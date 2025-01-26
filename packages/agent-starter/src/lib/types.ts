@@ -13,7 +13,7 @@ export type Metadata = {
 export type clientMessage = {
   message: string;
   originalMessage?: Message;
-  metadata: Metadata;
+  metadata?: Metadata;
   receivers?: string[];
   typeId?:
     | "text"

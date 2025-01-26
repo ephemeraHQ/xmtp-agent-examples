@@ -23,7 +23,6 @@ async function main() {
         await client.send({
           message: `Group created!\n- ID: ${group?.id}\n- Group URL: https://xmtp.chat/conversations/${group?.id}: \n- This url will deeplink to the group created\n- Once in the other group you can share the invite with your friends.`,
           originalMessage: message,
-          metadata: {},
         });
         return;
       } else {
@@ -31,7 +30,6 @@ async function main() {
           message:
             "👋 Welcome to the Gated Bot Group!\nTo get started, type /create to set up a new group. 🚀\nThis example will check if the user has a particular nft and add them to the group if they do.\nOnce your group is created, you'll receive a unique Group ID and URL.\nShare the URL with friends to invite them to join your group!",
           originalMessage: message,
-          metadata: {},
         });
       }
     },

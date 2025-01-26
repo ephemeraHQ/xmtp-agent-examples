@@ -30,7 +30,6 @@ async function main() {
       await client.send({
         message: gptMessage ?? "",
         originalMessage: message,
-        metadata: {},
       });
     },
   });

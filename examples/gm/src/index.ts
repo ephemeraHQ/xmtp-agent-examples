@@ -10,7 +10,6 @@ async function main() {
       await client.send({
         message: "gm",
         originalMessage: message,
-        metadata: {},
       });
     },
   });

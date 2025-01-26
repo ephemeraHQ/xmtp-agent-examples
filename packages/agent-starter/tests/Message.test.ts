@@ -32,12 +32,10 @@ describe("Client Private Key Configuration Tests", async () => {
     const message = await xmtp.send({
       message: "Hello, Alice!",
       receivers: [xmtp2.address as string],
-      metadata: {},
     });
     const message2 = await xmtp2.send({
       message: "Hello, Bob!",
       receivers: [xmtp.address as string],
-      metadata: {},
     });
     expect(message).toBeDefined();
     expect(message2).toBeDefined();

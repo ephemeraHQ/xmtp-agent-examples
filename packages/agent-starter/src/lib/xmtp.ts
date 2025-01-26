@@ -237,7 +237,10 @@ export class XMTP {
         reference: clientMessage.originalMessage?.id,
       } as Reply;
     } else if (clientMessage.typeId === "agent_message") {
-      message = new AgentMessage(clientMessage.message, clientMessage.metadata);
+      message = new AgentMessage(
+        clientMessage.message,
+        clientMessage.metadata ?? {},
+      );
       contentType = ContentTypeAgentMessage;
     }
     if (!clientMessage.receivers || clientMessage.receivers.length == 0) {
