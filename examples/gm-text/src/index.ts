@@ -1,21 +1,16 @@
-import { xmtpClient, type Message } from "./lib/helper.js";
+import { send, xmtpClient, type DecodedMessage } from "./lib/helper.js";
 
 async function main() {
   const client = await xmtpClient({
     walletKey: process.env.WALLET_KEY as string,
-    onMessage: async (message: Message) => {
-      console.log(
-        `Decoded message: ${message.content.text} by ${message.sender.address}`,
-      );
-      await client.send({
-        message: "gm",
-        originalMessage: message,
-      });
+    onMessage: async (message: DecodedMessage) => {
+      console.log(message);
+      await send("gm", message.senderInboxId, client);
     },
   });
 
   console.log(
-    `XMTP agent initialized on ${client.address}\nSend a message on https://converse.xyz/dm/${client.address}`,
+    `XMTP agent initialized on ${client.accountAddress}\nSend a message on https://xmtp.chat/dm/${client.accountAddress}`,
   );
 }
 
