@@ -1,0 +1,22 @@
+# Main
+.env
+node_modules/
+.data/
+dist/
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+
+# packages
+.yarn/
+.pnpm/
+.pnpm-workspace/

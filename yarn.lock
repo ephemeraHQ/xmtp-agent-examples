@@ -1040,6 +1040,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@example/gm-text@workspace:examples/gm-text":
+  version: 0.0.0-use.local
+  resolution: "@example/gm-text@workspace:examples/gm-text"
+  dependencies:
+    "@types/express": "npm:^4.17.21"
+    "@types/node": "npm:^22.10.9"
+    "@xmtp/content-type-text": "npm:^2.0.0"
+    "@xmtp/node-sdk": "npm:^0.0.40"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
 "@example/gm@workspace:examples/gm":
   version: 0.0.0-use.local
   resolution: "@example/gm@workspace:examples/gm"
