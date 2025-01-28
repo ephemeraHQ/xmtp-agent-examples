@@ -121,13 +121,15 @@ export async function send(message: string, address: string, client: Client) {
     conversation = await client.conversations.newDm(address);
   }
 
-  return conversation.send(
-    {
-      text: message,
-      metadata: {},
-    },
-    ContentTypeAgentMessage,
-  );
+  // By forcing this in Node we could prevent spammers or impersonators or at least make it really hard for them.
+  // return conversation.send(
+  //   {
+  //     text: message,
+  //     metadata: {},
+  //   },
+  //   ContentTypeAgentMessage,
+  // );
+  return conversation.send(message);
 }
 async function streamMessages(
   onMessage: (message: DecodedMessage) => Promise<void>,
