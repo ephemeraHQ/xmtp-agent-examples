@@ -131,6 +131,10 @@ export async function send(message: string, address: string, client: Client) {
   // );
   return conversation.send(message);
 }
+
+/*Developers want to send their own callbacks for messages.
+We could use this to send their own messages to the client.
+*/
 async function streamMessages(
   onMessage: (message: DecodedMessage) => Promise<void>,
   client: Client | undefined,
