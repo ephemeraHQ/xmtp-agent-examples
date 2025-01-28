@@ -2,9 +2,9 @@ import { send, xmtpClient, type DecodedMessage } from "./lib/helper.js";
 
 async function main() {
   const client = await xmtpClient({
-    onMessage: async (message: DecodedMessage) => {
-      console.log(message);
-      await send("gm", message.senderInboxId, client);
+    onMessage: async (message: DecodedMessage, senderAddress: string) => {
+      console.log(`Decoded message: ${message.content} from ${senderAddress}`);
+      await send("gm", senderAddress, client);
     },
   });
 

@@ -31,7 +31,7 @@ export async function xmtpClient({
   walletKey?: string;
   encryptionKey?: string;
   options?: ClientOptions;
-  onMessage?: (message: DecodedMessage) => Promise<void>;
+  onMessage?: (message: DecodedMessage, senderAddress: string) => Promise<void>;
 }): Promise<Client> {
   const suffix = name ? "_" + name : "";
   encryptionKey =
@@ -107,10 +107,14 @@ export function saveKeys(
   }
 }
 
-export async function send(message: string, address: string, client: Client) {
-  const inboxId = !isAddress(address)
-    ? address
-    : await client.getInboxIdByAddress(address);
+export async function send(
+  message: string,
+  senderAddress: string,
+  client: Client,
+) {
+  const inboxId = !isAddress(senderAddress)
+    ? senderAddress
+    : await client.getInboxIdByAddress(senderAddress);
 
   if (!inboxId) {
     throw new Error("Invalid receiver address");
@@ -118,7 +122,7 @@ export async function send(message: string, address: string, client: Client) {
 
   let conversation = client.conversations.getDmByInboxId(inboxId);
   if (!conversation) {
-    conversation = await client.conversations.newDm(address);
+    conversation = await client.conversations.newDm(senderAddress);
   }
 
   // By forcing this in Node we could prevent spammers or impersonators or at least make it really hard for them.
@@ -136,7 +140,7 @@ export async function send(message: string, address: string, client: Client) {
 We could use this to send their own messages to the client.
 */
 async function streamMessages(
-  onMessage: (message: DecodedMessage) => Promise<void>,
+  onMessage: (message: DecodedMessage, senderAddress: string) => Promise<void>,
   client: Client | undefined,
 ) {
   try {
@@ -162,7 +166,15 @@ async function streamMessages(
             }
 
             await conversation.sync();
-            await onMessage(message);
+            const members = await conversation.members();
+            const mainSenderAddress = members.find(
+              (member) => member.inboxId === senderInboxId,
+            )?.accountAddresses[0];
+
+            if (!mainSenderAddress) {
+              continue;
+            }
+            await onMessage(message, mainSenderAddress);
           } catch (e) {
             console.log(`error`, e);
           }
