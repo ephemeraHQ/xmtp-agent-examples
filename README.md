@@ -209,6 +209,13 @@ Result:
 
 > Learn more about [`lookup`](/packages/lookup/) library
 
+## Integrations
+
+Learn how XMTP is integrated into different frameworks
+
+- [Eliza](https://github.com/elizaOS/eliza/pull/2786) plugin
+- [MCP](https://github.com/orgs/modelcontextprotocol/discussions/147) discussion
+
 ## Development
 
 ```bash
