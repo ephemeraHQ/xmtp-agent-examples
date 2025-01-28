@@ -2,6 +2,11 @@ import { getRandomValues } from "node:crypto";
 import * as fs from "node:fs";
 import path from "node:path";
 import {
+  ContentTypeId,
+  type ContentCodec,
+  type EncodedContent,
+} from "@xmtp/content-type-primitives";
+import {
   Client,
   type ClientOptions,
   type DecodedMessage,
@@ -62,6 +67,7 @@ export async function xmtpClient({
   const clientConfig = {
     env: env,
     dbPath: `${dbPath}/${user.account.address.toLowerCase()}-${env}`,
+    codecs: [new AgentMessageCodec()],
     ...options,
   };
 
@@ -114,7 +120,14 @@ export async function send(message: string, address: string, client: Client) {
   if (!conversation) {
     conversation = await client.conversations.newDm(address);
   }
-  return conversation.send(message);
+
+  return conversation.send(
+    {
+      text: message,
+      metadata: {},
+    },
+    ContentTypeAgentMessage,
+  );
 }
 async function streamMessages(
   onMessage: (message: DecodedMessage) => Promise<void>,
@@ -186,4 +199,64 @@ export function createUser(key: string): UserReturnType {
       transport: http(),
     }),
   };
+}
+
+export type Metadata = {
+  isAgent?: boolean;
+  [key: string]: any;
+};
+
+// Create a unique identifier for your content type
+export const ContentTypeAgentMessage = new ContentTypeId({
+  authorityId: "xmtp.org",
+  typeId: "agentMessage",
+  versionMajor: 1,
+  versionMinor: 0,
+});
+
+// Define the message structure with metadata
+export class AgentMessage {
+  public text: string;
+  public metadata: Metadata;
+
+  constructor(text: string, metadata: Metadata) {
+    this.text = text;
+    this.metadata = {
+      isAgent: true,
+      ...metadata,
+    };
+  }
+}
+
+// Define the codec
+export class AgentMessageCodec implements ContentCodec<AgentMessage> {
+  get contentType(): ContentTypeId {
+    return ContentTypeAgentMessage;
+  }
+
+  encode(message: AgentMessage): EncodedContent {
+    return {
+      type: ContentTypeAgentMessage,
+      parameters: {},
+      content: new TextEncoder().encode(JSON.stringify(message)),
+    };
+  }
+
+  decode(encodedContent: EncodedContent): AgentMessage {
+    const decoded = new TextDecoder().decode(encodedContent.content);
+    const { text, metadata } = JSON.parse(decoded) as {
+      text: string;
+      metadata: Metadata;
+    };
+    return new AgentMessage(text, metadata);
+  }
+
+  // Only show the message text in unsupported clients
+  fallback(content: AgentMessage): string {
+    return content.text;
+  }
+
+  shouldPush(): boolean {
+    return true;
+  }
 }

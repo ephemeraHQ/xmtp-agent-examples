@@ -2,7 +2,6 @@ import { send, xmtpClient, type DecodedMessage } from "./lib/helper.js";
 
 async function main() {
   const client = await xmtpClient({
-    walletKey: process.env.WALLET_KEY as string,
     onMessage: async (message: DecodedMessage) => {
       console.log(message);
       await send("gm", message.senderInboxId, client);
