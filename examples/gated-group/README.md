@@ -15,8 +15,8 @@ ENCRYPTION_KEY= # a second fixed or random 32 bytes encryption key for the local
 Start your XMTP client and begin listening to messages from the bot.
 
 ```tsx
-const agent = await xmtpClient({
-  onMessage: async (message: Message) => {
+const agent = await createClient({
+  streamMessageCallback: async (message: Message) => {
     // Of message is /create then proceed to create a group.
     if (message?.content.text === "/create") {
       //This is a arbitrary trigger but you can embed this logic into any server.
@@ -49,7 +49,7 @@ app.post("/add-wallet", async (req, res) => {
     console.log("User cant be added to the group");
     return;
   } else {
-    await addToGroup(groupId, agent?.client as Client, walletAddress, true);
+    await addToGroup(groupId, agent?.client, walletAddress, true);
   }
 }
 ```
@@ -98,10 +98,10 @@ Use the `createGroup` function to create a new group conversation and set both t
 
 ```tsx
 export async function createGroup(
-  client: Client | undefined,
+  client: Client,
   members: string[],
-  senderAddress: string | undefined,
-  clientAddress: string | undefined,
+  senderAddress: string,
+  clientAddress: string,
 ) {
   try {
     await client?.conversations.sync();
