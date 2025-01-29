@@ -10,6 +10,7 @@ export async function createGroup(
     await client.conversations.sync();
     const conversations = client.conversations.list();
     console.log("Conversations", conversations.length);
+    /* If you have the inboxId you can use group.addMembersByInboxId instead*/
     const group = await client.conversations.newGroup([
       senderAddress,
       clientAddress,

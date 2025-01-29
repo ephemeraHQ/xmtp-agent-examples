@@ -38,6 +38,12 @@ const members = await group.members();
 
 > To learn more about groups, read the [XMTP documentation](https://docs.xmtp.org).
 
+## Keys
+
+By default, your bot will have a new address every time you start it up. That's ideal. If you have a private key, you can encode it to a hex string and set the KEY environment variable. Your bot will then use this key to connect to the network.
+
+Don't know how to create a private key? Here's how to do it with ethers.js:
+
 ## Web inbox
 
 Interact with the XMTP protocol using [xmtp.chat](https://xmtp.chat) the official web inbox for developers using the latest version powered by MLS.
@@ -61,10 +67,16 @@ yarn install
 yarn build
 
 # gm example
+yarn gm
+# or
+cd examples
 cd gm
 yarn dev
 
-# gated grouo
+# gated group example
+yarn gated
+# or
+cd examples
 cd gated-group
 yarn dev
 ```

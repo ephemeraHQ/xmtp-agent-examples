@@ -6,8 +6,7 @@ import {
   type DecodedMessage,
 } from "@xmtp/node-sdk";
 import dotenv from "dotenv";
-import { toBytes } from "viem";
-import { generateKeys, saveKeys } from "./keys.js";
+import KeyManager from "./keys.js";
 import { createSigner, createUser } from "./viem.js";
 
 dotenv.config();
@@ -25,8 +24,13 @@ export async function createClient({
   options?: ClientOptions;
   streamMessageCallback?: (message: DecodedMessage) => Promise<void>;
 }): Promise<Client> {
-  const { walletKey: clientWalletKey, encryptionKey: clientEncryptionKey } =
-    generateKeys(walletKey, encryptionKey, suffix);
+  const keyManager = new KeyManager(suffix);
+
+  const {
+    walletKey: clientWalletKey,
+    encryptionKey: clientEncryptionKey,
+    encryptionKeyBytes: clientEncryptionKeyBytes,
+  } = keyManager.generateKeys(walletKey, encryptionKey);
 
   const user = createUser(clientWalletKey);
 
@@ -45,14 +49,14 @@ export async function createClient({
 
   const client = await Client.create(
     createSigner(user),
-    new Uint8Array(toBytes(encryptionKey as `0x${string}`)),
+    clientEncryptionKeyBytes,
     clientConfig,
   );
 
   if (streamMessageCallback) {
     void streamMessages(streamMessageCallback, client);
   }
-  saveKeys(clientWalletKey, clientEncryptionKey, suffix);
+  keyManager.saveKeys(clientWalletKey, clientEncryptionKey);
   return client;
 }
 

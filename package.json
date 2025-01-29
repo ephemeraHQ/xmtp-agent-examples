@@ -14,6 +14,8 @@
     "examples": "node scripts/examples.js",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
+    "gated": "cd examples/gated-group && yarn dev",
+    "gm": "cd examples/gm && yarn dev",
     "lint": "yarn build && eslint .",
     "publish": "yarn build && changeset publish",
     "test": "FORCE_COLOR=1 turbo run test",
