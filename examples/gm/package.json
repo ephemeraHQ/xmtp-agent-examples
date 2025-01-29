@@ -9,11 +9,15 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@xmtp/agent-starter": "workspace:*"
+    "@xmtp/content-type-primitives": "^2.0.0",
+    "@xmtp/content-type-text": "^2.0.0",
+    "@xmtp/node-sdk": "^0.0.40",
+    "viem": "^2.22.12"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.9",
+    "dotenv": "latest",
     "typescript": "^5.7.3"
   },
   "engines": {

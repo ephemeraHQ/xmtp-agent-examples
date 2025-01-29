@@ -4,9 +4,7 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/*",
-    "examples/*",
-    "shared/*"
+    "examples/*"
   ],
   "scripts": {
     "build": "turbo run build",

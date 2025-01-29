@@ -5,12 +5,12 @@
 This agent replies GM
 
 ```tsx
-import { Message, xmtpClient } from "@xmtp/agent-starter";
+import { createClient, Message } from "@xmtp/agent-starter";
 
 async function main() {
-  const client = await xmtpClient({
+  const client = await createClient({
     walletKey: process.env.WALLET_KEY as string,
-    onMessage: async (message: Message) => {
+    streamMessageCallback: async (message: Message) => {
       console.log(
         `Decoded message: ${message?.content.text} by ${message.sender.address}`,
       );

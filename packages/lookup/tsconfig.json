@@ -1,4 +1,0 @@
-{
-  "include": ["src/**/*", "tests/**/*", "rollup.config.js"],
-  "extends": "@xmtp/tsconfig/base.json"
-}
