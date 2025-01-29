@@ -25,6 +25,14 @@ Here's how to easily deploy this app:
 
 3. **Volume**: Add a volume to your container.
 
+On runtime you can use this volume as is:
+
+```tsx
+const client = await createClient({
+  dbPath: process.env.RAILWAY_VOLUME_MOUNT_PATH,
+});
+```
+
 ![](volume.png)
 
 4. **Database (Optional)**: Optionally, right click to add db like Redis to your project.

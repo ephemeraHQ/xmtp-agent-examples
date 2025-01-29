@@ -1,6 +1,4 @@
-import { getRandomValues } from "node:crypto";
 import * as fs from "node:fs";
-import path from "node:path";
 import {
   Client,
   type ClientOptions,
@@ -8,57 +6,34 @@ import {
   type DecodedMessage,
 } from "@xmtp/node-sdk";
 import dotenv from "dotenv";
-import { toBytes, toHex } from "viem";
+import { toBytes } from "viem";
+import { generateKeys, saveKeys } from "./keys.js";
 import { createSigner, createUser } from "./viem.js";
 
 dotenv.config();
 
 export async function createClient({
-  name,
-  walletKey,
-  encryptionKey,
+  suffix = "",
   options,
   streamMessageCallback,
 }: {
-  name?: string;
-  walletKey?: string;
-  encryptionKey?: string;
+  suffix?: string;
   options?: ClientOptions;
   streamMessageCallback?: (message: DecodedMessage) => Promise<void>;
 }): Promise<Client> {
-  const suffix = name ? "_" + name : "";
-  encryptionKey =
-    encryptionKey ??
-    process.env["ENCRYPTION_KEY" + suffix] ??
-    toHex(getRandomValues(new Uint8Array(32)));
-
-  if (!encryptionKey.startsWith("0x")) {
-    encryptionKey = "0x" + encryptionKey;
-  }
-  walletKey =
-    walletKey ??
-    process.env["WALLET_KEY" + suffix] ??
-    toHex(getRandomValues(new Uint8Array(32)));
-
-  if (!walletKey.startsWith("0x")) {
-    walletKey = "0x" + walletKey;
-  }
+  const { walletKey, encryptionKey } = generateKeys(suffix);
 
   const user = createUser(walletKey);
 
-  let env = options?.env;
-  if (!env) env = "production";
+  const env = options?.env ?? "production";
 
-  const dbPath =
-    process.env.RAILWAY_VOLUME_MOUNT_PATH ?? options?.dbPath ?? ".data/xmtp";
+  const dbPath = options?.dbPath ?? ".data/xmtp";
 
   //Creates a DB folder if it doesnt exist
-  if (!fs.existsSync(dbPath)) {
-    fs.mkdirSync(dbPath, { recursive: true });
-  }
+  if (!fs.existsSync(dbPath)) fs.mkdirSync(dbPath, { recursive: true });
 
   const clientConfig = {
-    env: env,
+    env,
     dbPath: `${dbPath}/${user.account.address.toLowerCase()}-${env}`,
     ...options,
   };
@@ -76,32 +51,6 @@ export async function createClient({
   return client;
 }
 
-export function saveKeys(
-  suffix: string,
-  walletKey: string,
-  encryptionKey: string,
-) {
-  const envFilePath = path.resolve(process.cwd(), ".env");
-  const envContent = `\nENCRYPTION_KEY${suffix}=${encryptionKey}\nWALLET_KEY${suffix}=${walletKey}`;
-
-  // Read the existing .env file content
-  let existingEnvContent = "";
-  if (fs.existsSync(envFilePath)) {
-    existingEnvContent = fs.readFileSync(envFilePath, "utf8");
-  }
-
-  // Check if the keys already exist
-  if (
-    !existingEnvContent.includes(`ENCRYPTION_KEY${suffix}=`) &&
-    !existingEnvContent.includes(`WALLET_KEY${suffix}=`)
-  ) {
-    fs.appendFileSync(envFilePath, envContent);
-  }
-}
-
-/*Developers want to send their own callbacks for messages.
-We could use this to send their own messages to the client.
-*/
 async function streamMessages(
   streamMessageCallback: (message: DecodedMessage) => Promise<void>,
   client: Client,
