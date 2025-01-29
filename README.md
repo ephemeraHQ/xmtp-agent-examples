@@ -1,8 +1,5 @@
 <div align="center">
 
-[![GitHub release](https://img.shields.io/github/release/ephemerahq/xmtp-agents.svg)](https://github.com/huggingface/smolagents/releases)
-[![MIT License](https://img.shields.io/github/license/ephemerahq/xmtp-agents)](https://github.com/ephemerahq/xmtp-agents/blob/main/LICENSE)
-
 # xmtp-agents
 
 </div>
@@ -42,7 +39,62 @@ const members = await group.members();
 
 By default, your bot will have a new address every time you start it up. That's ideal. If you have a private key, you can encode it to a hex string and set the KEY environment variable. Your bot will then use this key to connect to the network.
 
-Don't know how to create a private key? Here's how to do it with ethers.js:
+XMTP uses two types of keys:
+
+1. **Wallet Key**:
+
+   - An Ethereum private key (e.g. `0x123...`) that defines your bot’s **on-chain identity** (its public address) (e.g. `hi.xmtp.eth`).
+   - By providing this key, messages sent from your bot will be tied to a consistent address.
+
+2. **Encryption Key**:
+   - Protects your **local database** of stored messages (it does not affect on-chain identity).
+   - If not provided, it’s created automatically and saved to your `.env`.
+
+### 1. Provide a private key
+
+If you already have a key, place it in `.env`:
+
+```bash
+WALLET_KEY=0xYOUR_PRIVATE_KEY
+```
+
+**Usage**:
+
+```ts
+const agent = await createClient({
+  walletKey: process.env.WALLET_KEY,
+});
+```
+
+The bot reuses this key, retaining the same address each time it starts.
+
+---
+
+### 2. Automatically generate a key
+
+If you don’t set `WALLET_KEY`, the bot creates a new one at runtime:
+
+```ts
+const agent = await createClient();
+```
+
+**Workflow**:
+
+1. A fresh Ethereum private key is generated.
+2. Key details are saved to your `.env` so the bot reuses them in future runs.
+
+---
+
+### 3. Use a named key
+
+When running multiple bots, each can have a distinct name to avoid overwriting each other’s keys:
+
+```ts
+const agent = await createClient({ name: "botA" });
+```
+
+In `.env`, this will be stored as `WALLET_KEY_botA=...`  
+**Benefit**: Simplifies managing multiple identities from one project.
 
 ## Web inbox
 
@@ -50,8 +102,7 @@ Interact with the XMTP protocol using [xmtp.chat](https://xmtp.chat) the officia
 
 ![](/chat.png)
 
-> [!WARNING]
-> This React app isn't a complete solution. For example, the list of conversations doesn't update when new messages arrive in existing conversations.
+> To learn more about dev tool visit the [official repo](https://github.com/xmtp/xmtp-js/tree/main/apps/xmtp.chat)
 
 ## Development
 

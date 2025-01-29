@@ -6,7 +6,6 @@ import {
   type DecodedMessage,
 } from "@xmtp/node-sdk";
 import dotenv from "dotenv";
-import { toBytes } from "viem";
 import KeyManager from "./keys.js";
 import { createSigner, createUser } from "./viem.js";
 
