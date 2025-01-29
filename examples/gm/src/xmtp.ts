@@ -13,17 +13,22 @@ import { createSigner, createUser } from "./viem.js";
 dotenv.config();
 
 export async function createClient({
-  suffix = "",
+  suffix,
+  walletKey,
+  encryptionKey,
   options,
   streamMessageCallback,
 }: {
   suffix?: string;
+  walletKey?: string;
+  encryptionKey?: string;
   options?: ClientOptions;
   streamMessageCallback?: (message: DecodedMessage) => Promise<void>;
 }): Promise<Client> {
-  const { walletKey, encryptionKey } = generateKeys(suffix);
+  const { walletKey: clientWalletKey, encryptionKey: clientEncryptionKey } =
+    generateKeys(walletKey, encryptionKey, suffix);
 
-  const user = createUser(walletKey);
+  const user = createUser(clientWalletKey);
 
   const env = options?.env ?? "production";
 
@@ -47,7 +52,7 @@ export async function createClient({
   if (streamMessageCallback) {
     void streamMessages(streamMessageCallback, client);
   }
-  saveKeys(suffix, walletKey, encryptionKey);
+  saveKeys(clientWalletKey, clientEncryptionKey, suffix);
   return client;
 }
 

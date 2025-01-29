@@ -3,15 +3,21 @@ import * as fs from "node:fs";
 import path from "path";
 import { toHex } from "viem";
 
-export function generateKeys(suffix: string) {
-  let encryptionKey =
+export function generateKeys(
+  walletKey?: string,
+  encryptionKey?: string,
+  suffix: string = "",
+) {
+  encryptionKey =
+    encryptionKey ??
     process.env["ENCRYPTION_KEY" + suffix] ??
     toHex(getRandomValues(new Uint8Array(32)));
 
   if (!encryptionKey.startsWith("0x")) {
     encryptionKey = "0x" + encryptionKey;
   }
-  let walletKey =
+  walletKey =
+    walletKey ??
     process.env["WALLET_KEY" + suffix] ??
     toHex(getRandomValues(new Uint8Array(32)));
 
@@ -22,9 +28,9 @@ export function generateKeys(suffix: string) {
 }
 
 export function saveKeys(
-  suffix: string,
   walletKey: string,
   encryptionKey: string,
+  suffix: string = "",
 ) {
   const envFilePath = path.resolve(process.cwd(), ".env");
   const envContent = `\nENCRYPTION_KEY${suffix}=${encryptionKey}\nWALLET_KEY${suffix}=${walletKey}`;
