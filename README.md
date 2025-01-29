@@ -47,13 +47,6 @@ Interact with the XMTP protocol using [xmtp.chat](https://xmtp.chat) the officia
 > [!WARNING]
 > This React app isn't a complete solution. For example, the list of conversations doesn't update when new messages arrive in existing conversations.
 
-## Deployment
-
-Learn how to deploy with:
-
-- [Railway](/tutorials/railway/)
-- [Replit example](/tutorials/replit/)
-
 ## Development
 
 ```bash
