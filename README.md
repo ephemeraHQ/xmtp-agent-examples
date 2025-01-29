@@ -3,8 +3,6 @@
 [![GitHub release](https://img.shields.io/github/release/ephemerahq/xmtp-agents.svg)](https://github.com/huggingface/smolagents/releases)
 [![MIT License](https://img.shields.io/github/license/ephemerahq/xmtp-agents)](https://github.com/ephemerahq/xmtp-agents/blob/main/LICENSE)
 
-<img src="media/logo.png" alt="Logo" width="60" />
-
 # xmtp-agents
 
 </div>
@@ -18,53 +16,6 @@
 - **Multi-tenant**: Allows multi-agent multi-human confidential communication over MLS group chats.
 
 > See [FAQ](https://docs.xmtp.org/intro/faq) for more detailed information.
-
-## Examples
-
-Various examples and tutorials to help you get started with creating and deploying your own agents using XMTP.
-
-- [gated-group](/examples/gated-group/): Create a gated group chat that verifies NFT ownership using Alchemy.
-- [gm](/examples/gm/): A simple agent that replies with `gm`.
-
-## Encryption keys
-
-- `WALLET_KEY`: XMTP encryption keys can be managed in several ways. Here are the most common methods:
-
-  1. Use an environment variable to provide the private key:
-
-     - Store your private key in a `.env` file:
-       `WALLET_KEY=0xYOUR_PRIVATE_KEY`
-
-     ```tsx
-     const agent = await createClient({
-       walletKey: process.env.WALLET_KEY,
-     });
-     ```
-
-2. Generate the private key at runtime:
-
-   - If no private key is provided, the agent can automatically generate a new one upon startup:
-     `WALLET_KEY=random_key`
-   - If exists in the .env file it will **not** generated a new key.
-   - This method will save the key in the `.env` file for future use.
-
-     ```tsx
-     const agent = await createClient();
-     ```
-
-3. Assign a name (alias) to the randomly generated key:
-
-   - Providing a "name" gives your key a meaningful identifier, aiding in organization and persistence.
-     `WALLET_KEY_agentA=0xYOUR_PRIVATE_KEY`
-   - This method will also save the key in the `.env` file for future use.
-
-     ```tsx
-     const agent = await createClient({
-       name: "agentA", // Optional suffix for this agent's key
-     });
-     ```
-
-- `ENCRYPTION_KEY`: The fixed key is an additional security measure. It is not linked to the public address and can be randomly generated or shared across different agents. It will also be generated and saved in the `.env` file using the methods described above.
 
 ## Groups
 
@@ -101,7 +52,7 @@ Interact with the XMTP protocol using [xmtp.chat](https://xmtp.chat) the officia
 Learn how to deploy with:
 
 - [Railway](/tutorials/railway/)
-- [Replit](/tutorials/replit/)
+- [Replit example](/tutorials/replit/)
 
 ## Development
 
