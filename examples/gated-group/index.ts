@@ -33,10 +33,6 @@ async function main() {
   console.log("Syncing conversations...");
   await client.conversations.sync();
 
-  console.log(
-    `Agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}`,
-  );
-
   console.log("Waiting for messages...");
   const stream = client.conversations.streamAllMessages();
 
