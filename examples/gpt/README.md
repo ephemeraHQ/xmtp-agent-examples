@@ -1,4 +1,4 @@
-# GPT Agent
+# GPT agent example
 
 This example uses the [OpenAI](https://openai.com) API for GPT-based responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
 
@@ -17,6 +17,9 @@ You can generate random keys with the following command:
 ```bash
 yarn gen:keys
 ```
+
+> [!WARNING]
+> Running the `gen:keys` script will overwrite the existing `.env` file.
 
 ## Usage
 
