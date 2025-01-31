@@ -44,20 +44,24 @@ async function main() {
       walletAddress: string;
       groupId: string;
     };
-    const verified = true; // (await checkNft(walletAddress, "XMTPeople"));
-    if (!verified) {
-      console.log("User cant be added to the group");
-      return;
-    } else {
-      addToGroup(groupId, client, walletAddress, true)
-        .then(() => {
-          res.status(200).send("success");
-        })
-        .catch((error: unknown) => {
-          res.status(400).send((error as Error).message);
-        });
-    }
+    checkNft(walletAddress, "XMTPeople")
+      .then((result) => {
+        if (!result) {
+          console.log("User cant be added to the group");
+          return;
+        } else {
+          return addToGroup(groupId, client, walletAddress, true);
+        }
+      })
+      .then(() => {
+        res.status(200).send("success");
+      })
+      .catch((error: unknown) => {
+        console.error("Error in checkNft or addToGroup:", error);
+        res.status(400).send((error as Error).message);
+      });
   });
+
   // Start the servfalcheer
   const PORT = process.env.PORT || 3000;
   const url = process.env.URL || `http://localhost:${PORT}`;
@@ -116,7 +120,7 @@ async function main() {
       );
 
       await conversation.send(
-        `Group created!\n- ID: ${group?.id}\n- Group URL: https://xmtp.chat/conversations/${group?.id}: \n- This url will deeplink to the group created\n- Once in the other group you can share the invite with your friends.`,
+        `Group created!\n- ID: ${group.id}\n- Group URL: https://xmtp.chat/conversations/${group.id}: \n- This url will deeplink to the group created\n- Once in the other group you can share the invite with your friends.`,
       );
       return;
     } else {
@@ -129,7 +133,7 @@ async function main() {
 
 main().catch(console.error);
 
-export async function checkNft(
+async function checkNft(
   walletAddress: string,
   collectionSlug: string,
 ): Promise<boolean> {
@@ -150,50 +154,7 @@ export async function checkNft(
   return false;
 }
 
-export async function removeFromGroup(
-  groupId: string,
-  client: Client,
-  senderAddress: string,
-): Promise<void> {
-  try {
-    const lowerAddress = senderAddress.toLowerCase();
-    const isOnXMTP = await client.canMessage([lowerAddress]);
-    console.warn("Checking if on XMTP: ", isOnXMTP);
-    if (!isOnXMTP.get(lowerAddress)) {
-      console.error("You don't seem to have a v3 identity ");
-      return;
-    }
-    const conversation = client.conversations.getConversationById(groupId);
-    console.warn("removing from group", conversation?.id);
-    await conversation?.sync();
-    await conversation?.removeMembers([lowerAddress]);
-    console.warn("Removed member from group");
-    await conversation?.sync();
-    const members = await conversation?.members();
-    console.warn("Number of members", members?.length);
-
-    let wasRemoved = true;
-    if (members) {
-      for (const member of members) {
-        const lowerMemberAddress = member.accountAddresses[0].toLowerCase();
-        if (lowerMemberAddress === lowerAddress) {
-          wasRemoved = false;
-          break;
-        }
-      }
-    }
-    console.log(
-      "You have been removed from the group",
-      wasRemoved ? "success" : "failed",
-    );
-    return;
-  } catch (error) {
-    console.log("Error removing from group", error);
-    return;
-  }
-}
-
-export async function addToGroup(
+async function addToGroup(
   groupId: string,
   client: Client,
   address: string,
