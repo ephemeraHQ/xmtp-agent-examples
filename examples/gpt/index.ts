@@ -5,16 +5,8 @@ import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 const { WALLET_KEY, ENCRYPTION_KEY, OPENAI_API_KEY } = process.env;
 
-if (!WALLET_KEY) {
-  throw new Error("WALLET_KEY must be set");
-}
-
-if (!ENCRYPTION_KEY) {
-  throw new Error("ENCRYPTION_KEY must be set");
-}
-
-if (!OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY must be set");
+if (!WALLET_KEY || !ENCRYPTION_KEY || !OPENAI_API_KEY) {
+  throw new Error("Environment variables must be set");
 }
 
 const signer = createSigner(WALLET_KEY);
