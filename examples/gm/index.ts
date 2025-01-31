@@ -1,4 +1,3 @@
-import * as fs from "node:fs";
 import { ContentTypeText } from "@xmtp/content-type-text";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
