@@ -19,7 +19,6 @@
     "@xmtp/content-type-text": "^2.0.0",
     "@xmtp/node-sdk": "^0.0.40",
     "alchemy-sdk": "^3.5.1",
-    "express": "^4.21.2",
     "openai": "latest",
     "tsx": "^4.19.2",
     "uint8arrays": "^5.1.0",

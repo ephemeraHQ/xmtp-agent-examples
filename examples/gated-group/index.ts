@@ -1,7 +1,6 @@
 import { ContentTypeText } from "@xmtp/content-type-text";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import { Alchemy, Network } from "alchemy-sdk";
-import express, { type Request, type Response } from "express";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 const settings = {
@@ -33,46 +32,12 @@ async function main() {
   console.log("Syncing conversations...");
   await client.conversations.sync();
 
+  console.log(
+    `Agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}`,
+  );
+
   console.log("Waiting for messages...");
   const stream = client.conversations.streamAllMessages();
-
-  // Endpoint to add wallet address to a group from an external source
-  const app = express();
-  app.use(express.json());
-  app.post("/add-wallet", (req: Request, res: Response) => {
-    const { walletAddress, groupId } = req.body as {
-      walletAddress: string;
-      groupId: string;
-    };
-    checkNft(walletAddress, "XMTPeople")
-      .then((result) => {
-        if (!result) {
-          console.log("User cant be added to the group");
-          return;
-        } else {
-          return addToGroup(groupId, client, walletAddress, true);
-        }
-      })
-      .then(() => {
-        res.status(200).send("success");
-      })
-      .catch((error: unknown) => {
-        console.error("Error in checkNft or addToGroup:", error);
-        res.status(400).send((error as Error).message);
-      });
-  });
-
-  // Start the servfalcheer
-  const PORT = process.env.PORT || 3000;
-  const url = process.env.URL || `http://localhost:${PORT}`;
-  app.listen(PORT, () => {
-    console.warn(
-      `Use this endpoint to add a wallet to a group indicated by the groupId\n${url}/add-wallet <body: {walletAddress, groupId}>`,
-    );
-  });
-  console.log(
-    `XMTP agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}`,
-  );
 
   for await (const message of await stream) {
     if (
@@ -104,11 +69,11 @@ async function main() {
 
     if (message.content === "/create") {
       console.log("Creating group");
-
-      const group = await client.conversations.newGroup([
-        client.accountAddress,
-      ]);
+      const group = await client.conversations.newGroup([]);
       console.log("Group created", group.id);
+      // First add the sender to the group
+      await group.addMembersByInboxId([message.senderInboxId]);
+      // Then make the sender a super admin
       await group.addSuperAdmin(message.senderInboxId);
       console.log(
         "Sender is superAdmin",
@@ -123,6 +88,28 @@ async function main() {
         `Group created!\n- ID: ${group.id}\n- Group URL: https://xmtp.chat/conversations/${group.id}: \n- This url will deeplink to the group created\n- Once in the other group you can share the invite with your friends.`,
       );
       return;
+    } else if (
+      typeof message.content === "string" &&
+      message.content.startsWith("/add")
+    ) {
+      const walletAddress = message.content.split(" ")[1];
+      if (!walletAddress) {
+        await conversation.send("Please provide a wallet address");
+        return;
+      }
+      const groupId = message.content.split(" ")[2];
+      if (!groupId) {
+        await conversation.send("Please provide a group id");
+        return;
+      }
+
+      const result = await checkNft(walletAddress, "XMTPeople");
+      if (!result) {
+        console.log("User can't be added to the group");
+        return;
+      } else {
+        return addToGroup(groupId, client, walletAddress, true);
+      }
     } else {
       await conversation.send(
         "👋 Welcome to the Gated Bot Group!\nTo get started, type /create to set up a new group. 🚀\nThis example will check if the user has a particular nft and add them to the group if they do.\nOnce your group is created, you'll receive a unique Group ID and URL.\nShare the URL with friends to invite them to join your group!",
@@ -168,27 +155,29 @@ async function addToGroup(
       return;
     }
     const group = client.conversations.getConversationById(groupId);
-    console.warn("Adding to group", group?.id);
-    await group?.sync();
-    await group?.addMembers([lowerAddress]);
-    console.warn("Added member to group");
-    await group?.sync();
-    if (asAdmin) {
-      await group?.addSuperAdmin(lowerAddress);
+    if (!group) {
+      console.error("Group not found");
+      return;
     }
-    const members = await group?.members();
-    console.warn("Number of members", members?.length);
+    console.warn("Adding to group", group.id);
+    await group.sync();
+    // Add the user to the group by address
+    await group.addMembers([lowerAddress]);
+    console.warn("Added member to group");
+    await group.sync();
+    if (asAdmin) {
+      await group.addSuperAdmin(lowerAddress);
+    }
+    const members = await group.members();
+    console.warn("Number of members", members.length);
 
-    if (members) {
-      for (const member of members) {
-        const lowerMemberAddress = member.accountAddresses[0].toLowerCase();
-        if (lowerMemberAddress === lowerAddress) {
-          console.warn("Member exists", lowerMemberAddress);
-          return;
-        }
+    for (const member of members) {
+      const lowerMemberAddress = member.accountAddresses[0].toLowerCase();
+      if (lowerMemberAddress === lowerAddress) {
+        console.warn("Member exists", lowerMemberAddress);
+        return;
       }
     }
-    return;
   } catch (error) {
     console.error("Error adding to group", error);
   }
