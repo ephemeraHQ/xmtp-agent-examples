@@ -33,6 +33,7 @@ yarn gen:keys
 ## Examples
 
 - [gm](/examples/gm/): A simple agent that replies to all text messages with "gm".
+- [gpt](/examples/gpt/): An example using GPT API's to answer messages.
 
 > See all the available [examples](/examples/).
 
