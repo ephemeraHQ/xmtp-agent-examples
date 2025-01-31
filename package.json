@@ -6,7 +6,9 @@
   "scripts": {
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
+    "examples:gated": "tsx --env-file=.env examples/gated-group/index.ts",
     "examples:gm": "tsx --env-file=.env examples/gm/index.ts",
+    "examples:gpt": "tsx --env-file=.env examples/gpt/index.ts",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
     "gen:keys": "tsx scripts/generateKeys.ts",
@@ -16,6 +18,9 @@
   "dependencies": {
     "@xmtp/content-type-text": "^2.0.0",
     "@xmtp/node-sdk": "^0.0.40",
+    "alchemy-sdk": "^3.5.1",
+    "express": "^4.21.2",
+    "openai": "latest",
     "tsx": "^4.19.2",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"
@@ -25,6 +30,7 @@
     "@eslint/js": "^9.19.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@types/eslint__js": "^8.42.3",
+    "@types/express": "^4.17.21",
     "@types/node": "^22.12.0",
     "eslint": "^9.19.0",
     "eslint-config-prettier": "^10.0.1",

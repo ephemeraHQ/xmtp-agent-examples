@@ -1,9 +1,9 @@
-import * as fs from "node:fs";
 import { ContentTypeText } from "@xmtp/content-type-text";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import OpenAI from "openai";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
-const { WALLET_KEY, ENCRYPTION_KEY } = process.env;
+const { WALLET_KEY, ENCRYPTION_KEY, OPENAI_API_KEY } = process.env;
 
 if (!WALLET_KEY) {
   throw new Error("WALLET_KEY must be set");
@@ -13,8 +13,13 @@ if (!ENCRYPTION_KEY) {
   throw new Error("ENCRYPTION_KEY must be set");
 }
 
+if (!OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY must be set");
+}
+
 const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 const env: XmtpEnv = "dev";
 
@@ -62,8 +67,23 @@ async function main() {
       continue;
     }
 
-    console.log(`Sending "gm" response...`);
-    await conversation.send("gm");
+    try {
+      const completion = await openai.chat.completions.create({
+        messages: [{ role: "user", content: message.content as string }],
+        model: "gpt-3.5-turbo",
+      });
+
+      const response =
+        completion.choices[0]?.message?.content ||
+        "I'm not sure how to respond to that.";
+      console.log(`Sending AI response: ${response}`);
+      await conversation.send(response);
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      await conversation.send(
+        "Sorry, I encountered an error processing your message.",
+      );
+    }
 
     console.log("Waiting for messages...");
   }
