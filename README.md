@@ -1,6 +1,6 @@
-# XMTP Agent Examples
+# XMTP agent examples
 
-This repository contains examples of agents that use the XMTP protocol.
+This repository contains examples of agents that use the [XMTP](https://docs.xmtp.org/) network.
 
 #### Why XMTP?
 
@@ -8,7 +8,7 @@ This repository contains examples of agents that use the XMTP protocol.
 - **Open-source & trustless**: Built on top of the [MLS](https://messaginglayersecurity.rocks/) protocol, it replaces trust in centralized certificate authorities with cryptographic proofs.
 - **Privacy & metadata protection**: Offers anonymous or pseudonymous usage with no tracking of sender routes, IPs, or device and message timestamps.
 - **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure.
-- **Multi-tenant**: Allows multi-agent multi-human confidential communication over MLS group chats.
+- **Multi-agent**: Allows multi-agent multi-human confidential communication over MLS group chats.
 
 > See [FAQ](https://docs.xmtp.org/intro/faq) for more detailed information.
 
