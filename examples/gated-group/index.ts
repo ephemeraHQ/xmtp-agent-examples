@@ -40,13 +40,12 @@ async function main() {
   const stream = client.conversations.streamAllMessages();
 
   for await (const message of await stream) {
-    console.log("message", message);
     if (
       !message ||
       !message.contentType ||
       !ContentTypeText.sameAs(message.contentType)
     ) {
-      console.log("Invalid message, skipping", message);
+      console.log("Invalid message, skipping", message?.contentType?.typeId);
       continue;
     }
 
@@ -67,7 +66,6 @@ async function main() {
       console.log("Unable to find conversation, skipping");
       continue;
     }
-    console.log("message.content", message.content);
     if (message.content === "/create") {
       console.log("Creating group");
       const group = await client.conversations.newGroup([]);
@@ -80,27 +78,31 @@ async function main() {
         "Sender is superAdmin",
         group.isSuperAdmin(message.senderInboxId),
       );
-      await group.send(`Welcome to the new group!`);
       await group.send(
-        `You are now the admin of this group as well as the bot`,
+        `Welcome to the new group!\nYou are now the admin of this group as well as the bot`,
       );
 
       await conversation.send(
-        `Group created!\n- ID: ${group.id}\n- Group URL: https://xmtp.chat/conversations/${group.id}: \n- This url will deeplink to the group created\n- Once in the other group you can share the invite with your friends.`,
+        `Group created!\n- ID: ${group.id}\n- Group URL: https://xmtp.chat/conversations/${group.id}: \n- This url will deeplink to the group created\n- Once in the other group you can share the invite with your friends.\n- You can add more members to the group by using the /add <group.id> <wallet-address>.`,
       );
       return;
     } else if (
       typeof message.content === "string" &&
       message.content.startsWith("/add")
     ) {
-      const walletAddress = message.content.split(" ")[1];
-      if (!walletAddress) {
-        await conversation.send("Please provide a wallet address");
-        return;
-      }
-      const groupId = message.content.split(" ")[2];
+      const groupId = message.content.split(" ")[1];
       if (!groupId) {
         await conversation.send("Please provide a group id");
+        return;
+      }
+      const group = client.conversations.getConversationById(groupId);
+      if (!group) {
+        await conversation.send("Please provide a valid group id");
+        return;
+      }
+      const walletAddress = message.content.split(" ")[2];
+      if (!walletAddress) {
+        await conversation.send("Please provide a wallet address");
         return;
       }
 
@@ -109,7 +111,10 @@ async function main() {
         console.log("User can't be added to the group");
         return;
       } else {
-        return addToGroup(groupId, client, walletAddress, true);
+        await group.addMembers([walletAddress]);
+        await conversation.send(
+          `User added to the group\n- Group ID: ${groupId}\n- Wallet Address: ${walletAddress}`,
+        );
       }
     } else {
       await conversation.send(
@@ -140,46 +145,4 @@ async function checkNft(
   }
 
   return false;
-}
-
-async function addToGroup(
-  groupId: string,
-  client: Client,
-  address: string,
-  asAdmin: boolean = false,
-): Promise<void> {
-  try {
-    const lowerAddress = address.toLowerCase();
-    const isOnXMTP = await client.canMessage([lowerAddress]);
-    if (!isOnXMTP.get(lowerAddress)) {
-      console.error("You don't seem to have a v3 identity ");
-      return;
-    }
-    const group = client.conversations.getConversationById(groupId);
-    if (!group) {
-      console.error("Group not found");
-      return;
-    }
-    console.warn("Adding to group", group.id);
-    await group.sync();
-    // Add the user to the group by address
-    await group.addMembers([lowerAddress]);
-    console.warn("Added member to group");
-    await group.sync();
-    if (asAdmin) {
-      await group.addSuperAdmin(lowerAddress);
-    }
-    const members = await group.members();
-    console.warn("Number of members", members.length);
-
-    for (const member of members) {
-      const lowerMemberAddress = member.accountAddresses[0].toLowerCase();
-      if (lowerMemberAddress === lowerAddress) {
-        console.warn("Member exists", lowerMemberAddress);
-        return;
-      }
-    }
-  } catch (error) {
-    console.error("Error adding to group", error);
-  }
 }
