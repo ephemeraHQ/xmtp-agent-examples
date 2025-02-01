@@ -55,9 +55,15 @@ for await (const message of await stream) {
     const walletAddress = message.content.split(" ")[1];
     const groupId = message.content.split(" ")[2];
 
-    const verified = await checkNft(walletAddress, "XMTPeople");
-    if (verified) {
-      await addToGroup(groupId, client, walletAddress, true);
+    const result = await checkNft(walletAddress, "XMTPeople");
+    if (!result) {
+      console.log("User can't be added to the group");
+      return;
+    } else {
+      await group.addMembers([walletAddress]);
+      await conversation.send(
+        `User added to the group\n- Group ID: ${groupId}\n- Wallet Address: ${walletAddress}`,
+      );
     }
   }
 }
@@ -86,45 +92,6 @@ async function checkNft(
     console.error("Error fetching NFTs from Alchemy:", error);
   }
   return false;
-}
-```
-
-## Add members to the group
-
-The `addToGroup` function handles adding verified members to a group:
-
-```tsx
-async function addToGroup(
-  groupId: string,
-  client: Client,
-  address: string,
-  asAdmin: boolean = false,
-): Promise<void> {
-  try {
-    const lowerAddress = address.toLowerCase();
-
-    // Check if wallet has XMTP identity
-    const isOnXMTP = await client.canMessage([lowerAddress]);
-    if (!isOnXMTP.get(lowerAddress)) {
-      console.error("Wallet doesn't have an XMTP identity");
-      return;
-    }
-
-    const group = client.conversations.getConversationById(groupId);
-    if (!group) {
-      console.error("Group not found");
-      return;
-    }
-
-    await group.sync();
-    await group.addMembers([lowerAddress]);
-
-    if (asAdmin) {
-      await group.addSuperAdmin(lowerAddress);
-    }
-  } catch (error) {
-    console.error("Error adding to group", error);
-  }
 }
 ```
 
