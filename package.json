@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
+    "examples:gated": "tsx --env-file=.env examples/gated-group/index.ts",
     "examples:gm": "tsx --env-file=.env examples/gm/index.ts",
     "examples:gpt": "tsx --env-file=.env examples/gpt/index.ts",
     "format": "prettier -w .",
@@ -17,6 +18,7 @@
   "dependencies": {
     "@xmtp/content-type-text": "^2.0.0",
     "@xmtp/node-sdk": "0.0.40",
+    "alchemy-sdk": "^3.0.0",
     "openai": "latest",
     "tsx": "^4.19.2",
     "uint8arrays": "^5.1.0",

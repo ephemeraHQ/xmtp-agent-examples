@@ -34,6 +34,7 @@ yarn gen:keys
 
 - [gm](/examples/gm/): A simple agent that replies to all text messages with "gm".
 - [gpt](/examples/gpt/): An example using GPT API's to answer messages.
+- [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
 
 > See all the available [examples](/examples/).
 
