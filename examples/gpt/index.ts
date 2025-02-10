@@ -1,4 +1,3 @@
-import { ContentTypeText } from "@xmtp/content-type-text";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
@@ -41,16 +40,9 @@ async function main() {
 
   for await (const message of await stream) {
     if (
-      !message ||
-      !message.contentType ||
-      !ContentTypeText.sameAs(message.contentType)
+      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
+      message?.contentType?.typeId !== "text"
     ) {
-      console.log("Invalid message, skipping", message);
-      continue;
-    }
-
-    // Ignore own messages
-    if (message.senderInboxId === client.inboxId) {
       continue;
     }
 
