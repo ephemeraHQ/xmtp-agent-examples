@@ -79,3 +79,18 @@ async function main() {
 
 main().catch(console.error);
 ```
+
+## Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+# install packages
+yarn
+# generate random keys (optional)
+yarn gen:keys
+# run the example
+yarn examples:gpt
+```

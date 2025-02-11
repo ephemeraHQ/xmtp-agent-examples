@@ -97,4 +97,17 @@ async function checkNft(
 3. Once you have the group ID, you can add members using `/add <group_id> <wallet_address>`
 4. The bot will verify NFT ownership and add the wallet if they own the required NFT
 
-The bot will automatically make the group creator a super admin and can optionally make new members admins as well.
+## Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+# install packages
+yarn
+# generate random keys (optional)
+yarn gen:keys
+# run the example
+yarn examples:gpt
+```
