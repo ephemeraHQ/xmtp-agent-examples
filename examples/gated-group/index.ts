@@ -2,7 +2,6 @@ import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import { Alchemy, Network } from "alchemy-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
-/* Set the Alchemy API key and network */
 const settings = {
   apiKey: process.env.ALCHEMY_API_KEY,
   network: Network.BASE_MAINNET,
@@ -28,18 +27,13 @@ const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 /* Set the environment to dev or production */
 const env: XmtpEnv = "dev";
 
-/**
- * Main function to run the agent
- */
 async function main() {
   console.log(`Creating client on the '${env}' network...`);
-  /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, {
     env,
   });
 
   console.log("Syncing conversations...");
-  /* Sync the conversations from the network to update the local db */
   await client.conversations.sync();
 
   console.log(
@@ -47,7 +41,6 @@ async function main() {
   );
 
   console.log("Waiting for messages...");
-  /* Stream all messages from the network */
   const stream = client.conversations.streamAllMessages();
 
   for await (const message of await stream) {
@@ -63,7 +56,6 @@ async function main() {
       `Received message: ${message.content as string} by ${message.senderInboxId}`,
     );
 
-    /* Get the conversation from the local db */
     const conversation = client.conversations.getConversationById(
       message.conversationId,
     );
@@ -73,9 +65,11 @@ async function main() {
       continue;
     }
 
-    /* If the message is to create a new group */
+    /* This example works by parsing slash commands to create a new group or add a member to a group
+     * /create - create a new group
+     * /add <group_id> <wallet_address> - add a member to a group */
+
     if (message.content === "/create") {
-      /* Create a new group */
       console.log("Creating group");
       const group = await client.conversations.newGroup([]);
       console.log("Group created", group.id);
@@ -99,38 +93,32 @@ async function main() {
       typeof message.content === "string" &&
       message.content.startsWith("/add")
     ) {
-      /* Extract the group id and wallet address from the message */
       const groupId = message.content.split(" ")[1];
       if (!groupId) {
         await conversation.send("Please provide a group id");
         return;
       }
-      /* Get the group from the local db */
       const group = client.conversations.getConversationById(groupId);
       if (!group) {
         await conversation.send("Please provide a valid group id");
         return;
       }
-      /* Extract the wallet address from the message */
       const walletAddress = message.content.split(" ")[2];
       if (!walletAddress) {
         await conversation.send("Please provide a wallet address");
         return;
       }
-      /* Check if the user has the NFT */
       const result = await checkNft(walletAddress, "XMTPeople");
       if (!result) {
         console.log("User can't be added to the group");
         return;
       } else {
-        /* Add the user to the group */
         await group.addMembers([walletAddress]);
         await conversation.send(
           `User added to the group\n- Group ID: ${groupId}\n- Wallet Address: ${walletAddress}`,
         );
       }
     } else {
-      /* Send a welcome message to the user */
       await conversation.send(
         "👋 Welcome to the Gated Bot Group!\nTo get started, type /create to set up a new group. 🚀\nThis example will check if the user has a particular nft and add them to the group if they do.\nOnce your group is created, you'll receive a unique Group ID and URL.\nShare the URL with friends to invite them to join your group!",
       );

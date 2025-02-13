@@ -2,6 +2,9 @@ import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
+/* Get the wallet key associated to the public key of
+ * the agent and the encryption key for the local db
+ * that stores your agent's messages */
 const { WALLET_KEY, ENCRYPTION_KEY, OPENAI_API_KEY } = process.env;
 
 /* Check if the environment variables are set */

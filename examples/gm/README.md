@@ -22,7 +22,6 @@ if (!ENCRYPTION_KEY) {
   throw new Error("ENCRYPTION_KEY must be set");
 }
 
-/* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
@@ -31,7 +30,6 @@ const env: XmtpEnv = "dev";
 
 async function main() {
   console.log(`Creating client on the '${env}' network...`);
-  /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, { env });
 
   console.log("Syncing conversations...");
@@ -43,7 +41,6 @@ async function main() {
   );
 
   console.log("Waiting for messages...");
-  /* Stream all messages from the network */
   const stream = client.conversations.streamAllMessages();
 
   for await (const message of await stream) {
@@ -59,7 +56,6 @@ async function main() {
       `Received message: ${message.content as string} by ${message.senderInboxId}`,
     );
 
-    /* Get the conversation by id */
     const conversation = client.conversations.getConversationById(
       message.conversationId,
     );
@@ -70,7 +66,6 @@ async function main() {
     }
 
     console.log(`Sending "gm" response...`);
-    /* Send a message to the conversation */
     await conversation.send("gm");
 
     console.log("Waiting for messages...");
