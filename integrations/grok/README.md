@@ -143,5 +143,5 @@ yarn
 # generate random keys (optional)
 yarn gen:keys
 # run the example
-yarn examples:gpt
+yarn dev
 ```
