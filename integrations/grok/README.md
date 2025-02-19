@@ -1,4 +1,4 @@
-# GPT agent example
+# Grok agent example
 
 This example uses the [Grok](https://x.ai/api) API for responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
 
