@@ -1,0 +1,27 @@
+{
+  "name": "@integrations/gpt",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf node_modules && yarn clean:dbs",
+    "clean:dbs": "rimraf *.db3* ||:",
+    "dev": "tsx --env-file=.env index.ts",
+    "format": "prettier -w .",
+    "format:check": "prettier -c .",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@xmtp/node-sdk": "0.0.42",
+    "openai": "latest",
+    "tsx": "^4.19.2",
+    "uint8arrays": "^5.1.0",
+    "viem": "^2.22.17"
+  },
+  "packageManager": "yarn@4.6.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "examples/*",
+    "integrations/*"
+  ],
   "scripts": {
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
@@ -16,8 +20,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@xmtp/content-type-text": "^2.0.0",
-    "@xmtp/node-sdk": "0.0.40",
+    "@xmtp/node-sdk": "0.0.42",
     "alchemy-sdk": "^3.0.0",
     "openai": "latest",
     "tsx": "^4.19.2",

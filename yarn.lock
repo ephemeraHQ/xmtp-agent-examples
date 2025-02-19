@@ -808,6 +808,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@integrations/gpt@workspace:integrations/grok":
+  version: 0.0.0-use.local
+  resolution: "@integrations/gpt@workspace:integrations/grok"
+  dependencies:
+    "@xmtp/node-sdk": "npm:0.0.42"
+    openai: "npm:latest"
+    tsx: "npm:^4.19.2"
+    uint8arrays: "npm:^5.1.0"
+    viem: "npm:^2.22.17"
+  languageName: unknown
+  linkType: soft
+
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
   resolution: "@isaacs/cliui@npm:8.0.2"
@@ -1263,23 +1275,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-bindings@npm:^0.0.34":
-  version: 0.0.34
-  resolution: "@xmtp/node-bindings@npm:0.0.34"
-  checksum: 10/4f5314d40dc1f07e303e52a4be1d4517f1199089b4ac1677fabb11f64a6b4f57a989b25849b31036d6d228e9de494a8326d2b53386067146ee47e28691bba999
+"@xmtp/node-bindings@npm:^0.0.37":
+  version: 0.0.37
+  resolution: "@xmtp/node-bindings@npm:0.0.37"
+  checksum: 10/06d12ee27f306a2ad767b75eedf3ceb0457cab3f574a545f44e487cbb39d07a3866c81277954a4937dc1f048a75c10b34b5ffa5de4fc43eaf9b1310a1c4dce8a
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:0.0.40":
-  version: 0.0.40
-  resolution: "@xmtp/node-sdk@npm:0.0.40"
+"@xmtp/node-sdk@npm:0.0.42":
+  version: 0.0.42
+  resolution: "@xmtp/node-sdk@npm:0.0.42"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.0"
     "@xmtp/content-type-primitives": "npm:^2.0.0"
     "@xmtp/content-type-text": "npm:^2.0.0"
-    "@xmtp/node-bindings": "npm:^0.0.34"
+    "@xmtp/node-bindings": "npm:^0.0.37"
     "@xmtp/proto": "npm:^3.72.3"
-  checksum: 10/eeed6072513dbf1c5ed7f0cfb9d5876c086d648b3fe93d757f0fefa87d03312a8aa5b3f3256b27339b37bbddf75c604eade1480a643909e04dc3865903915b2f
+  checksum: 10/6163ede6d9cd7bc36b3a237d9a63a8be0041a11a1eefc6f56fefbf7cb8b8cc02c817c4696996a29a4f296d7545fd3172d8ebf8f85e1aeb23dcff917719dfcd10
   languageName: node
   linkType: hard
 
@@ -3820,8 +3832,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/content-type-text": "npm:^2.0.0"
-    "@xmtp/node-sdk": "npm:0.0.40"
+    "@xmtp/node-sdk": "npm:0.0.42"
     alchemy-sdk: "npm:^3.0.0"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"

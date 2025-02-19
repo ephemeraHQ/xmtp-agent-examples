@@ -38,6 +38,12 @@ yarn gen:keys
 
 > See all the available [examples](/examples/).
 
+## Integrations
+
+Examples integrating XMTP with external libraries from the ecosystem
+
+- [grok](/integrations/grok/): Integration to Grok API
+
 ## Web inbox
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
