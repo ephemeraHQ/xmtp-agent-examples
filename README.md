@@ -38,11 +38,13 @@ yarn gen:keys
 
 > See all the available [examples](/examples/).
 
-## Integrations
+### Integrations
 
 Examples integrating XMTP with external libraries from the ecosystem
 
 - [grok](/integrations/grok/): Integration to Grok API
+
+> See all the available [examples](/integrations/).
 
 ## Web inbox
 
