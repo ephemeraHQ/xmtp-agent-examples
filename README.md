@@ -42,7 +42,7 @@ yarn gen:keys
 
 Examples integrating XMTP with external libraries from the ecosystem
 
-- [grok](/integrations/grok/): Integration to Grok API
+- [grok](/integrations/grok/): Integrate XMTP to the Grok API
 
 > See all the available [examples](/integrations/).
 
