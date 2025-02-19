@@ -11,13 +11,14 @@ console.log("Generating keys...");
 const walletKey = generatePrivateKey();
 const encryptionKeyHex = generateEncryptionKeyHex();
 
-const envFilePath = join(__dirname, "../.env");
+const targetDir = process.argv[2] || ".";
+const filePath = join(targetDir, ".env");
 
 await writeFile(
-  envFilePath,
+  filePath,
   `WALLET_KEY=${walletKey}
 ENCRYPTION_KEY=${encryptionKeyHex}
 `,
 );
 
-console.log(`Keys written to ${envFilePath}`);
+console.log(`Keys written to ${filePath}`);
