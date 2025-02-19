@@ -813,7 +813,6 @@ __metadata:
   resolution: "@integrations/gpt@workspace:integrations/grok"
   dependencies:
     "@xmtp/node-sdk": "npm:0.0.42"
-    openai: "npm:latest"
     tsx: "npm:^4.19.2"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.22.17"
