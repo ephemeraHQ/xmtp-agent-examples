@@ -13,7 +13,6 @@ export const createSigner = (privateKey: `0x${string}`) => {
   const account = privateKeyToAccount(privateKey);
   /* Return the signer */
   return {
-    walletType: "EOA",
     getAddress: () => account.address,
     signMessage: async (message: string) => {
       const signature = await account.signMessage({
