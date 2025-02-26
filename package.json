@@ -8,6 +8,7 @@
     "integrations/*"
   ],
   "scripts": {
+    "build": "tsc",
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
     "examples:gated": "tsx --env-file=.env examples/gated-group/index.ts",
@@ -20,7 +21,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "0.0.42",
+    "@xmtp/node-sdk": "0.0.45",
     "alchemy-sdk": "^3.0.0",
     "openai": "latest",
     "tsx": "^4.19.2",
