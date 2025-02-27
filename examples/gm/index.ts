@@ -1,5 +1,5 @@
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
+import { createSigner, createUser, getEncryptionKeyFromHex } from "@/helpers";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db

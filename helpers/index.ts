@@ -1,22 +1,38 @@
 import { getRandomValues } from "node:crypto";
+import type { Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
-import { toBytes } from "viem";
+import { createWalletClient, http, toBytes } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { sepolia } from "viem/chains";
 
-/**
- * Create a signer from a private key
- * @param privateKey - The private key of the account
- * @returns The signer
- */
-export const createSigner = (privateKey: `0x${string}`) => {
-  /* Convert the private key to an account */
-  const account = privateKeyToAccount(privateKey);
-  /* Return the signer */
+interface User {
+  key: string;
+  account: ReturnType<typeof privateKeyToAccount>;
+  wallet: ReturnType<typeof createWalletClient>;
+}
+
+export const createUser = (key: string): User => {
+  const account = privateKeyToAccount(key as `0x${string}`);
   return {
-    getAddress: () => account.address,
+    key,
+    account,
+    wallet: createWalletClient({
+      account,
+      chain: sepolia,
+      transport: http(),
+    }),
+  };
+};
+
+export const createSigner = (key: string): Signer => {
+  const user = createUser(key);
+  return {
+    walletType: "EOA",
+    getAddress: () => user.account.address,
     signMessage: async (message: string) => {
-      const signature = await account.signMessage({
+      const signature = await user.wallet.signMessage({
         message,
+        account: user.account,
       });
       return toBytes(signature);
     },
