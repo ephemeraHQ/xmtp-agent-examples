@@ -808,6 +808,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@integrations/gaia@workspace:integrations/gaia":
+  version: 0.0.0-use.local
+  resolution: "@integrations/gaia@workspace:integrations/gaia"
+  dependencies:
+    "@xmtp/node-sdk": "npm:0.0.42"
+    tsx: "npm:^4.19.2"
+    uint8arrays: "npm:^5.1.0"
+    viem: "npm:^2.22.17"
+  languageName: unknown
+  linkType: soft
+
 "@integrations/gpt@workspace:integrations/grok":
   version: 0.0.0-use.local
   resolution: "@integrations/gpt@workspace:integrations/grok"
