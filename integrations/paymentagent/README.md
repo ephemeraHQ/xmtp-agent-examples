@@ -22,8 +22,8 @@ Follow these steps to get your payment agent up and running quickly:
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/raihankhan-rk/xmpt-cdp-quickstart.git
-   cd examples/paymentagent
+   git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+   cd integrations/paymentagent
    ```
 
 2. **Install dependencies**:
