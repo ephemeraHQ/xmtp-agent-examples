@@ -1,4 +1,4 @@
-# GPT agent example
+# Gaia agent example
 
 This example uses a [Gaia](https://docs.gaianet.ai) API for AI based responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
 
@@ -142,8 +142,7 @@ git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 cd xmtp-agent-examples
 # install packages
 yarn
-# generate random keys (optional)
-yarn gen:keys
-# run the example
-yarn examples:gpt
+
+cd integrations/gaia
+yarn dev
 ```
