@@ -101,7 +101,7 @@ async function main() {
       /* Get the AI response */
       const completion = await openai.chat.completions.create({
         messages: [{ role: "user", content: message.content as string }],
-        model: GAIA_MODEL_NAME,
+        model: GAIA_MODEL_NAME as string,
       });
 
       /* Get the AI response */

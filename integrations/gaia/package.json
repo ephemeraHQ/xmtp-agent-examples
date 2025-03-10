@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "cd ../.. && yarn tsc",
     "dev": "tsx --env-file=.env index.ts",
-    "gen:keys": "tsx ../../scripts/generateKeys.ts"
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint integrations/gaia",
+    "typecheck": "cd ../.. && yarn typecheck"
   },
   "dependencies": {
     "@xmtp/node-sdk": "0.0.42",
