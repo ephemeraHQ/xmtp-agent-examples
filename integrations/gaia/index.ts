@@ -5,7 +5,13 @@ import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, GAIA_NODE_URL, GAIA_API_KEY, GAIA_MODEL_NAME } = process.env;
+const {
+  WALLET_KEY,
+  ENCRYPTION_KEY,
+  GAIA_NODE_URL,
+  GAIA_API_KEY,
+  GAIA_MODEL_NAME,
+} = process.env;
 
 /* Check if the environment variables are set */
 if (!WALLET_KEY) {
@@ -37,9 +43,9 @@ const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 /* Initialize the OpenAI client */
-const openai = new OpenAI({ 
-    baseURL: GAIA_NODE_URL,
-    apiKey: GAIA_API_KEY
+const openai = new OpenAI({
+  baseURL: GAIA_NODE_URL,
+  apiKey: GAIA_API_KEY,
 });
 
 /* Set the environment to dev or production */
