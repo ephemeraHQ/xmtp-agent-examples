@@ -1,4 +1,4 @@
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, type Group, type XmtpEnv } from "@xmtp/node-sdk";
 import { Alchemy, Network } from "alchemy-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
@@ -56,8 +56,8 @@ async function main() {
       `Received message: ${message.content as string} by ${message.senderInboxId}`,
     );
 
-    const conversation = client.conversations.getConversationById(
-      message.conversationId,
+    const conversation = client.conversations.getDmByInboxId(
+      message.senderInboxId,
     );
 
     if (!conversation) {
@@ -98,7 +98,7 @@ async function main() {
         await conversation.send("Please provide a group id");
         return;
       }
-      const group = client.conversations.getConversationById(groupId);
+      const group = await client.conversations.getConversationById(groupId);
       if (!group) {
         await conversation.send("Please provide a valid group id");
         return;
@@ -113,7 +113,7 @@ async function main() {
         console.log("User can't be added to the group");
         return;
       } else {
-        await group.addMembers([walletAddress]);
+        await (group as Group).addMembers([walletAddress]);
         await conversation.send(
           `User added to the group\n- Group ID: ${groupId}\n- Wallet Address: ${walletAddress}`,
         );

@@ -52,8 +52,8 @@ async function main() {
     );
 
     /* Get the conversation by id */
-    const conversation = client.conversations.getConversationById(
-      message.conversationId,
+    const conversation = client.conversations.getDmByInboxId(
+      message.senderInboxId,
     );
 
     if (!conversation) {

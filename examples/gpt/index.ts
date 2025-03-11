@@ -68,8 +68,8 @@ async function main() {
     );
 
     /* Get the conversation from the local db */
-    const conversation = client.conversations.getConversationById(
-      message.conversationId,
+    const conversation = client.conversations.getDmByInboxId(
+      message.senderInboxId,
     );
 
     /* If the conversation is not found, skip the message */

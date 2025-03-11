@@ -97,5 +97,6 @@ Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the officia
 Examples integrating XMTP with external libraries from the ecosystem
 
 - [grok](/integrations/grok/): Integrate XMTP to the Grok API
+- [gaia](/integrations/gaia/): Integrate XMTP to the Gaia API
 
 > See all the available [integrations](/integrations/).
