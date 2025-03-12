@@ -33,7 +33,7 @@ Start your XMTP client and begin listening to messages. The bot responds to the 
 if (message.content === "/create") {
   console.log("Creating group");
   const group = await client.conversations.newGroup([]);
-  await group.addMembersByInboxId([message.senderInboxId]);
+  await group.addMembers([message.senderInboxId]);
   await group.addSuperAdmin(message.senderInboxId);
 
   await conversation.send(

@@ -60,7 +60,7 @@ async function main() {
   await client.conversations.sync();
 
   console.log(
-    `Agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}`,
+    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}`,
   );
 
   console.log("Waiting for messages...");

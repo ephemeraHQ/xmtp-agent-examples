@@ -21,7 +21,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "0.0.47",
+    "@xmtp/node-sdk": "1.0.0-rc1",
     "alchemy-sdk": "^3.0.0",
     "openai": "latest",
     "tsx": "^4.19.2",

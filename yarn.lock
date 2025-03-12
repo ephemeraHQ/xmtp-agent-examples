@@ -812,7 +812,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@integrations/gaia@workspace:integrations/gaia"
   dependencies:
-    "@xmtp/node-sdk": "npm:0.0.47"
+    "@xmtp/node-sdk": "npm:1.0.0-rc1"
     tsx: "npm:^4.19.2"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.22.17"
@@ -823,7 +823,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@integrations/gpt@workspace:integrations/grok"
   dependencies:
-    "@xmtp/node-sdk": "npm:0.0.47"
+    "@xmtp/node-sdk": "npm:1.0.0-rc1"
     tsx: "npm:^4.19.2"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.22.17"
@@ -1285,23 +1285,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-bindings@npm:^0.0.41":
-  version: 0.0.41
-  resolution: "@xmtp/node-bindings@npm:0.0.41"
-  checksum: 10/809347d36de2b4f205fe46cc3869b1eab7595107fd14b0535457732745d14851121d1e7b0f22a0845deb32e48dfca29a7ad36a12bf9fc5c46b445a308a589c10
+"@xmtp/node-bindings@npm:^1.0.0-rc2":
+  version: 1.0.0-rc2
+  resolution: "@xmtp/node-bindings@npm:1.0.0-rc2"
+  checksum: 10/2cd22b55accdc90f463d983eba43e3b78335e974036622808c42488b99589b9c94a8c7dfce6e76f32d6e5da5fc65cb2888a09f2dc7210a85ed058109f26a50bf
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:0.0.47":
-  version: 0.0.47
-  resolution: "@xmtp/node-sdk@npm:0.0.47"
+"@xmtp/node-sdk@npm:1.0.0-rc1":
+  version: 1.0.0-rc1
+  resolution: "@xmtp/node-sdk@npm:1.0.0-rc1"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.0"
     "@xmtp/content-type-primitives": "npm:^2.0.0"
     "@xmtp/content-type-text": "npm:^2.0.0"
-    "@xmtp/node-bindings": "npm:^0.0.41"
+    "@xmtp/node-bindings": "npm:^1.0.0-rc2"
     "@xmtp/proto": "npm:^3.72.3"
-  checksum: 10/bf3b5e59cc5be0b9ec02acd2d7cf59bcae5f478971b5ffc772e6153c8d59515032c95436faf2c741e1de334d9572dc1991098395d9813ec5364f0eb09666a815
+  checksum: 10/0f79fd211e56a627250015104c90605ca4b4cf39716877761311bc067c9dcf61b31e687a88880809a6a89d8fdb2729a271b309a961001660a53fec88ae2afbce
   languageName: node
   linkType: hard
 
@@ -3842,7 +3842,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:0.0.47"
+    "@xmtp/node-sdk": "npm:1.0.0-rc1"
     alchemy-sdk: "npm:^3.0.0"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"

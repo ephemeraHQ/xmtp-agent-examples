@@ -36,8 +36,10 @@ async function main() {
   console.log("Syncing conversations...");
   await client.conversations.sync();
 
+  const identifier = await signer.getIdentifier();
+  const address = identifier.identifier;
   console.log(
-    `Agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}`,
+    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}`,
   );
 
   console.log("Waiting for messages...");
@@ -74,7 +76,7 @@ async function main() {
       const group = await client.conversations.newGroup([]);
       console.log("Group created", group.id);
       // First add the sender to the group
-      await group.addMembersByInboxId([message.senderInboxId]);
+      await group.addMembers([message.senderInboxId]);
       // Then make the sender a super admin
       await group.addSuperAdmin(message.senderInboxId);
       console.log(

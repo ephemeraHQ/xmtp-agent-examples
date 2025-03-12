@@ -32,7 +32,13 @@ import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
-const { WALLET_KEY, ENCRYPTION_KEY, GAIA_NODE_URL, GAIA_API_KEY, GAIA_MODEL_NAME } = process.env;
+const {
+  WALLET_KEY,
+  ENCRYPTION_KEY,
+  GAIA_NODE_URL,
+  GAIA_API_KEY,
+  GAIA_MODEL_NAME,
+} = process.env;
 
 if (!WALLET_KEY) {
   throw new Error("WALLET_KEY must be set");
@@ -59,9 +65,9 @@ if (!GAIA_MODEL_NAME) {
 
 const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-const openai = new OpenAI({ 
-    baseURL: GAIA_NODE_URL,
-    apiKey: GAIA_API_KEY
+const openai = new OpenAI({
+  baseURL: GAIA_NODE_URL,
+  apiKey: GAIA_API_KEY,
 });
 
 /* Set the environment to dev or production */
@@ -77,8 +83,10 @@ async function main() {
   /* Sync the conversations from the network to update the local db */
   await client.conversations.sync();
 
+  const identifier = await signer.getIdentifier();
+  const address = identifier.identifier;
   console.log(
-    `Agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}`,
+    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}`,
   );
 
   console.log("Waiting for messages...");

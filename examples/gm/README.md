@@ -36,8 +36,10 @@ async function main() {
   /* Sync the conversations from the network to update the local db */
   await client.conversations.sync();
 
+  const identifier = await signer.getIdentifier();
+  const address = identifier.identifier;
   console.log(
-    `Agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}?env=${env}`,
+    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}`,
   );
 
   console.log("Waiting for messages...");
