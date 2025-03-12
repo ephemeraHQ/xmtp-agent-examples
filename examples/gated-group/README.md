@@ -20,9 +20,6 @@ You can generate random keys with the following command:
 yarn gen:keys
 ```
 
-> [!WARNING]
-> Running the `gen:keys` script will overwrite the existing `.env` file.
-
 ## Start the XMTP agent
 
 Start your XMTP client and begin listening to messages. The bot responds to the following commands:

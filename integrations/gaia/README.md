@@ -22,9 +22,6 @@ You can generate random keys with the following command:
 yarn gen:keys
 ```
 
-> [!WARNING]
-> Running the `gen:keys` script will overwrite the existing `.env` file.
-
 ## Usage
 
 ```tsx

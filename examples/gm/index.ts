@@ -1,5 +1,9 @@
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
+import {
+  createSigner,
+  getAddressOfMember,
+  getEncryptionKeyFromHex,
+} from "@/helpers";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -62,8 +66,10 @@ async function main() {
       console.log("Unable to find conversation, skipping");
       continue;
     }
+    const members = await conversation.members();
 
-    console.log(`Sending "gm" response...`);
+    const address = getAddressOfMember(members, message.senderInboxId);
+    console.log(`Sending "gm" response to ${address}...`);
     /* Send a message to the conversation */
     await conversation.send("gm");
 

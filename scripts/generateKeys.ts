@@ -15,6 +15,9 @@ await writeFile(
   `WALLET_KEY=${walletKey}
 ENCRYPTION_KEY=${encryptionKeyHex}
 `,
+  {
+    flag: "a",
+  },
 );
 
 console.log(`Keys written to ${filePath}`);
