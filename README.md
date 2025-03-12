@@ -69,6 +69,32 @@ for (const conversation of conversations) {
 }
 ```
 
+## Working with addresses
+
+Because XMTP is interoperable, you may interact with inboxes that are not on your app. In these scenarios, you will need to find the appropriate inbox ID or address.
+
+```tsx
+// get an inbox ID from an address
+const inboxId = await getInboxIdForIdentifier({
+  identifier: "0x1234567890abcdef1234567890abcdef12345678",
+  identifierKind: IdentifierKind.Ethereum,
+});
+
+// find the addresses associated with an inbox ID
+const inboxState = await client.inboxStateFromInboxIds([inboxId]);
+
+interface InboxState {
+  inboxId: string;
+  recoveryIdentifier: Identifier;
+  installations: Installation[];
+  identifiers: Identifier[];
+}
+
+const addresses = inboxState.identifiers
+  .filter((i) => i.identifierKind === IdentifierKind.Ethereum)
+  .map((i) => i.identifier);
+```
+
 ## Web inbox
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
