@@ -52,6 +52,26 @@ await client.conversations.sync();
 await client.conversations.messages();
 ```
 
+### Conversations can be of type `Group` or `Dm`
+
+The new `Group` and `Dm` classes extend the `Conversation` class and provide specific functionality based on the conversation type.
+
+```tsx
+const conversations: (Group | Dm)[] = await client.conversations.list();
+
+for (const conversation of conversations) {
+  // narrow the type to Group to access the group name
+  if (conversation instanceof Group) {
+    console.log(group.name);
+  }
+
+  // narrow the type to Dm to access the peer inboxId
+  if (conversation instanceof Dm) {
+    console.log(conversation.peerInboxId);
+  }
+}
+```
+
 ### Working with addresses
 
 Conversations in XMTP can be `DMs` or `Groups`. The underlying technicalities are the same, but DMs are essentially groups locked between two users that can be reused - basically a fixed group of 2. This is how MLS works.

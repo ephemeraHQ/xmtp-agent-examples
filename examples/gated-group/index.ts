@@ -38,6 +38,7 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
+
   console.log(
     `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}`,
   );
