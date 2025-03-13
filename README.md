@@ -30,7 +30,7 @@ yarn gen:keys <name>
 ```
 
 > [!TIP]
-> Running the `gen:keys` or `gen:keys <name>` command will write to the existing `.env` file.
+> Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
 
 ### Fetching messages
 
