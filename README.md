@@ -26,8 +26,11 @@ ENCRYPTION_KEY= # encryption key for the local database
 You can generate random keys with the following command:
 
 ```bash
-yarn gen:keys
+yarn gen:keys <name>
 ```
+
+> [!TIP]
+> Running the `gen:keys` or `gen:keys <name>` command will write to the existing `.env` file.
 
 ### Fetching messages
 
