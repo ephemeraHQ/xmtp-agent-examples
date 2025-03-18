@@ -1,6 +1,6 @@
-# Payment Agent
+# Coinbase-Langchain
 
-A sophisticated DeFi payment agent built using Coinbase's AgentKit and LangChain, operating over the XMTP messaging protocol.
+A DeFi agent built using Langchain and powered by CDP SDK, operating over the XMTP messaging protocol.
 
 ## Features
 
@@ -25,7 +25,7 @@ Follow these steps to get your payment agent up and running:
 
    ```bash
    git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-   cd integrations/paymentagent
+   cd integrations/coinbase-langchain
    ```
 
 2. **Install dependencies**:
