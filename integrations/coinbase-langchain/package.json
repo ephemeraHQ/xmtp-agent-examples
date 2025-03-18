@@ -1,0 +1,42 @@
+{
+  "name": "paymentagent",
+  "version": "1.0.0",
+  "description": "A DeFi payment agent built using CDP AgentKit that operates over the XMTP messaging protocol",
+  "keywords": [
+    "xmtp",
+    "agent",
+    "blockchain",
+    "payment"
+  ],
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "gen:keys": "node --loader ts-node/esm scripts/generate-keys.ts",
+    "lint": "eslint . --ext .ts",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@coinbase/agentkit": "^0.2.0",
+    "@coinbase/agentkit-langchain": "^0.2.0",
+    "@langchain/core": "^0.3.20",
+    "@langchain/langgraph": "^0.2.24",
+    "@langchain/openai": "^0.3.14",
+    "@redis/client": "^1.6.0",
+    "@xmtp/node-sdk": "^0.0.47",
+    "dotenv": "^16.4.7",
+    "redis": "^4.7.0",
+    "uint8arrays": "^5.1.0",
+    "viem": "^2.7.15"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "eslint": "^8.56.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}
