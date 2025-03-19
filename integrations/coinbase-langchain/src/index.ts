@@ -1,10 +1,8 @@
-import * as dotenv from "dotenv";
-import { initializeStorage as initStorage } from "./storage.js";
-import { initializeXmtpClient, startMessageListener } from "./xmtp.js";
-import { initializeAgent, processMessage } from "./langchain.js";
-
-// Initialize environment variables
-dotenv.config();
+import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
+import "dotenv/config";
+import { initializeAgent, processMessage } from "./langchain";
+import { initializeStorage as initStorage } from "./storage";
+import { initializeXmtpClient, startMessageListener } from "./xmtp";
 
 /**
  * Validates that required environment variables are set
@@ -35,25 +33,15 @@ function validateEnvironment(): void {
     });
     process.exit(1);
   }
-
-  // Warn about optional variables
-  if (!process.env.NETWORK_ID) {
-    console.warn(
-      "Warning: NETWORK_ID not set, defaulting to base-mainnet"
-    );
-  }
-
-  if (!process.env.REDIS_URL) {
-    console.warn(
-      "Warning: REDIS_URL not set, using local file storage for wallet data"
-    );
-  }
 }
 
 /**
  * Handle incoming messages
  */
-async function handleMessage(message: any, conversation: any) {
+async function handleMessage(
+  message: DecodedMessage,
+  conversation: Conversation,
+) {
   // Use the sender's address as the user ID
   const userId = message.senderInboxId;
 
@@ -64,7 +52,7 @@ async function handleMessage(message: any, conversation: any) {
   const response = await processMessage(
     agent,
     config,
-    message.content as string
+    message.content as string,
   );
 
   // Send the response back to the user
@@ -75,7 +63,7 @@ async function handleMessage(message: any, conversation: any) {
 }
 
 async function main(): Promise<void> {
-  console.log("Starting Payment Agent...");
+  console.log("Starting agent...");
 
   // Validate environment variables
   validateEnvironment();
@@ -84,7 +72,7 @@ async function main(): Promise<void> {
   await initStorage();
 
   // Initialize XMTP client
-  const { client: xmtpClient } = await initializeXmtpClient();
+  const xmtpClient = await initializeXmtpClient();
 
   // Start listening for messages
   await startMessageListener(xmtpClient, handleMessage);

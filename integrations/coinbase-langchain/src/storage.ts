@@ -1,11 +1,16 @@
 import * as fs from "fs";
-import { createClient } from "redis";
+import { createClient, type RedisClientType } from "redis";
 
 // Storage constants
 export const WALLET_KEY_PREFIX = "wallet_data:";
 export const LOCAL_STORAGE_DIR = "./wallet_data";
-export let redisClient: any = null;
+export let redisClient: RedisClientType | null = null;
 
+if (!process.env.REDIS_URL) {
+  console.warn(
+    "Warning: REDIS_URL not set, using local file storage for wallet data",
+  );
+}
 /**
  * Initialize Redis client and handle fallback to local storage
  */
@@ -18,7 +23,7 @@ export async function initializeStorage() {
 
       await redisClient.connect();
       console.log("Connected to Redis");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to connect to Redis:", error);
       console.log("Falling back to local file storage");
       redisClient = null;
@@ -42,19 +47,23 @@ export function ensureLocalStorage() {
 /**
  * Save wallet data to storage
  */
-export async function saveWalletData(userId: string, walletData: string) {
-  const redisKey = `${WALLET_KEY_PREFIX}${userId}`;
-  const localFilePath = `${LOCAL_STORAGE_DIR}/${userId}.json`;
-
+export async function saveWalletData(
+  userId: string,
+  walletData: string,
+  networkId: string,
+): Promise<void> {
+  const key = `${WALLET_KEY_PREFIX}${userId}-${networkId}`;
   if (redisClient && redisClient.isReady) {
     // Save to Redis
-    await redisClient.set(redisKey, walletData);
+    await redisClient.set(key, walletData);
   } else {
     // Save to local file
     try {
-      fs.writeFileSync(localFilePath, walletData);
-    } catch (error) {
-      console.error(`Failed to save wallet data to file: ${error}`);
+      fs.writeFileSync(LOCAL_STORAGE_DIR + "/" + key, walletData);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`Failed to save wallet data to file: ${errorMessage}`);
     }
   }
 }
@@ -62,20 +71,24 @@ export async function saveWalletData(userId: string, walletData: string) {
 /**
  * Get wallet data from storage
  */
-export async function getWalletData(userId: string): Promise<string | null> {
-  const redisKey = `${WALLET_KEY_PREFIX}${userId}`;
-  const localFilePath = `${LOCAL_STORAGE_DIR}/${userId}.json`;
+export async function getWalletData(
+  key: string,
+  networkId: string,
+): Promise<string | null> {
+  const userKey = `${WALLET_KEY_PREFIX}${key}-${networkId}`;
 
   if (redisClient && redisClient.isReady) {
-    return await redisClient.get(redisKey);
+    return await redisClient.get(userKey);
   } else {
     try {
-      if (fs.existsSync(localFilePath)) {
-        return fs.readFileSync(localFilePath, "utf8");
+      if (fs.existsSync(LOCAL_STORAGE_DIR + "/" + key)) {
+        return fs.readFileSync(LOCAL_STORAGE_DIR + "/" + key, "utf8");
       }
-    } catch (error) {
-      console.warn(`Could not read wallet data from file: ${error}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.warn(`Could not read wallet data from file: ${errorMessage}`);
     }
     return null;
   }
-} 
+}
