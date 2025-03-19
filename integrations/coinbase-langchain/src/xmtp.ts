@@ -1,4 +1,9 @@
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import {
+  Client,
+  type Conversation,
+  type DecodedMessage,
+  type XmtpEnv,
+} from "@xmtp/node-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 /**
@@ -35,7 +40,10 @@ export async function initializeXmtpClient() {
   return client;
 }
 
-export type MessageHandler = (message: any, conversation: any) => Promise<void>;
+export type MessageHandler = (
+  message: DecodedMessage,
+  conversation: Conversation,
+) => Promise<void>;
 
 /**
  * Start listening for messages and handle them with the provided handler

@@ -48,18 +48,18 @@ export function ensureLocalStorage() {
  * Save wallet data to storage
  */
 export async function saveWalletData(
-  userId: string,
+  inboxId: string,
   walletData: string,
   networkId: string,
 ): Promise<void> {
-  const key = `${WALLET_KEY_PREFIX}${userId}-${networkId}`;
+  const key = `${WALLET_KEY_PREFIX}${inboxId}-${networkId}`;
   if (redisClient && redisClient.isReady) {
     // Save to Redis
     await redisClient.set(key, walletData);
   } else {
     // Save to local file
     try {
-      fs.writeFileSync(LOCAL_STORAGE_DIR + "/" + key, walletData);
+      fs.writeFileSync(LOCAL_STORAGE_DIR + "/" + key + ".json", walletData);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -72,17 +72,20 @@ export async function saveWalletData(
  * Get wallet data from storage
  */
 export async function getWalletData(
-  key: string,
+  inboxId: string,
   networkId: string,
 ): Promise<string | null> {
-  const userKey = `${WALLET_KEY_PREFIX}${key}-${networkId}`;
+  const userKey = `${WALLET_KEY_PREFIX}${inboxId}-${networkId}`;
 
   if (redisClient && redisClient.isReady) {
     return await redisClient.get(userKey);
   } else {
     try {
-      if (fs.existsSync(LOCAL_STORAGE_DIR + "/" + key)) {
-        return fs.readFileSync(LOCAL_STORAGE_DIR + "/" + key, "utf8");
+      if (fs.existsSync(LOCAL_STORAGE_DIR + "/" + userKey + ".json")) {
+        return fs.readFileSync(
+          LOCAL_STORAGE_DIR + "/" + userKey + ".json",
+          "utf8",
+        );
       }
     } catch (error: unknown) {
       const errorMessage =

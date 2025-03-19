@@ -36,9 +36,9 @@ interface AgentChunk {
   };
 }
 
-function createWalletTools(userId: string) {
+function createWalletTools(inboxId: string, address: string) {
   // Create a properly typed WalletService instance
-  const walletService = new WalletService(userId);
+  const walletService = new WalletService(inboxId, address);
 
   const getBalanceTool = new DynamicStructuredTool({
     name: "get_wallet_balance",
@@ -47,10 +47,10 @@ function createWalletTools(userId: string) {
     schema: z.object({}),
     func: async () => {
       try {
-        console.log(`Checking balance for fixed userId: ${userId}`);
-        const result = await walletService.checkBalance(userId);
+        console.log(`Checking balance for fixed inboxId: ${inboxId}`);
+        const result = await walletService.checkBalance(inboxId);
         if (!result.address) {
-          return `No wallet found for user ${userId}`;
+          return `No wallet found for user ${inboxId}`;
         }
         return `Wallet address: ${result.address}\nUSDC Balance: ${result.balance} USDC`;
       } catch (error: unknown) {
@@ -75,12 +75,11 @@ function createWalletTools(userId: string) {
           return `Error: Invalid amount ${amount}`;
         }
 
-        console.log(
-          `Transferring from fixed userId: ${userId} to: ${recipientAddress}`,
-        );
+        console.log(`Transferring from ${address} to: ${recipientAddress}`);
 
         const result = await walletService.transfer(
-          userId,
+          inboxId,
+          address,
           recipientAddress,
           numericAmount,
         );
@@ -116,35 +115,38 @@ function createWalletTools(userId: string) {
  * @returns Agent executor and config
  */
 export async function initializeAgent(
-  userId: string,
+  inboxId: string,
+  address: string,
 ): Promise<{ agent: Agent; config: AgentConfig }> {
   try {
     // Check if we already have an agent for this user
-    if (userId in agentStore) {
-      console.log(`Using existing agent for user: ${userId}`);
+    if (inboxId in agentStore) {
+      console.log(`Using existing agent for user: ${inboxId}`);
       const agentConfig = {
-        configurable: { thread_id: userId },
+        configurable: { thread_id: inboxId },
       };
-      return { agent: agentStore[userId], config: agentConfig };
+      return { agent: agentStore[inboxId], config: agentConfig };
     }
 
-    console.log(`Creating new agent for user: ${userId}`);
+    console.log(
+      `Creating new agent for user with inboxId: ${inboxId} and address: ${address}`,
+    );
 
     const llm = new ChatOpenAI({
       model: "gpt-4o-mini",
     });
 
-    const tools = createWalletTools(userId);
+    const tools = createWalletTools(inboxId, address);
 
-    if (!(userId in memoryStore)) {
-      console.log(`Creating new memory store for user: ${userId}`);
-      memoryStore[userId] = new MemorySaver();
+    if (!(inboxId in memoryStore)) {
+      console.log(`Creating new memory store for user: ${inboxId}`);
+      memoryStore[inboxId] = new MemorySaver();
     } else {
-      console.log(`Using existing memory store for user: ${userId}`);
+      console.log(`Using existing memory store for user: ${inboxId}`);
     }
 
     const agentConfig: AgentConfig = {
-      configurable: { thread_id: userId },
+      configurable: { thread_id: inboxId },
     };
 
     // Make sure we await the agent creation
@@ -152,28 +154,25 @@ export async function initializeAgent(
       createReactAgent({
         llm,
         tools,
-        checkpointSaver: memoryStore[userId],
+        checkpointSaver: memoryStore[inboxId],
         messageModifier: `
-        You are a DeFi  Agent that assists users with sending payments to any wallet address using natural language instructions.
+        You are a DeFi Agent that assists users with sending payments to any wallet address using natural language instructions.
 
-        When a user asks you to make a payment, notify them of successful transactions with relevant details.
-        Always check wallet balance before making a payment.
-
-        Your default token is USDC
-
-        You can only perform payment-related tasks. For other requests, politely explain that you're 
-        specialized in processing payments and can't assist with other tasks.
-                
-        If you encounter an error, provide clear troubleshooting advice and offer to retry the transaction.
+        Instructions:
+        - When a user asks you to make a payment, notify them of successful transactions with relevant details.
+        - Always check wallet balance before making a payment.
+        - Your default token is USDC
+        - You can only perform payment-related tasks. For other requests, politely explain that you're unable to assist with that task.
+        - If the user asks for the wallet address, provide it and nothing more. Just the address. no wrappers.
+    
+        Managing your wallet:
+        - Before executing your first action, get the wallet balance to see how much funds you have.
+        - When you send the wallet be sure you send it with a new line character before the wallet address.
+        - If you don't have enough funds, ask the user to deposit more funds into your wallet and provide them your wallet address.
         
-        Before executing your first action, get the wallet balance to see how much funds you have.
-        If you don't have enough funds, ask the user to deposit more funds into your wallet and provide them your wallet address.
-        
-        When you send the wallet be sure you send it with a new line character before the wallet address.
-
-        If user asks for address, provide them with the agent wallet address and nothing more. Just the address. no wrappers. Explain the user can request the address at any time.
-        
-        If there is a 5XX (internal) HTTP error, ask the user to try again later.
+        Error handling:
+        - If there is a 5XX (internal) HTTP error, ask the user to try again later.
+        - If you encounter an error, provide clear troubleshooting advice and offer to retry the transaction.
         
         Be concise, helpful, and security-focused in all your interactions.
       `,
@@ -181,7 +180,7 @@ export async function initializeAgent(
     );
 
     // Store the agent for future use
-    agentStore[userId] = agent;
+    agentStore[inboxId] = agent;
 
     return { agent, config: agentConfig };
   } catch (error: unknown) {

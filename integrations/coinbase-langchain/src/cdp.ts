@@ -5,84 +5,66 @@ import {
   type Transfer,
   type WalletData,
 } from "@coinbase/coinbase-sdk";
-import { isAddress, keccak256, toBytes, toHex } from "viem";
+import { isAddress } from "viem";
 import { getWalletData, saveWalletData } from "./storage";
 
-// Warn about optional variables
-if (!process.env.NETWORK_ID) {
-  console.warn("Warning: NETWORK_ID not set, defaulting to base-mainnet");
-}
-
+const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
+let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
 const networkId = process.env.NETWORK_ID ?? "base-sepolia";
 
+if (!coinbaseApiKeyName || !coinbaseApiKeyPrivateKey || !networkId) {
+  console.error(
+    "Either networkId, CDP_API_KEY_NAME or CDP_API_KEY_PRIVATE_KEY must be set",
+  );
+  process.exit(1);
+}
+
 class WalletStorage {
-  async get(key: string): Promise<string | undefined> {
+  async get(inboxId: string): Promise<string | undefined> {
     try {
-      const data = await getWalletData(key, networkId);
+      const data = await getWalletData(inboxId, networkId);
       return data ?? undefined;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error(`Error getting wallet data for ${key}:`, errorMessage);
+      console.error(`Error getting wallet data for ${inboxId}:`, errorMessage);
       return undefined;
     }
   }
 
-  async set(key: string, value: string): Promise<void> {
+  async set(inboxId: string, value: string): Promise<void> {
     try {
-      await saveWalletData(key, value, networkId);
+      await saveWalletData(inboxId, value, networkId);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error(`Error saving wallet data for ${key}:`, errorMessage);
+      console.error(`Error saving wallet data for ${inboxId}:`, errorMessage);
     }
   }
 
-  async del(key: string): Promise<void> {
+  async del(inboxId: string): Promise<void> {
     try {
-      await saveWalletData(key, "", networkId);
+      await saveWalletData(inboxId, "", networkId);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error(`Error deleting wallet data for ${key}:`, errorMessage);
+      console.error(`Error deleting wallet data for ${inboxId}:`, errorMessage);
     }
   }
 }
 
 // Initialize Coinbase SDK
 function initializeCoinbaseSDK(): boolean {
-  const coinbaseApiKeyName =
-    process.env.COINBASE_API_KEY_NAME || process.env.CDP_API_KEY_NAME;
-  let coinbaseApiKeyPrivateKey =
-    process.env.COINBASE_API_KEY_PRIVATE_KEY ||
-    process.env.CDP_API_KEY_PRIVATE_KEY;
   // Replace \\n with actual newlines if present in the private key
   if (coinbaseApiKeyPrivateKey) {
     coinbaseApiKeyPrivateKey = coinbaseApiKeyPrivateKey.replace(/\\n/g, "\n");
   }
-
-  console.log(
-    "coinbaseApiKeyName:",
-    coinbaseApiKeyName ? "Defined" : "Undefined",
-  );
-  console.log(
-    "coinbaseApiKeyPrivateKey:",
-    coinbaseApiKeyPrivateKey ? "Defined" : "Undefined",
-  );
-  console.log("networkId:", networkId ? "Defined" : "Undefined");
-  if (!coinbaseApiKeyName || !coinbaseApiKeyPrivateKey) {
-    console.error(
-      "Either COINBASE_API_KEY_NAME/COINBASE_API_KEY_PRIVATE_KEY or CDP_API_KEY_NAME/CDP_API_KEY_PRIVATE_KEY must be set",
-    );
-    return false;
-  }
-
   try {
     Coinbase.configure({
-      apiKeyName: coinbaseApiKeyName,
-      privateKey: coinbaseApiKeyPrivateKey,
+      apiKeyName: coinbaseApiKeyName as string,
+      privateKey: coinbaseApiKeyPrivateKey as string,
     });
-    console.log("Coinbase SDK initialized successfully");
+    console.log("Coinbase SDK initialized successfully, network:", networkId);
     return true;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -91,77 +73,41 @@ function initializeCoinbaseSDK(): boolean {
   }
 }
 
-// Define wallet information structure
-interface WalletInfo {
-  data: WalletData;
-  agent_address: string;
-  address: string;
-  key: string;
-}
-
 // Agent wallet data
 export type AgentWalletData = {
   id: string;
   wallet: Wallet;
-  address: string;
+  data: WalletData;
+  human_address: string;
   agent_address: string;
   blockchain?: string;
   state?: string;
-  key: string;
+  inboxId: string;
 };
 
 // Wallet service class based on cointoss implementation
 export class WalletService {
   private walletStorage: WalletStorage;
-  private cdpEncryptionKey: string;
-  private senderAddress: string;
+  private humanAddress: string;
+  private inboxId: string;
   private sdkInitialized: boolean;
 
-  constructor(sender: string) {
+  constructor(inboxId: string, address: string) {
     this.sdkInitialized = initializeCoinbaseSDK();
     this.walletStorage = new WalletStorage();
-    // Use either KEY or ENCRYPTION_KEY environment variable for local wallet encryption
-    this.cdpEncryptionKey = (
-      process.env.KEY ||
-      process.env.ENCRYPTION_KEY ||
-      ""
-    ).toLowerCase();
-    this.senderAddress = sender.toLowerCase();
-    console.log("WalletService initialized with sender", this.senderAddress);
-  }
-
-  encrypt(data: unknown): string {
-    let stringData = "";
-    if (typeof data === "string") {
-      stringData = data.toLowerCase();
-    } else {
-      stringData = JSON.stringify(data);
-    }
-
-    const key = keccak256(toHex(this.cdpEncryptionKey));
-    // Simple XOR encryption with the key
-    const encrypted = Buffer.from(stringData).map(
-      (byte, i) => byte ^ parseInt(key.slice(2 + (i % 64), 4 + (i % 64)), 16),
+    this.humanAddress = address;
+    this.inboxId = inboxId;
+    console.log(
+      "WalletService initialized with sender address",
+      this.humanAddress,
+      "and inboxId",
+      this.inboxId,
     );
-    return toHex(encrypted).toLowerCase();
   }
 
-  decrypt(data: string): WalletInfo {
-    if (typeof data === "string") {
-      data = data.toLowerCase();
-    }
-    const key = keccak256(toHex(this.cdpEncryptionKey));
-    const encrypted = toBytes(data);
-    const decrypted = encrypted.map(
-      (byte, i) => byte ^ parseInt(key.slice(2 + (i % 64), 4 + (i % 64)), 16),
-    );
-    return JSON.parse(Buffer.from(decrypted).toString()) as WalletInfo;
-  }
-
-  async createWallet(key: string): Promise<AgentWalletData> {
+  async createWallet(): Promise<AgentWalletData> {
     try {
-      key = key.toLowerCase();
-      console.log(`Creating new wallet for key ${key}...`);
+      console.log(`Creating new wallet for key ${this.inboxId}...`);
 
       // Initialize SDK if not already done
       if (!this.sdkInitialized) {
@@ -190,30 +136,35 @@ export class WalletService {
 
       // Make the wallet address visible in the logs for funding
       console.log("-----------------------------------------------------");
-      console.log(`NEW WALLET CREATED FOR USER: ${key}`);
+      console.log(`NEW WALLET CREATED FOR USER: ${this.humanAddress}`);
       console.log(`WALLET ADDRESS: ${walletAddress}`);
       console.log(`NETWORK: ${networkId}`);
       console.log(`SEND FUNDS TO THIS ADDRESS TO TEST: ${walletAddress}`);
       console.log("-----------------------------------------------------");
 
-      const walletInfo: WalletInfo = {
-        data,
+      const walletInfo: AgentWalletData = {
+        id: walletAddress,
+        wallet: wallet,
+        data: data,
+        human_address: this.humanAddress,
         agent_address: walletAddress,
-        address: this.senderAddress,
-        key,
+        inboxId: this.inboxId,
       };
 
       console.log("Saving wallet data to storage...");
-      await this.walletStorage.set(this.encrypt(key), this.encrypt(walletInfo));
+      const walletInfoToStore = {
+        data: data,
+        human_address: this.humanAddress,
+        agent_address: walletAddress,
+        inboxId: this.inboxId,
+      };
+      await this.walletStorage.set(
+        this.inboxId,
+        JSON.stringify(walletInfoToStore),
+      );
 
       console.log("Wallet created and saved successfully");
-      return {
-        id: walletAddress,
-        wallet: wallet,
-        address: this.senderAddress,
-        agent_address: walletAddress,
-        key: key,
-      };
+      return walletInfo;
     } catch (error: unknown) {
       console.error("Failed to create wallet:", error);
 
@@ -227,21 +178,19 @@ export class WalletService {
   }
 
   async getWallet(
-    key: string,
+    inboxId: string,
     createIfNotFound: boolean = true,
   ): Promise<AgentWalletData | undefined> {
-    console.log("Getting wallet for:", key);
-    key = key.toLowerCase();
-    const encryptedKey = this.encrypt(key);
-    const walletData = await this.walletStorage.get(encryptedKey);
+    console.log("Getting wallet for:", inboxId);
+    const walletData = await this.walletStorage.get(inboxId);
 
     // If no wallet exists, create one
     if (!walletData) {
-      console.log("No wallet found for", key);
+      console.log("No wallet found for", inboxId);
       if (createIfNotFound) {
         console.log("Creating new wallet as none was found");
         try {
-          const wallet = await this.createWallet(key);
+          const wallet = await this.createWallet();
           console.log("Successfully created new wallet, returning wallet data");
           return wallet;
         } catch (error: unknown) {
@@ -256,10 +205,10 @@ export class WalletService {
 
     try {
       console.log("Found existing wallet data, decrypting...");
-      const decrypted = this.decrypt(walletData);
+      const walletInfo = JSON.parse(walletData) as AgentWalletData;
 
       console.log("Importing wallet from stored data...");
-      const importedWallet = await Wallet.import(decrypted.data).catch(
+      const importedWallet = await Wallet.import(walletInfo.data).catch(
         (err: unknown) => {
           const errorMessage = err instanceof Error ? err.message : String(err);
           console.error("Error importing wallet:", errorMessage);
@@ -271,9 +220,10 @@ export class WalletService {
       return {
         id: importedWallet.getId() ?? "",
         wallet: importedWallet,
-        agent_address: decrypted.agent_address,
-        address: decrypted.address,
-        key: decrypted.key,
+        data: walletInfo.data,
+        human_address: walletInfo.human_address,
+        agent_address: walletInfo.agent_address,
+        inboxId: walletInfo.inboxId,
       };
     } catch (error: unknown) {
       const errorMessage =
@@ -283,7 +233,7 @@ export class WalletService {
       // If we failed to import, but have wallet data, attempt to recreate
       if (createIfNotFound) {
         console.log("Attempting to recreate wallet after import failure");
-        return this.createWallet(key);
+        return this.createWallet();
       }
 
       throw new Error("Invalid wallet access");
@@ -291,19 +241,18 @@ export class WalletService {
   }
 
   async checkBalance(
-    humanAddress: string,
+    inboxId: string,
   ): Promise<{ address: string | undefined; balance: number }> {
-    humanAddress = humanAddress.toLowerCase();
-    console.log(`⚖️ Checking balance for user: ${humanAddress}...`);
+    console.log(`⚖️ Checking balance for user with inboxId: ${inboxId}...`);
 
-    const walletData = await this.getWallet(humanAddress);
+    const walletData = await this.getWallet(inboxId);
     if (!walletData) {
-      console.log(`❌ No wallet found for ${humanAddress}`);
+      console.log(`❌ No wallet found for user with inboxId: ${inboxId}`);
       return { address: undefined, balance: 0 };
     }
 
     console.log(
-      `✅ Retrieved wallet with address: ${walletData.agent_address} for user: ${humanAddress}`,
+      `✅ Retrieved wallet with address: ${walletData.agent_address} for user with inboxId: ${inboxId}`,
     );
 
     try {
@@ -312,7 +261,7 @@ export class WalletService {
       );
       const balance = await walletData.wallet.getBalance(Coinbase.assets.Usdc);
       console.log(
-        `💵 USDC Balance for ${humanAddress}: ${Number(balance)} USDC`,
+        `💵 USDC Balance for user with inboxId: ${inboxId}: ${Number(balance)} USDC`,
       );
       console.log(Coinbase.assets.Usdc);
 
@@ -324,7 +273,7 @@ export class WalletService {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       console.error(
-        `❌ Error getting balance for ${humanAddress}:`,
+        `❌ Error getting balance for user with inboxId: ${inboxId}:`,
         errorMessage,
       );
       return {
@@ -335,23 +284,24 @@ export class WalletService {
   }
 
   async transfer(
-    fromAddress: string,
+    inboxId: string,
+    humanAddress: string,
     toAddress: string,
     amount: number,
   ): Promise<Transfer | undefined> {
-    fromAddress = fromAddress.toLowerCase();
+    humanAddress = humanAddress.toLowerCase();
     toAddress = toAddress.toLowerCase();
 
     console.log("📤 TRANSFER INITIATED");
     console.log(`💸 Amount: ${amount} USDC`);
-    console.log(`🔍 From user: ${fromAddress}`);
+    console.log(`🔍 From user: ${humanAddress}`);
     console.log(`🔍 To: ${toAddress}`);
 
     // Get the source wallet
-    console.log(`🔑 Retrieving source wallet for user: ${fromAddress}...`);
-    const from = await this.getWallet(fromAddress);
+    console.log(`🔑 Retrieving source wallet for user: ${humanAddress}...`);
+    const from = await this.getWallet(inboxId);
     if (!from) {
-      console.error(`❌ No wallet found for sender: ${fromAddress}`);
+      console.error(`❌ No wallet found for sender: ${humanAddress}`);
       return undefined;
     }
     console.log(`✅ Source wallet found: ${from.agent_address}`);

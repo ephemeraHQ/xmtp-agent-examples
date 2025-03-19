@@ -1,0 +1,10 @@
+{
+  "data": {
+    "walletId": "acb85a94-083b-4083-9b13-a2561590f434",
+    "seed": "d99f7bb91fac1d94f1f3eb4b8932847cb03c32bf315cd87d4e6d43a35208289a",
+    "networkId": "base-sepolia"
+  },
+  "human_address": "0x48ab6786426ff48f217ea81691e35408150bcb2c",
+  "agent_address": "0x4f1bDa301542290D4556E200a98ef884767De57e",
+  "inboxId": "14b8fcaf1e5df82fd7f27d039b641d34116c440e964f313cf87cffb0e84e0105"
+}
