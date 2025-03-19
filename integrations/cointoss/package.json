@@ -1,0 +1,31 @@
+{
+  "name": "cointoss-agent",
+  "version": "1.0.0",
+  "description": "A coin toss betting agent using XMTP and CDP AgentKit",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "gen:keys": "node dist/scripts/generate-keys.js"
+  },
+  "dependencies": {
+    "@coinbase/agentkit": "^0.2.0",
+    "@coinbase/agentkit-langchain": "^0.2.0",
+    "@coinbase/coinbase-sdk": "0.11.2",
+    "@langchain/core": "^0.3.20",
+    "@langchain/langgraph": "^0.2.24",
+    "@langchain/openai": "^0.3.14",
+    "@xmtp/node-sdk": "1.0.0-rc2",
+    "dotenv": "^16.4.7",
+    "redis": "^4.7.0",
+    "uint8arrays": "^5.1.0",
+    "viem": "^2.7.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.2"
+  }
+}
