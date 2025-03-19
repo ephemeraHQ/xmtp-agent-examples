@@ -1,3 +1,4 @@
+import { IdentifierKind } from "@xmtp/node-bindings";
 import {
   Client,
   type Conversation,
@@ -36,6 +37,15 @@ export async function initializeXmtpClient() {
   console.log(
     `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
   );
+
+  const conversation = await client.conversations.newDmWithIdentifier({
+    identifierKind: IdentifierKind.Ethereum,
+    identifier: "0xb222ec34482e3503988cfe81ced46ef10099c3e6",
+  });
+  //convos 0x0952bf0013b819a5fbbace9b60709044a53ea2e3
+  //0xb222ec34482e3503988cfe81ced46ef10099c3e6
+  console.log(conversation.id);
+  await conversation.send("Hello, world!");
 
   return client;
 }

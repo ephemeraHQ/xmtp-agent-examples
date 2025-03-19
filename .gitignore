@@ -54,3 +54,6 @@ dist
 
 # xmtp
 *.db3*
+
+.data
+

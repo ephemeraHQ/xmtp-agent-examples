@@ -3,7 +3,7 @@ import { createClient, type RedisClientType } from "redis";
 
 // Storage constants
 export const WALLET_KEY_PREFIX = "wallet_data:";
-export const LOCAL_STORAGE_DIR = "./wallet_data";
+export const LOCAL_STORAGE_DIR = ".data/wallet_data";
 export let redisClient: RedisClientType | null = null;
 
 if (!process.env.REDIS_URL) {
