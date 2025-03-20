@@ -1,0 +1,63 @@
+{
+  "name": "framesv2-nextjs-basic",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "frames": "frames",
+    "lint": "next lint",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@farcaster/auth-client": "^0.3.0",
+    "@farcaster/frame-core": "^0.0.29",
+    "@farcaster/frame-node": "^0.0.18",
+    "@farcaster/frame-sdk": "^0.0.31",
+    "@farcaster/frame-wagmi-connector": "^0.0.19",
+    "@frames.js/debugger": "^0.4.3",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@t3-oss/env-nextjs": "^0.12.0",
+    "@tanstack/react-query": "^5.67.2",
+    "@vercel/og": "^0.6.5",
+    "@xmtp/browser-sdk": "^1.1.0",
+    "@xmtp/content-type-reaction": "^2.0.0",
+    "@xmtp/content-type-remote-attachment": "^2.0.0",
+    "@xmtp/content-type-reply": "^2.0.0",
+    "@xmtp/node-sdk": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
+    "eruda": "^3.4.1",
+    "framer-motion": "^12.4.12",
+    "jiti": "1.21.7",
+    "jose": "^6.0.10",
+    "ky": "^1.7.5",
+    "lucide-react": "^0.483.0",
+    "next": "14.2.6",
+    "react": "^18",
+    "react-dom": "^18",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss-animate": "^1.0.7",
+    "uint8array-extras": "^1.4.0",
+    "usehooks-ts": "^3.1.1",
+    "uuid": "^11.1.0",
+    "viem": "^2.23.9",
+    "wagmi": "^2.14.13",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.6",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  },
+  "packageManager": "yarn@4.6.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
