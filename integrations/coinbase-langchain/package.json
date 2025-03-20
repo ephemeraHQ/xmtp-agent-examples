@@ -24,7 +24,7 @@
     "@langchain/langgraph": "^0.2.24",
     "@langchain/openai": "^0.3.14",
     "@redis/client": "^1.6.0",
-    "@xmtp/node-sdk": "1.0.0-rc2",
+    "@xmtp/node-sdk": "1.0.0",
     "redis": "^4.7.0",
     "uint8arrays": "^5.1.0",
     "viem": "^2.7.15"
