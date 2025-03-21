@@ -13,8 +13,8 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import type { StorageProvider } from "./types";
 
-// Interface for parsed bet information
-export interface ParsedBet {
+// Interface for parsed toss information
+export interface ParsedToss {
   topic: string;
   options: string[];
   amount: string;
@@ -40,7 +40,7 @@ interface ToolsChunk {
 type StreamChunk = AgentChunk | ToolsChunk;
 
 // Interface for parsed JSON response
-interface BetJsonResponse {
+interface TossJsonResponse {
   topic?: string;
   options?: string[];
   amount?: string;
@@ -78,7 +78,7 @@ export async function getOrCreateWalletForUser(
   return { walletProvider, config };
 }
 
-export async function createGameWallet(_storage: StorageProvider) {
+export async function createTossWallet(_storage: StorageProvider) {
   const config = {
     apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
     apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
@@ -144,21 +144,21 @@ export async function initializeAgent(
       tools,
       checkpointSaver: memory,
       messageModifier: `
-        You are a CoinToss Agent that helps users participate in coin toss betting games.
+        You are a CoinToss Agent that helps users participate in coin toss activities.
         
         You have two main functions:
-        1. Process natural language bet requests and structure them
-        2. Handle coin toss game management commands
+        1. Process natural language toss requests and structure them
+        2. Handle coin toss management commands
         
-        When parsing natural language bets:
-        - Extract the bet topic (what people are betting on)
+        When parsing natural language tosses:
+        - Extract the toss topic (what people are tossing on)
         - Identify options (default to "yes" and "no" if not provided)
-        - Determine bet amount (default to 0.1 USDC if not specified)
-        - Enforce a maximum bet amount of 10 USDC
+        - Determine toss amount (default to 0.1 USDC if not specified)
+        - Enforce a maximum toss amount of 10 USDC
         
         For example:
-        - "Will it rain tomorrow for 5" should be interpreted as a bet on "Will it rain tomorrow" with options ["yes", "no"] and amount "5"
-        - "Lakers vs Celtics for 10" should be interpreted as a bet on "Lakers vs Celtics game" with options ["Lakers", "Celtics"] and amount "10"
+        - "Will it rain tomorrow for 5" should be interpreted as a toss on "Will it rain tomorrow" with options ["yes", "no"] and amount "5"
+        - "Lakers vs Celtics for 10" should be interpreted as a toss on "Lakers vs Celtics game" with options ["Lakers", "Celtics"] and amount "10"
         
         When checking payments or balances:
         1. Use the USDC token at 0x5dEaC602762362FE5f135FA5904351916053cF70 on Base.
@@ -168,24 +168,24 @@ export async function initializeAgent(
            - The correct addresses were used
         3. For balance checks, show the exact USDC amount available.
         4. When transferring winnings, ensure:
-           - The game wallet has sufficient balance
+           - The toss wallet has sufficient balance
            - The transfer is completed successfully
            - Provide transaction details
         
         Available commands:
-        /create <amount> - Create a new coin toss game with specified USDC bet amount
-        /join <gameId> - Join an existing game with the specified ID
-        /list - List all active games
+        /create <amount> - Create a new coin toss with specified USDC amount
+        /join <tossId> - Join an existing toss with the specified ID
+        /list - List all active tosses
         /balance - Check your wallet balance
         /help - Show available commands
         
         Before executing any action:
         1. Check if the user has sufficient balance for the requested action
-        2. Verify game exists when joining
-        3. Ensure proper game state transitions
+        2. Verify toss exists when joining
+        3. Ensure proper toss state transitions
         4. Handle any errors gracefully
         
-        Keep responses concise and clear, focusing on payment verification and game status.
+        Keep responses concise and clear, focusing on payment verification and toss status.
         If there is a 5XX (internal) HTTP error, ask the user to try again later.
       `,
     });
@@ -238,20 +238,20 @@ export async function processMessage(
 }
 
 /**
- * Parse a natural language bet prompt to extract structured information
+ * Parse a natural language toss prompt to extract structured information
  * @param agent - The agent
  * @param config - Agent configuration
  * @param prompt - The natural language prompt
- * @returns Parsed bet information
+ * @returns Parsed toss information
  */
-export async function parseNaturalLanguageBet(
+export async function parseNaturalLanguageToss(
   agent: ReturnType<typeof createReactAgent>,
   config: { configurable: { thread_id: string } },
   prompt: string,
-): Promise<ParsedBet> {
+): Promise<ParsedToss> {
   try {
     // Default values in case parsing fails
-    const defaultResult: ParsedBet = {
+    const defaultResult: ParsedToss = {
       topic: prompt,
       options: ["yes", "no"],
       amount: "0.1",
@@ -261,17 +261,17 @@ export async function parseNaturalLanguageBet(
       return defaultResult;
     }
 
-    console.log(`🔄 Parsing natural language bet: "${prompt}"`);
+    console.log(`🔄 Parsing natural language toss: "${prompt}"`);
 
     // Format specific request for parsing
     const parsingRequest = `
-      Parse this bet request into structured format: "${prompt}"
+      Parse this toss request into structured format: "${prompt}"
       
       Return only a valid JSON object with these fields:
       {
-        "topic": "the betting topic",
+        "topic": "the tossing topic",
         "options": ["option1", "option2"],
-        "amount": "bet amount"
+        "amount": "toss amount"
       }
     `;
 
@@ -283,10 +283,10 @@ export async function parseNaturalLanguageBet(
       // Find JSON in the response
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsedJson = JSON.parse(jsonMatch[0]) as BetJsonResponse;
+        const parsedJson = JSON.parse(jsonMatch[0]) as TossJsonResponse;
 
         // Validate and provide defaults if needed
-        const result: ParsedBet = {
+        const result: ParsedToss = {
           topic: parsedJson.topic ?? prompt,
           options:
             Array.isArray(parsedJson.options) && parsedJson.options.length >= 2
@@ -296,7 +296,7 @@ export async function parseNaturalLanguageBet(
         };
 
         console.log(
-          `✅ Parsed bet: "${result.topic}" with options [${result.options.join(", ")}] for ${result.amount} USDC`,
+          `✅ Parsed toss: "${result.topic}" with options [${result.options.join(", ")}] for ${result.amount} USDC`,
         );
         return result;
       }
@@ -306,7 +306,7 @@ export async function parseNaturalLanguageBet(
 
     return defaultResult;
   } catch (error) {
-    console.error("Error parsing natural language bet:", error);
+    console.error("Error parsing natural language toss:", error);
     return {
       topic: prompt,
       options: ["yes", "no"],

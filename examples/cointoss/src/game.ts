@@ -1,7 +1,7 @@
 import * as crypto from "crypto";
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { parseNaturalLanguageBet } from "./cdp";
-import { GameStatus, type CoinTossGame, type StorageProvider } from "./types";
+import { parseNaturalLanguageToss } from "./cdp";
+import { TossStatus, type CoinTossGame, type StorageProvider } from "./types";
 import { WalletService } from "./walletService";
 
 // Interface for transfer response
@@ -27,9 +27,9 @@ export class GameManager {
   }
 
   private async initializeLastGameId() {
-    const games = await this.storage.listActiveGames();
-    this.lastGameId = games.reduce((maxId, game) => {
-      const id = parseInt(game.id);
+    const tosses = await this.storage.listActiveGames();
+    this.lastGameId = tosses.reduce((maxId, toss) => {
+      const id = parseInt(toss.id);
       return isNaN(id) ? maxId : Math.max(maxId, id);
     }, 0);
   }
@@ -49,133 +49,133 @@ export class GameManager {
     }
   }
 
-  async createGame(creator: string, betAmount: string): Promise<CoinTossGame> {
-    console.log(`🎮 CREATING NEW GAME`);
+  async createGame(creator: string, tossAmount: string): Promise<CoinTossGame> {
+    console.log(`🎮 CREATING NEW TOSS`);
     console.log(`👤 Creator: ${creator}`);
-    console.log(`💰 Bet Amount: ${betAmount} USDC`);
+    console.log(`💰 Toss Amount: ${tossAmount} USDC`);
 
-    // Create a new wallet for this game
-    console.log(`🔑 Creating wallet for the game...`);
-    const gameId = this.getNextGameId();
-    console.log(`🆔 Generated Game ID: ${gameId}`);
+    // Create a new wallet for this toss
+    console.log(`🔑 Creating wallet for the toss...`);
+    const tossId = this.getNextGameId();
+    console.log(`🆔 Generated Toss ID: ${tossId}`);
 
-    const gameWallet = await this.walletService.createWallet(`game:${gameId}`);
-    console.log(`✅ Game wallet created: ${gameWallet.agent_address}`);
+    const tossWallet = await this.walletService.createWallet(`toss:${tossId}`);
+    console.log(`✅ Toss wallet created: ${tossWallet.agent_address}`);
 
-    const game: CoinTossGame = {
-      id: gameId,
+    const toss: CoinTossGame = {
+      id: tossId,
       creator,
-      betAmount,
-      status: GameStatus.CREATED,
+      tossAmount,
+      status: TossStatus.CREATED,
       participants: [], // Creator will join separately
       participantOptions: [], // Track participant options
-      walletAddress: gameWallet.agent_address,
+      walletAddress: tossWallet.agent_address,
       createdAt: Date.now(),
-      coinTossResult: "",
+      tossResult: "",
       paymentSuccess: false,
     };
 
-    console.log(`💾 Saving game to storage...`);
-    await this.storage.saveGame(game);
-    console.log(`🎮 Game created successfully!`);
+    console.log(`💾 Saving toss to storage...`);
+    await this.storage.saveGame(toss);
+    console.log(`🎮 Toss created successfully!`);
     console.log(`---------------------------------------------`);
-    console.log(`GAME ID: ${gameId}`);
-    console.log(`GAME WALLET: ${gameWallet.agent_address}`);
-    console.log(`BET AMOUNT: ${betAmount} USDC`);
-    console.log(`STATUS: ${game.status}`);
+    console.log(`TOSS ID: ${tossId}`);
+    console.log(`TOSS WALLET: ${tossWallet.agent_address}`);
+    console.log(`TOSS AMOUNT: ${tossAmount} USDC`);
+    console.log(`STATUS: ${toss.status}`);
     console.log(`---------------------------------------------`);
 
     // No longer automatically adding creator as first participant
 
-    // Reload the game to get updated state
-    const updatedGame = await this.storage.getGame(gameId);
-    return updatedGame || game;
+    // Reload the toss to get updated state
+    const updatedToss = await this.storage.getGame(tossId);
+    return updatedToss || toss;
   }
 
   async addPlayerToGame(
-    gameId: string,
+    tossId: string,
     player: string,
     chosenOption: string,
     hasPaid: boolean,
   ): Promise<CoinTossGame> {
-    const game = await this.storage.getGame(gameId);
-    if (!game) {
-      throw new Error("Game not found");
+    const toss = await this.storage.getGame(tossId);
+    if (!toss) {
+      throw new Error("Toss not found");
     }
 
     if (
-      game.status !== GameStatus.CREATED &&
-      game.status !== GameStatus.WAITING_FOR_PLAYER
+      toss.status !== TossStatus.CREATED &&
+      toss.status !== TossStatus.WAITING_FOR_PLAYER
     ) {
-      throw new Error("Game is not accepting players");
+      throw new Error("Toss is not accepting players");
     }
 
-    if (game.participants.includes(player)) {
-      throw new Error("You are already in this game");
+    if (toss.participants.includes(player)) {
+      throw new Error("You are already in this toss");
     }
 
     if (!hasPaid) {
-      throw new Error(`Please pay ${game.betAmount} USDC to join the game`);
+      throw new Error(`Please pay ${toss.tossAmount} USDC to join the toss`);
     }
 
     // Validate the chosen option against available options
-    if (game.betOptions && game.betOptions.length > 0) {
+    if (toss.tossOptions && toss.tossOptions.length > 0) {
       const normalizedOption = chosenOption.toLowerCase();
-      const normalizedAvailableOptions = game.betOptions.map((opt) =>
+      const normalizedAvailableOptions = toss.tossOptions.map((opt) =>
         opt.toLowerCase(),
       );
 
       if (!normalizedAvailableOptions.includes(normalizedOption)) {
         throw new Error(
-          `Invalid option: ${chosenOption}. Available options: ${game.betOptions.join(", ")}`,
+          `Invalid option: ${chosenOption}. Available options: ${toss.tossOptions.join(", ")}`,
         );
       }
     }
 
     // Add player to participants list (for backward compatibility)
-    game.participants.push(player);
+    toss.participants.push(player);
 
     // Add player with their chosen option
-    game.participantOptions.push({
+    toss.participantOptions.push({
       userId: player,
       option: chosenOption,
     });
 
-    // Update game status based on number of participants
-    if (game.participants.length === 1) {
-      game.status = GameStatus.WAITING_FOR_PLAYER;
-    } else if (game.participants.length >= 2) {
-      game.status = GameStatus.WAITING_FOR_PLAYER;
+    // Update toss status based on number of participants
+    if (toss.participants.length === 1) {
+      toss.status = TossStatus.WAITING_FOR_PLAYER;
+    } else if (toss.participants.length >= 2) {
+      toss.status = TossStatus.WAITING_FOR_PLAYER;
     }
 
-    await this.storage.updateGame(game);
-    return game;
+    await this.storage.updateGame(toss);
+    return toss;
   }
 
-  async joinGame(gameId: string, player: string): Promise<CoinTossGame> {
-    const game = await this.storage.getGame(gameId);
-    if (!game) {
-      throw new Error("Game not found");
+  async joinGame(tossId: string, player: string): Promise<CoinTossGame> {
+    const toss = await this.storage.getGame(tossId);
+    if (!toss) {
+      throw new Error("Toss not found");
     }
 
     if (
-      game.status !== GameStatus.CREATED &&
-      game.status !== GameStatus.WAITING_FOR_PLAYER
+      toss.status !== TossStatus.CREATED &&
+      toss.status !== TossStatus.WAITING_FOR_PLAYER
     ) {
-      throw new Error("Game is not accepting players");
+      throw new Error("Toss is not accepting players");
     }
 
-    if (game.participants.includes(player)) {
-      throw new Error("You are already in this game");
+    if (toss.participants.includes(player)) {
+      throw new Error("You are already in this toss");
     }
 
-    // Don't add the player yet, just return the game info with available options
-    return game;
+    // Don't add the player yet, just return the toss info with available options
+    return toss;
   }
 
-  async verifyPayment(userId: string, gameId: string): Promise<boolean> {
-    const game = await this.storage.getGame(gameId);
-    if (!game) {
+  async verifyPayment(userId: string, tossId: string): Promise<boolean> {
+    const toss = await this.storage.getGame(tossId);
+    if (!toss) {
       return false;
     }
 
@@ -187,13 +187,13 @@ export class GameManager {
 
     try {
       // Check if the user has already transferred funds
-      const gameWalletBalance = await this.walletService.checkBalance(
-        `game:${gameId}`,
+      const tossWalletBalance = await this.walletService.checkBalance(
+        `toss:${tossId}`,
       );
-      if (!gameWalletBalance.address) return false;
+      if (!tossWalletBalance.address) return false;
 
-      // Check if the game wallet has the required funds
-      return gameWalletBalance.balance >= parseFloat(game.betAmount);
+      // Check if the toss wallet has the required funds
+      return tossWalletBalance.balance >= parseFloat(toss.tossAmount);
     } catch (error) {
       console.error("Error verifying payment:", error);
       return false;
@@ -202,13 +202,13 @@ export class GameManager {
 
   async makePayment(
     userId: string,
-    gameId: string,
+    tossId: string,
     amount: string,
     chosenOption: string,
   ): Promise<boolean> {
     console.log(`💸 PROCESSING PAYMENT`);
     console.log(`👤 User: ${userId}`);
-    console.log(`🎮 Game ID: ${gameId}`);
+    console.log(`🎮 Toss ID: ${tossId}`);
     console.log(`💰 Amount: ${amount} USDC`);
     console.log(`🎯 Chosen Option: ${chosenOption}`);
 
@@ -222,22 +222,22 @@ export class GameManager {
       }
       console.log(`✅ User wallet found: ${userWallet.agent_address}`);
 
-      // Get game wallet
-      console.log(`🔑 Getting game information...`);
-      const game = await this.storage.getGame(gameId);
-      if (!game) {
-        console.error(`❌ Game not found: ${gameId}`);
-        throw new Error("Game not found");
+      // Get toss wallet
+      console.log(`🔑 Getting toss information...`);
+      const toss = await this.storage.getGame(tossId);
+      if (!toss) {
+        console.error(`❌ Toss not found: ${tossId}`);
+        throw new Error("Toss not found");
       }
-      console.log(`✅ Game found, game wallet address: ${game.walletAddress}`);
+      console.log(`✅ Toss found, toss wallet address: ${toss.walletAddress}`);
 
-      // Transfer funds from user to game wallet
+      // Transfer funds from user to toss wallet
       console.log(
-        `💸 Transferring ${amount} USDC from ${userId} to game wallet ${game.walletAddress}...`,
+        `💸 Transferring ${amount} USDC from ${userId} to toss wallet ${toss.walletAddress}...`,
       );
       const transfer = await this.walletService.transfer(
         userId,
-        game.walletAddress,
+        toss.walletAddress,
         parseFloat(amount),
       );
 
@@ -254,77 +254,77 @@ export class GameManager {
     }
   }
 
-  async executeCoinToss(gameId: string): Promise<CoinTossGame> {
-    console.log(`🎲 EXECUTING COIN TOSS for Game: ${gameId}`);
+  async executeCoinToss(tossId: string): Promise<CoinTossGame> {
+    console.log(`🎲 EXECUTING TOSS for Toss: ${tossId}`);
 
-    const game = await this.storage.getGame(gameId);
-    if (!game) {
-      console.error(`❌ Game not found: ${gameId}`);
-      throw new Error("Game not found");
+    const toss = await this.storage.getGame(tossId);
+    if (!toss) {
+      console.error(`❌ Toss not found: ${tossId}`);
+      throw new Error("Toss not found");
     }
 
-    if (game.status !== GameStatus.WAITING_FOR_PLAYER) {
+    if (toss.status !== TossStatus.WAITING_FOR_PLAYER) {
       console.error(
-        `❌ Game is not ready for coin toss. Current status: ${game.status}`,
+        `❌ Toss is not ready for execution. Current status: ${toss.status}`,
       );
-      throw new Error("Game is not ready for coin toss");
+      throw new Error("Toss is not ready for execution");
     }
 
-    if (game.participants.length < 2) {
+    if (toss.participants.length < 2) {
       console.error(
-        `❌ Game needs at least 2 players. Current player count: ${game.participants.length}`,
+        `❌ Toss needs at least 2 players. Current player count: ${toss.participants.length}`,
       );
-      throw new Error("Game needs at least 2 players");
+      throw new Error("Toss needs at least 2 players");
     }
 
-    console.log(`👥 Game participants: ${game.participants.join(", ")}`);
-    const totalPot = parseFloat(game.betAmount) * game.participants.length;
+    console.log(`👥 Toss participants: ${toss.participants.join(", ")}`);
+    const totalPot = parseFloat(toss.tossAmount) * toss.participants.length;
     console.log(`💰 Total pot: ${totalPot} USDC`);
 
-    game.status = GameStatus.IN_PROGRESS;
-    await this.storage.updateGame(game);
-    console.log(`🏁 Game status updated to IN_PROGRESS`);
+    toss.status = TossStatus.IN_PROGRESS;
+    await this.storage.updateGame(toss);
+    console.log(`🏁 Toss status updated to IN_PROGRESS`);
 
     // Verify participants array is not empty
-    if (game.participants.length === 0) {
-      console.error(`❌ No participants found in the game`);
-      game.status = GameStatus.CANCELLED;
-      game.paymentSuccess = false;
-      await this.storage.updateGame(game);
-      return game;
+    if (toss.participants.length === 0) {
+      console.error(`❌ No participants found in the toss`);
+      toss.status = TossStatus.CANCELLED;
+      toss.paymentSuccess = false;
+      await this.storage.updateGame(toss);
+      return toss;
     }
 
     // Check if participantOptions is initialized and has entries
-    if (game.participantOptions.length === 0) {
-      console.error(`❌ No participant options found in the game`);
-      game.status = GameStatus.CANCELLED;
-      game.paymentSuccess = false;
-      await this.storage.updateGame(game);
-      return game;
+    if (toss.participantOptions.length === 0) {
+      console.error(`❌ No participant options found in the toss`);
+      toss.status = TossStatus.CANCELLED;
+      toss.paymentSuccess = false;
+      await this.storage.updateGame(toss);
+      return toss;
     }
 
     // Determine the available options
     let options: string[] = [];
-    if (game.betOptions && game.betOptions.length > 0) {
-      options = game.betOptions;
+    if (toss.tossOptions && toss.tossOptions.length > 0) {
+      options = toss.tossOptions;
     } else {
       // Extract unique options from participant choices
       const uniqueOptions = new Set<string>();
-      game.participantOptions.forEach((p) => uniqueOptions.add(p.option));
+      toss.participantOptions.forEach((p) => uniqueOptions.add(p.option));
       options = Array.from(uniqueOptions);
     }
 
     // Make sure we have at least two options
     if (options.length < 2) {
       console.error(`❌ Not enough unique options to choose from`);
-      game.status = GameStatus.CANCELLED;
-      game.paymentSuccess = false;
-      await this.storage.updateGame(game);
-      return game;
+      toss.status = TossStatus.CANCELLED;
+      toss.paymentSuccess = false;
+      await this.storage.updateGame(toss);
+      return toss;
     }
 
     console.log(
-      `🎲 Flipping the coin to select between options: ${options.join(" or ")}`,
+      `🎲 Executing toss to select between options: ${options.join(" or ")}`,
     );
 
     // Generate random selection for winning option
@@ -335,21 +335,21 @@ export class GameManager {
     const winningOptionIndex = randomValue % options.length;
     const winningOption = options[winningOptionIndex];
 
-    // Set the coin toss result
-    game.coinTossResult = winningOption;
+    // Set the toss result
+    toss.tossResult = winningOption;
     console.log(`🎯 Winning option selected: ${winningOption}`);
 
     // Find all winners (participants who chose the winning option)
-    const winners = game.participantOptions.filter(
+    const winners = toss.participantOptions.filter(
       (p) => p.option.toLowerCase() === winningOption.toLowerCase(),
     );
 
     if (winners.length === 0) {
       console.error(`❌ No winners found for option: ${winningOption}`);
-      game.status = GameStatus.CANCELLED;
-      game.paymentSuccess = false;
-      await this.storage.updateGame(game);
-      return game;
+      toss.status = TossStatus.CANCELLED;
+      toss.paymentSuccess = false;
+      await this.storage.updateGame(toss);
+      return toss;
     }
 
     console.log(
@@ -360,24 +360,24 @@ export class GameManager {
     const prizePerWinner = totalPot / winners.length;
     console.log(`💰 Prize per winner: ${prizePerWinner.toFixed(6)} USDC`);
 
-    // Update game with results
-    game.status = GameStatus.COMPLETED;
-    game.winner = winners.map((w) => w.userId).join(","); // Comma-separated list of winner IDs
+    // Update toss with results
+    toss.status = TossStatus.COMPLETED;
+    toss.winner = winners.map((w) => w.userId).join(","); // Comma-separated list of winner IDs
 
-    // Transfer winnings from game wallet to winners
+    // Transfer winnings from toss wallet to winners
     console.log(`💸 Transferring winnings to ${winners.length} winners...`);
 
     let allTransfersSuccessful = true;
     const successfulTransfers: string[] = [];
 
     try {
-      // Get game wallet
-      const gameWallet = await this.walletService.getWallet(`game:${gameId}`);
-      if (!gameWallet) {
-        console.error(`❌ Game wallet not found`);
-        game.paymentSuccess = false;
-        await this.storage.updateGame(game);
-        return game;
+      // Get toss wallet
+      const tossWallet = await this.walletService.getWallet(`toss:${tossId}`);
+      if (!tossWallet) {
+        console.error(`❌ Toss wallet not found`);
+        toss.paymentSuccess = false;
+        await this.storage.updateGame(toss);
+        return toss;
       }
 
       // Process transfers for each winner
@@ -409,7 +409,7 @@ export class GameManager {
 
           // Transfer the winner's share
           const transfer = await this.walletService.transfer(
-            `game:${gameId}`,
+            `toss:${tossId}`,
             winnerWalletAddress,
             prizePerWinner,
           );
@@ -421,14 +421,14 @@ export class GameManager {
             successfulTransfers.push(winner.userId);
 
             // Extract transaction link from the first successful transfer
-            if (!game.transactionLink) {
+            if (!toss.transactionLink) {
               try {
                 // Safe type casting
                 const transferData = transfer as unknown as Transfer;
                 if (transferData.model?.sponsored_send?.transaction_link) {
-                  game.transactionLink =
+                  toss.transactionLink =
                     transferData.model.sponsored_send.transaction_link;
-                  console.log(`🔗 Transaction Link: ${game.transactionLink}`);
+                  console.log(`🔗 Transaction Link: ${toss.transactionLink}`);
                 }
               } catch (error) {
                 console.error("Error extracting transaction link:", error);
@@ -448,7 +448,7 @@ export class GameManager {
       }
 
       // Set payment success based on all transfers
-      game.paymentSuccess = allTransfersSuccessful;
+      toss.paymentSuccess = allTransfersSuccessful;
       if (
         successfulTransfers.length > 0 &&
         successfulTransfers.length < winners.length
@@ -459,37 +459,37 @@ export class GameManager {
       }
     } catch (error) {
       console.error(`❌ Error transferring winnings:`, error);
-      game.paymentSuccess = false;
+      toss.paymentSuccess = false;
     }
 
-    // Save final game state
-    await this.storage.updateGame(game);
-    console.log(`🏁 Game completed. Final status saved.`);
+    // Save final toss state
+    await this.storage.updateGame(toss);
+    console.log(`🏁 Toss completed. Final status saved.`);
 
-    return game;
+    return toss;
   }
 
   async listActiveGames(): Promise<CoinTossGame[]> {
     return this.storage.listActiveGames();
   }
 
-  async getGame(gameId: string): Promise<CoinTossGame | null> {
-    return this.storage.getGame(gameId);
+  async getGame(tossId: string): Promise<CoinTossGame | null> {
+    return this.storage.getGame(tossId);
   }
 
-  async cancelGame(gameId: string): Promise<CoinTossGame> {
-    const game = await this.storage.getGame(gameId);
-    if (!game) {
-      throw new Error("Game not found");
+  async cancelGame(tossId: string): Promise<CoinTossGame> {
+    const toss = await this.storage.getGame(tossId);
+    if (!toss) {
+      throw new Error("Toss not found");
     }
 
-    if (game.status === GameStatus.COMPLETED) {
-      throw new Error("Cannot cancel completed game");
+    if (toss.status === TossStatus.COMPLETED) {
+      throw new Error("Cannot cancel completed toss");
     }
 
-    game.status = GameStatus.CANCELLED;
-    await this.storage.updateGame(game);
-    return game;
+    toss.status = TossStatus.CANCELLED;
+    await this.storage.updateGame(toss);
+    return toss;
   }
 
   async getUserBalance(userId: string): Promise<number> {
@@ -503,12 +503,12 @@ export class GameManager {
   }
 
   /**
-   * Create a game from a natural language prompt
+   * Create a toss from a natural language prompt
    * @param creator The user ID of the creator
-   * @param naturalLanguagePrompt The natural language prompt describing the bet
+   * @param naturalLanguagePrompt The natural language prompt describing the toss
    * @param agent The cdp agent
    * @param agentConfig The agent configuration
-   * @returns The created game
+   * @returns The created toss
    */
   async createGameFromPrompt(
     creator: string,
@@ -516,32 +516,32 @@ export class GameManager {
     agent: ReturnType<typeof createReactAgent>,
     agentConfig: { configurable: { thread_id: string } },
   ): Promise<CoinTossGame> {
-    console.log(`🎲 CREATING GAME FROM NATURAL LANGUAGE PROMPT`);
+    console.log(`🎲 CREATING TOSS FROM NATURAL LANGUAGE PROMPT`);
     console.log(`👤 Creator: ${creator}`);
     console.log(`💬 Prompt: "${naturalLanguagePrompt}"`);
 
     // Parse the natural language prompt using the CDP agent
-    const parsedBet = await parseNaturalLanguageBet(
+    const parsedToss = await parseNaturalLanguageToss(
       agent,
       agentConfig,
       naturalLanguagePrompt,
     );
 
-    // Store the bet details in the game
-    console.log(`📝 Parsed bet topic: "${parsedBet.topic}"`);
-    console.log(`🎯 Parsed options: [${parsedBet.options.join(", ")}]`);
-    console.log(`💰 Parsed amount: ${parsedBet.amount} USDC`);
+    // Store the toss details
+    console.log(`📝 Parsed toss topic: "${parsedToss.topic}"`);
+    console.log(`🎯 Parsed options: [${parsedToss.options.join(", ")}]`);
+    console.log(`💰 Parsed amount: ${parsedToss.amount} USDC`);
 
-    // Create the game using the parsed values (don't auto-join creator)
-    const game = await this.createGame(creator, parsedBet.amount);
+    // Create the toss using the parsed values (don't auto-join creator)
+    const toss = await this.createGame(creator, parsedToss.amount);
 
-    // Add additional bet information to the game
-    game.betTopic = parsedBet.topic;
-    game.betOptions = parsedBet.options;
+    // Add additional toss information
+    toss.tossTopic = parsedToss.topic;
+    toss.tossOptions = parsedToss.options;
 
-    // Update the game with the additional information
-    await this.storage.updateGame(game);
+    // Update the toss with the additional information
+    await this.storage.updateGame(toss);
 
-    return game;
+    return toss;
   }
 }

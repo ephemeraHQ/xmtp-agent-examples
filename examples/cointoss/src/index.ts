@@ -1,7 +1,6 @@
-import * as path from "path";
+import "dotenv/config";
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
-import * as dotenv from "dotenv";
 import { initializeAgent } from "./cdp";
 import { handleCommand as processCommand } from "./commands";
 import { GameManager } from "./game";
@@ -9,48 +8,22 @@ import { initializeStorage } from "./storage";
 import type { StorageProvider } from "./types";
 import { initializeXmtpClient, startMessageListener } from "./xmtp";
 
-// Initialize environment variables - make sure this is at the top of the file before any other code
-const envPath = path.resolve(process.cwd(), ".env");
-console.log("Loading .env file from:", envPath);
-const result = dotenv.config({ path: envPath });
-if (result.error) {
-  console.error("Error loading .env file:", result.error);
-} else {
-  console.log("Environment variables loaded from .env file successfully");
-}
-
-// Global CDP agent instance - we'll initialize this at startup for better performance
-let cdpAgent: ReturnType<typeof createReactAgent> | null = null;
-let cdpAgentConfig: { configurable: { thread_id: string } } | null = null;
-let storage: StorageProvider | null = null;
-
 /**
  * Validates that required environment variables are set
  */
 function validateEnvironment(): void {
-  // Load .env from parent directory
-  dotenv.config({ path: "../.env" });
   const missingVars: string[] = [];
 
   // Check required variables
-  const requiredVars = ["WALLET_KEY", "ENCRYPTION_KEY", "OPENAI_API_KEY"];
+  const requiredVars = [
+    "CDP_API_KEY_NAME",
+    "CDP_API_KEY_PRIVATE_KEY",
+    "WALLET_KEY",
+    "XMTP_ENV",
+    "OPENAI_API_KEY",
+    "ENCRYPTION_KEY",
+  ];
 
-  // Check Coinbase SDK variables - we need either the COINBASE_ or CDP_ prefixed versions
-  const coinbaseApiKeyName =
-    process.env.COINBASE_API_KEY_NAME || process.env.CDP_API_KEY_NAME;
-  const coinbaseApiKeyPrivateKey =
-    process.env.COINBASE_API_KEY_PRIVATE_KEY ||
-    process.env.CDP_API_KEY_PRIVATE_KEY;
-
-  if (!coinbaseApiKeyName) {
-    missingVars.push("COINBASE_API_KEY_NAME or CDP_API_KEY_NAME");
-  }
-
-  if (!coinbaseApiKeyPrivateKey) {
-    missingVars.push("COINBASE_API_KEY_PRIVATE_KEY or CDP_API_KEY_PRIVATE_KEY");
-  }
-
-  // Check other required variables
   requiredVars.forEach((varName) => {
     if (!process.env[varName]) {
       missingVars.push(varName);
@@ -65,16 +38,11 @@ function validateEnvironment(): void {
     });
     process.exit(1);
   }
-
-  // Log warning about KEY variable
-  if (!process.env.KEY) {
-    console.warn(
-      "Warning: KEY is not set, using ENCRYPTION_KEY for wallet encryption",
-    );
-  }
-
-  return; // Explicit return to satisfy the linter
 }
+// Global CDP agent instance - we'll initialize this at startup for better performance
+let cdpAgent: ReturnType<typeof createReactAgent> | null = null;
+let cdpAgentConfig: { configurable: { thread_id: string } } | null = null;
+let storage: StorageProvider | null = null;
 
 /**
  * Handle incoming messages
@@ -121,26 +89,16 @@ async function main(): Promise<void> {
   // Initialize storage at startup
   storage = initializeStorage();
 
-  // Initialize the CDP agent at startup for better performance
-  if (process.env.OPENAI_API_KEY) {
-    console.log(
-      "Initializing CDP agent (this might take a moment but will improve message handling speed)...",
-    );
-    try {
-      // Use a placeholder userId for initial setup
-      const initResult = await initializeAgent("SYSTEM_INIT", storage);
-      cdpAgent = initResult.agent;
-      cdpAgentConfig = initResult.config;
-      console.log("✅ CDP agent initialized successfully");
-    } catch (error) {
-      console.error("Error initializing CDP agent:", error);
-      console.warn(
-        "⚠️ Will attempt to initialize agent on first message instead",
-      );
-    }
-  } else {
+  try {
+    // Use a placeholder userId for initial setup
+    const initResult = await initializeAgent("SYSTEM_INIT", storage);
+    cdpAgent = initResult.agent;
+    cdpAgentConfig = initResult.config;
+    console.log("✅ CDP agent initialized successfully");
+  } catch (error) {
+    console.error("Error initializing CDP agent:", error);
     console.warn(
-      "⚠️ OPENAI_API_KEY is not set, natural language bet parsing will be disabled",
+      "⚠️ Will attempt to initialize agent on first message instead",
     );
   }
 

@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createClient } from "redis";
 import {
-  GameStatus,
+  TossStatus,
   type CoinTossGame,
   type StorageProvider,
   type UserWallet,
@@ -102,51 +102,51 @@ export class LocalStorage {
 }
 
 export class LocalStorageProvider implements StorageProvider {
-  private gamesStorage: LocalStorage;
+  private tossesStorage: LocalStorage;
   private walletsStorage: LocalStorage;
 
   constructor() {
-    this.gamesStorage = new LocalStorage(
-      path.join(process.cwd(), "data", "games"),
+    this.tossesStorage = new LocalStorage(
+      path.join(process.cwd(), "data", "tosses"),
     );
     this.walletsStorage = new LocalStorage(
       path.join(process.cwd(), "wallet_data"),
     );
   }
 
-  async saveGame(game: CoinTossGame): Promise<void> {
-    await this.gamesStorage.set(game.id, JSON.stringify(game, null, 2));
+  async saveGame(toss: CoinTossGame): Promise<void> {
+    await this.tossesStorage.set(toss.id, JSON.stringify(toss, null, 2));
   }
 
-  async getGame(gameId: string): Promise<CoinTossGame | null> {
-    const data = await this.gamesStorage.get(gameId);
+  async getGame(tossId: string): Promise<CoinTossGame | null> {
+    const data = await this.tossesStorage.get(tossId);
     return data ? (JSON.parse(data) as CoinTossGame) : null;
   }
 
   async listActiveGames(): Promise<CoinTossGame[]> {
-    const gamesDir = path.join(process.cwd(), "data", "games");
-    const files = await fs.readdir(gamesDir);
-    const games: CoinTossGame[] = [];
+    const tossesDir = path.join(process.cwd(), "data", "tosses");
+    const files = await fs.readdir(tossesDir);
+    const tosses: CoinTossGame[] = [];
 
     for (const file of files) {
       if (file.endsWith(".json")) {
-        const gameId = file.replace(".json", "");
-        const game = await this.getGame(gameId);
+        const tossId = file.replace(".json", "");
+        const toss = await this.getGame(tossId);
         if (
-          game &&
-          game.status !== GameStatus.COMPLETED &&
-          game.status !== GameStatus.CANCELLED
+          toss &&
+          toss.status !== TossStatus.COMPLETED &&
+          toss.status !== TossStatus.CANCELLED
         ) {
-          games.push(game);
+          tosses.push(toss);
         }
       }
     }
 
-    return games;
+    return tosses;
   }
 
-  async updateGame(game: CoinTossGame): Promise<void> {
-    await this.saveGame(game);
+  async updateGame(toss: CoinTossGame): Promise<void> {
+    await this.saveGame(toss);
   }
 
   async saveUserWallet(wallet: UserWallet): Promise<void> {
@@ -172,7 +172,7 @@ export class LocalStorageProvider implements StorageProvider {
 
 export class RedisStorageProvider implements StorageProvider {
   private client: ReturnType<typeof createClient>;
-  private readonly gamePrefix = "game:";
+  private readonly tossPrefix = "toss:";
   private readonly walletPrefix = "wallet:";
 
   constructor() {
@@ -182,35 +182,35 @@ export class RedisStorageProvider implements StorageProvider {
     void this.client.connect();
   }
 
-  async saveGame(game: CoinTossGame): Promise<void> {
-    await this.client.set(this.gamePrefix + game.id, JSON.stringify(game));
+  async saveGame(toss: CoinTossGame): Promise<void> {
+    await this.client.set(this.tossPrefix + toss.id, JSON.stringify(toss));
   }
 
-  async getGame(gameId: string): Promise<CoinTossGame | null> {
-    const data = await this.client.get(this.gamePrefix + gameId);
+  async getGame(tossId: string): Promise<CoinTossGame | null> {
+    const data = await this.client.get(this.tossPrefix + tossId);
     return data ? (JSON.parse(data) as CoinTossGame) : null;
   }
 
   async listActiveGames(): Promise<CoinTossGame[]> {
-    const keys = await this.client.keys(this.gamePrefix + "*");
-    const games: CoinTossGame[] = [];
+    const keys = await this.client.keys(this.tossPrefix + "*");
+    const tosses: CoinTossGame[] = [];
 
     for (const key of keys) {
-      const game = await this.getGame(key.replace(this.gamePrefix, ""));
+      const toss = await this.getGame(key.replace(this.tossPrefix, ""));
       if (
-        game &&
-        game.status !== GameStatus.COMPLETED &&
-        game.status !== GameStatus.CANCELLED
+        toss &&
+        toss.status !== TossStatus.COMPLETED &&
+        toss.status !== TossStatus.CANCELLED
       ) {
-        games.push(game);
+        tosses.push(toss);
       }
     }
 
-    return games;
+    return tosses;
   }
 
-  async updateGame(game: CoinTossGame): Promise<void> {
-    await this.saveGame(game);
+  async updateGame(toss: CoinTossGame): Promise<void> {
+    await this.saveGame(toss);
   }
 
   async saveUserWallet(wallet: UserWallet): Promise<void> {

@@ -59,68 +59,68 @@ async function handleExplicitCommand(
     case "create": {
       const amount = args[0];
       if (!amount) {
-        return "Please specify a bet amount: create <amount>";
+        return "Please specify a toss amount: create <amount>";
       }
 
       // Check if user has sufficient balance
       const balance = await gameManager.getUserBalance(userId);
       if (balance < parseFloat(amount)) {
-        return `Insufficient USDC balance. You need at least ${amount} USDC to create a game. Your balance: ${balance} USDC`;
+        return `Insufficient USDC balance. You need at least ${amount} USDC to create a toss. Your balance: ${balance} USDC`;
       }
 
-      // Create the game - creator doesn't join automatically now
-      const game = await gameManager.createGame(userId, amount);
+      // Create the toss - creator doesn't join automatically now
+      const toss = await gameManager.createGame(userId, amount);
 
-      // Generate response with bet options if they exist
+      // Generate response with toss options if they exist
       let optionsMessage = "";
-      if (game.betOptions && game.betOptions.length > 0) {
-        optionsMessage = `\nOptions: ${game.betOptions.join(", ")}\n\nYou need to join your own game by choosing an option: join ${game.id} <option>`;
+      if (toss.tossOptions && toss.tossOptions.length > 0) {
+        optionsMessage = `\nOptions: ${toss.tossOptions.join(", ")}\n\nYou need to join your own toss by choosing an option: join ${toss.id} <option>`;
       } else {
-        optionsMessage = `\n\nYou need to join your own game first: join ${game.id} yes/no`;
+        optionsMessage = `\n\nYou need to join your own toss first: join ${toss.id} yes/no`;
       }
 
-      return `Game created!\nGame ID: ${game.id}\nBet Amount: ${game.betAmount} USDC${
-        game.betTopic ? `\nTopic: ${game.betTopic}` : ""
-      }${optionsMessage}\n\nOther players can join with: join ${game.id} <option>\nWhen everyone has joined, you can run: execute ${game.id}`;
+      return `Toss created!\nToss ID: ${toss.id}\nToss Amount: ${toss.tossAmount} USDC${
+        toss.tossTopic ? `\nTopic: ${toss.tossTopic}` : ""
+      }${optionsMessage}\n\nOther players can join with: join ${toss.id} <option>\nWhen everyone has joined, you can run: execute ${toss.id}`;
     }
 
     case "join": {
       // Check if we have enough arguments
       if (args.length < 1) {
-        return "Please specify a game ID and your chosen option: join <gameId> <option>";
+        return "Please specify a toss ID and your chosen option: join <tossId> <option>";
       }
 
-      const gameId = args[0];
+      const tossId = args[0];
       const chosenOption = args.length >= 2 ? args[1] : null;
 
-      if (!gameId) {
-        return "Please specify a game ID: join <gameId> <option>";
+      if (!tossId) {
+        return "Please specify a toss ID: join <tossId> <option>";
       }
 
-      // First check if the game exists and is joinable
-      const game = await gameManager.joinGame(gameId, userId);
+      // First check if the toss exists and is joinable
+      const toss = await gameManager.joinGame(tossId, userId);
 
       // Check if an option was provided
       if (!chosenOption) {
         const availableOptions =
-          game.betOptions && game.betOptions.length > 0
-            ? game.betOptions.join(", ")
+          toss.tossOptions && toss.tossOptions.length > 0
+            ? toss.tossOptions.join(", ")
             : "yes, no";
 
-        return `Please specify your option when joining: join ${gameId} <option>\nAvailable options: ${availableOptions}`;
+        return `Please specify your option when joining: join ${tossId} <option>\nAvailable options: ${availableOptions}`;
       }
 
       // Check user's balance
       const balance = await gameManager.getUserBalance(userId);
-      if (balance < parseFloat(game.betAmount)) {
-        return `Insufficient USDC balance. You need ${game.betAmount} USDC to join this game. Your balance: ${balance} USDC`;
+      if (balance < parseFloat(toss.tossAmount)) {
+        return `Insufficient USDC balance. You need ${toss.tossAmount} USDC to join this toss. Your balance: ${balance} USDC`;
       }
 
       // Make the payment
       const paymentSuccess = await gameManager.makePayment(
         userId,
-        gameId,
-        game.betAmount,
+        tossId,
+        toss.tossAmount,
         chosenOption,
       );
 
@@ -128,9 +128,9 @@ async function handleExplicitCommand(
         return `Payment failed. Please ensure you have enough USDC and try again.`;
       }
 
-      // Add player to game after payment
-      const updatedGame = await gameManager.addPlayerToGame(
-        gameId,
+      // Add player to toss after payment
+      const updatedToss = await gameManager.addPlayerToGame(
+        tossId,
         userId,
         chosenOption,
         true,
@@ -138,60 +138,60 @@ async function handleExplicitCommand(
 
       // Generate player ID (P2, P3, etc. based on position)
       const playerPosition =
-        updatedGame.participants.findIndex((p) => p === userId) + 1;
+        updatedToss.participants.findIndex((p) => p === userId) + 1;
       const playerId = `P${playerPosition}`;
 
-      // Include bet topic and options in the response if available
-      let responseMessage = `Successfully joined game ${gameId}! Payment of ${game.betAmount} USDC sent.\nYour Player ID: ${playerId}\nYour Choice: ${chosenOption}\nTotal players: ${updatedGame.participants.length}`;
+      // Include toss topic and options in the response if available
+      let responseMessage = `Successfully joined toss ${tossId}! Payment of ${toss.tossAmount} USDC sent.\nYour Player ID: ${playerId}\nYour Choice: ${chosenOption}\nTotal players: ${updatedToss.participants.length}`;
 
-      if (updatedGame.betTopic) {
-        responseMessage += `\nBet Topic: "${updatedGame.betTopic}"`;
+      if (updatedToss.tossTopic) {
+        responseMessage += `\nToss Topic: "${updatedToss.tossTopic}"`;
 
-        if (updatedGame.betOptions && updatedGame.betOptions.length === 2) {
-          responseMessage += `\nOptions: ${updatedGame.betOptions[0]} or ${updatedGame.betOptions[1]}`;
+        if (updatedToss.tossOptions && updatedToss.tossOptions.length === 2) {
+          responseMessage += `\nOptions: ${updatedToss.tossOptions[0]} or ${updatedToss.tossOptions[1]}`;
         }
       }
 
-      if (userId === game.creator) {
-        responseMessage += `\n\nAs the creator, you can execute the coin toss with: execute ${gameId}`;
+      if (userId === toss.creator) {
+        responseMessage += `\n\nAs the creator, you can execute the toss with: execute ${tossId}`;
       } else {
-        responseMessage += `\n\nWaiting for the game creator to execute the coin toss.`;
+        responseMessage += `\n\nWaiting for the toss creator to execute the toss.`;
       }
 
       return responseMessage;
     }
 
     case "execute": {
-      const gameId = args[0];
-      if (!gameId) {
-        return "Please specify a game ID: execute <gameId>";
+      const tossId = args[0];
+      if (!tossId) {
+        return "Please specify a toss ID: execute <tossId>";
       }
 
       // Check if the user is the creator
-      const game = await gameManager.getGame(gameId);
-      if (!game) {
-        return `Game ${gameId} not found.`;
+      const toss = await gameManager.getGame(tossId);
+      if (!toss) {
+        return `Toss ${tossId} not found.`;
       }
 
-      if (game.creator !== userId) {
-        return "Only the game creator can execute the coin toss.";
+      if (toss.creator !== userId) {
+        return "Only the toss creator can execute the toss.";
       }
 
-      if (game.participants.length < 2) {
-        return "At least 2 players are needed to execute the coin toss.";
+      if (toss.participants.length < 2) {
+        return "At least 2 players are needed to execute the toss.";
       }
 
       let result;
       try {
-        result = await gameManager.executeCoinToss(gameId);
+        result = await gameManager.executeCoinToss(tossId);
 
-        // Check if the coin toss was successful and a winner was determined
+        // Check if the toss was successful and a winner was determined
         if (!result.winner) {
-          return "The coin toss failed to determine a winner. Please try again.";
+          return "The toss failed to determine a winner. Please try again.";
         }
       } catch (error) {
-        console.error("Error executing coin toss:", error);
-        return `Error executing coin toss: ${error instanceof Error ? error.message : "Unknown error"}`;
+        console.error("Error executing toss:", error);
+        return `Error executing toss: ${error instanceof Error ? error.message : "Unknown error"}`;
       }
 
       // Generate player IDs for result message
@@ -208,14 +208,14 @@ async function handleExplicitCommand(
       );
 
       // Create detailed result message
-      let resultMessage = `🎲 COIN TOSS RESULTS FOR GAME #${gameId} 🎲\n\n`;
+      let resultMessage = `🎲 TOSS RESULTS FOR TOSS #${tossId} 🎲\n\n`;
 
-      // Add bet topic if available
-      if (result.betTopic) {
-        resultMessage += `📝 Bet: "${result.betTopic}"\n`;
+      // Add toss topic if available
+      if (result.tossTopic) {
+        resultMessage += `📝 Toss: "${result.tossTopic}"\n`;
 
-        if (result.betOptions && result.betOptions.length === 2) {
-          resultMessage += `🎯 Options: ${result.betOptions[0]} or ${result.betOptions[1]}\n\n`;
+        if (result.tossOptions && result.tossOptions.length === 2) {
+          resultMessage += `🎯 Options: ${result.tossOptions[0]} or ${result.tossOptions[1]}\n\n`;
         }
       }
 
@@ -235,11 +235,11 @@ async function handleExplicitCommand(
 
       // Calculate total pot
       const totalPot =
-        parseFloat(result.betAmount) * result.participants.length;
+        parseFloat(result.tossAmount) * result.participants.length;
       resultMessage += `\n💰 Total Pot: ${totalPot} USDC\n`;
 
-      // Show the winning option (former coin toss result)
-      resultMessage += `🎯 Winning Option: ${result.coinTossResult || "Unknown"}\n\n`;
+      // Show the winning option (former toss result)
+      resultMessage += `🎯 Winning Option: ${result.tossResult || "Unknown"}\n\n`;
 
       // Multiple winners handling - identify all players who chose the winning option
       const winnerIds = result.winner ? result.winner.split(",") : [];
@@ -280,60 +280,60 @@ async function handleExplicitCommand(
     }
 
     case "status": {
-      const gameId = args[0];
-      if (!gameId) {
-        return "Please specify a game ID: status <gameId>";
+      const tossId = args[0];
+      if (!tossId) {
+        return "Please specify a toss ID: status <tossId>";
       }
 
-      const game = await gameManager.getGame(gameId);
-      if (!game) {
-        return `Game ${gameId} not found.`;
+      const toss = await gameManager.getGame(tossId);
+      if (!toss) {
+        return `Toss ${tossId} not found.`;
       }
 
       // Generate player IDs for status message with wallet addresses
       const playerMap = await Promise.all(
-        game.participants.map(async (player, index) => {
+        toss.participants.map(async (player, index) => {
           const walletAddress =
             (await gameManager.getPlayerWalletAddress(player)) || player;
           return {
-            id: `P${index + 1}${player === game.creator ? " (Creator)" : ""}`,
+            id: `P${index + 1}${player === toss.creator ? " (Creator)" : ""}`,
             address: player,
             walletAddress: walletAddress,
           };
         }),
       );
 
-      let statusMessage = `🎮 GAME #${gameId} STATUS 🎮\n\n`;
+      let statusMessage = `🎮 TOSS #${tossId} STATUS 🎮\n\n`;
 
-      // Add bet topic if available
-      if (game.betTopic) {
-        statusMessage += `📝 Bet: "${game.betTopic}"\n`;
+      // Add toss topic if available
+      if (toss.tossTopic) {
+        statusMessage += `📝 Toss: "${toss.tossTopic}"\n`;
 
-        if (game.betOptions && game.betOptions.length === 2) {
-          statusMessage += `🎯 Options: ${game.betOptions[0]} or ${game.betOptions[1]}\n\n`;
+        if (toss.tossOptions && toss.tossOptions.length === 2) {
+          statusMessage += `🎯 Options: ${toss.tossOptions[0]} or ${toss.tossOptions[1]}\n\n`;
         }
       }
 
-      statusMessage += `Status: ${game.status}\n`;
-      statusMessage += `Bet Amount: ${game.betAmount} USDC\n`;
-      statusMessage += `Prize Pool: ${parseFloat(game.betAmount) * game.participants.length} USDC\n`;
+      statusMessage += `Status: ${toss.status}\n`;
+      statusMessage += `Toss Amount: ${toss.tossAmount} USDC\n`;
+      statusMessage += `Prize Pool: ${parseFloat(toss.tossAmount) * toss.participants.length} USDC\n`;
 
       // Show creator's wallet address
       const creatorWallet =
-        (await gameManager.getPlayerWalletAddress(game.creator)) ||
-        game.creator;
+        (await gameManager.getPlayerWalletAddress(toss.creator)) ||
+        toss.creator;
       const shortCreatorWallet =
         creatorWallet.substring(0, 10) +
         "..." +
         creatorWallet.substring(creatorWallet.length - 6);
       statusMessage += `Creator: ${shortCreatorWallet}\n`;
 
-      statusMessage += `Game Wallet: ${game.walletAddress}\n`;
-      statusMessage += `Created: ${new Date(game.createdAt).toLocaleString()}\n\n`;
+      statusMessage += `Toss Wallet: ${toss.walletAddress}\n`;
+      statusMessage += `Created: ${new Date(toss.createdAt).toLocaleString()}\n\n`;
 
-      statusMessage += `Players (${game.participants.length}):\n`;
+      statusMessage += `Players (${toss.participants.length}):\n`;
 
-      if (game.participants.length === 0) {
+      if (toss.participants.length === 0) {
         statusMessage += "No players have joined yet.\n";
       } else {
         playerMap.forEach((p) => {
@@ -342,21 +342,21 @@ async function handleExplicitCommand(
             "..." +
             p.walletAddress.substring(p.walletAddress.length - 6);
           const playerOption =
-            game.participantOptions.find((opt) => opt.userId === p.address)
+            toss.participantOptions.find((opt) => opt.userId === p.address)
               ?.option || "Unknown";
           statusMessage += `${p.id}: ${displayAddress} (Chose: ${playerOption})\n`;
         });
       }
 
-      if (game.winner) {
+      if (toss.winner) {
         // Check if we have multiple winners
-        if (game.winner.includes(",")) {
-          const winnerIds = game.winner.split(",");
+        if (toss.winner.includes(",")) {
+          const winnerIds = toss.winner.split(",");
           const winningPlayers = playerMap.filter((p) =>
             winnerIds.includes(p.address),
           );
 
-          statusMessage += `\nWinning Option: ${game.coinTossResult || "Unknown"}\n`;
+          statusMessage += `\nWinning Option: ${toss.tossResult || "Unknown"}\n`;
           statusMessage += `Winners (${winningPlayers.length}):\n`;
 
           for (const winner of winningPlayers) {
@@ -369,18 +369,18 @@ async function handleExplicitCommand(
 
           if (winningPlayers.length > 0) {
             const prizePerWinner =
-              (parseFloat(game.betAmount) * game.participants.length) /
+              (parseFloat(toss.tossAmount) * toss.participants.length) /
               winningPlayers.length;
             statusMessage += `Prize per winner: ${prizePerWinner.toFixed(6)} USDC\n`;
           }
         } else {
           // Single winner (for backwards compatibility)
-          const winnerInfo = playerMap.find((p) => p.address === game.winner);
+          const winnerInfo = playerMap.find((p) => p.address === toss.winner);
           const winnerId = winnerInfo ? winnerInfo.id : "Unknown";
           const winnerWallet =
             winnerInfo?.walletAddress ||
-            (await gameManager.getPlayerWalletAddress(game.winner)) ||
-            game.winner;
+            (await gameManager.getPlayerWalletAddress(toss.winner)) ||
+            toss.winner;
           statusMessage += `\nWinner: ${winnerId} (${winnerWallet.substring(0, 10)}...${winnerWallet.substring(winnerWallet.length - 6)})\n`;
         }
       }
@@ -389,27 +389,27 @@ async function handleExplicitCommand(
     }
 
     case "list": {
-      const games = await gameManager.listActiveGames();
-      if (games.length === 0) {
-        return "No active games found.";
+      const tosses = await gameManager.listActiveGames();
+      if (tosses.length === 0) {
+        return "No active tosses found.";
       }
 
-      // Updated game descriptions with wallet addresses
-      const gameDescriptions = await Promise.all(
-        games.map(async (game) => {
+      // Updated toss descriptions with wallet addresses
+      const tossDescriptions = await Promise.all(
+        tosses.map(async (toss) => {
           const creatorWallet =
-            (await gameManager.getPlayerWalletAddress(game.creator)) ||
-            game.creator;
+            (await gameManager.getPlayerWalletAddress(toss.creator)) ||
+            toss.creator;
           const shortCreatorWallet =
             creatorWallet.substring(0, 10) +
             "..." +
             creatorWallet.substring(creatorWallet.length - 6);
 
-          return `Game ID: ${game.id}\nBet Amount: ${game.betAmount} USDC\nStatus: ${game.status}\nPlayers: ${game.participants.length}\nCreator: ${shortCreatorWallet}\nGame Wallet: ${game.walletAddress}`;
+          return `Toss ID: ${toss.id}\nToss Amount: ${toss.tossAmount} USDC\nStatus: ${toss.status}\nPlayers: ${toss.participants.length}\nCreator: ${shortCreatorWallet}\nToss Wallet: ${toss.walletAddress}`;
         }),
       );
 
-      return gameDescriptions.join("\n\n");
+      return tossDescriptions.join("\n\n");
     }
 
     case "balance": {
@@ -420,17 +420,17 @@ async function handleExplicitCommand(
 
     case "help":
       return `Available commands:
-create <amount> - Create a new betting game with specified USDC bet amount
-join <gameId> <option> - Join an existing game with the specified ID and your chosen option
-execute <gameId> - Execute the bet resolution (only for game creator)
-status <gameId> - Check the status of a specific game
-list - List all active games
+create <amount> - Create a new toss with specified USDC amount
+join <tossId> <option> - Join an existing toss with the specified ID and your chosen option
+execute <tossId> - Execute the toss resolution (only for toss creator)
+status <tossId> - Check the status of a specific toss
+list - List all active tosses
 balance - Check your wallet balance and address
 help - Show this help message
 
-You can also create a bet using natural language, for example:
-"Will it rain tomorrow for 5" - Creates a yes/no bet with 5 USDC
-"Lakers vs Celtics for 10" - Creates a bet with Lakers and Celtics as options with 10 USDC`;
+You can also create a toss using natural language, for example:
+"Will it rain tomorrow for 5" - Creates a yes/no toss with 5 USDC
+"Lakers vs Celtics for 10" - Creates a toss with Lakers and Celtics as options with 10 USDC`;
 
     default:
       return "Unknown command. Type help to see available commands.";
@@ -438,7 +438,7 @@ You can also create a bet using natural language, for example:
 }
 
 /**
- * Handle natural language betting commands
+ * Handle natural language toss commands
  * @param prompt - The natural language prompt
  * @param userId - The user's identifier
  * @param gameManager - The game manager instance
@@ -459,11 +459,11 @@ async function handleNaturalLanguageCommand(
     // Check if user has sufficient balance (default check for minimum amount)
     const balance = await gameManager.getUserBalance(userId);
     if (balance < 0.01) {
-      return `Insufficient USDC balance. You need at least 0.01 USDC to create a bet. Your balance: ${balance} USDC`;
+      return `Insufficient USDC balance. You need at least 0.01 USDC to create a toss. Your balance: ${balance} USDC`;
     }
 
-    // Create a game using the natural language prompt
-    const game = await gameManager.createGameFromPrompt(
+    // Create a toss using the natural language prompt
+    const toss = await gameManager.createGameFromPrompt(
       userId,
       prompt,
       agent,
@@ -471,25 +471,25 @@ async function handleNaturalLanguageCommand(
     );
 
     // Create a detailed response with the parsed information
-    let response = `🎲 Bet Created! 🎲\n\n`;
-    response += `Game ID: ${game.id}\n`;
-    response += `Topic: "${game.betTopic}"\n`;
+    let response = `🎲 Toss Created! 🎲\n\n`;
+    response += `Toss ID: ${toss.id}\n`;
+    response += `Topic: "${toss.tossTopic}"\n`;
 
-    if (game.betOptions && game.betOptions.length === 2) {
-      response += `Options: ${game.betOptions[0]} or ${game.betOptions[1]}\n`;
+    if (toss.tossOptions && toss.tossOptions.length === 2) {
+      response += `Options: ${toss.tossOptions[0]} or ${toss.tossOptions[1]}\n`;
     }
 
-    response += `Bet Amount: ${game.betAmount} USDC\n\n`;
-    response += `You need to join your own game first by choosing an option: join ${game.id} <option>\n\n`;
-    response += `Other players can join with: join ${game.id} <option>\n`;
-    response += `When everyone has joined, you can execute the toss with: execute ${game.id}`;
+    response += `Toss Amount: ${toss.tossAmount} USDC\n\n`;
+    response += `You need to join your own toss first by choosing an option: join ${toss.id} <option>\n\n`;
+    response += `Other players can join with: join ${toss.id} <option>\n`;
+    response += `When everyone has joined, you can execute the toss with: execute ${toss.id}`;
 
     return response;
   } catch (error) {
     console.error("Error processing natural language command:", error);
-    return `Sorry, I couldn't process your natural language bet. Please try again with a different wording or use explicit commands.
+    return `Sorry, I couldn't process your natural language toss. Please try again with a different wording or use explicit commands.
 
 Example: "Will the price of Bitcoin reach $100k this year for 5"
-Or use: create <amount> - to create a standard coin toss game`;
+Or use: create <amount> - to create a standard toss`;
   }
 }
