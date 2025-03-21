@@ -21,9 +21,10 @@ To run your XMTP agent, you must create a `.env` file with the following variabl
 ```tsx
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
+XMTP_ENV= # local, dev, production
 ```
 
-You can generate random keys with the following command:
+You can generate random xmtp keys with the following command:
 
 ```tsx
 yarn gen:keys <name>
@@ -125,18 +126,11 @@ Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the officia
 
 ## Examples
 
-- [gm](/examples/gm/): A simple agent that replies to all text messages with "gm".
+- [gm](/gm/): A simple agent that replies to all text messages with "gm".
 - [gpt](/examples/gpt/): An example using GPT API's to answer messages.
 - [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
+- [grok](/examples/grok/): Integrate your agent with the Grok API
+- [gaia](/examples/gaia/): Integrate with the Gaia API
+- [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
 
 > See all the available [examples](/examples/).
-
-### Integrations
-
-Examples integrating XMTP with external libraries from the ecosystem
-
-- [grok](/integrations/grok/): Integrate your agent with the Grok API
-- [gaia](/integrations/gaia/): Integrate with the Gaia API
-- [coinbase-langchain](/integrations/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
-
-> See all the available [integrations](/integrations/).

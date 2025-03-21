@@ -4,16 +4,14 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "examples/*",
-    "integrations/*"
+    "examples/*"
   ],
   "scripts": {
     "build": "tsc",
+    "build:examples": "yarn workspaces foreach --all --include \"examples/*\" run build",
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
-    "examples:gated": "tsx --env-file=.env examples/gated-group/index.ts",
-    "examples:gm": "tsx --env-file=.env examples/gm/index.ts",
-    "examples:gpt": "tsx --env-file=.env examples/gpt/index.ts",
+    "dev": "tsx gm/index.ts",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
     "gen:keys": "tsx scripts/generateKeys.ts",
@@ -21,9 +19,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "1.0.0",
-    "alchemy-sdk": "^3.0.0",
-    "openai": "latest",
+    "@xmtp/node-sdk": "1.0.2",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"
   },

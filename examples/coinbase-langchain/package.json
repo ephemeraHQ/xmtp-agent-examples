@@ -1,21 +1,13 @@
 {
   "name": "coinbase-langchain",
-  "version": "1.0.0",
-  "description": "A DeFi  agent built using CDP AgentKit that operates over the XMTP messaging protocol",
-  "keywords": [
-    "xmtp",
-    "agent",
-    "blockchain",
-    "payment"
-  ],
-  "license": "ISC",
-  "author": "",
+  "version": "0.0.1",
+  "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsx  src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint integrations/coinbase-langchain"
+    "lint": "cd ../.. && yarn eslint examples/coinbase-langchain"
   },
   "dependencies": {
     "@coinbase/agentkit": "^0.2.0",
@@ -24,14 +16,10 @@
     "@langchain/langgraph": "^0.2.24",
     "@langchain/openai": "^0.3.14",
     "@redis/client": "^1.6.0",
-    "@xmtp/node-sdk": "1.0.0",
-    "redis": "^4.7.0",
-    "uint8arrays": "^5.1.0",
-    "viem": "^2.7.15"
+    "@xmtp/node-sdk": "1.0.2",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
-    "@types/node": "^22.13.0",
-    "dotenv": "^16.4.7",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }

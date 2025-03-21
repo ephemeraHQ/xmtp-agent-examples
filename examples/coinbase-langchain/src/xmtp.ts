@@ -1,4 +1,3 @@
-import { IdentifierKind } from "@xmtp/node-bindings";
 import {
   Client,
   type Conversation,

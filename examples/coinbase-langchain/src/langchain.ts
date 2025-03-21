@@ -5,40 +5,19 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import { WalletService } from "./cdp";
+import {
+  agentStore,
+  memoryStore,
+  type Agent,
+  type AgentChunk,
+  type AgentConfig,
+  type TransferData,
+  type XMTPUser,
+} from "./types";
 
-const memoryStore: Record<string, MemorySaver> = {};
-const agentStore: Record<string, Agent> = {};
-
-interface AgentConfig {
-  configurable: {
-    thread_id: string;
-  };
-}
-
-type Agent = ReturnType<typeof createReactAgent>;
-
-// Define transfer result structure
-interface TransferData {
-  model?: {
-    sponsored_send?: {
-      transaction_link?: string;
-    };
-  };
-  transactionLink?: string;
-}
-
-// Define chunk structure for agent stream
-interface AgentChunk {
-  agent?: {
-    messages?: Array<{
-      content?: string;
-    }>;
-  };
-}
-
-function createWalletTools(inboxId: string, address: string) {
+function createWalletTools(xmtpUser: XMTPUser) {
   // Create a properly typed WalletService instance
-  const walletService = new WalletService(inboxId, address);
+  const walletService = new WalletService(xmtpUser);
 
   const getBalanceTool = new DynamicStructuredTool({
     name: "get_wallet_balance",
@@ -47,10 +26,9 @@ function createWalletTools(inboxId: string, address: string) {
     schema: z.object({}),
     func: async () => {
       try {
-        console.log(`Checking balance for fixed inboxId: ${inboxId}`);
-        const result = await walletService.checkBalance(inboxId);
+        const result = await walletService.checkBalance(xmtpUser.inboxId);
         if (!result.address) {
-          return `No wallet found for user ${inboxId}`;
+          return `No wallet found for user ${xmtpUser.inboxId}`;
         }
         return `Wallet address: ${result.address}\nUSDC Balance: ${result.balance} USDC`;
       } catch (error: unknown) {
@@ -75,11 +53,13 @@ function createWalletTools(inboxId: string, address: string) {
           return `Error: Invalid amount ${amount}`;
         }
 
-        console.log(`Transferring from ${address} to: ${recipientAddress}`);
+        console.log(
+          `Transferring from ${xmtpUser.address} to: ${recipientAddress}`,
+        );
 
         const result = await walletService.transfer(
-          inboxId,
-          address,
+          xmtpUser.inboxId,
+          xmtpUser.address,
           recipientAddress,
           numericAmount,
         );
@@ -111,42 +91,41 @@ function createWalletTools(inboxId: string, address: string) {
 
 /**
  * Initialize the agent with LangChain and Coinbase SDK
- * @param userId - The user's identifier (XMTP address)
+ * @param inboxId - The user's identifier (XMTP address)
  * @returns Agent executor and config
  */
 export async function initializeAgent(
-  inboxId: string,
-  address: string,
+  xmtpUser: XMTPUser,
 ): Promise<{ agent: Agent; config: AgentConfig }> {
   try {
     // Check if we already have an agent for this user
-    if (inboxId in agentStore) {
-      console.log(`Using existing agent for user: ${inboxId}`);
+    if (xmtpUser.inboxId in agentStore) {
+      console.log(`Using existing agent for user: ${xmtpUser.inboxId}`);
       const agentConfig = {
-        configurable: { thread_id: inboxId },
+        configurable: { thread_id: xmtpUser.inboxId },
       };
-      return { agent: agentStore[inboxId], config: agentConfig };
+      return { agent: agentStore[xmtpUser.inboxId], config: agentConfig };
     }
 
     console.log(
-      `Creating new agent for user with inboxId: ${inboxId} and address: ${address}`,
+      `Creating new agent for user with inboxId: ${xmtpUser.inboxId} and address: ${xmtpUser.address}`,
     );
 
     const llm = new ChatOpenAI({
       model: "gpt-4o-mini",
     });
 
-    const tools = createWalletTools(inboxId, address);
+    const tools = createWalletTools(xmtpUser);
 
-    if (!(inboxId in memoryStore)) {
-      console.log(`Creating new memory store for user: ${inboxId}`);
-      memoryStore[inboxId] = new MemorySaver();
+    if (!(xmtpUser.inboxId in memoryStore)) {
+      console.log(`Creating new memory store for user: ${xmtpUser.inboxId}`);
+      memoryStore[xmtpUser.inboxId] = new MemorySaver();
     } else {
-      console.log(`Using existing memory store for user: ${inboxId}`);
+      console.log(`Using existing memory store for user: ${xmtpUser.inboxId}`);
     }
 
     const agentConfig: AgentConfig = {
-      configurable: { thread_id: inboxId },
+      configurable: { thread_id: xmtpUser.inboxId },
     };
 
     // Make sure we await the agent creation
@@ -154,7 +133,7 @@ export async function initializeAgent(
       createReactAgent({
         llm,
         tools,
-        checkpointSaver: memoryStore[inboxId],
+        checkpointSaver: memoryStore[xmtpUser.inboxId],
         messageModifier: `
         You are a DeFi Agent that assists users with sending payments to any wallet address using natural language instructions.
 
@@ -180,7 +159,7 @@ export async function initializeAgent(
     );
 
     // Store the agent for future use
-    agentStore[inboxId] = agent;
+    agentStore[xmtpUser.inboxId] = agent;
 
     return { agent, config: agentConfig };
   } catch (error: unknown) {

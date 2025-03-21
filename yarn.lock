@@ -818,6 +818,49 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@examples/gaia@workspace:examples/gaia":
+  version: 0.0.0-use.local
+  resolution: "@examples/gaia@workspace:examples/gaia"
+  dependencies:
+    "@xmtp/node-sdk": "npm:1.0.2"
+    openai: "npm:latest"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
+"@examples/gated-group@workspace:examples/gated-group":
+  version: 0.0.0-use.local
+  resolution: "@examples/gated-group@workspace:examples/gated-group"
+  dependencies:
+    "@xmtp/node-sdk": "npm:1.0.2"
+    alchemy-sdk: "npm:^3.0.0"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
+"@examples/gpt@workspace:examples/gpt":
+  version: 0.0.0-use.local
+  resolution: "@examples/gpt@workspace:examples/gpt"
+  dependencies:
+    "@xmtp/node-sdk": "npm:1.0.2"
+    openai: "npm:latest"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
+"@examples/grok@workspace:examples/grok":
+  version: 0.0.0-use.local
+  resolution: "@examples/grok@workspace:examples/grok"
+  dependencies:
+    "@xmtp/node-sdk": "npm:1.0.2"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
 "@fastify/busboy@npm:^2.0.0":
   version: 2.1.1
   resolution: "@fastify/busboy@npm:2.1.1"
@@ -881,28 +924,6 @@ __metadata:
   checksum: 10/4d4666bdbc30ab579b8d39e1ae68c2088bdc8e9d50ac356f85ca64ef614c09b05cab5a908f7c4ab3e1b5d7f235994e877f5af67561e3f967ba9ec5011625ceca
   languageName: node
   linkType: hard
-
-"@integrations/gaia@workspace:integrations/gaia":
-  version: 0.0.0-use.local
-  resolution: "@integrations/gaia@workspace:integrations/gaia"
-  dependencies:
-    "@xmtp/node-sdk": "npm:1.0.0"
-    tsx: "npm:^4.19.2"
-    uint8arrays: "npm:^5.1.0"
-    viem: "npm:^2.22.17"
-  languageName: unknown
-  linkType: soft
-
-"@integrations/gpt@workspace:integrations/grok":
-  version: 0.0.0-use.local
-  resolution: "@integrations/gpt@workspace:integrations/grok"
-  dependencies:
-    "@xmtp/node-sdk": "npm:1.0.0"
-    tsx: "npm:^4.19.2"
-    uint8arrays: "npm:^5.1.0"
-    viem: "npm:^2.22.17"
-  languageName: unknown
-  linkType: soft
 
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
@@ -1777,31 +1798,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-group-updated@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@xmtp/content-type-group-updated@npm:2.0.0"
+"@xmtp/content-type-group-updated@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-group-updated@npm:2.0.1"
   dependencies:
-    "@xmtp/content-type-primitives": "npm:^2.0.0"
-    "@xmtp/proto": "npm:^3.72.0"
-  checksum: 10/49f4d4203932ecde56f68acf02379a1db597e2b18a42196d97cb65bfcf7b1492cc1e6feb287b1d4b092e72e79a3ea667c0358271f2a2d76288c4f4fbe179bde3
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/75d8f30fedf2524335745865c286ef4b240e2c2c9b981d9044ef4d6b09f5c5324f13b448ef8358c4a13d3d0c49fd6a964dab6d94974cf2fcc887ecaefb2e6671
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-primitives@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@xmtp/content-type-primitives@npm:2.0.0"
+"@xmtp/content-type-primitives@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-primitives@npm:2.0.1"
   dependencies:
-    "@xmtp/proto": "npm:^3.72.0"
-  checksum: 10/a5aca63b6d9cb505b78ed518f48331236bac54bb2dcae3e037b8b43d802d9e64b1da151111b5c82b1bb78a0b6c3507c0f8bfad5ffb281c77ace21430c8716b8e
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/966d17a2ef9b70452348651e7eb56d858608d4b910343bdc8886bc73693040ea34ce69bac74bd4367404f6cf6f7b6ec7b25a2dd25c507fc35bee1447065ea02d
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-text@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@xmtp/content-type-text@npm:2.0.0"
+"@xmtp/content-type-text@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-text@npm:2.0.1"
   dependencies:
-    "@xmtp/content-type-primitives": "npm:^2.0.0"
-  checksum: 10/8d1291983d9a52fb2465f65f4e03926cd3f30ab7d0801a8e42891e3491468415104144fe0188f6c872aefc37733d7a268072ace2a7fa65bedc98eae2bb4e60c1
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+  checksum: 10/7febd12cfbb69a80c434caef4111ccd02d5e9b24eb58fb0f27a35d5f14c61c47e949322b1715a25918ff4d70d0392116ac310a4e2e59f1e23dc2223ca8a141fc
   languageName: node
   linkType: hard
 
@@ -1812,28 +1833,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@xmtp/node-sdk@npm:1.0.0"
+"@xmtp/node-sdk@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@xmtp/node-sdk@npm:1.0.2"
   dependencies:
-    "@xmtp/content-type-group-updated": "npm:^2.0.0"
-    "@xmtp/content-type-primitives": "npm:^2.0.0"
-    "@xmtp/content-type-text": "npm:^2.0.0"
+    "@xmtp/content-type-group-updated": "npm:^2.0.1"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/content-type-text": "npm:^2.0.1"
     "@xmtp/node-bindings": "npm:^1.0.0"
-    "@xmtp/proto": "npm:^3.72.3"
-  checksum: 10/9c07530f121304125ace483cb7db361fed43fb6f02136956d553fed669824f84d4b17499428eb0cc8849b6900bd448222c56d1fb76f454db734a4dfe8a56ea26
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/a0face4876a50a13458e0618070541e5d11960ba448610840d28bb6ad9347f70074842bd7fc8b2f643713e072e3d14e6e0dbf3b182659ab4b2e598ec559925fa
   languageName: node
   linkType: hard
 
-"@xmtp/proto@npm:^3.72.0, @xmtp/proto@npm:^3.72.3":
-  version: 3.73.0
-  resolution: "@xmtp/proto@npm:3.73.0"
+"@xmtp/proto@npm:^3.78.0":
+  version: 3.78.0
+  resolution: "@xmtp/proto@npm:3.78.0"
   dependencies:
     long: "npm:^5.2.0"
     protobufjs: "npm:^7.0.0"
     rxjs: "npm:^7.8.0"
     undici: "npm:^5.8.1"
-  checksum: 10/6de5c3951f9495a41df2c5fe0749043cbd3eb10a32d88dae2dbcd6b0ae84b1bcc0758cc6e68c424864832a7e9da913d67ebe0267cc5aaed2b0094d171ce1e567
+  checksum: 10/11ed8017c5d59fe64f647dd27395241dc644c517263bbc0c729826def08c0cd569db79bae06445fff84cc417d4a4dabd28b87789e3de1e937409598b11c7f213
   languageName: node
   linkType: hard
 
@@ -2326,9 +2347,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"coinbase-langchain@workspace:integrations/coinbase-langchain":
+"coinbase-langchain@workspace:examples/coinbase-langchain":
   version: 0.0.0-use.local
-  resolution: "coinbase-langchain@workspace:integrations/coinbase-langchain"
+  resolution: "coinbase-langchain@workspace:examples/coinbase-langchain"
   dependencies:
     "@coinbase/agentkit": "npm:^0.2.0"
     "@coinbase/agentkit-langchain": "npm:^0.2.0"
@@ -2336,14 +2357,10 @@ __metadata:
     "@langchain/langgraph": "npm:^0.2.24"
     "@langchain/openai": "npm:^0.3.14"
     "@redis/client": "npm:^1.6.0"
-    "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:1.0.0"
-    dotenv: "npm:^16.4.7"
+    "@xmtp/node-sdk": "npm:1.0.2"
     redis: "npm:^4.7.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
-    uint8arrays: "npm:^5.1.0"
-    viem: "npm:^2.7.15"
   languageName: unknown
   linkType: soft
 
@@ -2513,7 +2530,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^16.0.3, dotenv@npm:^16.4.5, dotenv@npm:^16.4.7":
+"dotenv@npm:^16.0.3, dotenv@npm:^16.4.5":
   version: 16.4.7
   resolution: "dotenv@npm:16.4.7"
   checksum: 10/f13bfe97db88f0df4ec505eeffb8925ec51f2d56a3d0b6d916964d8b4af494e6fb1633ba5d09089b552e77ab2a25de58d70259b2c5ed45ec148221835fc99a0c
@@ -5161,7 +5178,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2.21.26, viem@npm:^2.22.16, viem@npm:^2.7.15":
+"viem@npm:^2.21.26, viem@npm:^2.22.16":
   version: 2.23.12
   resolution: "viem@npm:2.23.12"
   dependencies:
@@ -5392,13 +5409,11 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:1.0.0"
-    alchemy-sdk: "npm:^3.0.0"
+    "@xmtp/node-sdk": "npm:1.0.2"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"
     globals: "npm:^15.14.0"
-    openai: "npm:latest"
     prettier: "npm:^3.4.2"
     prettier-plugin-packagejson: "npm:^2.5.8"
     rimraf: "npm:^6.0.1"
