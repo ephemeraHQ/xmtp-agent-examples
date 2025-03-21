@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Client, type Group, type XmtpEnv } from "@xmtp/node-sdk";
 import { Alchemy, Network } from "alchemy-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";

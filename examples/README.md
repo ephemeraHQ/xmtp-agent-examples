@@ -1,6 +1,6 @@
-# How to contribute an XMTP integration
+# How to contribute an XMTP example
 
-This guide explains how to help develop or improve an integration using the XMTP protocol.
+This guide explains how to help develop or improve an example using the XMTP protocol.
 
 ## Prerequisites
 
@@ -28,15 +28,15 @@ This guide explains how to help develop or improve an integration using the XMTP
    Make a new branch for your changes.
 
    ```bash
-   git checkout -b integration/your-integration-name
+   git checkout -b example/your-example-name
    ```
 
 4. **Install dependencies**
 
-   Go to the integration directory and install packages.
+   Go to the example directory and install packages.
 
    ```bash
-   cd integrations/your-integration
+   cd examples/your-example
    yarn
    ```
 
@@ -46,7 +46,7 @@ This guide explains how to help develop or improve an integration using the XMTP
 
 6. **Test changes**
 
-   Run the integration to check your changes.
+   Run the example to check your changes.
 
    ```bash
    yarn dev
@@ -58,7 +58,7 @@ This guide explains how to help develop or improve an integration using the XMTP
 
    ```bash
    git add .
-   git commit -m "Add integration: description of your integration"
+   git commit -m "Add example: description of your example"
    ```
 
 8. **Push changes**
@@ -66,7 +66,7 @@ This guide explains how to help develop or improve an integration using the XMTP
    Send your changes to your forked repository.
 
    ```bash
-   git push origin integration/your-integration-name
+   git push origin example/your-example-name
    ```
 
 ## Submit a Pull Request

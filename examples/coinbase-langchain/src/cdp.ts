@@ -7,6 +7,7 @@ import {
 } from "@coinbase/coinbase-sdk";
 import { isAddress } from "viem";
 import { getWalletData, saveWalletData } from "./storage";
+import type { XMTPUser } from "./types";
 
 const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
 let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
@@ -92,11 +93,11 @@ export class WalletService {
   private inboxId: string;
   private sdkInitialized: boolean;
 
-  constructor(inboxId: string, address: string) {
+  constructor(xmtpUser: XMTPUser) {
     this.sdkInitialized = initializeCoinbaseSDK();
     this.walletStorage = new WalletStorage();
-    this.humanAddress = address;
-    this.inboxId = inboxId;
+    this.humanAddress = xmtpUser.address;
+    this.inboxId = xmtpUser.inboxId;
     console.log(
       "WalletService initialized with sender address",
       this.humanAddress,

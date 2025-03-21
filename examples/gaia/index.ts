@@ -1,33 +1,18 @@
-# Grok agent example
-
-This example uses the [Grok](https://x.ai/api) API for responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
-
-## Environment variables
-
-Add the following keys to a `.env` file:
-
-```bash
-WALLET_KEY= # the private key of the wallet
-ENCRYPTION_KEY= # a second random 32 bytes encryption key for local db encryption
-GROK_API_KEY= # the API key for the Grok API
-```
-
-You can generate random keys with the following command:
-
-```bash
-yarn gen:keys
-```
-
-## Usage
-
-```tsx
+import "dotenv/config";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import OpenAI from "openai";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, GROK_API_KEY } = process.env;
+const {
+  WALLET_KEY,
+  ENCRYPTION_KEY,
+  GAIA_NODE_URL,
+  GAIA_API_KEY,
+  GAIA_MODEL_NAME,
+} = process.env;
 
 /* Check if the environment variables are set */
 if (!WALLET_KEY) {
@@ -39,14 +24,30 @@ if (!ENCRYPTION_KEY) {
   throw new Error("ENCRYPTION_KEY must be set");
 }
 
-/* Check if the Grok API key is set */
-if (!GROK_API_KEY) {
-  throw new Error("GROK_API_KEY must be set");
+/* Check if the OpenAI API key is set */
+if (!GAIA_API_KEY) {
+  throw new Error("GAIA_API_KEY must be set");
+}
+
+/* Check if the Gaia node's base URL is set */
+if (!GAIA_NODE_URL) {
+  throw new Error("GAIA_NODE_URL must be set");
+}
+
+/* Check if the the model name for the Gaia node is set */
+if (!GAIA_MODEL_NAME) {
+  throw new Error("GAIA_MODEL_NAME must be set");
 }
 
 /* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+
+/* Initialize the OpenAI client */
+const openai = new OpenAI({
+  baseURL: GAIA_NODE_URL,
+  apiKey: GAIA_API_KEY,
+});
 
 /* Set the environment to local, dev or production */
 const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
@@ -89,8 +90,8 @@ async function main() {
     );
 
     /* Get the conversation from the local db */
-    const conversation = client.conversations.getConversationById(
-      message.conversationId,
+    const conversation = client.conversations.getDmByInboxId(
+      message.senderInboxId,
     );
 
     /* If the conversation is not found, skip the message */
@@ -100,32 +101,20 @@ async function main() {
     }
 
     try {
-      /* Get the AI response from Grok */
-      const response = await fetch("https://api.x.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${GROK_API_KEY}`, // Use the same API key variable
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: "You are a test assistant." },
-            { role: "user", content: message.content as string },
-          ],
-          model: "grok-2-latest",
-          stream: false,
-          temperature: 0,
-        }),
-      }).then(
-        (res) =>
-          res.json() as Promise<{
-            choices: { message: { content: string } }[];
-          }>,
-      );
-      const aiResponse = response.choices[0]?.message?.content || "";
-      console.log(`Sending AI response: ${aiResponse}`);
+      /* Get the AI response */
+      const completion = await openai.chat.completions.create({
+        messages: [{ role: "user", content: message.content as string }],
+        model: GAIA_MODEL_NAME as string,
+      });
+
+      /* Get the AI response */
+      const response =
+        completion.choices[0]?.message?.content ||
+        "I'm not sure how to respond to that.";
+
+      console.log(`Sending AI response: ${response}`);
       /* Send the AI response to the conversation */
-      await conversation.send(aiResponse);
+      await conversation.send(response);
     } catch (error) {
       console.error("Error getting AI response:", error);
       await conversation.send(
@@ -138,21 +127,3 @@ async function main() {
 }
 
 main().catch(console.error);
-```
-
-## Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-cd integrations
-cd grok
-# install packages
-yarn
-# generate random keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
-```

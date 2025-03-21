@@ -4,21 +4,25 @@ To create a gated group chat using XMTP, you will need an admin bot within the g
 
 ![](/media/gated.png)
 
-#### Environment variables
+### Environment variables
+
+To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of admin bot
-ENCRYPTION_KEY= # a second fixed or random 32 bytes encryption key for the local db
-
-
+WALLET_KEY= # the private key of the wallet
+ENCRYPTION_KEY= # encryption key for the local database
 ALCHEMY_API_KEY= #alchemy api to check NFT ownership
+XMTP_ENV= # local, dev, production
 ```
 
 You can generate random keys with the following command:
 
-```bash
-yarn gen:keys
+```tsx
+yarn gen:keys <name>
 ```
+
+> [!WARNING]
+> Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
 
 ## Start the XMTP agent
 
@@ -103,8 +107,10 @@ git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 cd xmtp-agent-examples
 # install packages
 yarn
-# generate random keys (optional)
+# go to the folder
+cd examples/gated-group
+# generate random xmtp keys (optional)
 yarn gen:keys
 # run the example
-yarn examples:gated
+yarn dev
 ```

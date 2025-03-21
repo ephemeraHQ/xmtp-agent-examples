@@ -7,7 +7,7 @@ A DeFi agent built using Langchain and powered by CDP SDK, operating over the XM
 - Process blockchain payments using natural language commands
 - Advanced language processing using LangChain and OpenAI
 - User-specific wallet management with flexible storage options (Redis or local file)
-- XMTP messaging integration for secure, decentralized chat interactions
+- XMTP messaging for secure, decentralized chat interactions
 - Powered by CDP SDK for reliable blockchain operations and Langchain for AI Agent
 
 ## Prerequisites
@@ -26,7 +26,7 @@ Follow these steps to get your x agent up and running:
 
    ```bash
    git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-   cd integrations/coinbase-langchain
+   cd examples/coinbase-langchain
    ```
 
 2. **Install dependencies**:
