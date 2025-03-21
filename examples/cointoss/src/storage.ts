@@ -1,44 +1,20 @@
-import fs from "fs/promises";
-import path from "path";
-import { createClient } from "redis";
-import {
-  TossStatus,
-  type CoinTossGame,
-  type StorageProvider,
-  type UserWallet,
-} from "./types";
+import { existsSync, mkdirSync } from "fs";
+import * as fs from "fs/promises";
+import * as path from "path";
+import { createClient, type RedisClientType } from "redis";
+import { TossStatus, type CoinTossGame, type UserWallet } from "./types";
 
-// Storage provider instance
-let storageInstance: StorageProvider | null = null;
-
-/**
- * Initialize the storage provider based on environment variables
- * Uses Redis if REDIS_URL is provided, otherwise falls back to local file storage
- */
-export function initializeStorage(): StorageProvider {
-  try {
-    if (process.env.REDIS_URL) {
-      console.log("Initializing Redis storage...");
-      storageInstance = new RedisStorageProvider();
-      console.log("Redis storage initialized successfully.");
-    } else {
-      console.log("Initializing local file storage...");
-      storageInstance = new LocalStorageProvider();
-      console.log("Local file storage initialized successfully.");
-    }
-  } catch (error) {
-    console.error("Failed to initialize storage:", error);
-    console.log("Falling back to local file storage...");
-    storageInstance = new LocalStorageProvider();
-  }
-
-  return storageInstance;
-}
+const networkId = process.env.NETWORK_ID ?? "base-sepolia";
+const TOSS_KEY_PREFIX = "toss:";
+const WALLET_KEY_PREFIX = "wallet_data:";
+const WALLET_STORAGE_DIR = ".data/wallet_data";
+const XMTP_STORAGE_DIR = ".data/xmtp";
+const TOSS_STORAGE_DIR = ".data/tosses";
 
 /**
  * Generic local file storage for key-value data
  */
-export class LocalStorage {
+class LocalStorage {
   private baseDir: string;
 
   constructor(baseDir: string) {
@@ -101,36 +77,103 @@ export class LocalStorage {
   }
 }
 
-export class LocalStorageProvider implements StorageProvider {
+/**
+ * Global storage service that can switch between Redis and local file storage
+ */
+class StorageService {
+  private useRedis: boolean;
+  private redisClient: RedisClientType | null = null;
   private tossesStorage: LocalStorage;
   private walletsStorage: LocalStorage;
+  private initialized = false;
 
   constructor() {
-    this.tossesStorage = new LocalStorage(
-      path.join(process.cwd(), "data", "tosses"),
-    );
-    this.walletsStorage = new LocalStorage(
-      path.join(process.cwd(), "wallet_data"),
-    );
+    this.useRedis = Boolean(process.env.REDIS_URL);
+    this.tossesStorage = new LocalStorage(TOSS_STORAGE_DIR);
+    this.walletsStorage = new LocalStorage(WALLET_STORAGE_DIR);
   }
 
-  async saveGame(toss: CoinTossGame): Promise<void> {
-    await this.tossesStorage.set(toss.id, JSON.stringify(toss, null, 2));
+  /**
+   * Initialize storage (connect to Redis or ensure local directories)
+   */
+  public async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    if (this.useRedis) {
+      this.redisClient = createClient({
+        url: process.env.REDIS_URL,
+      });
+
+      await this.redisClient.connect();
+      console.log("Connected to Redis");
+    } else {
+      console.log("Using local file storage");
+      this.ensureLocalStorage();
+    }
+
+    this.initialized = true;
   }
 
-  async getGame(tossId: string): Promise<CoinTossGame | null> {
-    const data = await this.tossesStorage.get(tossId);
-    return data ? (JSON.parse(data) as CoinTossGame) : null;
+  /**
+   * Ensure local storage directories exist
+   */
+  private ensureLocalStorage(): void {
+    if (!existsSync(WALLET_STORAGE_DIR)) {
+      mkdirSync(WALLET_STORAGE_DIR, { recursive: true });
+    }
+    if (!existsSync(TOSS_STORAGE_DIR)) {
+      mkdirSync(TOSS_STORAGE_DIR, { recursive: true });
+    }
+    if (!existsSync(XMTP_STORAGE_DIR)) {
+      mkdirSync(XMTP_STORAGE_DIR, { recursive: true });
+    }
   }
 
-  async listActiveGames(): Promise<CoinTossGame[]> {
-    const tossesDir = path.join(process.cwd(), "data", "tosses");
-    const files = await fs.readdir(tossesDir);
+  /**
+   * Save a coin toss game
+   */
+  public async saveGame(toss: CoinTossGame): Promise<void> {
+    if (!this.initialized) await this.initialize();
+
+    if (this.redisClient) {
+      const key = `${TOSS_KEY_PREFIX}${toss.id}-${networkId}`;
+      await this.redisClient.set(key, JSON.stringify(toss));
+    } else {
+      await this.tossesStorage.set(toss.id, JSON.stringify(toss, null, 2));
+    }
+  }
+
+  /**
+   * Get a coin toss game by ID
+   */
+  public async getGame(tossId: string): Promise<CoinTossGame | null> {
+    if (!this.initialized) await this.initialize();
+
+    if (this.redisClient) {
+      const key = `${TOSS_KEY_PREFIX}${tossId}-${networkId}`;
+      const data = await this.redisClient.get(key);
+      return data ? (JSON.parse(data) as CoinTossGame) : null;
+    } else {
+      const data = await this.tossesStorage.get(tossId);
+      return data ? (JSON.parse(data) as CoinTossGame) : null;
+    }
+  }
+
+  /**
+   * List all active games
+   */
+  public async listActiveGames(): Promise<CoinTossGame[]> {
+    if (!this.initialized) await this.initialize();
+
     const tosses: CoinTossGame[] = [];
 
-    for (const file of files) {
-      if (file.endsWith(".json")) {
-        const tossId = file.replace(".json", "");
+    if (this.redisClient) {
+      const keys = await this.redisClient.keys(`${TOSS_KEY_PREFIX}*`);
+
+      for (const key of keys) {
+        const tossId = key
+          .replace(TOSS_KEY_PREFIX, "")
+          .replace(`-${networkId}`, "");
         const toss = await this.getGame(tossId);
         if (
           toss &&
@@ -140,84 +183,92 @@ export class LocalStorageProvider implements StorageProvider {
           tosses.push(toss);
         }
       }
-    }
+    } else {
+      try {
+        const files = await fs.readdir(TOSS_STORAGE_DIR);
 
-    return tosses;
-  }
-
-  async updateGame(toss: CoinTossGame): Promise<void> {
-    await this.saveGame(toss);
-  }
-
-  async saveUserWallet(wallet: UserWallet): Promise<void> {
-    await this.walletsStorage.set(
-      wallet.userId,
-      JSON.stringify(wallet, null, 2),
-    );
-  }
-
-  async getUserWallet(userId: string): Promise<string | null> {
-    const data = await this.walletsStorage.get(userId);
-    if (!data) return null;
-
-    try {
-      const wallet = JSON.parse(data) as UserWallet;
-      return wallet.walletData;
-    } catch (error) {
-      console.error("Error parsing wallet data:", error);
-      return null;
-    }
-  }
-}
-
-export class RedisStorageProvider implements StorageProvider {
-  private client: ReturnType<typeof createClient>;
-  private readonly tossPrefix = "toss:";
-  private readonly walletPrefix = "wallet:";
-
-  constructor() {
-    this.client = createClient({
-      url: process.env.REDIS_URL,
-    });
-    void this.client.connect();
-  }
-
-  async saveGame(toss: CoinTossGame): Promise<void> {
-    await this.client.set(this.tossPrefix + toss.id, JSON.stringify(toss));
-  }
-
-  async getGame(tossId: string): Promise<CoinTossGame | null> {
-    const data = await this.client.get(this.tossPrefix + tossId);
-    return data ? (JSON.parse(data) as CoinTossGame) : null;
-  }
-
-  async listActiveGames(): Promise<CoinTossGame[]> {
-    const keys = await this.client.keys(this.tossPrefix + "*");
-    const tosses: CoinTossGame[] = [];
-
-    for (const key of keys) {
-      const toss = await this.getGame(key.replace(this.tossPrefix, ""));
-      if (
-        toss &&
-        toss.status !== TossStatus.COMPLETED &&
-        toss.status !== TossStatus.CANCELLED
-      ) {
-        tosses.push(toss);
+        for (const file of files) {
+          if (file.endsWith(".json")) {
+            const tossId = file.replace(".json", "");
+            const toss = await this.getGame(tossId);
+            if (
+              toss &&
+              toss.status !== TossStatus.COMPLETED &&
+              toss.status !== TossStatus.CANCELLED
+            ) {
+              tosses.push(toss);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error listing active games:", error);
       }
     }
 
     return tosses;
   }
 
-  async updateGame(toss: CoinTossGame): Promise<void> {
+  /**
+   * Update an existing game
+   */
+  public async updateGame(toss: CoinTossGame): Promise<void> {
     await this.saveGame(toss);
   }
 
-  async saveUserWallet(wallet: UserWallet): Promise<void> {
-    await this.client.set(this.walletPrefix + wallet.userId, wallet.walletData);
+  /**
+   * Save user wallet data
+   */
+  public async saveUserWallet(wallet: UserWallet): Promise<void> {
+    if (!this.initialized) await this.initialize();
+
+    if (this.redisClient) {
+      const key = `${WALLET_KEY_PREFIX}${wallet.userId}-${networkId}`;
+      await this.redisClient.set(key, JSON.stringify(wallet));
+    } else {
+      await this.walletsStorage.set(
+        wallet.userId,
+        JSON.stringify(wallet, null, 2),
+      );
+    }
   }
 
-  async getUserWallet(userId: string): Promise<string | null> {
-    return this.client.get(this.walletPrefix + userId);
+  /**
+   * Get user wallet data by user ID
+   */
+  public async getUserWallet(userId: string): Promise<UserWallet | null> {
+    if (!this.initialized) await this.initialize();
+
+    if (this.redisClient) {
+      const key = `${WALLET_KEY_PREFIX}${userId}-${networkId}`;
+      const data = await this.redisClient.get(key);
+      if (!data) return null;
+      return JSON.parse(data) as UserWallet;
+    } else {
+      const data = await this.walletsStorage.get(userId);
+      if (!data) return null;
+
+      try {
+        const wallet = JSON.parse(data) as UserWallet;
+        return wallet;
+      } catch (error) {
+        console.error("Error parsing wallet data:", error);
+        return null;
+      }
+    }
   }
 }
+
+// Create a single global instance
+const storage = new StorageService();
+
+// Export the storage instance
+export { storage };
+
+// Export constants for backward compatibility
+export {
+  TOSS_KEY_PREFIX,
+  WALLET_KEY_PREFIX,
+  WALLET_STORAGE_DIR,
+  XMTP_STORAGE_DIR,
+  TOSS_STORAGE_DIR,
+};

@@ -1,8 +1,9 @@
 import * as crypto from "crypto";
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { parseNaturalLanguageToss } from "./cdp";
-import { TossStatus, type CoinTossGame, type StorageProvider } from "./types";
-import { WalletService } from "./walletService";
+import { WalletService } from "./cdp";
+import { parseNaturalLanguageToss } from "./langchain";
+import { storage } from "./storage";
+import { TossStatus, type CoinTossGame } from "./types";
 
 // Interface for transfer response
 interface Transfer {
@@ -17,17 +18,14 @@ export class GameManager {
   private lastGameId: number = 0;
   private walletService: WalletService;
 
-  constructor(
-    private storage: StorageProvider,
-    private agentAddress: string,
-  ) {
+  constructor(agentAddress: string) {
     this.walletService = new WalletService(agentAddress);
     // Initialize lastGameId from storage
     void this.initializeLastGameId();
   }
 
   private async initializeLastGameId() {
-    const tosses = await this.storage.listActiveGames();
+    const tosses = await storage.listActiveGames();
     this.lastGameId = tosses.reduce((maxId, toss) => {
       const id = parseInt(toss.id);
       return isNaN(id) ? maxId : Math.max(maxId, id);
@@ -76,7 +74,7 @@ export class GameManager {
     };
 
     console.log(`💾 Saving toss to storage...`);
-    await this.storage.saveGame(toss);
+    await storage.saveGame(toss);
     console.log(`🎮 Toss created successfully!`);
     console.log(`---------------------------------------------`);
     console.log(`TOSS ID: ${tossId}`);
@@ -88,7 +86,7 @@ export class GameManager {
     // No longer automatically adding creator as first participant
 
     // Reload the toss to get updated state
-    const updatedToss = await this.storage.getGame(tossId);
+    const updatedToss = await storage.getGame(tossId);
     return updatedToss || toss;
   }
 
@@ -98,7 +96,7 @@ export class GameManager {
     chosenOption: string,
     hasPaid: boolean,
   ): Promise<CoinTossGame> {
-    const toss = await this.storage.getGame(tossId);
+    const toss = await storage.getGame(tossId);
     if (!toss) {
       throw new Error("Toss not found");
     }
@@ -148,12 +146,12 @@ export class GameManager {
       toss.status = TossStatus.WAITING_FOR_PLAYER;
     }
 
-    await this.storage.updateGame(toss);
+    await storage.updateGame(toss);
     return toss;
   }
 
   async joinGame(tossId: string, player: string): Promise<CoinTossGame> {
-    const toss = await this.storage.getGame(tossId);
+    const toss = await storage.getGame(tossId);
     if (!toss) {
       throw new Error("Toss not found");
     }
@@ -174,7 +172,7 @@ export class GameManager {
   }
 
   async verifyPayment(userId: string, tossId: string): Promise<boolean> {
-    const toss = await this.storage.getGame(tossId);
+    const toss = await storage.getGame(tossId);
     if (!toss) {
       return false;
     }
@@ -224,7 +222,7 @@ export class GameManager {
 
       // Get toss wallet
       console.log(`🔑 Getting toss information...`);
-      const toss = await this.storage.getGame(tossId);
+      const toss = await storage.getGame(tossId);
       if (!toss) {
         console.error(`❌ Toss not found: ${tossId}`);
         throw new Error("Toss not found");
@@ -257,7 +255,7 @@ export class GameManager {
   async executeCoinToss(tossId: string): Promise<CoinTossGame> {
     console.log(`🎲 EXECUTING TOSS for Toss: ${tossId}`);
 
-    const toss = await this.storage.getGame(tossId);
+    const toss = await storage.getGame(tossId);
     if (!toss) {
       console.error(`❌ Toss not found: ${tossId}`);
       throw new Error("Toss not found");
@@ -282,7 +280,7 @@ export class GameManager {
     console.log(`💰 Total pot: ${totalPot} USDC`);
 
     toss.status = TossStatus.IN_PROGRESS;
-    await this.storage.updateGame(toss);
+    await storage.updateGame(toss);
     console.log(`🏁 Toss status updated to IN_PROGRESS`);
 
     // Verify participants array is not empty
@@ -290,7 +288,7 @@ export class GameManager {
       console.error(`❌ No participants found in the toss`);
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
-      await this.storage.updateGame(toss);
+      await storage.updateGame(toss);
       return toss;
     }
 
@@ -299,7 +297,7 @@ export class GameManager {
       console.error(`❌ No participant options found in the toss`);
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
-      await this.storage.updateGame(toss);
+      await storage.updateGame(toss);
       return toss;
     }
 
@@ -319,7 +317,7 @@ export class GameManager {
       console.error(`❌ Not enough unique options to choose from`);
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
-      await this.storage.updateGame(toss);
+      await storage.updateGame(toss);
       return toss;
     }
 
@@ -348,7 +346,7 @@ export class GameManager {
       console.error(`❌ No winners found for option: ${winningOption}`);
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
-      await this.storage.updateGame(toss);
+      await storage.updateGame(toss);
       return toss;
     }
 
@@ -376,7 +374,7 @@ export class GameManager {
       if (!tossWallet) {
         console.error(`❌ Toss wallet not found`);
         toss.paymentSuccess = false;
-        await this.storage.updateGame(toss);
+        await storage.updateGame(toss);
         return toss;
       }
 
@@ -409,7 +407,7 @@ export class GameManager {
 
           // Transfer the winner's share
           const transfer = await this.walletService.transfer(
-            `toss:${tossId}`,
+            winner.userId,
             winnerWalletAddress,
             prizePerWinner,
           );
@@ -463,22 +461,22 @@ export class GameManager {
     }
 
     // Save final toss state
-    await this.storage.updateGame(toss);
+    await storage.updateGame(toss);
     console.log(`🏁 Toss completed. Final status saved.`);
 
     return toss;
   }
 
   async listActiveGames(): Promise<CoinTossGame[]> {
-    return this.storage.listActiveGames();
+    return storage.listActiveGames();
   }
 
   async getGame(tossId: string): Promise<CoinTossGame | null> {
-    return this.storage.getGame(tossId);
+    return storage.getGame(tossId);
   }
 
   async cancelGame(tossId: string): Promise<CoinTossGame> {
-    const toss = await this.storage.getGame(tossId);
+    const toss = await storage.getGame(tossId);
     if (!toss) {
       throw new Error("Toss not found");
     }
@@ -488,7 +486,7 @@ export class GameManager {
     }
 
     toss.status = TossStatus.CANCELLED;
-    await this.storage.updateGame(toss);
+    await storage.updateGame(toss);
     return toss;
   }
 
@@ -540,7 +538,7 @@ export class GameManager {
     toss.tossOptions = parsedToss.options;
 
     // Update the toss with the additional information
-    await this.storage.updateGame(toss);
+    await storage.updateGame(toss);
 
     return toss;
   }

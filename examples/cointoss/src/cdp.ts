@@ -1,316 +1,294 @@
 import {
-  AgentKit,
-  cdpApiActionProvider,
-  cdpWalletActionProvider,
-  CdpWalletProvider,
-  erc20ActionProvider,
-  walletActionProvider,
-} from "@coinbase/agentkit";
-import { getLangChainTools } from "@coinbase/agentkit-langchain";
-import { HumanMessage } from "@langchain/core/messages";
-import { MemorySaver } from "@langchain/langgraph";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { ChatOpenAI } from "@langchain/openai";
-import type { StorageProvider } from "./types";
+  Coinbase,
+  TimeoutError,
+  Wallet,
+  type Trade,
+  type Transfer,
+  type WalletData,
+} from "@coinbase/coinbase-sdk";
+import { isAddress } from "viem";
+import { storage } from "./storage";
+import type { AgentWalletData, UserWallet } from "./types";
 
-// Interface for parsed toss information
-export interface ParsedToss {
-  topic: string;
-  options: string[];
-  amount: string;
+const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
+let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
+const networkId = process.env.NETWORK_ID ?? "base-sepolia";
+
+if (!coinbaseApiKeyName || !coinbaseApiKeyPrivateKey || !networkId) {
+  console.error(
+    "Either networkId, CDP_API_KEY_NAME or CDP_API_KEY_PRIVATE_KEY must be set",
+  );
+  process.exit(1);
 }
 
-// Define stream chunk types
-interface AgentChunk {
-  agent: {
-    messages: Array<{
-      content: string;
-    }>;
-  };
-}
-
-interface ToolsChunk {
-  tools: {
-    messages: Array<{
-      content: string;
-    }>;
-  };
-}
-
-type StreamChunk = AgentChunk | ToolsChunk;
-
-// Interface for parsed JSON response
-interface TossJsonResponse {
-  topic?: string;
-  options?: string[];
-  amount?: string;
-}
-
-export async function getOrCreateWalletForUser(
-  userId: string,
-  storage: StorageProvider,
-) {
-  const walletDataStr = await storage.getUserWallet(userId);
-
-  // Configure CDP Wallet Provider
-  const config = {
-    apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
-    apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-      /\\n/g,
-      "\n",
-    ),
-    cdpWalletData: walletDataStr || undefined,
-    networkId: process.env.NETWORK_ID,
-  };
-
-  // Create a new wallet if one doesn't exist
-  const walletProvider = await CdpWalletProvider.configureWithWallet(config);
-
-  if (!walletDataStr) {
-    // Export wallet data and save
-    const exportedWallet = await walletProvider.exportWallet();
-    await storage.saveUserWallet({
-      userId,
-      walletData: JSON.stringify(exportedWallet),
-    });
+// Initialize Coinbase SDK
+function initializeCoinbaseSDK(): boolean {
+  // Replace \\n with actual newlines if present in the private key
+  if (coinbaseApiKeyPrivateKey) {
+    coinbaseApiKeyPrivateKey = coinbaseApiKeyPrivateKey.replace(/\\n/g, "\n");
   }
-
-  return { walletProvider, config };
-}
-
-export async function createTossWallet(_storage: StorageProvider) {
-  const config = {
-    apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
-    apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-      /\\n/g,
-      "\n",
-    ),
-    networkId: process.env.NETWORK_ID || "base-mainnet",
-  };
-
-  const walletProvider = await CdpWalletProvider.configureWithWallet(config);
-  const exportedWallet = await walletProvider.exportWallet();
-  const walletAddress = walletProvider.getAddress();
-
-  return {
-    walletProvider,
-    walletAddress, // Removed await as it's not a Promise
-    exportedWallet: JSON.stringify(exportedWallet),
-  };
-}
-
-export async function initializeAgent(
-  userId: string,
-  storage: StorageProvider,
-) {
   try {
-    const llm = new ChatOpenAI({
-      modelName: "gpt-4o-mini",
+    Coinbase.configure({
+      apiKeyName: coinbaseApiKeyName as string,
+      privateKey: coinbaseApiKeyPrivateKey as string,
     });
-
-    const { walletProvider } = await getOrCreateWalletForUser(userId, storage);
-
-    const agentkit = await AgentKit.from({
-      walletProvider,
-      actionProviders: [
-        walletActionProvider(),
-        erc20ActionProvider(),
-        cdpApiActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n",
-          ),
-        }),
-        cdpWalletActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n",
-          ),
-        }),
-      ],
-    });
-
-    const tools = await getLangChainTools(agentkit);
-    const memory = new MemorySaver();
-
-    const agentConfig = {
-      configurable: { thread_id: `CoinToss Agent for ${userId}` },
-    };
-
-    const agent = createReactAgent({
-      llm,
-      tools,
-      checkpointSaver: memory,
-      messageModifier: `
-        You are a CoinToss Agent that helps users participate in coin toss activities.
-        
-        You have two main functions:
-        1. Process natural language toss requests and structure them
-        2. Handle coin toss management commands
-        
-        When parsing natural language tosses:
-        - Extract the toss topic (what people are tossing on)
-        - Identify options (default to "yes" and "no" if not provided)
-        - Determine toss amount (default to 0.1 USDC if not specified)
-        - Enforce a maximum toss amount of 10 USDC
-        
-        For example:
-        - "Will it rain tomorrow for 5" should be interpreted as a toss on "Will it rain tomorrow" with options ["yes", "no"] and amount "5"
-        - "Lakers vs Celtics for 10" should be interpreted as a toss on "Lakers vs Celtics game" with options ["Lakers", "Celtics"] and amount "10"
-        
-        When checking payments or balances:
-        1. Use the USDC token at 0x5dEaC602762362FE5f135FA5904351916053cF70 on Base.
-        2. When asked to check if a payment was sent, verify:
-           - The exact amount was transferred
-           - The transaction is confirmed
-           - The correct addresses were used
-        3. For balance checks, show the exact USDC amount available.
-        4. When transferring winnings, ensure:
-           - The toss wallet has sufficient balance
-           - The transfer is completed successfully
-           - Provide transaction details
-        
-        Available commands:
-        /create <amount> - Create a new coin toss with specified USDC amount
-        /join <tossId> - Join an existing toss with the specified ID
-        /list - List all active tosses
-        /balance - Check your wallet balance
-        /help - Show available commands
-        
-        Before executing any action:
-        1. Check if the user has sufficient balance for the requested action
-        2. Verify toss exists when joining
-        3. Ensure proper toss state transitions
-        4. Handle any errors gracefully
-        
-        Keep responses concise and clear, focusing on payment verification and toss status.
-        If there is a 5XX (internal) HTTP error, ask the user to try again later.
-      `,
-    });
-
-    return { agent, config: agentConfig };
-  } catch (error) {
-    console.error("Failed to initialize agent:", error);
-    throw error;
+    console.log("Coinbase SDK initialized successfully, network:", networkId);
+    return true;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Failed to initialize Coinbase SDK:", errorMessage);
+    return false;
   }
 }
 
-/**
- * Process a message with the agent
- * @param agent - The agent executor
- * @param config - Agent configuration
- * @param message - The user message
- * @returns The agent's response
- */
-export async function processMessage(
-  agent: ReturnType<typeof createReactAgent>,
-  config: { configurable: { thread_id: string } },
-  message: string,
-): Promise<string> {
-  try {
-    const stream = await agent.stream(
-      { messages: [new HumanMessage(message)] },
-      config,
-    );
+// Initialize the SDK when the module is loaded
+let sdkInitialized = false;
 
-    let response = "";
-    for await (const chunk of stream as AsyncIterable<StreamChunk>) {
-      if ("agent" in chunk) {
-        const content = chunk.agent.messages[0].content;
-        if (typeof content === "string") {
-          response += content + "\n";
-        }
-      } else if ("tools" in chunk) {
-        const content = chunk.tools.messages[0].content;
-        if (typeof content === "string") {
-          response += content + "\n";
-        }
-      }
+export class WalletService {
+  private senderAddress: string;
+
+  constructor(sender: string) {
+    if (!sdkInitialized) {
+      sdkInitialized = initializeCoinbaseSDK();
     }
 
-    return response.trim();
-  } catch (error) {
-    console.error("Error processing message:", error);
-    return "Sorry, I encountered an error while processing your request. Please try again.";
+    this.senderAddress = sender.toLowerCase();
   }
-}
 
-/**
- * Parse a natural language toss prompt to extract structured information
- * @param agent - The agent
- * @param config - Agent configuration
- * @param prompt - The natural language prompt
- * @returns Parsed toss information
- */
-export async function parseNaturalLanguageToss(
-  agent: ReturnType<typeof createReactAgent>,
-  config: { configurable: { thread_id: string } },
-  prompt: string,
-): Promise<ParsedToss> {
-  try {
-    // Default values in case parsing fails
-    const defaultResult: ParsedToss = {
-      topic: prompt,
-      options: ["yes", "no"],
-      amount: "0.1",
-    };
-
-    if (!prompt || prompt.length < 3) {
-      return defaultResult;
-    }
-
-    console.log(`🔄 Parsing natural language toss: "${prompt}"`);
-
-    // Format specific request for parsing
-    const parsingRequest = `
-      Parse this toss request into structured format: "${prompt}"
-      
-      Return only a valid JSON object with these fields:
-      {
-        "topic": "the tossing topic",
-        "options": ["option1", "option2"],
-        "amount": "toss amount"
-      }
-    `;
-
-    // Process with the agent
-    const response = await processMessage(agent, config, parsingRequest);
-
-    // Try to extract JSON from the response
+  async createWallet(key: string): Promise<AgentWalletData> {
     try {
-      // Find JSON in the response
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsedJson = JSON.parse(jsonMatch[0]) as TossJsonResponse;
+      key = key.toLowerCase();
 
-        // Validate and provide defaults if needed
-        const result: ParsedToss = {
-          topic: parsedJson.topic ?? prompt,
-          options:
-            Array.isArray(parsedJson.options) && parsedJson.options.length >= 2
-              ? [parsedJson.options[0], parsedJson.options[1]]
-              : ["yes", "no"],
-          amount: parsedJson.amount ?? "0.1",
-        };
-
-        console.log(
-          `✅ Parsed toss: "${result.topic}" with options [${result.options.join(", ")}] for ${result.amount} USDC`,
-        );
-        return result;
+      if (!sdkInitialized) {
+        sdkInitialized = initializeCoinbaseSDK();
       }
+
+      const wallet = await Wallet.create({
+        networkId: Coinbase.networks.BaseSepolia,
+      });
+
+      const data = wallet.export();
+      const address = await wallet.getDefaultAddress();
+      const walletAddress = address.getId();
+
+      await storage.saveUserWallet({
+        userId: `wallet:${key}`,
+        walletData: data,
+      });
+
+      return {
+        id: walletAddress,
+        wallet: wallet,
+        data: data,
+        human_address: this.senderAddress,
+        agent_address: walletAddress,
+        inboxId: key,
+      };
     } catch (error) {
-      console.error("Error parsing JSON from agent response:", error);
+      if (error instanceof Error) {
+        throw new Error(`Wallet creation failed: ${error.message}`);
+      }
+      throw new Error(`Failed to create wallet: ${String(error)}`);
+    }
+  }
+
+  async getWallet(
+    inboxId: string,
+    createIfNotFound: boolean = true,
+  ): Promise<AgentWalletData | undefined> {
+    // Try to retrieve existing wallet data
+    const walletData = await storage.getUserWallet(inboxId);
+    if (!walletData) {
+      return undefined;
     }
 
-    return defaultResult;
-  } catch (error) {
-    console.error("Error parsing natural language toss:", error);
+    try {
+      const importedWallet = await Wallet.import(walletData.walletData);
+
+      return {
+        id: importedWallet.getId() ?? "",
+        wallet: importedWallet,
+        data: walletData.walletData,
+        human_address: walletData.userId,
+        agent_address: walletData.userId,
+        inboxId: walletData.userId,
+      };
+    } catch (error) {
+      // If wallet data exists but is corrupted/invalid and we're allowed to create a new one
+      if (createIfNotFound) {
+        console.warn(
+          `Failed to import existing wallet for ${inboxId}, creating new one`,
+        );
+        return this.createWallet(inboxId);
+      }
+
+      // Otherwise, fail explicitly
+      throw new Error(
+        `Invalid wallet data: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  async transfer(
+    userId: string,
+    toAddress: string,
+    amount: number,
+  ): Promise<Transfer | undefined> {
+    userId = userId.toLowerCase();
+    toAddress = toAddress.toLowerCase();
+
+    console.log("📤 TRANSFER INITIATED");
+    console.log(`💸 Amount: ${amount} USDC`);
+    console.log(`🔍 From user: ${userId}`);
+    console.log(`🔍 To: ${toAddress}`);
+
+    // Get the source wallet
+    console.log(`🔑 Retrieving source wallet for user: ${userId}...`);
+    const from = await this.getWallet(userId);
+    if (!from) {
+      console.error(`❌ No wallet found for sender: ${userId}`);
+      return undefined;
+    }
+    console.log(`✅ Source wallet found: ${from.agent_address}`);
+
+    if (!Number(amount)) {
+      console.error(`❌ Invalid amount: ${amount}`);
+      return undefined;
+    }
+
+    // Check balance
+    console.log(
+      `💰 Checking balance for source wallet: ${from.agent_address}...`,
+    );
+    const balance = await from.wallet.getBalance(Coinbase.assets.Usdc);
+    console.log(`💵 Available balance: ${Number(balance)} USDC`);
+
+    if (Number(balance) < amount) {
+      console.error(
+        `❌ Insufficient balance. Required: ${amount} USDC, Available: ${Number(balance)} USDC`,
+      );
+      return undefined;
+    }
+
+    if (!isAddress(toAddress) && !toAddress.includes(":")) {
+      // If this is not an address, and not a user ID, we can't transfer
+      console.error(`❌ Invalid destination address: ${toAddress}`);
+      return undefined;
+    }
+
+    // Get or validate destination wallet
+    let destinationAddress = toAddress;
+    console.log(`🔑 Validating destination: ${toAddress}...`);
+    const to = await this.getWallet(toAddress, false);
+    if (to) {
+      destinationAddress = to.agent_address;
+      console.log(`✅ Destination wallet found: ${destinationAddress}`);
+    } else {
+      console.log(`ℹ️ Using raw address as destination: ${destinationAddress}`);
+    }
+
+    if (destinationAddress.includes(":")) {
+      console.error(
+        `❌ Invalid destination address format: ${destinationAddress}`,
+      );
+      return undefined;
+    }
+
+    try {
+      console.log(
+        `🚀 Executing transfer of ${amount} USDC from ${from.agent_address} to ${destinationAddress}...`,
+      );
+      const transfer = await from.wallet.createTransfer({
+        amount,
+        assetId: Coinbase.assets.Usdc,
+        destination: destinationAddress,
+        gasless: true,
+      });
+
+      console.log(`⏳ Waiting for transfer to complete...`);
+      try {
+        await transfer.wait();
+        console.log(`✅ Transfer completed successfully!`);
+        console.log(
+          `📝 Transaction details: ${JSON.stringify(transfer, null, 2)}`,
+        );
+      } catch (err) {
+        if (err instanceof TimeoutError) {
+          console.log(
+            `⚠️ Waiting for transfer timed out, but transaction may still complete`,
+          );
+        } else {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          console.error(
+            `❌ Error while waiting for transfer to complete:`,
+            errorMessage,
+          );
+        }
+      }
+
+      return transfer;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(`❌ Transfer failed:`, errorMessage);
+      throw error;
+    }
+  }
+
+  async checkBalance(
+    humanAddress: string,
+  ): Promise<{ address: string | undefined; balance: number }> {
+    humanAddress = humanAddress.toLowerCase();
+    const walletData = await this.getWallet(humanAddress);
+
+    if (!walletData) {
+      return { address: undefined, balance: 0 };
+    }
+
+    const balance = await walletData.wallet.getBalance(Coinbase.assets.Usdc);
     return {
-      topic: prompt,
-      options: ["yes", "no"],
-      amount: "0.1",
+      address: walletData.agent_address,
+      balance: Number(balance),
     };
+  }
+
+  async swap(
+    address: string,
+    fromAssetId: string,
+    toAssetId: string,
+    amount: number,
+  ): Promise<Trade | undefined> {
+    address = address.toLowerCase();
+    const walletData = await this.getWallet(address);
+    if (!walletData) return undefined;
+
+    const trade = await walletData.wallet.createTrade({
+      amount,
+      fromAssetId,
+      toAssetId,
+    });
+
+    try {
+      await trade.wait();
+    } catch (err) {
+      if (!(err instanceof TimeoutError)) {
+        console.error("Error while waiting for trade to complete: ", err);
+      }
+    }
+
+    return trade;
+  }
+
+  async deleteWallet(key: string): Promise<boolean> {
+    key = key.toLowerCase();
+    const encryptedKey = `wallet:${key}`;
+
+    const emptyWallet: UserWallet = {
+      userId: encryptedKey,
+      walletData: {} as WalletData,
+    };
+
+    await storage.saveUserWallet(emptyWallet);
+    return true;
   }
 }

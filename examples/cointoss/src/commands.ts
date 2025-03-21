@@ -1,5 +1,5 @@
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
-import type { GameManager } from "./game";
+import type { GameManager } from "./toss";
 
 /**
  * Entry point for command processing

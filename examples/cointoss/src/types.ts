@@ -1,3 +1,23 @@
+import type { Wallet, WalletData } from "@coinbase/coinbase-sdk";
+
+export function validateEnvironment() {
+  const requiredVars = [
+    "CDP_API_KEY_NAME",
+    "CDP_API_KEY_PRIVATE_KEY",
+    "WALLET_KEY",
+    "XMTP_ENV",
+    "OPENAI_API_KEY",
+    "ENCRYPTION_KEY",
+  ];
+
+  const missing = requiredVars.filter((v) => !process.env[v]);
+
+  if (missing.length) {
+    console.error("Missing env vars:", missing.join(", "));
+    process.exit(1);
+  }
+}
+
 // Interface to track participant options
 export interface Participant {
   userId: string;
@@ -32,17 +52,23 @@ export enum TossStatus {
 
 export interface UserWallet {
   userId: string;
-  walletData: string;
+  walletData: WalletData;
 }
-
-export interface StorageProvider {
-  saveGame(toss: CoinTossGame): Promise<void>;
-  getGame(tossId: string): Promise<CoinTossGame | null>;
-  listActiveGames(): Promise<CoinTossGame[]>;
-  updateGame(toss: CoinTossGame): Promise<void>;
-  saveUserWallet(wallet: UserWallet): Promise<void>;
-  getUserWallet(userId: string): Promise<string | null>;
+export interface XMTPUser {
+  inboxId: string;
+  address: string;
 }
+// Agent wallet data
+export type AgentWalletData = {
+  id: string;
+  wallet: Wallet;
+  data: WalletData;
+  human_address: string;
+  agent_address: string;
+  blockchain?: string;
+  state?: string;
+  inboxId: string;
+};
 
 export interface AgentConfig {
   configurable: {
