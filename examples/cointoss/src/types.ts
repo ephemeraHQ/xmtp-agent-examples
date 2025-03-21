@@ -9,7 +9,7 @@ export interface CoinTossGame {
   creator: string;
   betAmount: string;
   status: GameStatus;
-  participants: string[];        // Maintaining for backward compatibility
+  participants: string[]; // Maintaining for backward compatibility
   participantOptions: Participant[]; // New field to track participant options
   winner?: string;
   walletAddress: string;
@@ -27,7 +27,7 @@ export enum GameStatus {
   READY = "READY",
   IN_PROGRESS = "IN_PROGRESS",
   COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED"
+  CANCELLED = "CANCELLED",
 }
 
 export interface UserWallet {
@@ -48,4 +48,4 @@ export interface AgentConfig {
   configurable: {
     thread_id: string;
   };
-} 
+}

@@ -11,7 +11,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import { StorageProvider } from "./types.js";
+import type { StorageProvider } from "./types";
 
 // Interface for parsed bet information
 export interface ParsedBet {
@@ -20,24 +20,51 @@ export interface ParsedBet {
   amount: string;
 }
 
+// Define stream chunk types
+interface AgentChunk {
+  agent: {
+    messages: Array<{
+      content: string;
+    }>;
+  };
+}
+
+interface ToolsChunk {
+  tools: {
+    messages: Array<{
+      content: string;
+    }>;
+  };
+}
+
+type StreamChunk = AgentChunk | ToolsChunk;
+
+// Interface for parsed JSON response
+interface BetJsonResponse {
+  topic?: string;
+  options?: string[];
+  amount?: string;
+}
+
 export async function getOrCreateWalletForUser(
   userId: string,
-  storage: StorageProvider
+  storage: StorageProvider,
 ) {
   const walletDataStr = await storage.getUserWallet(userId);
 
-  let walletProvider;
-
   // Configure CDP Wallet Provider
   const config = {
-    apiKeyName: process.env.CDP_API_KEY_NAME!,
-    apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
+    apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
+      /\\n/g,
+      "\n",
+    ),
     cdpWalletData: walletDataStr || undefined,
     networkId: process.env.NETWORK_ID,
   };
 
   // Create a new wallet if one doesn't exist
-  walletProvider = await CdpWalletProvider.configureWithWallet(config);
+  const walletProvider = await CdpWalletProvider.configureWithWallet(config);
 
   if (!walletDataStr) {
     // Export wallet data and save
@@ -51,33 +78,37 @@ export async function getOrCreateWalletForUser(
   return { walletProvider, config };
 }
 
-export async function createGameWallet(storage: StorageProvider) {
+export async function createGameWallet(_storage: StorageProvider) {
   const config = {
-    apiKeyName: process.env.CDP_API_KEY_NAME!,
-    apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
+    apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
+      /\\n/g,
+      "\n",
+    ),
     networkId: process.env.NETWORK_ID || "base-mainnet",
   };
 
   const walletProvider = await CdpWalletProvider.configureWithWallet(config);
   const exportedWallet = await walletProvider.exportWallet();
+  const walletAddress = walletProvider.getAddress();
 
   return {
     walletProvider,
-    walletAddress: await walletProvider.getAddress(),
+    walletAddress, // Removed await as it's not a Promise
     exportedWallet: JSON.stringify(exportedWallet),
   };
 }
 
-export async function initializeAgent(userId: string, storage: StorageProvider) {
+export async function initializeAgent(
+  userId: string,
+  storage: StorageProvider,
+) {
   try {
     const llm = new ChatOpenAI({
       modelName: "gpt-4o-mini",
     });
 
-    const { walletProvider, config: walletConfig } = await getOrCreateWalletForUser(
-      userId,
-      storage
-    );
+    const { walletProvider } = await getOrCreateWalletForUser(userId, storage);
 
     const agentkit = await AgentKit.from({
       walletProvider,
@@ -85,12 +116,18 @@ export async function initializeAgent(userId: string, storage: StorageProvider) 
         walletActionProvider(),
         erc20ActionProvider(),
         cdpApiActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME!,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+          apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
+            /\\n/g,
+            "\n",
+          ),
         }),
         cdpWalletActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME!,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+          apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
+            /\\n/g,
+            "\n",
+          ),
         }),
       ],
     });
@@ -104,7 +141,7 @@ export async function initializeAgent(userId: string, storage: StorageProvider) 
 
     const agent = createReactAgent({
       llm,
-      tools: tools as any, // Type assertion to fix type error
+      tools,
       checkpointSaver: memory,
       messageModifier: `
         You are a CoinToss Agent that helps users participate in coin toss betting games.
@@ -170,20 +207,26 @@ export async function initializeAgent(userId: string, storage: StorageProvider) 
 export async function processMessage(
   agent: ReturnType<typeof createReactAgent>,
   config: { configurable: { thread_id: string } },
-  message: string
+  message: string,
 ): Promise<string> {
   try {
     const stream = await agent.stream(
       { messages: [new HumanMessage(message)] },
-      config
+      config,
     );
 
     let response = "";
-    for await (const chunk of stream) {
+    for await (const chunk of stream as AsyncIterable<StreamChunk>) {
       if ("agent" in chunk) {
-        response += chunk.agent.messages[0].content + "\n";
+        const content = chunk.agent.messages[0].content;
+        if (typeof content === "string") {
+          response += content + "\n";
+        }
       } else if ("tools" in chunk) {
-        response += chunk.tools.messages[0].content + "\n";
+        const content = chunk.tools.messages[0].content;
+        if (typeof content === "string") {
+          response += content + "\n";
+        }
       }
     }
 
@@ -204,14 +247,14 @@ export async function processMessage(
 export async function parseNaturalLanguageBet(
   agent: ReturnType<typeof createReactAgent>,
   config: { configurable: { thread_id: string } },
-  prompt: string
+  prompt: string,
 ): Promise<ParsedBet> {
   try {
     // Default values in case parsing fails
     const defaultResult: ParsedBet = {
       topic: prompt,
       options: ["yes", "no"],
-      amount: "0.1"
+      amount: "0.1",
     };
 
     if (!prompt || prompt.length < 3) {
@@ -219,7 +262,7 @@ export async function parseNaturalLanguageBet(
     }
 
     console.log(`🔄 Parsing natural language bet: "${prompt}"`);
-    
+
     // Format specific request for parsing
     const parsingRequest = `
       Parse this bet request into structured format: "${prompt}"
@@ -231,27 +274,30 @@ export async function parseNaturalLanguageBet(
         "amount": "bet amount"
       }
     `;
-    
+
     // Process with the agent
     const response = await processMessage(agent, config, parsingRequest);
-    
+
     // Try to extract JSON from the response
     try {
       // Find JSON in the response
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsedJson = JSON.parse(jsonMatch[0]);
-        
+        const parsedJson = JSON.parse(jsonMatch[0]) as BetJsonResponse;
+
         // Validate and provide defaults if needed
         const result: ParsedBet = {
-          topic: parsedJson.topic || prompt,
-          options: Array.isArray(parsedJson.options) && parsedJson.options.length >= 2 
-            ? [parsedJson.options[0], parsedJson.options[1]] 
-            : ["yes", "no"],
-          amount: parsedJson.amount || "0.1"
+          topic: parsedJson.topic ?? prompt,
+          options:
+            Array.isArray(parsedJson.options) && parsedJson.options.length >= 2
+              ? [parsedJson.options[0], parsedJson.options[1]]
+              : ["yes", "no"],
+          amount: parsedJson.amount ?? "0.1",
         };
-        
-        console.log(`✅ Parsed bet: "${result.topic}" with options [${result.options.join(', ')}] for ${result.amount} USDC`);
+
+        console.log(
+          `✅ Parsed bet: "${result.topic}" with options [${result.options.join(", ")}] for ${result.amount} USDC`,
+        );
         return result;
       }
     } catch (error) {
@@ -264,7 +310,7 @@ export async function parseNaturalLanguageBet(
     return {
       topic: prompt,
       options: ["yes", "no"],
-      amount: "0.1"
+      amount: "0.1",
     };
   }
-} 
+}

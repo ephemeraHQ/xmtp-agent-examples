@@ -1,13 +1,14 @@
-import * as dotenv from "dotenv";
 import * as path from "path";
-import { initializeStorage } from "./storage.js";
-import { initializeXmtpClient, startMessageListener } from "./xmtp.js";
-import { initializeAgent } from "./cdp.js";
-import { GameManager } from "./game.js";
-import { handleCommand as processCommand } from "./commands.js";
+import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
+import * as dotenv from "dotenv";
+import { initializeAgent } from "./cdp";
+import { handleCommand as processCommand } from "./commands";
+import { GameManager } from "./game";
+import { initializeStorage } from "./storage";
+import { initializeXmtpClient, startMessageListener } from "./xmtp";
 
 // Initialize environment variables - make sure this is at the top of the file before any other code
-const envPath = path.resolve(process.cwd(), '.env');
+const envPath = path.resolve(process.cwd(), ".env");
 console.log("Loading .env file from:", envPath);
 const result = dotenv.config({ path: envPath });
 if (result.error) {
@@ -26,28 +27,27 @@ let storage: any = null;
  */
 function validateEnvironment(): void {
   // Load .env from parent directory
-  dotenv.config({ path: '../.env' });
+  dotenv.config({ path: "../.env" });
   const missingVars: string[] = [];
 
   // Check required variables
-  const requiredVars = [
-    "WALLET_KEY",
-    "ENCRYPTION_KEY",
-    "OPENAI_API_KEY",
-  ];
-  
+  const requiredVars = ["WALLET_KEY", "ENCRYPTION_KEY", "OPENAI_API_KEY"];
+
   // Check Coinbase SDK variables - we need either the COINBASE_ or CDP_ prefixed versions
-  const coinbaseApiKeyName = process.env.COINBASE_API_KEY_NAME || process.env.CDP_API_KEY_NAME;
-  const coinbaseApiKeyPrivateKey = process.env.COINBASE_API_KEY_PRIVATE_KEY || process.env.CDP_API_KEY_PRIVATE_KEY;
-  
+  const coinbaseApiKeyName =
+    process.env.COINBASE_API_KEY_NAME || process.env.CDP_API_KEY_NAME;
+  const coinbaseApiKeyPrivateKey =
+    process.env.COINBASE_API_KEY_PRIVATE_KEY ||
+    process.env.CDP_API_KEY_PRIVATE_KEY;
+
   if (!coinbaseApiKeyName) {
     missingVars.push("COINBASE_API_KEY_NAME or CDP_API_KEY_NAME");
   }
-  
+
   if (!coinbaseApiKeyPrivateKey) {
     missingVars.push("COINBASE_API_KEY_PRIVATE_KEY or CDP_API_KEY_PRIVATE_KEY");
   }
-  
+
   // Check other required variables
   requiredVars.forEach((varName) => {
     if (!process.env[varName]) {
@@ -63,43 +63,50 @@ function validateEnvironment(): void {
     });
     process.exit(1);
   }
-  
+
   // Log warning about KEY variable
   if (!process.env.KEY) {
-    console.warn("Warning: KEY is not set, using ENCRYPTION_KEY for wallet encryption");
+    console.warn(
+      "Warning: KEY is not set, using ENCRYPTION_KEY for wallet encryption",
+    );
   }
-  
+
   return; // Explicit return to satisfy the linter
 }
 
 /**
  * Handle incoming messages
  */
-async function handleMessage(message: any, conversation: any, userId: string, content: string) {
+async function handleMessage(
+  message: DecodedMessage,
+  conversation: Conversation,
+  command: string,
+) {
   try {
-    // Get agent address from XMTP client
-    const address = message.clientAddress || "unknown";
-    
+    // TODO: Fix this
+    const address = message.senderInboxId;
     // Initialize game manager for this request
     const gameManager = new GameManager(storage, address);
-  
+
     // Extract command content and process it
-    const commandContent = content.replace(/^@toss\s+/i, "").trim();
-    const response = await processCommand(commandContent, userId, gameManager, cdpAgent, cdpAgentConfig);
-  
-    // Send the response back
-    if (conversation) {
-      await conversation.send(response);
-      console.log(`✅ Response sent: ${response.substring(0, 100)}${response.length > 100 ? '...' : ''}`);
-    }
+    const commandContent = command.replace(/^@toss\s+/i, "").trim();
+    const response = await processCommand(
+      commandContent,
+      address,
+      gameManager,
+      cdpAgent,
+      cdpAgentConfig,
+    );
+
+    await conversation.send(response);
+    console.log(
+      `✅ Response sent: ${response.substring(0, 100)}${response.length > 100 ? "..." : ""}`,
+    );
   } catch (error) {
     console.error("Error handling message:", error);
-    
-    // Send error message back to the conversation
-    if (conversation) {
-      const errorMessage = `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}`;
-      await conversation.send(errorMessage);
-    }
+
+    const errorMessage = `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}`;
+    await conversation.send(errorMessage);
   }
 }
 
@@ -108,13 +115,15 @@ async function main(): Promise<void> {
 
   // Validate environment variables
   validateEnvironment();
-  
+
   // Initialize storage at startup
-  storage = await initializeStorage();
-  
+  storage = initializeStorage();
+
   // Initialize the CDP agent at startup for better performance
   if (process.env.OPENAI_API_KEY) {
-    console.log("Initializing CDP agent (this might take a moment but will improve message handling speed)...");
+    console.log(
+      "Initializing CDP agent (this might take a moment but will improve message handling speed)...",
+    );
     try {
       // Use a placeholder userId for initial setup
       const initResult = await initializeAgent("SYSTEM_INIT", storage);
@@ -123,14 +132,18 @@ async function main(): Promise<void> {
       console.log("✅ CDP agent initialized successfully");
     } catch (error) {
       console.error("Error initializing CDP agent:", error);
-      console.warn("⚠️ Will attempt to initialize agent on first message instead");
+      console.warn(
+        "⚠️ Will attempt to initialize agent on first message instead",
+      );
     }
   } else {
-    console.warn("⚠️ OPENAI_API_KEY is not set, natural language bet parsing will be disabled");
+    console.warn(
+      "⚠️ OPENAI_API_KEY is not set, natural language bet parsing will be disabled",
+    );
   }
 
   // Initialize XMTP client
-  const { client: xmtpClient } = await initializeXmtpClient();
+  const xmtpClient = await initializeXmtpClient();
 
   // Start listening for messages
   await startMessageListener(xmtpClient, handleMessage);

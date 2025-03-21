@@ -1,7 +1,12 @@
-import { createClient } from "redis";
 import fs from "fs/promises";
 import path from "path";
-import { CoinTossGame, StorageProvider, UserWallet } from "./types.js";
+import { createClient } from "redis";
+import {
+  GameStatus,
+  type CoinTossGame,
+  type StorageProvider,
+  type UserWallet,
+} from "./types";
 
 // Storage provider instance
 let storageInstance: StorageProvider | null = null;
@@ -10,11 +15,7 @@ let storageInstance: StorageProvider | null = null;
  * Initialize the storage provider based on environment variables
  * Uses Redis if REDIS_URL is provided, otherwise falls back to local file storage
  */
-export async function initializeStorage(): Promise<StorageProvider> {
-  if (storageInstance) {
-    return storageInstance;
-  }
-
+export function initializeStorage(): StorageProvider {
   try {
     if (process.env.REDIS_URL) {
       console.log("Initializing Redis storage...");
@@ -42,7 +43,7 @@ export class LocalStorage {
 
   constructor(baseDir: string) {
     this.baseDir = baseDir;
-    this.initDirectory();
+    void this.initDirectory();
   }
 
   private async initDirectory() {
@@ -70,6 +71,7 @@ export class LocalStorage {
       const data = await fs.readFile(filePath, "utf-8");
       return data;
     } catch (error) {
+      console.error("Error reading from storage:", error);
       return null;
     }
   }
@@ -88,7 +90,9 @@ export class LocalStorage {
   async getWalletCount(): Promise<number> {
     try {
       const files = await fs.readdir(this.baseDir);
-      const walletFiles = files.filter(file => file.startsWith("wallet:") && file.endsWith(".json"));
+      const walletFiles = files.filter(
+        (file) => file.startsWith("wallet:") && file.endsWith(".json"),
+      );
       return walletFiles.length;
     } catch (error) {
       console.error("Error getting wallet count:", error);
@@ -102,8 +106,12 @@ export class LocalStorageProvider implements StorageProvider {
   private walletsStorage: LocalStorage;
 
   constructor() {
-    this.gamesStorage = new LocalStorage(path.join(process.cwd(), "data", "games"));
-    this.walletsStorage = new LocalStorage(path.join(process.cwd(), "wallet_data"));
+    this.gamesStorage = new LocalStorage(
+      path.join(process.cwd(), "data", "games"),
+    );
+    this.walletsStorage = new LocalStorage(
+      path.join(process.cwd(), "wallet_data"),
+    );
   }
 
   async saveGame(game: CoinTossGame): Promise<void> {
@@ -112,7 +120,7 @@ export class LocalStorageProvider implements StorageProvider {
 
   async getGame(gameId: string): Promise<CoinTossGame | null> {
     const data = await this.gamesStorage.get(gameId);
-    return data ? JSON.parse(data) : null;
+    return data ? (JSON.parse(data) as CoinTossGame) : null;
   }
 
   async listActiveGames(): Promise<CoinTossGame[]> {
@@ -124,7 +132,11 @@ export class LocalStorageProvider implements StorageProvider {
       if (file.endsWith(".json")) {
         const gameId = file.replace(".json", "");
         const game = await this.getGame(gameId);
-        if (game && game.status !== "COMPLETED" && game.status !== "CANCELLED") {
+        if (
+          game &&
+          game.status !== GameStatus.COMPLETED &&
+          game.status !== GameStatus.CANCELLED
+        ) {
           games.push(game);
         }
       }
@@ -138,17 +150,21 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   async saveUserWallet(wallet: UserWallet): Promise<void> {
-    await this.walletsStorage.set(wallet.userId, JSON.stringify(wallet, null, 2));
+    await this.walletsStorage.set(
+      wallet.userId,
+      JSON.stringify(wallet, null, 2),
+    );
   }
 
   async getUserWallet(userId: string): Promise<string | null> {
     const data = await this.walletsStorage.get(userId);
     if (!data) return null;
-    
+
     try {
       const wallet = JSON.parse(data) as UserWallet;
       return wallet.walletData;
     } catch (error) {
+      console.error("Error parsing wallet data:", error);
       return null;
     }
   }
@@ -161,16 +177,13 @@ export class RedisStorageProvider implements StorageProvider {
 
   constructor() {
     this.client = createClient({
-      url: process.env.REDIS_URL
+      url: process.env.REDIS_URL,
     });
     this.client.connect();
   }
 
   async saveGame(game: CoinTossGame): Promise<void> {
-    await this.client.set(
-      this.gamePrefix + game.id,
-      JSON.stringify(game)
-    );
+    await this.client.set(this.gamePrefix + game.id, JSON.stringify(game));
   }
 
   async getGame(gameId: string): Promise<CoinTossGame | null> {
@@ -184,7 +197,11 @@ export class RedisStorageProvider implements StorageProvider {
 
     for (const key of keys) {
       const game = await this.getGame(key.replace(this.gamePrefix, ""));
-      if (game && game.status !== "COMPLETED" && game.status !== "CANCELLED") {
+      if (
+        game &&
+        game.status !== GameStatus.COMPLETED &&
+        game.status !== GameStatus.CANCELLED
+      ) {
         games.push(game);
       }
     }
@@ -197,13 +214,10 @@ export class RedisStorageProvider implements StorageProvider {
   }
 
   async saveUserWallet(wallet: UserWallet): Promise<void> {
-    await this.client.set(
-      this.walletPrefix + wallet.userId,
-      wallet.walletData
-    );
+    await this.client.set(this.walletPrefix + wallet.userId, wallet.walletData);
   }
 
   async getUserWallet(userId: string): Promise<string | null> {
     return this.client.get(this.walletPrefix + userId);
   }
-} 
+}
