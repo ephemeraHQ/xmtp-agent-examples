@@ -10,9 +10,11 @@ import {
   SafeGroupMember,
 } from "@xmtp/browser-sdk";
 import ky from "ky";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronUp, ChevronUpIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/shadcn/button";
+import { ScrollArea, ScrollBar } from "@/components/shadcn/scroll-area";
 import { useXMTP } from "@/context/xmtp-context";
 import { useConversation } from "@/hooks/use-conversation";
 import { useConversations } from "@/hooks/use-conversations";
@@ -29,7 +31,7 @@ export default function HomeContent() {
   const [currentConversation, setCurrentConversation] = useState<
     Conversation | undefined
   >(undefined);
-  const { getMessages, send } = useConversation(currentConversation);
+  const { getMessages, send, sending } = useConversation(currentConversation);
   const [currentConversationMessages, setCurrentConversationMessages] =
     useState<DecodedMessage[]>([]);
   const [group, setGroup] = useState<Group | undefined>(undefined);
@@ -39,6 +41,7 @@ export default function HomeContent() {
   const [message, setMessage] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [currentConversationName, setCurrentConversationName] = useState("");
+  const [showInviteUsers, setShowInviteUsers] = useState(false);
 
   const { data: searchResults, isLoading: isSearchLoading } = useQuery({
     queryKey: ["search", searchQuery],
@@ -54,6 +57,7 @@ export default function HomeContent() {
   useEffect(() => {
     if (searchResults) {
       setHandleSearch(false);
+      setShowInviteUsers(true);
     }
   }, [searchResults]);
 
@@ -137,8 +141,9 @@ export default function HomeContent() {
   };
 
   const handleSend = async () => {
-    await send(message);
+    const tmpMessage = message;
     setMessage("");
+    await send(tmpMessage);
     void loadMessages();
     setTimeout(() => {
       inputRef.current?.focus();
@@ -193,68 +198,106 @@ export default function HomeContent() {
               {currentConversationName}
             </h2>
           </div>
-          <div className="flex flex-col gap-2">
-            <h2>Invite other users on this XMTP chat</h2>
+          <div className="flex flex-col gap-1">
+            <h2 className="text-sm font-light text-white">
+              Invite other users on this XMTP chat
+            </h2>
             <div className="flex flex-col gap-2">
               <div className="flex flex-row items-center gap-2">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for a farcaster username..."
+                  placeholder="Search for a farcaster user..."
                   className="w-full px-2 py-1 rounded-xl border border-gray-300 bg-gray-800 text-white"
                 />
-                <button onClick={() => setHandleSearch(!handleSearch)}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setHandleSearch(!handleSearch);
+                    setShowInviteUsers((prev) => !prev);
+                  }}
+                  className="text-white"
+                  disabled={isSearchLoading}>
                   {isSearchLoading ? "Searching..." : "Search"}
-                </button>
+                </Button>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                {searchResults?.data.users.map((user) => (
-                  <div
-                    key={user.fid}
-                    className="flex flex-col items-center justify-center gap-2 px-2 py-1 bg-gray-800 rounded-lg"
-                    onClick={() => handleInviteUser(user.fid)}>
-                    <Image
-                      src={user.pfp_url}
-                      alt={user.username}
-                      width={32}
-                      height={32}
-                      className="rounded-full w-[32px] h-[32px] object-cover"
-                    />
-                    <div className="flex flex-col items-center justify-center">
-                      <p className="text-sm text-gray-400">Invite</p>
-                      <span className="text-xl font-bold text-gray-400">
-                        {user.username}
-                      </span>
+              {showInviteUsers ? (
+                <div className="flex flex-col gap-2 w-full">
+                  <ScrollArea className="h-[200px]">
+                    <div className="flex flex-col gap-2 bg-gray-900 rounded-b-lg py-2 px-2">
+                      {searchResults ? (
+                        searchResults.data.users.map((user) => (
+                          <div
+                            key={user.fid}
+                            className="flex items-center justify-between gap-2 px-2 py-1 bg-gray-800 rounded-lg">
+                            <div className="flex flex-row items-center gap-2">
+                              <Image
+                                src={user.pfp_url}
+                                alt={user.username}
+                                width={32}
+                                height={32}
+                                className="rounded-full w-[32px] h-[32px] object-cover"
+                              />
+                              <span className="text-lg font-semibold text-gray-400">
+                                {user.username}
+                              </span>
+                            </div>
+                            <Button
+                              onClick={() => handleInviteUser(user.fid)}
+                              className="bg-blue-600 hover:bg-blue-600/80 text-white">
+                              Invite
+                            </Button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col gap-2 bg-gray-900 rounded-b-lg py-2 px-2">
+                          <p className="text-white">
+                            {isSearchLoading
+                              ? "Searching..."
+                              : "No users found"}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                    <ScrollBar orientation="vertical" className="bg-gray-300" />
+                  </ScrollArea>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowInviteUsers(false)}
+                    className="flex flex-row items-center justify-center gap-2 w-full py-1 px-2 text-white">
+                    <ChevronUpIcon className="w-4 h-4 text-white" />
+                    Close
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-2 w-full min-h-[400px]">
-              {currentConversationMessages.map((message) => {
-                const isSender = client?.inboxId === message.senderInboxId;
-                const member = groupMembers.find(
-                  (member) => member.inboxId === message.senderInboxId,
-                );
-                const senderDisplayName = member
-                  ? member.accountIdentifiers[0].identifier
-                  : message.senderInboxId;
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex flex-row text-sm w-full ${isSender ? "text-blue-500 justify-end" : "text-gray-400 justify-start"}`}>
+            <ScrollArea className="h-[400px]">
+              <div className="flex flex-col gap-2 w-full min-h-[400px]">
+                {currentConversationMessages.map((message) => {
+                  const isSender = client?.inboxId === message.senderInboxId;
+                  const member = groupMembers.find(
+                    (member) => member.inboxId === message.senderInboxId,
+                  );
+                  const senderDisplayName = member
+                    ? member.accountIdentifiers[0].identifier
+                    : message.senderInboxId;
+                  return (
                     <div
-                      className={`flex flex-col items-start ${isSender ? "items-end" : "items-start"}`}>
-                      <p>{`${senderDisplayName.slice(0, 6)}...${senderDisplayName.slice(-4)}`}</p>
-                      <p>{message.content}</p>
+                      key={message.id}
+                      className={`flex flex-row text-sm w-full ${isSender ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`flex flex-col gap-1 items-start rounded-xl px-2 py-1 ${isSender ? "bg-blue-500 rounded-br-none items-end" : "bg-gray-600 text-white items-start rounded-bl-none"}`}>
+                        <p>{`${senderDisplayName.slice(0, 6)}...${senderDisplayName.slice(-4)}`}</p>
+                        <p>{message.content}</p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
             <div className="flex flex-row items-center gap-2">
               <input
                 ref={inputRef}
@@ -264,7 +307,13 @@ export default function HomeContent() {
                 placeholder="Message..."
                 className="w-full px-2 py-1 rounded-xl border border-gray-300 bg-gray-800 text-white"
               />
-              <button onClick={handleSend}>Send</button>
+              <Button
+                variant="default"
+                onClick={handleSend}
+                className="bg-blue-600 hover:bg-blue-600/80 text-white"
+                disabled={sending}>
+                {sending ? "Sending..." : "Send"}
+              </Button>
             </div>
           </div>
         </div>
