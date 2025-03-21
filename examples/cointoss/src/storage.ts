@@ -179,7 +179,7 @@ export class RedisStorageProvider implements StorageProvider {
     this.client = createClient({
       url: process.env.REDIS_URL,
     });
-    this.client.connect();
+    void this.client.connect();
   }
 
   async saveGame(game: CoinTossGame): Promise<void> {
@@ -188,7 +188,7 @@ export class RedisStorageProvider implements StorageProvider {
 
   async getGame(gameId: string): Promise<CoinTossGame | null> {
     const data = await this.client.get(this.gamePrefix + gameId);
-    return data ? JSON.parse(data) : null;
+    return data ? (JSON.parse(data) as CoinTossGame) : null;
   }
 
   async listActiveGames(): Promise<CoinTossGame[]> {

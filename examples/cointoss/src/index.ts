@@ -1,10 +1,12 @@
 import * as path from "path";
+import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import * as dotenv from "dotenv";
 import { initializeAgent } from "./cdp";
 import { handleCommand as processCommand } from "./commands";
 import { GameManager } from "./game";
 import { initializeStorage } from "./storage";
+import type { StorageProvider } from "./types";
 import { initializeXmtpClient, startMessageListener } from "./xmtp";
 
 // Initialize environment variables - make sure this is at the top of the file before any other code
@@ -18,9 +20,9 @@ if (result.error) {
 }
 
 // Global CDP agent instance - we'll initialize this at startup for better performance
-let cdpAgent: any = null;
-let cdpAgentConfig: any = null;
-let storage: any = null;
+let cdpAgent: ReturnType<typeof createReactAgent> | null = null;
+let cdpAgentConfig: { configurable: { thread_id: string } } | null = null;
+let storage: StorageProvider | null = null;
 
 /**
  * Validates that required environment variables are set
@@ -86,7 +88,7 @@ async function handleMessage(
     // TODO: Fix this
     const address = message.senderInboxId;
     // Initialize game manager for this request
-    const gameManager = new GameManager(storage, address);
+    const gameManager = new GameManager(storage as StorageProvider, address);
 
     // Extract command content and process it
     const commandContent = command.replace(/^@toss\s+/i, "").trim();
@@ -94,8 +96,8 @@ async function handleMessage(
       commandContent,
       address,
       gameManager,
-      cdpAgent,
-      cdpAgentConfig,
+      cdpAgent as ReturnType<typeof createReactAgent>,
+      cdpAgentConfig as { configurable: { thread_id: string } },
     );
 
     await conversation.send(response);

@@ -14,8 +14,8 @@ export async function handleCommand(
   content: string,
   userId: string,
   gameManager: GameManager,
-  agent: any,
-  agentConfig: any,
+  agent: ReturnType<typeof createReactAgent>,
+  agentConfig: { configurable: { thread_id: string } },
 ): Promise<string> {
   const commandParts = content.split(" ");
   const firstWord = commandParts[0].toLowerCase();

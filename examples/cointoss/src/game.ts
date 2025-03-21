@@ -16,7 +16,6 @@ interface Transfer {
 export class GameManager {
   private lastGameId: number = 0;
   private walletService: WalletService;
-  private promptParserAgent: any = null;
 
   constructor(
     private storage: StorageProvider,
