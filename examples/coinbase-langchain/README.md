@@ -18,55 +18,6 @@ A DeFi agent built using Langchain and powered by CDP SDK, operating over the XM
 - [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
 - Yarn package manager
 
-## Quick Start Guide
-
-Follow these steps to get your x agent up and running:
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-   cd examples/coinbase-langchain
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   yarn install
-   ```
-
-3. **Set up your environment variables**:
-   Create a `.env` file like in `.env.example`:
-
-   ```bash
-   WALLET_KEY= # the private key for the wallet
-   ENCRYPTION_KEY= # the encryption key for the wallet
-   # public key is
-
-   NETWORK_ID=base-sepolia # base-mainnet or others
-   OPENAI_API_KEY= # the OpenAI API key
-   CDP_API_KEY_NAME= # the name of the CDP API key
-   CDP_API_KEY_PRIVATE_KEY= # the private key for the CDP API key
-   XMTP_ENV=local # the environment to use for XMTP
-   REDIS_URL= # the URL for the Redis database
-   ```
-
-4. **Start the agent**:
-
-   ```bash
-   yarn dev
-   ```
-
-5. **Interact with your agent**:
-
-   Once running, you'll see a URL in the console like:
-
-   ```bash
-   Send a message on http://xmtp.chat/dm/YOUR_AGENT_ADDRESS?env=dev
-   ```
-
-   Open this URL in your browser to start chatting with your agent!
-
 ## Usage Examples
 
 Once the agent is running, you can interact with it using natural language commands:
@@ -103,3 +54,19 @@ This agent combines key technologies:
 
 - System falls back to local storage if Redis fails
 - Check permissions and connection URLs
+
+## Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/coinbase-langchain
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```

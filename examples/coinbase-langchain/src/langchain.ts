@@ -26,7 +26,6 @@ function createWalletTools(xmtpUser: XMTPUser) {
     schema: z.object({}),
     func: async () => {
       try {
-        console.log(`Checking balance for fixed inboxId: ${xmtpUser.inboxId}`);
         const result = await walletService.checkBalance(xmtpUser.inboxId);
         if (!result.address) {
           return `No wallet found for user ${xmtpUser.inboxId}`;

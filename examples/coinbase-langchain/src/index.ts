@@ -2,7 +2,7 @@ import "dotenv/config";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { getAddressOfMember } from "@/helpers";
 import { initializeAgent, processMessage } from "./langchain";
-import { initializeStorage as initStorage } from "./storage";
+import { initializeStorage } from "./storage";
 import type { XMTPUser } from "./types";
 import { initializeXmtpClient, startMessageListener } from "./xmtp";
 
@@ -80,7 +80,7 @@ async function main(): Promise<void> {
   validateEnvironment();
 
   // Initialize storage (Redis or local)
-  await initStorage();
+  await initializeStorage();
 
   // Initialize XMTP client
   const xmtpClient = await initializeXmtpClient();

@@ -10,7 +10,7 @@
     "lint": "cd ../.. && yarn eslint examples/grok"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "1.0.0"
+    "@xmtp/node-sdk": "1.0.2"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
