@@ -18,7 +18,7 @@ export async function initializeXmtpClient() {
     );
   }
   // Create the signer using viem
-  const signer = createSigner(WALLET_KEY as `0x${string}`);
+  const signer = createSigner(WALLET_KEY);
   const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
   // Set the environment to dev or production
