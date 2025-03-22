@@ -1,11 +1,12 @@
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
-import type { GameManager } from "./toss";
+import type { TossManager } from "./toss";
+import { ERROR_MESSAGE, HELP_MESSAGE, type AgentConfig } from "./types";
 
 /**
  * Entry point for command processing
  * @param content - The message content from the user
  * @param userId - The user's identifier
- * @param gameManager - The game manager instance
+ * @param tossManager - The toss manager instance
  * @param agent - The CDP agent instance
  * @param agentConfig - The CDP agent configuration
  * @returns Response message to send back to the user
@@ -13,9 +14,9 @@ import type { GameManager } from "./toss";
 export async function handleCommand(
   content: string,
   userId: string,
-  gameManager: GameManager,
+  tossManager: TossManager,
   agent: ReturnType<typeof createReactAgent>,
-  agentConfig: { configurable: { thread_id: string } },
+  agentConfig: AgentConfig,
 ): Promise<string> {
   const commandParts = content.split(" ");
   const firstWord = commandParts[0].toLowerCase();
@@ -28,13 +29,13 @@ export async function handleCommand(
   ) {
     // Handle traditional command formatting
     const [command, ...args] = commandParts;
-    return handleExplicitCommand(command, args, userId, gameManager);
+    return handleExplicitCommand(command, args, userId, tossManager);
   } else {
     // This is likely a natural language prompt
     return handleNaturalLanguageCommand(
       content,
       userId,
-      gameManager,
+      tossManager,
       agent,
       agentConfig,
     );
@@ -46,30 +47,30 @@ export async function handleCommand(
  * @param command - The command type
  * @param args - The command arguments
  * @param userId - The user's identifier
- * @param gameManager - The game manager instance
+ * @param tossManager - The toss manager instance
  * @returns Response message to send back to the user
  */
 async function handleExplicitCommand(
   command: string,
   args: string[],
   userId: string,
-  gameManager: GameManager,
+  tossManager: TossManager,
 ): Promise<string> {
   switch (command.toLowerCase()) {
     case "create": {
       const amount = args[0];
-      if (!amount) {
-        return "Please specify a toss amount: create <amount>";
+      if (!amount || isNaN(parseFloat(amount))) {
+        return "Please specify a valid toss amount: create <amount>";
       }
 
       // Check if user has sufficient balance
-      const balance = await gameManager.getUserBalance(userId);
+      const balance = await tossManager.getUserBalance(userId);
       if (balance < parseFloat(amount)) {
         return `Insufficient USDC balance. You need at least ${amount} USDC to create a toss. Your balance: ${balance} USDC`;
       }
 
       // Create the toss - creator doesn't join automatically now
-      const toss = await gameManager.createGame(userId, amount);
+      const toss = await tossManager.createGame(userId, amount);
 
       // Generate response with toss options if they exist
       let optionsMessage = "";
@@ -98,7 +99,7 @@ async function handleExplicitCommand(
       }
 
       // First check if the toss exists and is joinable
-      const toss = await gameManager.joinGame(tossId, userId);
+      const toss = await tossManager.joinGame(tossId, userId);
 
       // Check if an option was provided
       if (!chosenOption) {
@@ -111,13 +112,13 @@ async function handleExplicitCommand(
       }
 
       // Check user's balance
-      const balance = await gameManager.getUserBalance(userId);
+      const balance = await tossManager.getUserBalance(userId);
       if (balance < parseFloat(toss.tossAmount)) {
         return `Insufficient USDC balance. You need ${toss.tossAmount} USDC to join this toss. Your balance: ${balance} USDC`;
       }
 
       // Make the payment
-      const paymentSuccess = await gameManager.makePayment(
+      const paymentSuccess = await tossManager.makePayment(
         userId,
         tossId,
         toss.tossAmount,
@@ -129,7 +130,7 @@ async function handleExplicitCommand(
       }
 
       // Add player to toss after payment
-      const updatedToss = await gameManager.addPlayerToGame(
+      const updatedToss = await tossManager.addPlayerToGame(
         tossId,
         userId,
         chosenOption,
@@ -168,7 +169,7 @@ async function handleExplicitCommand(
       }
 
       // Check if the user is the creator
-      const toss = await gameManager.getGame(tossId);
+      const toss = await tossManager.getToss(tossId);
       if (!toss) {
         return `Toss ${tossId} not found.`;
       }
@@ -183,7 +184,7 @@ async function handleExplicitCommand(
 
       let result;
       try {
-        result = await gameManager.executeCoinToss(tossId);
+        result = await tossManager.executeCoinToss(tossId);
 
         // Check if the toss was successful and a winner was determined
         if (!result.winner) {
@@ -198,7 +199,7 @@ async function handleExplicitCommand(
       const playerMap = await Promise.all(
         result.participants.map(async (player, index) => {
           const walletAddress =
-            (await gameManager.getPlayerWalletAddress(player)) || player;
+            (await tossManager.getPlayerWalletAddress(player)) || player;
           return {
             id: `P${index + 1}${player === result.creator ? " (Creator)" : ""}`,
             address: player,
@@ -285,7 +286,7 @@ async function handleExplicitCommand(
         return "Please specify a toss ID: status <tossId>";
       }
 
-      const toss = await gameManager.getGame(tossId);
+      const toss = await tossManager.getToss(tossId);
       if (!toss) {
         return `Toss ${tossId} not found.`;
       }
@@ -294,7 +295,7 @@ async function handleExplicitCommand(
       const playerMap = await Promise.all(
         toss.participants.map(async (player, index) => {
           const walletAddress =
-            (await gameManager.getPlayerWalletAddress(player)) || player;
+            (await tossManager.getPlayerWalletAddress(player)) || player;
           return {
             id: `P${index + 1}${player === toss.creator ? " (Creator)" : ""}`,
             address: player,
@@ -320,7 +321,7 @@ async function handleExplicitCommand(
 
       // Show creator's wallet address
       const creatorWallet =
-        (await gameManager.getPlayerWalletAddress(toss.creator)) ||
+        (await tossManager.getPlayerWalletAddress(toss.creator)) ||
         toss.creator;
       const shortCreatorWallet =
         creatorWallet.substring(0, 10) +
@@ -379,7 +380,7 @@ async function handleExplicitCommand(
           const winnerId = winnerInfo ? winnerInfo.id : "Unknown";
           const winnerWallet =
             winnerInfo?.walletAddress ||
-            (await gameManager.getPlayerWalletAddress(toss.winner)) ||
+            (await tossManager.getPlayerWalletAddress(toss.winner)) ||
             toss.winner;
           statusMessage += `\nWinner: ${winnerId} (${winnerWallet.substring(0, 10)}...${winnerWallet.substring(winnerWallet.length - 6)})\n`;
         }
@@ -389,7 +390,7 @@ async function handleExplicitCommand(
     }
 
     case "list": {
-      const tosses = await gameManager.listActiveGames();
+      const tosses = await tossManager.listActiveTosses();
       if (tosses.length === 0) {
         return "No active tosses found.";
       }
@@ -398,7 +399,7 @@ async function handleExplicitCommand(
       const tossDescriptions = await Promise.all(
         tosses.map(async (toss) => {
           const creatorWallet =
-            (await gameManager.getPlayerWalletAddress(toss.creator)) ||
+            (await tossManager.getPlayerWalletAddress(toss.creator)) ||
             toss.creator;
           const shortCreatorWallet =
             creatorWallet.substring(0, 10) +
@@ -413,24 +414,13 @@ async function handleExplicitCommand(
     }
 
     case "balance": {
-      const balance = await gameManager.getUserBalance(userId);
-      const walletAddress = await gameManager.getPlayerWalletAddress(userId);
+      const balance = await tossManager.getUserBalance(userId);
+      const walletAddress = await tossManager.getPlayerWalletAddress(userId);
       return `Your USDC balance: ${balance}\nYour wallet address: ${walletAddress}`;
     }
 
     case "help":
-      return `Available commands:
-create <amount> - Create a new toss with specified USDC amount
-join <tossId> <option> - Join an existing toss with the specified ID and your chosen option
-execute <tossId> - Execute the toss resolution (only for toss creator)
-status <tossId> - Check the status of a specific toss
-list - List all active tosses
-balance - Check your wallet balance and address
-help - Show this help message
-
-You can also create a toss using natural language, for example:
-"Will it rain tomorrow for 5" - Creates a yes/no toss with 5 USDC
-"Lakers vs Celtics for 10" - Creates a toss with Lakers and Celtics as options with 10 USDC`;
+      return HELP_MESSAGE;
 
     default:
       return "Unknown command. Type help to see available commands.";
@@ -441,7 +431,7 @@ You can also create a toss using natural language, for example:
  * Handle natural language toss commands
  * @param prompt - The natural language prompt
  * @param userId - The user's identifier
- * @param gameManager - The game manager instance
+ * @param tossManager - The toss manager instance
  * @param agent - The CDP agent instance
  * @param agentConfig - The CDP agent configuration
  * @returns Response message to send back to the user
@@ -449,21 +439,21 @@ You can also create a toss using natural language, for example:
 async function handleNaturalLanguageCommand(
   prompt: string,
   userId: string,
-  gameManager: GameManager,
+  tossManager: TossManager,
   agent: ReturnType<typeof createReactAgent>,
-  agentConfig: { configurable: { thread_id: string } },
+  agentConfig: AgentConfig,
 ): Promise<string> {
   try {
     console.log(`🧠 Processing natural language prompt: "${prompt}"`);
 
     // Check if user has sufficient balance (default check for minimum amount)
-    const balance = await gameManager.getUserBalance(userId);
+    const balance = await tossManager.getUserBalance(userId);
     if (balance < 0.01) {
       return `Insufficient USDC balance. You need at least 0.01 USDC to create a toss. Your balance: ${balance} USDC`;
     }
 
     // Create a toss using the natural language prompt
-    const toss = await gameManager.createGameFromPrompt(
+    const toss = await tossManager.createGameFromPrompt(
       userId,
       prompt,
       agent,
@@ -487,9 +477,6 @@ async function handleNaturalLanguageCommand(
     return response;
   } catch (error) {
     console.error("Error processing natural language command:", error);
-    return `Sorry, I couldn't process your natural language toss. Please try again with a different wording or use explicit commands.
-
-Example: "Will the price of Bitcoin reach $100k this year for 5"
-Or use: create <amount> - to create a standard toss`;
+    return ERROR_MESSAGE;
   }
 }

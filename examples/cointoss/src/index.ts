@@ -2,13 +2,13 @@ import "dotenv/config";
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { handleCommand as processCommand } from "./commands";
-import { GameManager } from "./toss";
-import { validateEnvironment } from "./types";
+import { TossManager } from "./toss";
+import { validateEnvironment, type AgentConfig } from "./types";
 import { initializeXmtpClient, startMessageListener } from "./xmtp";
 
 // Global CDP agent
 const cdpAgent: ReturnType<typeof createReactAgent> | null = null;
-const cdpAgentConfig: { configurable: { thread_id: string } } | null = null;
+const cdpAgentConfig: AgentConfig | null = null;
 
 validateEnvironment();
 
@@ -19,15 +19,15 @@ async function handleMessage(
 ) {
   try {
     const address = message.senderInboxId;
-    const gameManager = new GameManager(address);
+    const tossManager = new TossManager();
     const commandContent = command.replace(/^@toss\s+/i, "").trim();
 
     const response = await processCommand(
       commandContent,
       address,
-      gameManager,
+      tossManager,
       cdpAgent as ReturnType<typeof createReactAgent>,
-      cdpAgentConfig as { configurable: { thread_id: string } },
+      cdpAgentConfig as AgentConfig,
     );
 
     await conversation.send(response);

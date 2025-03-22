@@ -10,40 +10,13 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import type { XMTPUser } from "./types";
-
-// Interface for parsed toss information
-export interface ParsedToss {
-  topic: string;
-  options: string[];
-  amount: string;
-}
-
-// Define stream chunk types
-interface AgentChunk {
-  agent: {
-    messages: Array<{
-      content: string;
-    }>;
-  };
-}
-
-interface ToolsChunk {
-  tools: {
-    messages: Array<{
-      content: string;
-    }>;
-  };
-}
-
-type StreamChunk = AgentChunk | ToolsChunk;
-
-// Interface for parsed JSON response
-interface TossJsonResponse {
-  topic?: string;
-  options?: string[];
-  amount?: string;
-}
+import type {
+  AgentConfig,
+  ParsedToss,
+  StreamChunk,
+  TossJsonResponse,
+  XMTPUser,
+} from "./types";
 
 // Constants for default values
 const DEFAULT_OPTIONS = ["yes", "no"];
@@ -156,7 +129,7 @@ export async function initializeAgent(xmtpUser: XMTPUser) {
  */
 export async function processMessage(
   agent: ReturnType<typeof createReactAgent>,
-  config: { configurable: { thread_id: string } },
+  config: AgentConfig,
   message: string,
 ): Promise<string> {
   try {
@@ -214,7 +187,7 @@ function extractJsonFromResponse(response: string): TossJsonResponse | null {
  */
 export async function parseNaturalLanguageToss(
   agent: ReturnType<typeof createReactAgent>,
-  config: { configurable: { thread_id: string } },
+  config: AgentConfig,
   prompt: string,
 ): Promise<ParsedToss> {
   try {

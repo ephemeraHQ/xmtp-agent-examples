@@ -1,17 +1,6 @@
 # CoinToss Agent
 
-A decentralized toss agent built using CDP AgentKit that operates over the XMTP messaging protocol, enabling group toss on custom topics.
-
-## Features
-
-- XMTP group chat support (responds to @toss mentions)
-- Natural language toss creation (e.g., "Will it rain tomorrow for 10 USDC")
-- Support for custom toss topics and options
-- Multiple player support with option-based prize distribution
-- Wallet address display for transparency and accountability
-- Transaction hash links for payment verification
-- Automated prize distribution to all winners
-- Real-time messaging through XMTP
+A coin toss agent built using CDP AgentKit that operates over the XMTP messaging protocol, enabling group coin toss on custom topics.
 
 ## Prerequisites
 
@@ -82,34 +71,6 @@ If you see errors like `Failed to create wallet: APIError`:
    - Verify your API key name matches exactly as shown in the Coinbase Developer Dashboard
    - Ensure your private key includes the complete PEM format with BEGIN/END lines
    - Format multiline keys properly for your .env file
-
-2. **Network Issues**:
-   - Check your internet connectivity and API endpoint access
-   - Verify there are no Coinbase service outages
-
-If you're still encountering issues, try clearing your local wallet data:
-
-```bash
-rm -rf .data/wallets
-```
-
-## Architecture
-
-- **Wallet Management**: Coinbase SDK for wallet creation and transfers
-- **XMTP Integration**: Group chat support with @toss tag handling
-- **Unified Agent System**:
-  - Single AI agent for both natural language parsing and wallet operations
-- **Toss Logic**:
-  - Random selection of winning option
-  - Fair prize distribution among winners
-
-## Security
-
-- Each user and toss gets a dedicated Coinbase wallet
-- Encrypted wallet storage
-- Transparent wallet address display
-- Transaction verification through block explorer links
-- Advanced randomness for fair winner selection
 
 ## Run the agent
 

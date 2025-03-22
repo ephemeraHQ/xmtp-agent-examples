@@ -8,25 +8,13 @@ import {
 } from "@coinbase/coinbase-sdk";
 import { isAddress } from "viem";
 import { storage } from "./storage";
-import type { AgentWalletData } from "./types";
+import { validateEnvironment, type AgentWalletData } from "./types";
 
-const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
-let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
-const networkId = process.env.NETWORK_ID ?? "base-sepolia";
-
-if (!coinbaseApiKeyName || !coinbaseApiKeyPrivateKey || !networkId) {
-  console.error(
-    "Either networkId, CDP_API_KEY_NAME or CDP_API_KEY_PRIVATE_KEY must be set",
-  );
-  process.exit(1);
-}
+const [coinbaseApiKeyName, coinbaseApiKeyPrivateKey, networkId] =
+  validateEnvironment();
 
 // Initialize Coinbase SDK
 function initializeCoinbaseSDK(): boolean {
-  // Replace \\n with actual newlines if present in the private key
-  if (coinbaseApiKeyPrivateKey) {
-    coinbaseApiKeyPrivateKey = coinbaseApiKeyPrivateKey.replace(/\\n/g, "\n");
-  }
   try {
     Coinbase.configure({
       apiKeyName: coinbaseApiKeyName as string,
@@ -45,14 +33,10 @@ function initializeCoinbaseSDK(): boolean {
 let sdkInitialized = false;
 
 export class WalletService {
-  private senderAddress: string;
-
-  constructor(sender: string) {
+  constructor() {
     if (!sdkInitialized) {
       sdkInitialized = initializeCoinbaseSDK();
     }
-
-    this.senderAddress = sender.toLowerCase();
   }
 
   async createWallet(inboxId: string): Promise<AgentWalletData> {
@@ -110,7 +94,7 @@ export class WalletService {
         inboxId: inboxId,
       };
 
-      await storage.saveUserWallet(inboxId, JSON.stringify(walletInfoToStore));
+      await storage.saveWallet(inboxId, JSON.stringify(walletInfoToStore));
       console.log("Wallet created and saved successfully");
       return walletInfo;
     } catch (error: unknown) {
@@ -127,7 +111,7 @@ export class WalletService {
 
   async getWallet(inboxId: string): Promise<AgentWalletData | undefined> {
     // Try to retrieve existing wallet data
-    const walletData = await storage.getUserWallet(inboxId);
+    const walletData = await storage.getWallet(inboxId);
     if (walletData === null) {
       console.log(`No wallet found for ${inboxId}, creating new one`);
       return this.createWallet(inboxId);
@@ -310,7 +294,7 @@ export class WalletService {
       inboxId: encryptedKey,
     };
 
-    await storage.saveUserWallet(encryptedKey, JSON.stringify(emptyWallet));
+    await storage.saveWallet(encryptedKey, JSON.stringify(emptyWallet));
     return true;
   }
 }
