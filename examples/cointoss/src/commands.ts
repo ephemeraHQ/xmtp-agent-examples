@@ -303,7 +303,7 @@ async function handleExplicitCommand(
         }),
       );
 
-      let statusMessage = `🎮 TOSS #${tossId} STATUS 🎮\n\n`;
+      let statusMessage = `TOSS #${tossId} 🪙\n\n`;
 
       // Add toss topic if available
       if (toss.tossTopic) {

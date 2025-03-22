@@ -5,6 +5,7 @@ import { TossStatus, type AgentWalletData, type CoinTossGame } from "./types";
 
 const networkId = process.env.NETWORK_ID;
 export const WALLET_KEY_PREFIX = "wallet_data:";
+export const WALLET_KEY_PREFIX_TOSS = "toss:";
 export const WALLET_STORAGE_DIR = ".data/wallet_data";
 export const XMTP_STORAGE_DIR = ".data/xmtp";
 export const TOSS_STORAGE_DIR = ".data/tosses";
@@ -42,10 +43,10 @@ class StorageService {
    */
   private async saveToFile(
     directory: string,
-    inboxId: string,
+    identifier: string,
     data: string,
   ): Promise<boolean> {
-    const toRead = `${WALLET_KEY_PREFIX}${inboxId}-${networkId}`;
+    const toRead = `${identifier}-${networkId}`;
     try {
       const filePath = path.join(directory, `${toRead}.json`);
       await fs.writeFile(filePath, data);
@@ -61,10 +62,10 @@ class StorageService {
    */
   private async readFromFile<T>(
     directory: string,
-    inboxId: string,
+    identifier: string,
   ): Promise<T | null> {
     try {
-      const key = `${WALLET_KEY_PREFIX}${inboxId}-${networkId}`;
+      const key = `${identifier}-${networkId}`;
       const filePath = path.join(directory, `${key}.json`);
       const data = await fs.readFile(filePath, "utf-8");
       return JSON.parse(data) as T;
@@ -87,7 +88,11 @@ class StorageService {
    */
   public async saveGame(toss: CoinTossGame): Promise<void> {
     if (!this.initialized) this.initialize();
-    await this.saveToFile(TOSS_STORAGE_DIR, toss.id, JSON.stringify(toss));
+    await this.saveToFile(
+      TOSS_STORAGE_DIR,
+      WALLET_KEY_PREFIX_TOSS + toss.id,
+      JSON.stringify(toss),
+    );
   }
 
   /**
@@ -95,7 +100,10 @@ class StorageService {
    */
   public async getGame(tossId: string): Promise<CoinTossGame | null> {
     if (!this.initialized) this.initialize();
-    return this.readFromFile<CoinTossGame>(TOSS_STORAGE_DIR, tossId);
+    return this.readFromFile<CoinTossGame>(
+      TOSS_STORAGE_DIR,
+      WALLET_KEY_PREFIX_TOSS + tossId,
+    );
   }
 
   /**
@@ -143,7 +151,11 @@ class StorageService {
     walletData: string,
   ): Promise<void> {
     if (!this.initialized) this.initialize();
-    await this.saveToFile(WALLET_STORAGE_DIR, inboxId, walletData);
+    await this.saveToFile(
+      WALLET_STORAGE_DIR,
+      WALLET_KEY_PREFIX + inboxId,
+      walletData,
+    );
   }
 
   /**
@@ -151,7 +163,10 @@ class StorageService {
    */
   public async getUserWallet(inboxId: string): Promise<AgentWalletData | null> {
     if (!this.initialized) this.initialize();
-    return this.readFromFile<AgentWalletData>(WALLET_STORAGE_DIR, inboxId);
+    return this.readFromFile<AgentWalletData>(
+      WALLET_STORAGE_DIR,
+      WALLET_KEY_PREFIX + inboxId,
+    );
   }
 
   /**
