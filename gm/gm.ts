@@ -4,7 +4,7 @@ import {
   createSigner,
   getAddressOfMember,
   getEncryptionKeyFromHex,
-} from "@/helpers";
+} from "../helpers";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db

@@ -4,7 +4,7 @@ import {
   type DecodedMessage,
   type XmtpEnv,
 } from "@xmtp/node-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
+import { createSigner, getEncryptionKeyFromHex } from "../../../helpers";
 
 /**
  * Initialize the XMTP client
