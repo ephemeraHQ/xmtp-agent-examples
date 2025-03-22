@@ -1,11 +1,13 @@
 import { existsSync, mkdirSync } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { TossStatus, type CoinTossGame, type UserWallet } from "./types";
+import { TossStatus, type AgentWalletData, type CoinTossGame } from "./types";
 
-const WALLET_STORAGE_DIR = ".data/wallet_data";
-const XMTP_STORAGE_DIR = ".data/xmtp";
-const TOSS_STORAGE_DIR = ".data/tosses";
+const networkId = process.env.NETWORK_ID;
+export const WALLET_KEY_PREFIX = "wallet_data:";
+export const WALLET_STORAGE_DIR = ".data/wallet_data";
+export const XMTP_STORAGE_DIR = ".data/xmtp";
+export const TOSS_STORAGE_DIR = ".data/tosses";
 
 /**
  * Storage service for coin toss game data and user wallets
@@ -40,15 +42,16 @@ class StorageService {
    */
   private async saveToFile(
     directory: string,
-    key: string,
-    data: any,
+    inboxId: string,
+    data: string,
   ): Promise<boolean> {
+    const toRead = `${WALLET_KEY_PREFIX}${inboxId}-${networkId}`;
     try {
-      const filePath = path.join(directory, `${key}.json`);
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+      const filePath = path.join(directory, `${toRead}.json`);
+      await fs.writeFile(filePath, data);
       return true;
     } catch (error) {
-      console.error(`Error writing to file ${key}:`, error);
+      console.error(`Error writing to file ${toRead}:`, error);
       return false;
     }
   }
@@ -58,11 +61,25 @@ class StorageService {
    */
   private async readFromFile<T>(
     directory: string,
-    key: string,
+    inboxId: string,
   ): Promise<T | null> {
-    const filePath = path.join(directory, `${key}.json`);
-    const data = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(data) as T;
+    try {
+      const key = `${WALLET_KEY_PREFIX}${inboxId}-${networkId}`;
+      const filePath = path.join(directory, `${key}.json`);
+      const data = await fs.readFile(filePath, "utf-8");
+      return JSON.parse(data) as T;
+    } catch (error) {
+      // If file doesn't exist, return null
+      if (
+        error instanceof Error &&
+        (error.message.includes("ENOENT") ||
+          error.message.includes("no such file or directory"))
+      ) {
+        return null;
+      }
+      // For other errors, rethrow
+      throw error;
+    }
   }
 
   /**
@@ -70,7 +87,7 @@ class StorageService {
    */
   public async saveGame(toss: CoinTossGame): Promise<void> {
     if (!this.initialized) this.initialize();
-    await this.saveToFile(TOSS_STORAGE_DIR, toss.id, toss);
+    await this.saveToFile(TOSS_STORAGE_DIR, toss.id, JSON.stringify(toss));
   }
 
   /**
@@ -121,17 +138,20 @@ class StorageService {
   /**
    * Save user wallet data
    */
-  public async saveUserWallet(wallet: UserWallet): Promise<void> {
+  public async saveUserWallet(
+    inboxId: string,
+    walletData: string,
+  ): Promise<void> {
     if (!this.initialized) this.initialize();
-    await this.saveToFile(WALLET_STORAGE_DIR, wallet.userId, wallet);
+    await this.saveToFile(WALLET_STORAGE_DIR, inboxId, walletData);
   }
 
   /**
    * Get user wallet data by user ID
    */
-  public async getUserWallet(userId: string): Promise<UserWallet | null> {
+  public async getUserWallet(inboxId: string): Promise<AgentWalletData | null> {
     if (!this.initialized) this.initialize();
-    return this.readFromFile<UserWallet>(WALLET_STORAGE_DIR, userId);
+    return this.readFromFile<AgentWalletData>(WALLET_STORAGE_DIR, inboxId);
   }
 
   /**
@@ -167,6 +187,3 @@ const storage = new StorageService();
 
 // Export the storage instance
 export { storage };
-
-// Export constants for backward compatibility
-export { WALLET_STORAGE_DIR, XMTP_STORAGE_DIR, TOSS_STORAGE_DIR };

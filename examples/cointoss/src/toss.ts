@@ -39,7 +39,7 @@ export class GameManager {
   // Get a player's wallet address from their user ID
   async getPlayerWalletAddress(userId: string): Promise<string | undefined> {
     try {
-      const walletData = await this.walletService.getWallet(userId, false);
+      const walletData = await this.walletService.getWallet(userId);
       return walletData?.agent_address;
     } catch (error) {
       console.error(`Error getting wallet address for ${userId}:`, error);
@@ -392,7 +392,6 @@ export class GameManager {
           // Get the winner's wallet address
           const winnerWalletData = await this.walletService.getWallet(
             winner.userId,
-            false,
           );
           if (!winnerWalletData) {
             console.error(

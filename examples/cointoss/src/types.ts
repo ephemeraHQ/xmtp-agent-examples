@@ -61,13 +61,11 @@ export interface XMTPUser {
 // Agent wallet data
 export type AgentWalletData = {
   id: string;
-  wallet: Wallet;
-  data: WalletData;
+  walletData: WalletData;
   human_address: string;
   agent_address: string;
-  blockchain?: string;
-  state?: string;
   inboxId: string;
+  wallet?: Wallet;
 };
 
 export interface AgentConfig {

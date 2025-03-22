@@ -52,7 +52,7 @@ This CoinToss agent combines several technologies:
 
 1. **XMTP Protocol**: For group chat messaging interface
 2. **Coinbase AgentKit**: For wallet management and payments
-3. **Storage Options**: Redis or local file storage for toss and wallet data
+3. **Storage Options**: Local storage for toss and wallet data
 4. **LLM Integration**: For natural language toss parsing
 
 The agent workflow:
@@ -102,7 +102,6 @@ rm -rf .data/wallets
 - **Toss Logic**:
   - Random selection of winning option
   - Fair prize distribution among winners
-- **Storage Options**: Local file storage or Redis
 
 ## Security
 

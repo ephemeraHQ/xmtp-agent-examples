@@ -8,7 +8,7 @@ import {
 } from "@coinbase/coinbase-sdk";
 import { isAddress } from "viem";
 import { storage } from "./storage";
-import type { AgentWalletData, UserWallet } from "./types";
+import type { AgentWalletData } from "./types";
 
 const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
 let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
@@ -55,78 +55,94 @@ export class WalletService {
     this.senderAddress = sender.toLowerCase();
   }
 
-  async createWallet(key: string): Promise<AgentWalletData> {
+  async createWallet(inboxId: string): Promise<AgentWalletData> {
     try {
-      key = key.toLowerCase();
+      console.log(`Creating new wallet for key ${inboxId}...`);
 
+      // Initialize SDK if not already done
       if (!sdkInitialized) {
         sdkInitialized = initializeCoinbaseSDK();
       }
 
+      // Log the network we're using
+      console.log(`Creating wallet on network: ${networkId}`);
+
+      // Create wallet
       const wallet = await Wallet.create({
-        networkId: Coinbase.networks.BaseSepolia,
+        networkId: networkId,
+      }).catch((err: unknown) => {
+        const errorDetails =
+          typeof err === "object" ? JSON.stringify(err, null, 2) : err;
+        console.error("Detailed wallet creation error:", errorDetails);
+        throw err;
       });
 
+      console.log("Wallet created successfully, exporting data...");
       const data = wallet.export();
+
+      console.log("Getting default address...");
       const address = await wallet.getDefaultAddress();
       const walletAddress = address.getId();
 
-      await storage.saveUserWallet({
-        userId: `wallet:${key}`,
-        walletData: data,
-      });
+      // Make the wallet address visible in the logs for funding
+      console.log("-----------------------------------------------------");
+      console.log(`NEW WALLET CREATED FOR USER: ${inboxId}`);
+      console.log(`WALLET ADDRESS: ${walletAddress}`);
+      console.log(`NETWORK: ${networkId}`);
+      console.log(`SEND FUNDS TO THIS ADDRESS TO TEST: ${walletAddress}`);
+      console.log("-----------------------------------------------------");
 
-      return {
+      const walletInfo: AgentWalletData = {
         id: walletAddress,
         wallet: wallet,
-        data: data,
-        human_address: this.senderAddress,
+        walletData: data,
+        human_address: inboxId,
         agent_address: walletAddress,
-        inboxId: key,
+        inboxId: inboxId,
       };
-    } catch (error) {
+
+      const walletInfoToStore: AgentWalletData = {
+        id: walletAddress,
+        //no wallet
+        walletData: data,
+        human_address: inboxId,
+        agent_address: walletAddress,
+        inboxId: inboxId,
+      };
+
+      await storage.saveUserWallet(inboxId, JSON.stringify(walletInfoToStore));
+      console.log("Wallet created and saved successfully");
+      return walletInfo;
+    } catch (error: unknown) {
+      console.error("Failed to create wallet:", error);
+
+      // Provide more detailed error information
       if (error instanceof Error) {
         throw new Error(`Wallet creation failed: ${error.message}`);
       }
+
       throw new Error(`Failed to create wallet: ${String(error)}`);
     }
   }
 
-  async getWallet(
-    inboxId: string,
-    createIfNotFound: boolean = true,
-  ): Promise<AgentWalletData | undefined> {
+  async getWallet(inboxId: string): Promise<AgentWalletData | undefined> {
     // Try to retrieve existing wallet data
     const walletData = await storage.getUserWallet(inboxId);
-    if (!walletData) {
-      return undefined;
+    if (walletData === null) {
+      console.log(`No wallet found for ${inboxId}, creating new one`);
+      return this.createWallet(inboxId);
     }
 
-    try {
-      const importedWallet = await Wallet.import(walletData.walletData);
+    const importedWallet = await Wallet.import(walletData.walletData);
 
-      return {
-        id: importedWallet.getId() ?? "",
-        wallet: importedWallet,
-        data: walletData.walletData,
-        human_address: walletData.userId,
-        agent_address: walletData.userId,
-        inboxId: walletData.userId,
-      };
-    } catch (error) {
-      // If wallet data exists but is corrupted/invalid and we're allowed to create a new one
-      if (createIfNotFound) {
-        console.warn(
-          `Failed to import existing wallet for ${inboxId}, creating new one`,
-        );
-        return this.createWallet(inboxId);
-      }
-
-      // Otherwise, fail explicitly
-      throw new Error(
-        `Invalid wallet data: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    return {
+      id: importedWallet.getId() ?? "",
+      wallet: importedWallet,
+      walletData: walletData.walletData,
+      human_address: walletData.human_address,
+      agent_address: walletData.agent_address,
+      inboxId: walletData.inboxId,
+    };
   }
 
   async transfer(
@@ -160,7 +176,7 @@ export class WalletService {
     console.log(
       `💰 Checking balance for source wallet: ${from.agent_address}...`,
     );
-    const balance = await from.wallet.getBalance(Coinbase.assets.Usdc);
+    const balance = await from.wallet?.getBalance(Coinbase.assets.Usdc);
     console.log(`💵 Available balance: ${Number(balance)} USDC`);
 
     if (Number(balance) < amount) {
@@ -179,7 +195,7 @@ export class WalletService {
     // Get or validate destination wallet
     let destinationAddress = toAddress;
     console.log(`🔑 Validating destination: ${toAddress}...`);
-    const to = await this.getWallet(toAddress, false);
+    const to = await this.getWallet(toAddress);
     if (to) {
       destinationAddress = to.agent_address;
       console.log(`✅ Destination wallet found: ${destinationAddress}`);
@@ -198,7 +214,7 @@ export class WalletService {
       console.log(
         `🚀 Executing transfer of ${amount} USDC from ${from.agent_address} to ${destinationAddress}...`,
       );
-      const transfer = await from.wallet.createTransfer({
+      const transfer = await from.wallet?.createTransfer({
         amount,
         assetId: Coinbase.assets.Usdc,
         destination: destinationAddress,
@@ -207,7 +223,7 @@ export class WalletService {
 
       console.log(`⏳ Waiting for transfer to complete...`);
       try {
-        await transfer.wait();
+        await transfer?.wait();
         console.log(`✅ Transfer completed successfully!`);
         console.log(
           `📝 Transaction details: ${JSON.stringify(transfer, null, 2)}`,
@@ -245,7 +261,7 @@ export class WalletService {
       return { address: undefined, balance: 0 };
     }
 
-    const balance = await walletData.wallet.getBalance(Coinbase.assets.Usdc);
+    const balance = await walletData.wallet?.getBalance(Coinbase.assets.Usdc);
     return {
       address: walletData.agent_address,
       balance: Number(balance),
@@ -262,11 +278,13 @@ export class WalletService {
     const walletData = await this.getWallet(address);
     if (!walletData) return undefined;
 
-    const trade = await walletData.wallet.createTrade({
+    const trade = await walletData.wallet?.createTrade({
       amount,
       fromAssetId,
       toAssetId,
     });
+
+    if (!trade) return undefined;
 
     try {
       await trade.wait();
@@ -283,12 +301,16 @@ export class WalletService {
     key = key.toLowerCase();
     const encryptedKey = `wallet:${key}`;
 
-    const emptyWallet: UserWallet = {
-      userId: encryptedKey,
+    const emptyWallet: AgentWalletData = {
+      id: "",
+      wallet: {} as Wallet,
       walletData: {} as WalletData,
+      human_address: encryptedKey,
+      agent_address: encryptedKey,
+      inboxId: encryptedKey,
     };
 
-    await storage.saveUserWallet(emptyWallet);
+    await storage.saveUserWallet(encryptedKey, JSON.stringify(emptyWallet));
     return true;
   }
 }
