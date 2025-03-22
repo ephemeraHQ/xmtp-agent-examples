@@ -10,7 +10,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 ## Guidelines
 
-1. Use modern JavaScript/TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
+1. Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
 2. Use the XMTP node-sdk v1.0.2 or newer, which offers enhanced functionality including group conversations.
 
@@ -295,31 +295,131 @@ await client.conversations.sync();
 const messages = await client.conversations.messages();
 ```
 
-### Linting and Code Style Best Practices
+### Understanding XMTP Identifiers
+
+When working with XMTP, you'll encounter several types of identifiers. Understanding their formats is crucial for proper implementation:
+
+### Ethereum Addresses
+
+- Format: `0x` followed by 40 hexadecimal characters
+- Example: `0xA274d20B76d7179752d237d6Cf1d44cA2aEb55bE`
+- Usage: Identifies blockchain wallets associated with XMTP users
+- Always lowercase the address when comparing addresses
+
+### Inbox ID
+
+- Format: 64 hexadecimal characters (without "0x" prefix)
+- Example: `9741c260e851e9252a644278ac46a976ee4f80ca089f36253afa1998996315fc`
+- Usage: Primary identifier for XMTP conversations
+- Always lowercase the inboxId when comparing inbox IDs
+
+### Private Key
+
+- Format: `0x` followed by 64 hexadecimal characters
+- Example: `0xbce7917bfeccbf55e8a4afe19be06cb7bb981d598e0804c486cd8f8de2db6caa`
+- Usage: Used to create the signer for authenticating with XMTP
+
+### Encryption Key
+
+- Format: 64 hexadecimal characters (without "0x" prefix)
+- Example: `c401ca5f515b946b508ebb94f201041fd5c113785f3d3cb449e858243bf5f429`
+- Usage: Used for encrypting the local database
+
+### Installation ID
+
+- Format: Starts with "x:" followed by 40 hexadecimal characters
+- Example: `x:283b3cf044b83932d26d178caaecc26d92506d71`
+- Usage: Identifies a specific XMTP client installation
+
+### Validating and Converting Identifiers
+
+Always validate identifiers before using them. Here are some common validation patterns:
+
+```typescript
+// Validate Ethereum address
+function isValidEthereumAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+// Validate Inbox ID
+function isValidInboxId(inboxId: string): boolean {
+  return /^[a-fA-F0-9]{64}$/.test(inboxId);
+}
+
+// Normalize an Ethereum address (lowercase)
+function normalizeAddress(address: string): string {
+  return address.toLowerCase();
+}
+
+// Convert between address and inboxId
+async function getInboxIdFromAddress(address: string): Promise<string> {
+  return await getInboxIdForIdentifier({
+    identifier: address.toLowerCase(),
+    identifierKind: IdentifierKind.Ethereum,
+  });
+}
+```
+
+### Example: Working with Addresses and Inbox IDs
+
+```typescript
+import { IdentifierKind } from "@xmtp/node-sdk";
+
+// When storing user information
+type XMTPUser = {
+  address: string; // Ethereum address
+  inboxId: string; // XMTP inbox ID
+};
+
+// When looking up a user
+async function findUserByAddress(
+  address: string,
+): Promise<XMTPUser | undefined> {
+  const normalizedAddress = address.toLowerCase();
+  const inboxId = await getInboxIdForIdentifier({
+    identifier: normalizedAddress,
+    identifierKind: IdentifierKind.Ethereum,
+  });
+
+  if (!inboxId) return undefined;
+
+  return {
+    address: normalizedAddress,
+    inboxId,
+  };
+}
+
+// When handling a message
+function processMessage(
+  senderInboxId: string,
+  knownUsers: XMTPUser[],
+): XMTPUser | undefined {
+  return knownUsers.find(
+    (user) => user.inboxId.toLowerCase() === senderInboxId.toLowerCase(),
+  );
+}
+```
+
+## Linting and Code Style Best Practices
 
 XMTP agents should follow consistent TypeScript linting practices to ensure code quality and readability. The project uses ESLint with TypeScript-ESLint and Prettier integration.
 
-```typescript
-// Import the necessary types
-import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
-```
+````
 
 ### Key Linting Guidelines
 
 1. **Use TypeScript Type Imports**
-
    - Always use `import type` for importing types:
      ```typescript
-     import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
+     import type { Conversation, XmtpEnv } from "@xmtp/node-sdk";
+     import { Client } from "@xmtp/node-sdk";
      ```
 
 2. **Handle Unused Variables**
-
    - Prefix unused variables with underscore: `_unusedVar`
    - This applies to unused function parameters and destructured variables as well
 
 3. **Type Safety**
-
    - Avoid using `any` whenever possible
    - Use proper type guards when handling unknown types:
      ```typescript
@@ -331,7 +431,6 @@ import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
      ```
 
 4. **Node.js Imports**
-
    - Use the `node:` prefix for Node.js built-in modules:
      ```typescript
      import fs from "node:fs";
@@ -348,7 +447,8 @@ import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
 
 ```typescript
 import "dotenv/config";
-import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client } from "@xmtp/node-sdk";
+import type { Conversation, XmtpEnv } from "@xmtp/node-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 // Environment variable validation
@@ -391,7 +491,7 @@ main().catch((error: unknown) => {
   console.error("Unhandled error:", error);
   process.exit(1);
 });
-```
+````
 
 ### Error Handling Patterns
 
