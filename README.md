@@ -14,6 +14,9 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 ## Getting started
 
+> [!NOTE]
+> For detailed XMTP Agent development guidelines, please refer to our [Cursor Rules documentation](/.cursor/README.md) which contains comprehensive coding standards and best practices for XMTP integration.
+
 ### Environment variables
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
@@ -49,11 +52,6 @@ yarn gen:keys <name>
 ```tsx
 XMTP_ENV = local;
 ```
-
-## Concepts
-
-> [!NOTE]
-> For detailed XMTP Agent development guidelines, please refer to our [Cursor Rules documentation](/.cursor/README.md) which contains comprehensive coding standards and best practices for XMTP integration.
 
 ## Web inbox
 
