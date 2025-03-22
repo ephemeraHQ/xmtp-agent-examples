@@ -82,7 +82,7 @@ Because XMTP is interoperable, you may interact with inboxes that are not on you
 ```tsx
 // get an inbox ID from an address
 const inboxId = await getInboxIdForIdentifier({
-  identifier: "0x1234567890abcdef1234567890abcdef12345678",
+  identifier: "0x7c40611372d354799d138542e77243c284e460b2",
   identifierKind: IdentifierKind.Ethereum,
 });
 
