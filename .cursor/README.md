@@ -331,35 +331,6 @@ When working with XMTP, you'll encounter several types of identifiers. Understan
 - Example: `x:283b3cf044b83932d26d178caaecc26d92506d71`
 - Usage: Identifies a specific XMTP client installation
 
-### Validating and Converting Identifiers
-
-Always validate identifiers before using them. Here are some common validation patterns:
-
-```typescript
-// Validate Ethereum address
-function isValidEthereumAddress(address: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
-}
-
-// Validate Inbox ID
-function isValidInboxId(inboxId: string): boolean {
-  return /^[a-fA-F0-9]{64}$/.test(inboxId);
-}
-
-// Normalize an Ethereum address (lowercase)
-function normalizeAddress(address: string): string {
-  return address.toLowerCase();
-}
-
-// Convert between address and inboxId
-async function getInboxIdFromAddress(address: string): Promise<string> {
-  return await getInboxIdForIdentifier({
-    identifier: address.toLowerCase(),
-    identifierKind: IdentifierKind.Ethereum,
-  });
-}
-```
-
 ### Example: Working with Addresses and Inbox IDs
 
 ```typescript
