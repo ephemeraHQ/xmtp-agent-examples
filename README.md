@@ -52,6 +52,9 @@ XMTP_ENV = local;
 
 ## Concepts
 
+> [!NOTE]
+> For detailed XMTP Agent development guidelines, please refer to our [Cursor Rules documentation](/.cursor/README.md) which contains comprehensive coding standards and best practices for XMTP integration.
+
 ### Fetching messages
 
 There are to ways to fetch messages from a conversation, one is by starting a stream
@@ -70,26 +73,6 @@ And by polling you can call all the messages at once, which we stored in your lo
 await client.conversations.sync();
 // get message array
 await client.conversations.messages();
-```
-
-### Conversations can be of type `Group` or `Dm`
-
-The new `Group` and `Dm` classes extend the `Conversation` class and provide specific functionality based on the conversation type.
-
-```tsx
-const conversations: (Group | Dm)[] = await client.conversations.list();
-
-for (const conversation of conversations) {
-  // narrow the type to Group to access the group name
-  if (conversation instanceof Group) {
-    console.log(group.name);
-  }
-
-  // narrow the type to Dm to access the peer inboxId
-  if (conversation instanceof Dm) {
-    console.log(conversation.peerInboxId);
-  }
-}
 ```
 
 ### Working with addresses
@@ -133,4 +116,4 @@ Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the officia
 - [gaia](/examples/gaia/): Integrate with the Gaia API
 - [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
 
-> See all the available [examples](/examples/).
+> See our contribution guidelines [here](/CONTRIBUTING.md).

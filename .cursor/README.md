@@ -1,9 +1,4 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
 # Specify the following for Cursor rules
 description: Coding rules for XMTP Agent development
 globs: "**/*.ts"
