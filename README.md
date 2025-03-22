@@ -55,52 +55,6 @@ XMTP_ENV = local;
 > [!NOTE]
 > For detailed XMTP Agent development guidelines, please refer to our [Cursor Rules documentation](/.cursor/README.md) which contains comprehensive coding standards and best practices for XMTP integration.
 
-### Fetching messages
-
-There are to ways to fetch messages from a conversation, one is by starting a stream
-
-```tsx
-const stream = client.conversations.streamAllMessages();
-for await (const message of await stream) {
-  /*You message*/
-}
-```
-
-And by polling you can call all the messages at once, which we stored in your local database
-
-```tsx
-/* Sync the conversations from the network to update the local db */
-await client.conversations.sync();
-// get message array
-await client.conversations.messages();
-```
-
-### Working with addresses
-
-Because XMTP is interoperable, you may interact with inboxes that are not on your app. In these scenarios, you will need to find the appropriate inbox ID or address.
-
-```tsx
-// get an inbox ID from an address
-const inboxId = await getInboxIdForIdentifier({
-  identifier: "0x7c40611372d354799d138542e77243c284e460b2",
-  identifierKind: IdentifierKind.Ethereum,
-});
-
-// find the addresses associated with an inbox ID
-const inboxState = await client.inboxStateFromInboxIds([inboxId]);
-
-interface InboxState {
-  inboxId: string;
-  recoveryIdentifier: Identifier;
-  installations: Installation[];
-  identifiers: Identifier[];
-}
-
-const addresses = inboxState.identifiers
-  .filter((i) => i.identifierKind === IdentifierKind.Ethereum)
-  .map((i) => i.identifier);
-```
-
 ## Web inbox
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
