@@ -1,3 +1,4 @@
+import type { Wallet, WalletData } from "@coinbase/coinbase-sdk";
 import type { MemorySaver } from "@langchain/langgraph";
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 
@@ -13,6 +14,17 @@ export interface AgentConfig {
     thread_id: string;
   };
 }
+// Agent wallet data
+export type AgentWalletData = {
+  id: string;
+  wallet: Wallet;
+  data: WalletData;
+  human_address: string;
+  agent_address: string;
+  blockchain?: string;
+  state?: string;
+  inboxId: string;
+};
 
 export type Agent = ReturnType<typeof createReactAgent>;
 
