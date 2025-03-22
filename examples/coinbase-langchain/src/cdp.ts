@@ -2,13 +2,12 @@ import {
   Coinbase,
   TimeoutError,
   Wallet,
-  type Trade,
   type Transfer,
   type WalletData,
 } from "@coinbase/coinbase-sdk";
 import { isAddress } from "viem";
 import { getWalletData, saveWalletData } from "./storage";
-import type { AgentWalletData, XMTPUser } from "./types";
+import type { XMTPUser } from "./types";
 
 const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
 let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
@@ -74,6 +73,18 @@ function initializeCoinbaseSDK(): boolean {
     return false;
   }
 }
+
+// Agent wallet data
+export type AgentWalletData = {
+  id: string;
+  wallet: Wallet;
+  data: WalletData;
+  human_address: string;
+  agent_address: string;
+  blockchain?: string;
+  state?: string;
+  inboxId: string;
+};
 
 // Wallet service class based on cointoss implementation
 export class WalletService {
@@ -274,12 +285,12 @@ export class WalletService {
   }
 
   async transfer(
-    xmtpUser: XMTPUser,
+    inboxId: string,
+    humanAddress: string,
     toAddress: string,
     amount: number,
   ): Promise<Transfer | undefined> {
-    const humanAddress = xmtpUser.address.toLowerCase();
-    const inboxId = xmtpUser.inboxId;
+    humanAddress = humanAddress.toLowerCase();
     toAddress = toAddress.toLowerCase();
 
     console.log("📤 TRANSFER INITIATED");
@@ -378,59 +389,5 @@ export class WalletService {
       console.error(`❌ Transfer failed:`, errorMessage);
       throw error;
     }
-  }
-
-  async swap(
-    xmtpUser: XMTPUser,
-    fromAssetId: string,
-    toAssetId: string,
-    amount: number,
-  ): Promise<Trade | undefined> {
-    const inboxId = xmtpUser.inboxId;
-    const walletData = await this.getWallet(inboxId);
-    if (!walletData) return undefined;
-    console.log(`Retrieved wallet data for ${inboxId}`);
-
-    console.log(
-      `Initiating swap from ${fromAssetId} to ${toAssetId} for amount: ${amount}`,
-    );
-    const trade = await walletData.wallet.createTrade({
-      amount,
-      fromAssetId,
-      toAssetId,
-    });
-
-    try {
-      await trade.wait();
-    } catch (err) {
-      if (err instanceof TimeoutError) {
-        console.log("Waiting for trade timed out");
-      } else {
-        console.error("Error while waiting for trade to complete: ", err);
-      }
-    }
-
-    return trade;
-  }
-
-  async deleteWallet(xmtpUser: XMTPUser): Promise<boolean> {
-    const inboxId = xmtpUser.inboxId;
-    console.log(`Deleting wallet for key ${inboxId}`);
-    const encryptedKey = `wallet:${inboxId}`;
-
-    // Create an empty wallet object to effectively delete the wallet
-    const emptyWallet: AgentWalletData = {
-      id: encryptedKey,
-      wallet: {} as Wallet,
-      data: {} as WalletData,
-      human_address: this.humanAddress,
-      agent_address: this.inboxId,
-      inboxId: this.inboxId,
-    };
-
-    await this.walletStorage.set(this.inboxId, JSON.stringify(emptyWallet));
-
-    console.log(`Wallet deleted for key ${inboxId}`);
-    return true;
   }
 }

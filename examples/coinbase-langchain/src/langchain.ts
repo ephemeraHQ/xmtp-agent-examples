@@ -59,6 +59,7 @@ function createWalletTools(xmtpUser: XMTPUser) {
 
         const result = await walletService.transfer(
           xmtpUser.inboxId,
+          xmtpUser.address,
           recipientAddress,
           numericAmount,
         );
@@ -100,7 +101,7 @@ export async function initializeAgent(
     // Check if we already have an agent for this user
     if (xmtpUser.inboxId in agentStore) {
       console.log(`Using existing agent for user: ${xmtpUser.inboxId}`);
-      const agentConfig: AgentConfig = {
+      const agentConfig = {
         configurable: { thread_id: xmtpUser.inboxId },
       };
       return { agent: agentStore[xmtpUser.inboxId], config: agentConfig };

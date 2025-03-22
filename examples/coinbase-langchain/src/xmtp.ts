@@ -5,7 +5,6 @@ import {
   type XmtpEnv,
 } from "@xmtp/node-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
-import { XMTP_STORAGE_DIR } from "./storage";
 
 /**
  * Initialize the XMTP client
@@ -22,19 +21,17 @@ export async function initializeXmtpClient() {
   const signer = createSigner(WALLET_KEY as `0x${string}`);
   const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
   // Set the environment to dev or production
   const env: XmtpEnv = XMTP_ENV as XmtpEnv;
 
   console.log(`Creating XMTP client on the '${env}' network...`);
-  const client = await Client.create(signer, encryptionKey, {
-    env,
-    dbPath: XMTP_STORAGE_DIR + `/${env}-${address}`,
-  });
+  const client = await Client.create(signer, encryptionKey, { env });
 
   console.log("Syncing conversations...");
   await client.conversations.sync();
+
+  const identifier = await signer.getIdentifier();
+  const address = identifier.identifier;
 
   console.log(
     `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
