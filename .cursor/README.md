@@ -404,22 +404,22 @@ function processMessage(
 
 XMTP agents should follow consistent TypeScript linting practices to ensure code quality and readability. The project uses ESLint with TypeScript-ESLint and Prettier integration.
 
-````
-
 ### Key Linting Guidelines
 
 1. **Use TypeScript Type Imports**
+
    - Always use `import type` for importing types:
      ```typescript
-     import type { Conversation, XmtpEnv } from "@xmtp/node-sdk";
-     import { Client } from "@xmtp/node-sdk";
+     import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
      ```
 
 2. **Handle Unused Variables**
+
    - Prefix unused variables with underscore: `_unusedVar`
    - This applies to unused function parameters and destructured variables as well
 
 3. **Type Safety**
+
    - Avoid using `any` whenever possible
    - Use proper type guards when handling unknown types:
      ```typescript
@@ -431,6 +431,7 @@ XMTP agents should follow consistent TypeScript linting practices to ensure code
      ```
 
 4. **Node.js Imports**
+
    - Use the `node:` prefix for Node.js built-in modules:
      ```typescript
      import fs from "node:fs";
@@ -447,8 +448,7 @@ XMTP agents should follow consistent TypeScript linting practices to ensure code
 
 ```typescript
 import "dotenv/config";
-import { Client } from "@xmtp/node-sdk";
-import type { Conversation, XmtpEnv } from "@xmtp/node-sdk";
+import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 // Environment variable validation
@@ -491,7 +491,7 @@ main().catch((error: unknown) => {
   console.error("Unhandled error:", error);
   process.exit(1);
 });
-````
+```
 
 ### Error Handling Patterns
 
