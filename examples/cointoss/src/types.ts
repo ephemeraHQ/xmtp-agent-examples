@@ -36,7 +36,7 @@ Or use: create <amount> - to create a standard toss`;
 export const HELP_MESSAGE = `Available commands:
 create <amount> - Create a new toss with specified USDC amount
 join <tossId> <option> - Join an existing toss with the specified ID and your chosen option
-execute <tossId> - Execute the toss resolution (only for toss creator)
+close <tossId> <option> - Close the toss and set the winning option (only for toss creator)
 status <tossId> - Check the status of a specific toss
 list - List all active tosses
 balance - Check your wallet balance and address

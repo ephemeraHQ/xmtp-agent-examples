@@ -1,4 +1,5 @@
 import * as crypto from "crypto";
+import * as fs from "fs/promises";
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { WalletService } from "./cdp";
 import { parseNaturalLanguageToss } from "./langchain";
@@ -252,7 +253,10 @@ export class TossManager {
     }
   }
 
-  async executeCoinToss(tossId: string): Promise<CoinTossGame> {
+  async executeCoinToss(
+    tossId: string,
+    winningOption: string,
+  ): Promise<CoinTossGame> {
     console.log(`🎲 EXECUTING TOSS for Toss: ${tossId}`);
 
     const toss = await storage.getToss(tossId);
@@ -321,29 +325,32 @@ export class TossManager {
       return toss;
     }
 
-    console.log(
-      `🎲 Executing toss to select between options: ${options.join(" or ")}`,
+    console.log(`🎲 Executing toss with options: ${options.join(" or ")}`);
+
+    // Validate and normalize the winning option
+    const matchingOption = options.find(
+      (option) => option.toLowerCase() === winningOption.toLowerCase(),
     );
 
-    // Generate random selection for winning option
-    const randomBuffer = crypto.randomBytes(8);
-    const timestamp = Date.now();
-    const randomValue =
-      (timestamp ^ parseInt(randomBuffer.toString("hex"), 16)) % 1000000;
-    const winningOptionIndex = randomValue % options.length;
-    const winningOption = options[winningOptionIndex];
+    if (!matchingOption) {
+      console.error(`❌ Invalid winning option provided: ${winningOption}`);
+      toss.status = TossStatus.CANCELLED;
+      toss.paymentSuccess = false;
+      await storage.updateToss(toss);
+      return toss;
+    }
 
     // Set the toss result
-    toss.tossResult = winningOption;
-    console.log(`🎯 Winning option selected: ${winningOption}`);
+    toss.tossResult = matchingOption;
+    console.log(`🎯 Winning option selected: ${matchingOption}`);
 
     // Find all winners (participants who chose the winning option)
     const winners = toss.participantOptions.filter(
-      (p) => p.option.toLowerCase() === winningOption.toLowerCase(),
+      (p) => p.option.toLowerCase() === matchingOption.toLowerCase(),
     );
 
     if (winners.length === 0) {
-      console.error(`❌ No winners found for option: ${winningOption}`);
+      console.error(`❌ No winners found for option: ${matchingOption}`);
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
       await storage.updateToss(toss);
@@ -351,7 +358,7 @@ export class TossManager {
     }
 
     console.log(
-      `🏆 ${winners.length} winner(s) found who chose ${winningOption}`,
+      `🏆 ${winners.length} winner(s) found who chose ${matchingOption}`,
     );
 
     // Calculate prize money per winner
@@ -472,6 +479,25 @@ export class TossManager {
 
   async getToss(tossId: string): Promise<CoinTossGame | null> {
     return storage.getToss(tossId);
+  }
+
+  async getTotalTossCount(): Promise<number> {
+    try {
+      // Get all tosses from the storage directory
+      const tossesDir = storage.getTossStorageDir();
+      const files = await fs.readdir(tossesDir);
+      const networkId = process.env.NETWORK_ID || "";
+
+      // Count files that match the toss pattern
+      const tossIdPattern = new RegExp(`toss:\\d+-${networkId}\\.json$`);
+      const tossCount = files.filter((file) => tossIdPattern.test(file)).length;
+
+      console.log(`Found ${tossCount} total tosses in the system`);
+      return tossCount;
+    } catch (error) {
+      console.error("Error counting total tosses:", error);
+      return 0;
+    }
   }
 
   async cancelGame(tossId: string): Promise<CoinTossGame> {

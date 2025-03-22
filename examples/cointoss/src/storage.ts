@@ -118,7 +118,8 @@ class StorageService {
 
       for (const file of files) {
         if (file.endsWith(".json")) {
-          const tossId = file.replace(".json", "");
+          const tossWithoutNetwork = file.replace(`-${networkId}.json`, "");
+          const tossId = tossWithoutNetwork.replace(WALLET_KEY_PREFIX_TOSS, "");
           const toss = await this.getToss(tossId);
           if (
             toss &&
@@ -191,6 +192,13 @@ class StorageService {
       console.error("Error getting wallet count:", error);
       return 0;
     }
+  }
+
+  /**
+   * Get the toss storage directory
+   */
+  public getTossStorageDir(): string {
+    return TOSS_STORAGE_DIR;
   }
 }
 

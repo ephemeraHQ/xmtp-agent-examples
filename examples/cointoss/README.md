@@ -16,7 +16,7 @@ The agent responds to commands in group chats when tagged with `@toss`:
 
 - `@toss create <amount>` - Create a new toss with specified USDC amount
 - `@toss join <tossId> <option>` - Join a toss and select your option
-- `@toss execute <tossId>` - Execute the toss resolution (creator only)
+- `@toss close <tossId> <option>` - Close the toss and set the winning option (creator only)
 - `@toss status <tossId>` - Check toss status and participants
 - `@toss list` - List all active tosses
 - `@toss balance` - Check your wallet balance
@@ -30,9 +30,9 @@ The agent responds to commands in group chats when tagged with `@toss`:
 ### Example Flow
 
 1. **Create a toss**: `@toss Will Bitcoin hit $100k this year for 5`
-2. **Join the toss**: `@toss join 1 yes` (each player must choose an option)
+2. **Join the toss**: `@toss join 1 yes` (other players must choose an option)
 3. **Check status**: `@toss status 1`
-4. **Execute the toss**: `@toss execute 1` (creator only)
+4. **Close the toss**: `@toss close 1 yes` (creator decides the winning option)
 5. **View results**: All players who chose the winning option share the prize pool
 
 ## How It Works
@@ -48,14 +48,14 @@ The agent workflow:
 
 1. Users create or join tosses in group chats
 2. Each player is assigned a unique wallet
-3. The toss creator determines when to execute the toss
-4. A random option is selected as the winner
-5. Prize money is split among all players who chose the winning option
+3. The toss creator determines the winning option when closing the toss
+4. Prize money is split among all players who chose the winning option
+5. Transaction confirmations are provided in the chat
 
 ## Prize Distribution
 
 - All tosses are collected in a dedicated toss wallet
-- When the toss is executed, a winning option is randomly selected
+- When the toss is closed, the creator chooses the winning option
 - All players who chose the winning option share the prize pool equally
 - Automatic transfers are sent to each winner's wallet
 - Transaction confirmations are provided in the chat

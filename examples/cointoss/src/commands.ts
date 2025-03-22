@@ -23,7 +23,7 @@ export async function handleCommand(
 
   // Check if the first word is a command
   if (
-    ["create", "join", "execute", "status", "list", "balance", "help"].includes(
+    ["create", "join", "close", "status", "list", "balance", "help"].includes(
       firstWord,
     )
   ) {
@@ -43,7 +43,7 @@ export async function handleCommand(
 }
 
 /**
- * Handle explicit commands like create, join, execute, etc.
+ * Handle explicit commands like create, join, close, etc.
  * @param command - The command type
  * @param args - The command arguments
  * @param userId - The user's identifier
@@ -75,14 +75,14 @@ async function handleExplicitCommand(
       // Generate response with toss options if they exist
       let optionsMessage = "";
       if (toss.tossOptions && toss.tossOptions.length > 0) {
-        optionsMessage = `\nOptions: ${toss.tossOptions.join(", ")}\n\nYou need to join your own toss by choosing an option: join ${toss.id} <option>`;
+        optionsMessage = `\nOptions: ${toss.tossOptions.join(" or ")}`;
       } else {
-        optionsMessage = `\n\nYou need to join your own toss first: join ${toss.id} yes/no`;
+        optionsMessage = `\nOptions: Yes or No (default)`;
       }
 
       return `Toss created!\nToss ID: ${toss.id}\nToss Amount: ${toss.tossAmount} USDC${
         toss.tossTopic ? `\nTopic: ${toss.tossTopic}` : ""
-      }${optionsMessage}\n\nOther players can join with: join ${toss.id} <option>\nWhen everyone has joined, you can run: execute ${toss.id}`;
+      }${optionsMessage}\n\nOther players can join with: join ${toss.id} <option>\nWhen players have joined, you can close the toss with: close ${toss.id} <option>`;
     }
 
     case "join": {
@@ -98,14 +98,25 @@ async function handleExplicitCommand(
         return "Please specify a toss ID: join <tossId> <option>";
       }
 
-      // First check if the toss exists and is joinable
-      const toss = await tossManager.joinGame(tossId, userId);
+      // First check if the toss exists
+      const toss = await tossManager.getToss(tossId);
+      if (!toss) {
+        return `Toss ${tossId} not found.`;
+      }
+
+      // Prevent the creator from joining their own toss
+      if (toss.creator === userId) {
+        return "As the creator of this toss, you cannot join it. You can only create and close tosses.";
+      }
+
+      // Join the game
+      const joinedToss = await tossManager.joinGame(tossId, userId);
 
       // Check if an option was provided
       if (!chosenOption) {
         const availableOptions =
-          toss.tossOptions && toss.tossOptions.length > 0
-            ? toss.tossOptions.join(", ")
+          joinedToss.tossOptions && joinedToss.tossOptions.length > 0
+            ? joinedToss.tossOptions.join(", ")
             : "yes, no";
 
         return `Please specify your option when joining: join ${tossId} <option>\nAvailable options: ${availableOptions}`;
@@ -154,18 +165,24 @@ async function handleExplicitCommand(
       }
 
       if (userId === toss.creator) {
-        responseMessage += `\n\nAs the creator, you can execute the toss with: execute ${tossId}`;
+        responseMessage += `\n\nAs the creator, you can close the toss with: close ${tossId} <option>`;
       } else {
-        responseMessage += `\n\nWaiting for the toss creator to execute the toss.`;
+        responseMessage += `\n\nWaiting for the toss creator to close the toss.`;
       }
 
       return responseMessage;
     }
 
-    case "execute": {
+    case "close": {
       const tossId = args[0];
+      const winningOption = args[1];
+
       if (!tossId) {
-        return "Please specify a toss ID: execute <tossId>";
+        return "Please specify a toss ID: close <tossId> <option>";
+      }
+
+      if (!winningOption) {
+        return "Please specify the winning option: close <tossId> <option>";
       }
 
       // Check if the user is the creator
@@ -175,24 +192,34 @@ async function handleExplicitCommand(
       }
 
       if (toss.creator !== userId) {
-        return "Only the toss creator can execute the toss.";
+        return "Only the toss creator can close the toss.";
       }
 
       if (toss.participants.length < 2) {
-        return "At least 2 players are needed to execute the toss.";
+        return "At least 2 players are needed to close the toss.";
+      }
+
+      // Validate winning option
+      if (
+        toss.tossOptions &&
+        !toss.tossOptions.some(
+          (option) => option.toLowerCase() === winningOption.toLowerCase(),
+        )
+      ) {
+        return `Invalid option. Please choose one of: ${toss.tossOptions.join(", ")}`;
       }
 
       let result;
       try {
-        result = await tossManager.executeCoinToss(tossId);
+        result = await tossManager.executeCoinToss(tossId, winningOption);
 
         // Check if the toss was successful and a winner was determined
         if (!result.winner) {
           return "The toss failed to determine a winner. Please try again.";
         }
       } catch (error) {
-        console.error("Error executing toss:", error);
-        return `Error executing toss: ${error instanceof Error ? error.message : "Unknown error"}`;
+        console.error("Error closing toss:", error);
+        return `Error closing toss: ${error instanceof Error ? error.message : "Unknown error"}`;
       }
 
       // Generate player IDs for result message
@@ -392,7 +419,9 @@ async function handleExplicitCommand(
     case "list": {
       const tosses = await tossManager.listActiveTosses();
       if (tosses.length === 0) {
-        return "No active tosses found.";
+        // Get the total count of tosses (including completed/cancelled) for debugging
+        const allTossCount = await tossManager.getTotalTossCount();
+        return `No active tosses found. (Total tosses in system: ${allTossCount})`;
       }
 
       // Updated toss descriptions with wallet addresses
@@ -470,9 +499,8 @@ async function handleNaturalLanguageCommand(
     }
 
     response += `Toss Amount: ${toss.tossAmount} USDC\n\n`;
-    response += `You need to join your own toss first by choosing an option: join ${toss.id} <option>\n\n`;
     response += `Other players can join with: join ${toss.id} <option>\n`;
-    response += `When everyone has joined, you can execute the toss with: execute ${toss.id}`;
+    response += `When everyone has joined, you can close the toss with: close ${toss.id} <option>`;
 
     return response;
   } catch (error) {
