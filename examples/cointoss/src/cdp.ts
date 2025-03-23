@@ -4,7 +4,6 @@ import {
   Wallet,
   type Trade,
   type Transfer,
-  type WalletData,
 } from "@coinbase/coinbase-sdk";
 import { isAddress } from "viem";
 import { storage } from "./storage";
@@ -80,21 +79,20 @@ export class WalletService {
         id: walletAddress,
         wallet: wallet,
         walletData: data,
-        human_address: inboxId,
         agent_address: walletAddress,
         inboxId: inboxId,
       };
 
-      const walletInfoToStore: AgentWalletData = {
-        id: walletAddress,
-        //no wallet
-        walletData: data,
-        human_address: inboxId,
-        agent_address: walletAddress,
-        inboxId: inboxId,
-      };
-
-      await storage.saveWallet(inboxId, JSON.stringify(walletInfoToStore));
+      await storage.saveWallet(
+        inboxId,
+        JSON.stringify({
+          id: walletInfo.id,
+          // no wallet
+          walletData: walletInfo.walletData,
+          agent_address: walletInfo.agent_address,
+          inboxId: walletInfo.inboxId,
+        }),
+      );
       console.log("Wallet created and saved successfully");
       return walletInfo;
     } catch (error: unknown) {
@@ -123,7 +121,6 @@ export class WalletService {
       id: importedWallet.getId() ?? "",
       wallet: importedWallet,
       walletData: walletData.walletData,
-      human_address: walletData.human_address,
       agent_address: walletData.agent_address,
       inboxId: walletData.inboxId,
     };
@@ -279,22 +276,5 @@ export class WalletService {
     }
 
     return trade;
-  }
-
-  async deleteWallet(key: string): Promise<boolean> {
-    key = key.toLowerCase();
-    const encryptedKey = `wallet:${key}`;
-
-    const emptyWallet: AgentWalletData = {
-      id: "",
-      wallet: {} as Wallet,
-      walletData: {} as WalletData,
-      human_address: encryptedKey,
-      agent_address: encryptedKey,
-      inboxId: encryptedKey,
-    };
-
-    await storage.saveWallet(encryptedKey, JSON.stringify(emptyWallet));
-    return true;
   }
 }

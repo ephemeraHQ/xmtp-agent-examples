@@ -15,7 +15,6 @@ import type {
   ParsedToss,
   StreamChunk,
   TossJsonResponse,
-  XMTPUser,
 } from "./types";
 
 // Constants for default values
@@ -56,7 +55,6 @@ const AGENT_INSTRUCTIONS = `
      - Provide transaction details
   
   Available commands:
-  /create <amount> - Create a new coin toss with specified USDC amount
   /join <tossId> - Join an existing toss with the specified ID
   /list - List all active tosses
   /balance - Check your wallet balance
@@ -72,7 +70,7 @@ const AGENT_INSTRUCTIONS = `
   If there is a 5XX (internal) HTTP error, ask the user to try again later.
 `;
 
-export async function initializeAgent(xmtpUser: XMTPUser) {
+export async function initializeAgent(inboxId: string) {
   try {
     const llm = new ChatOpenAI({
       modelName: "gpt-4o-mini",
@@ -103,7 +101,7 @@ export async function initializeAgent(xmtpUser: XMTPUser) {
     const memory = new MemorySaver();
 
     const agentConfig = {
-      configurable: { thread_id: `CoinToss Agent for ${xmtpUser.inboxId}` },
+      configurable: { thread_id: `CoinToss Agent for ${inboxId}` },
     };
 
     const agent = createReactAgent({

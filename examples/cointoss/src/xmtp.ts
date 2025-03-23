@@ -1,10 +1,10 @@
+import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import {
   Client,
   type Conversation,
   type DecodedMessage,
   type XmtpEnv,
 } from "@xmtp/node-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 import { XMTP_STORAGE_DIR } from "./storage";
 
 /**

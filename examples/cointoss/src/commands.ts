@@ -23,9 +23,7 @@ export async function handleCommand(
 
   // Check if the first word is a command
   if (
-    ["create", "join", "close", "status", "list", "balance", "help"].includes(
-      firstWord,
-    )
+    ["join", "close", "status", "list", "balance", "help"].includes(firstWord)
   ) {
     // Handle traditional command formatting
     const [command, ...args] = commandParts;
@@ -57,34 +55,6 @@ async function handleExplicitCommand(
   tossManager: TossManager,
 ): Promise<string> {
   switch (command.toLowerCase()) {
-    case "create": {
-      const amount = args[0];
-      if (!amount || isNaN(parseFloat(amount))) {
-        return "Please specify a valid toss amount: create <amount>";
-      }
-
-      // Check if user has sufficient balance
-      const balance = await tossManager.getUserBalance(userId);
-      if (balance < parseFloat(amount)) {
-        return `Insufficient USDC balance. You need at least ${amount} USDC to create a toss. Your balance: ${balance} USDC`;
-      }
-
-      // Create the toss - creator doesn't join automatically now
-      const toss = await tossManager.createGame(userId, amount);
-
-      // Generate response with toss options if they exist
-      let optionsMessage = "";
-      if (toss.tossOptions && toss.tossOptions.length > 0) {
-        optionsMessage = `\nOptions: ${toss.tossOptions.join(" or ")}`;
-      } else {
-        optionsMessage = `\nOptions: Yes or No (default)`;
-      }
-
-      return `Toss created!\nToss ID: ${toss.id}\nToss Amount: ${toss.tossAmount} USDC${
-        toss.tossTopic ? `\nTopic: ${toss.tossTopic}` : ""
-      }${optionsMessage}\n\nOther players can join with: join ${toss.id} <option>\nWhen players have joined, you can close the toss with: close ${toss.id} <option>`;
-    }
-
     case "join": {
       // Check if we have enough arguments
       if (args.length < 1) {

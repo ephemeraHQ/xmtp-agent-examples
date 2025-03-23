@@ -4,10 +4,6 @@ import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 export const memoryStore: Record<string, MemorySaver> = {};
 export const agentStore: Record<string, Agent> = {};
 
-export type XMTPUser = {
-  inboxId: string;
-  address: string;
-};
 export interface AgentConfig {
   configurable: {
     thread_id: string;

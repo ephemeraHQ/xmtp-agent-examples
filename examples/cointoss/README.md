@@ -14,13 +14,12 @@ The agent responds to commands in group chats when tagged with `@toss`:
 
 ### Available Commands
 
-- `@toss create <amount>` - Create a new toss with specified USDC amount
+- `@toss <natural language toss>` - Create a toss using natural language
 - `@toss join <tossId> <option>` - Join a toss and select your option
 - `@toss close <tossId> <option>` - Close the toss and set the winning option (creator only)
 - `@toss status <tossId>` - Check toss status and participants
 - `@toss list` - List all active tosses
 - `@toss balance` - Check your wallet balance
-- `@toss <natural language toss>` - Create a toss using natural language
 
 ### Natural Language Examples
 

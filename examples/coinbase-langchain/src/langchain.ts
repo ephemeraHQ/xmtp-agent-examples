@@ -12,12 +12,11 @@ import {
   type AgentChunk,
   type AgentConfig,
   type TransferData,
-  type XMTPUser,
 } from "./types";
 
-function createWalletTools(xmtpUser: XMTPUser) {
+function createWalletTools(inboxId: string) {
   // Create a properly typed WalletService instance
-  const walletService = new WalletService(xmtpUser);
+  const walletService = new WalletService(inboxId);
 
   const getBalanceTool = new DynamicStructuredTool({
     name: "get_wallet_balance",
@@ -26,9 +25,9 @@ function createWalletTools(xmtpUser: XMTPUser) {
     schema: z.object({}),
     func: async () => {
       try {
-        const result = await walletService.checkBalance(xmtpUser.inboxId);
+        const result = await walletService.checkBalance(inboxId);
         if (!result.address) {
-          return `No wallet found for user ${xmtpUser.inboxId}`;
+          return `No wallet found for user ${inboxId}`;
         }
         return `Wallet address: ${result.address}\nUSDC Balance: ${result.balance} USDC`;
       } catch (error: unknown) {
@@ -53,13 +52,10 @@ function createWalletTools(xmtpUser: XMTPUser) {
           return `Error: Invalid amount ${amount}`;
         }
 
-        console.log(
-          `Transferring from ${xmtpUser.address} to: ${recipientAddress}`,
-        );
+        console.log(`Transferring from ${inboxId} to: ${recipientAddress}`);
 
         const result = await walletService.transfer(
-          xmtpUser.inboxId,
-          xmtpUser.address,
+          inboxId,
           recipientAddress,
           numericAmount,
         );
@@ -95,37 +91,35 @@ function createWalletTools(xmtpUser: XMTPUser) {
  * @returns Agent executor and config
  */
 export async function initializeAgent(
-  xmtpUser: XMTPUser,
+  inboxId: string,
 ): Promise<{ agent: Agent; config: AgentConfig }> {
   try {
     // Check if we already have an agent for this user
-    if (xmtpUser.inboxId in agentStore) {
-      console.log(`Using existing agent for user: ${xmtpUser.inboxId}`);
+    if (inboxId in agentStore) {
+      console.log(`Using existing agent for user: ${inboxId}`);
       const agentConfig = {
-        configurable: { thread_id: xmtpUser.inboxId },
+        configurable: { thread_id: inboxId },
       };
-      return { agent: agentStore[xmtpUser.inboxId], config: agentConfig };
+      return { agent: agentStore[inboxId], config: agentConfig };
     }
 
-    console.log(
-      `Creating new agent for user with inboxId: ${xmtpUser.inboxId} and address: ${xmtpUser.address}`,
-    );
+    console.log(`Creating new agent for user with inboxId: ${inboxId}`);
 
     const llm = new ChatOpenAI({
       model: "gpt-4o-mini",
     });
 
-    const tools = createWalletTools(xmtpUser);
+    const tools = createWalletTools(inboxId);
 
-    if (!(xmtpUser.inboxId in memoryStore)) {
-      console.log(`Creating new memory store for user: ${xmtpUser.inboxId}`);
-      memoryStore[xmtpUser.inboxId] = new MemorySaver();
+    if (!(inboxId in memoryStore)) {
+      console.log(`Creating new memory store for user: ${inboxId}`);
+      memoryStore[inboxId] = new MemorySaver();
     } else {
-      console.log(`Using existing memory store for user: ${xmtpUser.inboxId}`);
+      console.log(`Using existing memory store for user: ${inboxId}`);
     }
 
     const agentConfig: AgentConfig = {
-      configurable: { thread_id: xmtpUser.inboxId },
+      configurable: { thread_id: inboxId },
     };
 
     // Make sure we await the agent creation
@@ -133,7 +127,7 @@ export async function initializeAgent(
       createReactAgent({
         llm,
         tools,
-        checkpointSaver: memoryStore[xmtpUser.inboxId],
+        checkpointSaver: memoryStore[inboxId],
         messageModifier: `
         You are a DeFi Agent that assists users with sending payments to any wallet address using natural language instructions.
 
@@ -159,7 +153,7 @@ export async function initializeAgent(
     );
 
     // Store the agent for future use
-    agentStore[xmtpUser.inboxId] = agent;
+    agentStore[inboxId] = agent;
 
     return { agent, config: agentConfig };
   } catch (error: unknown) {

@@ -7,7 +7,6 @@ import {
 } from "@coinbase/coinbase-sdk";
 import { isAddress } from "viem";
 import { getWalletData, saveWalletData } from "./storage";
-import type { XMTPUser } from "./types";
 
 const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
 let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
@@ -79,7 +78,6 @@ export type AgentWalletData = {
   id: string;
   wallet: Wallet;
   data: WalletData;
-  human_address: string;
   agent_address: string;
   blockchain?: string;
   state?: string;
@@ -89,21 +87,14 @@ export type AgentWalletData = {
 // Wallet service class based on cointoss implementation
 export class WalletService {
   private walletStorage: WalletStorage;
-  private humanAddress: string;
   private inboxId: string;
   private sdkInitialized: boolean;
 
-  constructor(xmtpUser: XMTPUser) {
+  constructor(inboxId: string) {
     this.sdkInitialized = initializeCoinbaseSDK();
     this.walletStorage = new WalletStorage();
-    this.humanAddress = xmtpUser.address;
-    this.inboxId = xmtpUser.inboxId;
-    console.log(
-      "WalletService initialized with sender address",
-      this.humanAddress,
-      "and inboxId",
-      this.inboxId,
-    );
+    this.inboxId = inboxId;
+    console.log("WalletService initialized with sender inboxId", this.inboxId);
   }
 
   async createWallet(): Promise<AgentWalletData> {
@@ -137,7 +128,7 @@ export class WalletService {
 
       // Make the wallet address visible in the logs for funding
       console.log("-----------------------------------------------------");
-      console.log(`NEW WALLET CREATED FOR USER: ${this.humanAddress}`);
+      console.log(`NEW WALLET CREATED FOR USER: ${this.inboxId}`);
       console.log(`WALLET ADDRESS: ${walletAddress}`);
       console.log(`NETWORK: ${networkId}`);
       console.log(`SEND FUNDS TO THIS ADDRESS TO TEST: ${walletAddress}`);
@@ -147,7 +138,6 @@ export class WalletService {
         id: walletAddress,
         wallet: wallet,
         data: data,
-        human_address: this.humanAddress,
         agent_address: walletAddress,
         inboxId: this.inboxId,
       };
@@ -155,7 +145,6 @@ export class WalletService {
       console.log("Saving wallet data to storage...");
       const walletInfoToStore = {
         data: data,
-        human_address: this.humanAddress,
         agent_address: walletAddress,
         inboxId: this.inboxId,
       };
@@ -222,7 +211,6 @@ export class WalletService {
         id: importedWallet.getId() ?? "",
         wallet: importedWallet,
         data: walletInfo.data,
-        human_address: walletInfo.human_address,
         agent_address: walletInfo.agent_address,
         inboxId: walletInfo.inboxId,
       };
@@ -286,23 +274,21 @@ export class WalletService {
 
   async transfer(
     inboxId: string,
-    humanAddress: string,
     toAddress: string,
     amount: number,
   ): Promise<Transfer | undefined> {
-    humanAddress = humanAddress.toLowerCase();
     toAddress = toAddress.toLowerCase();
 
     console.log("📤 TRANSFER INITIATED");
     console.log(`💸 Amount: ${amount} USDC`);
-    console.log(`🔍 From user: ${humanAddress}`);
+    console.log(`🔍 From user: ${inboxId}`);
     console.log(`🔍 To: ${toAddress}`);
 
     // Get the source wallet
-    console.log(`🔑 Retrieving source wallet for user: ${humanAddress}...`);
+    console.log(`🔑 Retrieving source wallet for user: ${inboxId}...`);
     const from = await this.getWallet(inboxId);
     if (!from) {
-      console.error(`❌ No wallet found for sender: ${humanAddress}`);
+      console.error(`❌ No wallet found for sender: ${inboxId}`);
       return undefined;
     }
     console.log(`✅ Source wallet found: ${from.agent_address}`);

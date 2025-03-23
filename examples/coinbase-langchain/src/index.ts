@@ -3,7 +3,6 @@ import { getAddressOfMember } from "@helpers";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { initializeAgent, processMessage } from "./langchain";
 import { initializeStorage } from "./storage";
-import type { XMTPUser } from "./types";
 import { initializeXmtpClient, startMessageListener } from "./xmtp";
 
 /**
@@ -52,12 +51,8 @@ async function handleMessage(
     console.log("Unable to find address, skipping");
     return;
   }
-  const xmtpUser: XMTPUser = {
-    inboxId,
-    address,
-  };
   // Initialize or get the agent for this user
-  const { agent, config } = await initializeAgent(xmtpUser);
+  const { agent, config } = await initializeAgent(inboxId);
 
   // Process the message with the agent
   const response = await processMessage(
