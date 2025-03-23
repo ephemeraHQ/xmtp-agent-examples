@@ -4,8 +4,6 @@ import * as path from "path";
 import { TossStatus, type AgentWalletData, type CoinTossGame } from "./types";
 
 const networkId = process.env.NETWORK_ID;
-export const WALLET_KEY_PREFIX = "wallet_data:";
-export const WALLET_KEY_PREFIX_TOSS = "toss:";
 export const WALLET_STORAGE_DIR = ".data/wallet_data";
 export const XMTP_STORAGE_DIR = ".data/xmtp";
 export const TOSS_STORAGE_DIR = ".data/tosses";
@@ -88,11 +86,7 @@ class StorageService {
    */
   public async saveToss(toss: CoinTossGame): Promise<void> {
     if (!this.initialized) this.initialize();
-    await this.saveToFile(
-      TOSS_STORAGE_DIR,
-      WALLET_KEY_PREFIX_TOSS + toss.id,
-      JSON.stringify(toss),
-    );
+    await this.saveToFile(TOSS_STORAGE_DIR, toss.id, JSON.stringify(toss));
   }
 
   /**
@@ -100,10 +94,7 @@ class StorageService {
    */
   public async getToss(tossId: string): Promise<CoinTossGame | null> {
     if (!this.initialized) this.initialize();
-    return this.readFromFile<CoinTossGame>(
-      TOSS_STORAGE_DIR,
-      WALLET_KEY_PREFIX_TOSS + tossId,
-    );
+    return this.readFromFile<CoinTossGame>(TOSS_STORAGE_DIR, tossId);
   }
 
   /**
@@ -118,8 +109,7 @@ class StorageService {
 
       for (const file of files) {
         if (file.endsWith(".json")) {
-          const tossWithoutNetwork = file.replace(`-${networkId}.json`, "");
-          const tossId = tossWithoutNetwork.replace(WALLET_KEY_PREFIX_TOSS, "");
+          const tossId = file.replace(`-${networkId}.json`, "");
           const toss = await this.getToss(tossId);
           if (
             toss &&
@@ -149,11 +139,7 @@ class StorageService {
    */
   public async saveWallet(inboxId: string, walletData: string): Promise<void> {
     if (!this.initialized) this.initialize();
-    await this.saveToFile(
-      WALLET_STORAGE_DIR,
-      WALLET_KEY_PREFIX + inboxId,
-      walletData,
-    );
+    await this.saveToFile(WALLET_STORAGE_DIR, inboxId, walletData);
   }
 
   /**
@@ -161,10 +147,7 @@ class StorageService {
    */
   public async getWallet(inboxId: string): Promise<AgentWalletData | null> {
     if (!this.initialized) this.initialize();
-    return this.readFromFile<AgentWalletData>(
-      WALLET_STORAGE_DIR,
-      WALLET_KEY_PREFIX + inboxId,
-    );
+    return this.readFromFile<AgentWalletData>(WALLET_STORAGE_DIR, inboxId);
   }
 
   /**

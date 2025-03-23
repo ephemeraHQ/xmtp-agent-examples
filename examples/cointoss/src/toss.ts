@@ -57,7 +57,7 @@ export class TossManager {
     const tossId = this.getNextGameId();
     console.log(`🆔 Generated Toss ID: ${tossId}`);
 
-    const tossWallet = await this.walletService.createWallet(`toss:${tossId}`);
+    const tossWallet = await this.walletService.createWallet(tossId);
     console.log(`✅ Toss wallet created: ${tossWallet.agent_address}`);
 
     const toss: CoinTossGame = {
@@ -185,9 +185,7 @@ export class TossManager {
 
     try {
       // Check if the user has already transferred funds
-      const tossWalletBalance = await this.walletService.checkBalance(
-        `toss:${tossId}`,
-      );
+      const tossWalletBalance = await this.walletService.checkBalance(tossId);
       if (!tossWalletBalance.address) return false;
 
       // Check if the toss wallet has the required funds
@@ -260,216 +258,119 @@ export class TossManager {
 
     const toss = await storage.getToss(tossId);
     if (!toss) {
-      console.error(`❌ Toss not found: ${tossId}`);
       throw new Error("Toss not found");
     }
 
+    // Validate toss state
     if (toss.status !== TossStatus.WAITING_FOR_PLAYER) {
-      console.error(
-        `❌ Toss is not ready for execution. Current status: ${toss.status}`,
+      throw new Error(
+        `Toss is not ready for execution. Current status: ${toss.status}`,
       );
-      throw new Error("Toss is not ready for execution");
     }
 
     if (toss.participants.length < 2) {
-      console.error(
-        `❌ Toss needs at least 2 players. Current player count: ${toss.participants.length}`,
-      );
       throw new Error("Toss needs at least 2 players");
     }
 
-    console.log(`👥 Toss participants: ${toss.participants.join(", ")}`);
-    const totalPot = parseFloat(toss.tossAmount) * toss.participants.length;
-    console.log(`💰 Total pot: ${totalPot} USDC`);
+    if (!toss.participantOptions.length) {
+      throw new Error("No participant options found in the toss");
+    }
 
+    // Get options from the toss or participant choices
+    const options = toss.tossOptions?.length
+      ? toss.tossOptions
+      : [...new Set(toss.participantOptions.map((p) => p.option))];
+
+    if (options.length < 2) {
+      throw new Error("Not enough unique options to choose from");
+    }
+
+    // Set toss in progress
     toss.status = TossStatus.IN_PROGRESS;
     await storage.updateToss(toss);
     console.log(`🏁 Toss status updated to IN_PROGRESS`);
 
-    // Verify participants array is not empty
-    if (toss.participants.length === 0) {
-      console.error(`❌ No participants found in the toss`);
-      toss.status = TossStatus.CANCELLED;
-      toss.paymentSuccess = false;
-      await storage.updateToss(toss);
-      return toss;
-    }
-
-    // Check if participantOptions is initialized and has entries
-    if (toss.participantOptions.length === 0) {
-      console.error(`❌ No participant options found in the toss`);
-      toss.status = TossStatus.CANCELLED;
-      toss.paymentSuccess = false;
-      await storage.updateToss(toss);
-      return toss;
-    }
-
-    // Determine the available options
-    let options: string[] = [];
-    if (toss.tossOptions && toss.tossOptions.length > 0) {
-      options = toss.tossOptions;
-    } else {
-      // Extract unique options from participant choices
-      const uniqueOptions = new Set<string>();
-      toss.participantOptions.forEach((p) => uniqueOptions.add(p.option));
-      options = Array.from(uniqueOptions);
-    }
-
-    // Make sure we have at least two options
-    if (options.length < 2) {
-      console.error(`❌ Not enough unique options to choose from`);
-      toss.status = TossStatus.CANCELLED;
-      toss.paymentSuccess = false;
-      await storage.updateToss(toss);
-      return toss;
-    }
-
-    console.log(`🎲 Executing toss with options: ${options.join(" or ")}`);
-
-    // Validate and normalize the winning option
+    // Validate winning option
     const matchingOption = options.find(
       (option) => option.toLowerCase() === winningOption.toLowerCase(),
     );
 
     if (!matchingOption) {
-      console.error(`❌ Invalid winning option provided: ${winningOption}`);
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
       await storage.updateToss(toss);
-      return toss;
+      throw new Error(`Invalid winning option provided: ${winningOption}`);
     }
 
-    // Set the toss result
+    // Set the result
     toss.tossResult = matchingOption;
-    console.log(`🎯 Winning option selected: ${matchingOption}`);
 
-    // Find all winners (participants who chose the winning option)
+    // Find winners
     const winners = toss.participantOptions.filter(
       (p) => p.option.toLowerCase() === matchingOption.toLowerCase(),
     );
 
-    if (winners.length === 0) {
-      console.error(`❌ No winners found for option: ${matchingOption}`);
+    if (!winners.length) {
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
       await storage.updateToss(toss);
-      return toss;
+      throw new Error(`No winners found for option: ${matchingOption}`);
     }
 
-    console.log(
-      `🏆 ${winners.length} winner(s) found who chose ${matchingOption}`,
-    );
-
-    // Calculate prize money per winner
+    // Calculate prize per winner
+    const totalPot = parseFloat(toss.tossAmount) * toss.participants.length;
     const prizePerWinner = totalPot / winners.length;
-    console.log(`💰 Prize per winner: ${prizePerWinner.toFixed(6)} USDC`);
 
-    // Update toss with results
-    toss.status = TossStatus.COMPLETED;
-    toss.winner = winners.map((w) => w.inboxId).join(","); // Comma-separated list of winner IDs
+    // Distribute prizes
+    const tossWallet = await this.walletService.getWallet(tossId);
+    if (!tossWallet) {
+      toss.status = TossStatus.CANCELLED;
+      toss.paymentSuccess = false;
+      await storage.updateToss(toss);
+      throw new Error("Toss wallet not found");
+    }
 
-    // Transfer winnings from toss wallet to winners
-    console.log(`💸 Transferring winnings to ${winners.length} winners...`);
-
-    let allTransfersSuccessful = true;
     const successfulTransfers: string[] = [];
 
-    try {
-      // Get toss wallet
-      const tossWallet = await this.walletService.getWallet(`toss:${tossId}`);
-      if (!tossWallet) {
-        console.error(`❌ Toss wallet not found`);
-        toss.paymentSuccess = false;
-        await storage.updateToss(toss);
-        return toss;
-      }
+    for (const winner of winners) {
+      try {
+        if (!winner.inboxId) continue;
 
-      // Process transfers for each winner
-      for (const winner of winners) {
-        try {
-          if (!winner.inboxId) {
-            console.error(`❌ Winner ID is undefined, skipping transfer`);
-            allTransfersSuccessful = false;
-            continue;
+        const winnerWalletData = await this.walletService.getWallet(
+          winner.inboxId,
+        );
+        if (!winnerWalletData) continue;
+
+        const transfer = await this.walletService.transfer(
+          tossWallet.inboxId,
+          winnerWalletData.agent_address,
+          prizePerWinner,
+        );
+
+        if (transfer) {
+          successfulTransfers.push(winner.inboxId);
+
+          // Set transaction link from first successful transfer
+          if (!toss.transactionLink) {
+            const transferData = transfer as unknown as Transfer;
+            toss.transactionLink =
+              transferData.model?.sponsored_send?.transaction_link;
           }
-
-          console.log(`🏆 Processing transfer for winner: ${winner.inboxId}`);
-
-          // Get the winner's wallet address
-          const winnerWalletData = await this.walletService.getWallet(
-            winner.inboxId,
-          );
-          if (!winnerWalletData) {
-            console.error(
-              `❌ Winner wallet data not found for ${winner.inboxId}`,
-            );
-            allTransfersSuccessful = false;
-            continue;
-          }
-
-          const winnerWalletAddress = winnerWalletData.agent_address;
-          console.log(`🔍 Winner wallet address: ${winnerWalletAddress}`);
-
-          // Transfer the winner's share
-          const transfer = await this.walletService.transfer(
-            tossWallet.inboxId,
-            winnerWalletAddress,
-            prizePerWinner,
-          );
-
-          if (transfer) {
-            console.log(
-              `✅ Successfully transferred ${prizePerWinner.toFixed(6)} USDC to ${winner.inboxId}`,
-            );
-            successfulTransfers.push(winner.inboxId);
-
-            // Extract transaction link from the first successful transfer
-            if (!toss.transactionLink) {
-              try {
-                // Safe type casting
-                const transferData = transfer as unknown as Transfer;
-                if (transferData.model?.sponsored_send?.transaction_link) {
-                  toss.transactionLink =
-                    transferData.model.sponsored_send.transaction_link;
-                  console.log(`🔗 Transaction Link: ${toss.transactionLink}`);
-                }
-              } catch (error) {
-                console.error("Error extracting transaction link:", error);
-              }
-            }
-          } else {
-            console.error(
-              `❌ Failed to transfer winnings to ${winner.inboxId}`,
-            );
-            allTransfersSuccessful = false;
-          }
-        } catch (error) {
-          console.error(
-            `❌ Error processing transfer for ${winner.inboxId}:`,
-            error,
-          );
-          allTransfersSuccessful = false;
         }
-      }
-
-      // Set payment success based on all transfers
-      toss.paymentSuccess = allTransfersSuccessful;
-      if (
-        successfulTransfers.length > 0 &&
-        successfulTransfers.length < winners.length
-      ) {
-        console.warn(
-          `⚠️ Partial payment success: ${successfulTransfers.length}/${winners.length} transfers completed`,
+      } catch (error) {
+        console.error(
+          `Error processing transfer for ${winner.inboxId}:`,
+          error,
         );
       }
-    } catch (error) {
-      console.error(`❌ Error transferring winnings:`, error);
-      toss.paymentSuccess = false;
     }
 
-    // Save final toss state
+    // Complete the toss
+    toss.status = TossStatus.COMPLETED;
+    toss.winner = winners.map((w) => w.inboxId).join(",");
+    toss.paymentSuccess = successfulTransfers.length === winners.length;
+
     await storage.updateToss(toss);
-    console.log(`🏁 Toss completed. Final status saved.`);
 
     return toss;
   }
@@ -484,15 +385,9 @@ export class TossManager {
 
   async getTotalTossCount(): Promise<number> {
     try {
-      // Get all tosses from the storage directory
       const tossesDir = storage.getTossStorageDir();
       const files = await fs.readdir(tossesDir);
-      const networkId = process.env.NETWORK_ID || "";
-
-      // Count files that match the toss pattern
-      const tossIdPattern = new RegExp(`toss:\\d+-${networkId}\\.json$`);
-      const tossCount = files.filter((file) => tossIdPattern.test(file)).length;
-
+      const tossCount = files.filter((file) => file.endsWith(".json")).length;
       console.log(`Found ${tossCount} total tosses in the system`);
       return tossCount;
     } catch (error) {

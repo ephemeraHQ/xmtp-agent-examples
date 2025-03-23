@@ -6,18 +6,11 @@ import {
   type WalletData,
 } from "@coinbase/coinbase-sdk";
 import { isAddress } from "viem";
+import { validateEnvironment } from ".";
 import { getWalletData, saveWalletData } from "./storage";
 
-const coinbaseApiKeyName = process.env.CDP_API_KEY_NAME;
-let coinbaseApiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
-const networkId = process.env.NETWORK_ID ?? "base-sepolia";
-
-if (!coinbaseApiKeyName || !coinbaseApiKeyPrivateKey || !networkId) {
-  console.error(
-    "Either networkId, CDP_API_KEY_NAME or CDP_API_KEY_PRIVATE_KEY must be set",
-  );
-  process.exit(1);
-}
+const { coinbaseApiKeyName, coinbaseApiKeyPrivateKey, networkId } =
+  validateEnvironment();
 
 class WalletStorage {
   async get(inboxId: string): Promise<string | undefined> {
@@ -55,14 +48,10 @@ class WalletStorage {
 
 // Initialize Coinbase SDK
 function initializeCoinbaseSDK(): boolean {
-  // Replace \\n with actual newlines if present in the private key
-  if (coinbaseApiKeyPrivateKey) {
-    coinbaseApiKeyPrivateKey = coinbaseApiKeyPrivateKey.replace(/\\n/g, "\n");
-  }
   try {
     Coinbase.configure({
-      apiKeyName: coinbaseApiKeyName as string,
-      privateKey: coinbaseApiKeyPrivateKey as string,
+      apiKeyName: coinbaseApiKeyName,
+      privateKey: coinbaseApiKeyPrivateKey,
     });
     console.log("Coinbase SDK initialized successfully, network:", networkId);
     return true;
@@ -125,14 +114,6 @@ export class WalletService {
       console.log("Getting default address...");
       const address = await wallet.getDefaultAddress();
       const walletAddress = address.getId();
-
-      // Make the wallet address visible in the logs for funding
-      console.log("-----------------------------------------------------");
-      console.log(`NEW WALLET CREATED FOR USER: ${this.inboxId}`);
-      console.log(`WALLET ADDRESS: ${walletAddress}`);
-      console.log(`NETWORK: ${networkId}`);
-      console.log(`SEND FUNDS TO THIS ADDRESS TO TEST: ${walletAddress}`);
-      console.log("-----------------------------------------------------");
 
       const walletInfo: AgentWalletData = {
         id: walletAddress,
@@ -351,9 +332,6 @@ export class WalletService {
       try {
         await transfer.wait();
         console.log(`✅ Transfer completed successfully!`);
-        console.log(
-          `📝 Transaction details: ${JSON.stringify(transfer, null, 2)}`,
-        );
       } catch (err) {
         if (err instanceof TimeoutError) {
           console.log(

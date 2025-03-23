@@ -8,32 +8,37 @@ import { initializeXmtpClient, startMessageListener } from "./xmtp";
 /**
  * Validates that required environment variables are set
  */
-function validateEnvironment(): void {
-  const missingVars: string[] = [];
-
-  // Check required variables
+export function validateEnvironment(): {
+  coinbaseApiKeyName: string;
+  coinbaseApiKeyPrivateKey: string;
+  networkId: string;
+} {
   const requiredVars = [
-    "OPENAI_API_KEY",
     "CDP_API_KEY_NAME",
     "CDP_API_KEY_PRIVATE_KEY",
     "WALLET_KEY",
+    "XMTP_ENV",
+    "OPENAI_API_KEY",
     "ENCRYPTION_KEY",
   ];
 
-  requiredVars.forEach((varName) => {
-    if (!process.env[varName]) {
-      missingVars.push(varName);
-    }
-  });
+  const missing = requiredVars.filter((v) => !process.env[v]);
 
-  // Exit if any required variables are missing
-  if (missingVars.length > 0) {
-    console.error("Error: Required environment variables are not set");
-    missingVars.forEach((varName) => {
-      console.error(`${varName}=your_${varName.toLowerCase()}_here`);
-    });
+  if (missing.length) {
+    console.error("Missing env vars:", missing.join(", "));
     process.exit(1);
   }
+
+  // Replace \\n with actual newlines if present in the private key
+  if (process.env.CDP_API_KEY_PRIVATE_KEY) {
+    process.env.CDP_API_KEY_PRIVATE_KEY =
+      process.env.CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n");
+  }
+  return {
+    coinbaseApiKeyName: process.env.CDP_API_KEY_NAME as string,
+    coinbaseApiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY as string,
+    networkId: process.env.NETWORK_ID as string,
+  };
 }
 
 /**

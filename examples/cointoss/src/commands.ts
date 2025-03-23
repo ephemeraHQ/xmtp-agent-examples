@@ -92,6 +92,16 @@ async function handleExplicitCommand(
         return `Please specify your option when joining: join ${tossId} <option>\nAvailable options: ${availableOptions}`;
       }
 
+      // Validate the chosen option before making payment
+      if (
+        joinedToss.tossOptions &&
+        !joinedToss.tossOptions.some(
+          (option) => option.toLowerCase() === chosenOption.toLowerCase(),
+        )
+      ) {
+        return `Invalid option: ${chosenOption}. Available options: ${joinedToss.tossOptions.join(", ")}`;
+      }
+
       // Check user's balance
       const { balance } = await tossManager.getUserBalance(inboxId);
       if (balance < parseFloat(toss.tossAmount)) {

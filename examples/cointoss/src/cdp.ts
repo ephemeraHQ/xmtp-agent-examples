@@ -135,8 +135,10 @@ export class WalletService {
         console.log(`📌 Address ${address} belongs to toss:${matchingToss.id}`);
         return matchingToss.id;
       }
-    } catch (error) {
-      console.log(`ℹ️ Error checking for toss wallet: ${error}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.log(`ℹ️ Error checking for toss wallet: ${errorMessage}`);
     }
 
     return null;
@@ -197,7 +199,7 @@ export class WalletService {
     if (tossId) {
       // Use the toss ID instead of the address
       console.log(`🎮 Found toss ID: ${tossId} for address: ${toAddress}`);
-      const tossWallet = await this.getWallet(`toss:${tossId}`);
+      const tossWallet = await this.getWallet(tossId);
       if (tossWallet) {
         destinationAddress = tossWallet.agent_address;
         console.log(`✅ Using toss wallet: ${destinationAddress}`);
@@ -269,7 +271,7 @@ export class WalletService {
     if (tossId) {
       // Use the toss ID instead of the address
       console.log(`🎮 Using toss ID: ${tossId} instead of address: ${inboxId}`);
-      const tossWallet = await this.getWallet(`toss:${tossId}`);
+      const tossWallet = await this.getWallet(tossId);
       if (tossWallet) {
         const balance = await tossWallet.wallet?.getBalance(
           Coinbase.assets.Usdc,
@@ -308,7 +310,7 @@ export class WalletService {
     if (tossId) {
       // Use the toss ID instead of the address
       console.log(`🎮 Using toss ID: ${tossId} instead of address: ${address}`);
-      const tossWallet = await this.getWallet(`toss:${tossId}`);
+      const tossWallet = await this.getWallet(tossId);
       if (tossWallet) {
         const trade = await tossWallet.wallet?.createTrade({
           amount,
