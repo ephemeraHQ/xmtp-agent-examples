@@ -1,11 +1,11 @@
 import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 import type { TossManager } from "./toss";
-import { ERROR_MESSAGE, HELP_MESSAGE, type AgentConfig } from "./types";
+import { HELP_MESSAGE, type AgentConfig } from "./types";
 
 /**
  * Entry point for command processing
  * @param content - The message content from the user
- * @param userId - The user's identifier
+ * @param inboxId - The user's identifier
  * @param tossManager - The toss manager instance
  * @param agent - The CDP agent instance
  * @param agentConfig - The CDP agent configuration
@@ -13,29 +13,36 @@ import { ERROR_MESSAGE, HELP_MESSAGE, type AgentConfig } from "./types";
  */
 export async function handleCommand(
   content: string,
-  userId: string,
+  inboxId: string,
   tossManager: TossManager,
   agent: ReturnType<typeof createReactAgent>,
   agentConfig: AgentConfig,
 ): Promise<string> {
-  const commandParts = content.split(" ");
-  const firstWord = commandParts[0].toLowerCase();
+  try {
+    const commandParts = content.split(" ");
+    const firstWord = commandParts[0].toLowerCase();
 
-  // Check if the first word is a command
-  if (
-    ["join", "close", "status", "list", "balance", "help"].includes(firstWord)
-  ) {
-    // Handle traditional command formatting
-    const [command, ...args] = commandParts;
-    return handleExplicitCommand(command, args, userId, tossManager);
-  } else {
-    // This is likely a natural language prompt
-    return handleNaturalLanguageCommand(
-      content,
-      userId,
-      tossManager,
-      agent,
-      agentConfig,
+    // Check if the first word is a command
+    if (
+      ["join", "close", "status", "list", "balance", "help"].includes(firstWord)
+    ) {
+      // Handle traditional command formatting
+      const [command, ...args] = commandParts;
+      return await handleExplicitCommand(command, args, inboxId, tossManager);
+    } else {
+      // This is likely a natural language prompt
+      return await handleNaturalLanguageCommand(
+        content,
+        inboxId,
+        tossManager,
+        agent,
+        agentConfig,
+      );
+    }
+  } catch (error) {
+    console.error("Error handling natural language command:", error);
+    return Promise.resolve(
+      error instanceof Error ? error.message : String(error),
     );
   }
 }
@@ -44,14 +51,14 @@ export async function handleCommand(
  * Handle explicit commands like create, join, close, etc.
  * @param command - The command type
  * @param args - The command arguments
- * @param userId - The user's identifier
+ * @param inboxId - The user's identifier
  * @param tossManager - The toss manager instance
  * @returns Response message to send back to the user
  */
 async function handleExplicitCommand(
   command: string,
   args: string[],
-  userId: string,
+  inboxId: string,
   tossManager: TossManager,
 ): Promise<string> {
   switch (command.toLowerCase()) {
@@ -74,13 +81,8 @@ async function handleExplicitCommand(
         return `Toss ${tossId} not found.`;
       }
 
-      // Prevent the creator from joining their own toss
-      if (toss.creator === userId) {
-        return "As the creator of this toss, you cannot join it. You can only create and close tosses.";
-      }
-
       // Join the game
-      const joinedToss = await tossManager.joinGame(tossId, userId);
+      const joinedToss = await tossManager.joinGame(tossId, inboxId);
 
       // Check if an option was provided
       if (!chosenOption) {
@@ -93,14 +95,14 @@ async function handleExplicitCommand(
       }
 
       // Check user's balance
-      const balance = await tossManager.getUserBalance(userId);
+      const { balance } = await tossManager.getUserBalance(inboxId);
       if (balance < parseFloat(toss.tossAmount)) {
         return `Insufficient USDC balance. You need ${toss.tossAmount} USDC to join this toss. Your balance: ${balance} USDC`;
       }
 
       // Make the payment
       const paymentSuccess = await tossManager.makePayment(
-        userId,
+        inboxId,
         tossId,
         toss.tossAmount,
         chosenOption,
@@ -113,14 +115,14 @@ async function handleExplicitCommand(
       // Add player to toss after payment
       const updatedToss = await tossManager.addPlayerToGame(
         tossId,
-        userId,
+        inboxId,
         chosenOption,
         true,
       );
 
       // Generate player ID (P2, P3, etc. based on position)
       const playerPosition =
-        updatedToss.participants.findIndex((p) => p === userId) + 1;
+        updatedToss.participants.findIndex((p) => p === inboxId) + 1;
       const playerId = `P${playerPosition}`;
 
       // Include toss topic and options in the response if available
@@ -134,7 +136,7 @@ async function handleExplicitCommand(
         }
       }
 
-      if (userId === toss.creator) {
+      if (inboxId === toss.creator) {
         responseMessage += `\n\nAs the creator, you can close the toss with: close ${tossId} <option>`;
       } else {
         responseMessage += `\n\nWaiting for the toss creator to close the toss.`;
@@ -161,7 +163,7 @@ async function handleExplicitCommand(
         return `Toss ${tossId} not found.`;
       }
 
-      if (toss.creator !== userId) {
+      if (inboxId !== toss.creator) {
         return "Only the toss creator can close the toss.";
       }
 
@@ -226,7 +228,7 @@ async function handleExplicitCommand(
           "..." +
           p.walletAddress.substring(p.walletAddress.length - 6);
         const playerOption =
-          result.participantOptions.find((opt) => opt.userId === p.address)
+          result.participantOptions.find((opt) => opt.inboxId === p.address)
             ?.option || "Unknown";
         resultMessage += `${p.id}: ${displayAddress} (Chose: ${playerOption})\n`;
       });
@@ -340,7 +342,7 @@ async function handleExplicitCommand(
             "..." +
             p.walletAddress.substring(p.walletAddress.length - 6);
           const playerOption =
-            toss.participantOptions.find((opt) => opt.userId === p.address)
+            toss.participantOptions.find((opt) => opt.inboxId === p.address)
               ?.option || "Unknown";
           statusMessage += `${p.id}: ${displayAddress} (Chose: ${playerOption})\n`;
         });
@@ -413,9 +415,8 @@ async function handleExplicitCommand(
     }
 
     case "balance": {
-      const balance = await tossManager.getUserBalance(userId);
-      const walletAddress = await tossManager.getPlayerWalletAddress(userId);
-      return `Your USDC balance: ${balance}\nYour wallet address: ${walletAddress}`;
+      const { balance, address } = await tossManager.getUserBalance(inboxId);
+      return `Your USDC balance: ${balance}\nYour wallet address: ${address}`;
     }
 
     case "help":
@@ -429,7 +430,7 @@ async function handleExplicitCommand(
 /**
  * Handle natural language toss commands
  * @param prompt - The natural language prompt
- * @param userId - The user's identifier
+ * @param inboxId - The user's identifier
  * @param tossManager - The toss manager instance
  * @param agent - The CDP agent instance
  * @param agentConfig - The CDP agent configuration
@@ -437,44 +438,39 @@ async function handleExplicitCommand(
  */
 async function handleNaturalLanguageCommand(
   prompt: string,
-  userId: string,
+  inboxId: string,
   tossManager: TossManager,
   agent: ReturnType<typeof createReactAgent>,
   agentConfig: AgentConfig,
 ): Promise<string> {
-  try {
-    console.log(`🧠 Processing natural language prompt: "${prompt}"`);
+  console.log(`🧠 Processing natural language prompt: "${prompt}"`);
 
-    // Check if user has sufficient balance (default check for minimum amount)
-    const balance = await tossManager.getUserBalance(userId);
-    if (balance < 0.01) {
-      return `Insufficient USDC balance. You need at least 0.01 USDC to create a toss. Your balance: ${balance} USDC`;
-    }
-
-    // Create a toss using the natural language prompt
-    const toss = await tossManager.createGameFromPrompt(
-      userId,
-      prompt,
-      agent,
-      agentConfig,
-    );
-
-    // Create a detailed response with the parsed information
-    let response = `🎲 Toss Created! 🎲\n\n`;
-    response += `Toss ID: ${toss.id}\n`;
-    response += `Topic: "${toss.tossTopic}"\n`;
-
-    if (toss.tossOptions && toss.tossOptions.length === 2) {
-      response += `Options: ${toss.tossOptions[0]} or ${toss.tossOptions[1]}\n`;
-    }
-
-    response += `Toss Amount: ${toss.tossAmount} USDC\n\n`;
-    response += `Other players can join with: join ${toss.id} <option>\n`;
-    response += `When everyone has joined, you can close the toss with: close ${toss.id} <option>`;
-
-    return response;
-  } catch (error) {
-    console.error("Error processing natural language command:", error);
-    return ERROR_MESSAGE;
+  // Check if user has sufficient balance (default check for minimum amount)
+  const { balance, address } = await tossManager.getUserBalance(inboxId);
+  if (balance < 0.01) {
+    return `Insufficient USDC balance. You need at least 0.01 USDC to create a toss. Your balance: ${balance} USDC\nTransfer USDC to your wallet address: ${address}`;
   }
+
+  // Create a toss using the natural language prompt
+  const toss = await tossManager.createGameFromPrompt(
+    inboxId,
+    prompt,
+    agent,
+    agentConfig,
+  );
+
+  // Create a detailed response with the parsed information
+  let response = `🎲 Toss Created! 🎲\n\n`;
+  response += `Toss ID: ${toss.id}\n`;
+  response += `Topic: "${toss.tossTopic}"\n`;
+
+  if (toss.tossOptions && toss.tossOptions.length === 2) {
+    response += `Options: ${toss.tossOptions[0]} or ${toss.tossOptions[1]}\n`;
+  }
+
+  response += `Toss Amount: ${toss.tossAmount} USDC\n\n`;
+  response += `Other players can join with: join ${toss.id} <option>\n`;
+  response += `When everyone has joined, you can close the toss with: close ${toss.id} <option>`;
+
+  return response;
 }

@@ -10,11 +10,12 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import type {
-  AgentConfig,
-  ParsedToss,
-  StreamChunk,
-  TossJsonResponse,
+import {
+  validateEnvironment,
+  type AgentConfig,
+  type ParsedToss,
+  type StreamChunk,
+  type TossJsonResponse,
 } from "./types";
 
 // Constants for default values
@@ -55,7 +56,10 @@ const AGENT_INSTRUCTIONS = `
      - Provide transaction details
   
   Available commands:
-  /join <tossId> - Join an existing toss with the specified ID
+  @toss <topic> <options> <amount> - Create a new toss
+  /join <tossId> <option> - Join an existing toss with the specified ID
+  /close <tossId> <option> - Close the toss and set the winning option (creator only)
+  /status <tossId> - Check toss status and participants
   /list - List all active tosses
   /balance - Check your wallet balance
   /help - Show available commands
@@ -68,34 +72,45 @@ const AGENT_INSTRUCTIONS = `
   
   Keep responses concise and clear, focusing on payment verification and toss status.
   If there is a 5XX (internal) HTTP error, ask the user to try again later.
+  
+  IMPORTANT: Command pattern recognition rules:
+  - If a message contains "@toss" followed by only a number (e.g., "@toss 1", "@toss 42"), 
+    this is likely a join attempt. Respond with: "It seems you're trying to join a toss. Please use '/join <tossId> <option>' instead."
+  - If a message contains "@toss" followed by a number and words like "join", "yes", or "no" (e.g., "@toss 1 join", "@toss 5 yes"), 
+    this is definitely a join attempt. Respond with: "To join toss #[number], please use '/join [number] [option]' instead."
+  - Only treat a message as a new toss creation if it contains descriptive text about a topic, not just numbers or join-related words.
+  - Always prioritize detecting join attempts over creating new tosses with ambiguous text.
 `;
 
 export async function initializeAgent(inboxId: string) {
   try {
+    console.log(`Initializing agent for inbox: ${inboxId}`);
+
     const llm = new ChatOpenAI({
-      modelName: "gpt-4o-mini",
+      modelName: "gpt-4o",
     });
 
+    const { coinbaseApiKeyName, coinbaseApiKeyPrivateKey } =
+      validateEnvironment();
+
     const agentkit = await AgentKit.from({
+      cdpApiKeyName: coinbaseApiKeyName,
+      cdpApiKeyPrivateKey: coinbaseApiKeyPrivateKey,
       actionProviders: [
         walletActionProvider(),
         erc20ActionProvider(),
         cdpApiActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n",
-          ),
+          apiKeyName: coinbaseApiKeyName,
+          apiKeyPrivateKey: coinbaseApiKeyPrivateKey,
         }),
         cdpWalletActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME ?? "",
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n",
-          ),
+          apiKeyName: coinbaseApiKeyName,
+          apiKeyPrivateKey: coinbaseApiKeyPrivateKey,
         }),
       ],
     });
+
+    console.log("AgentKit initialized successfully");
 
     const tools = await getLangChainTools(agentkit);
     const memory = new MemorySaver();
@@ -111,6 +126,7 @@ export async function initializeAgent(inboxId: string) {
       messageModifier: AGENT_INSTRUCTIONS,
     });
 
+    console.log("Agent created successfully");
     return { agent, config: agentConfig };
   } catch (error) {
     console.error("Failed to initialize agent:", error);
@@ -131,6 +147,12 @@ export async function processMessage(
   message: string,
 ): Promise<string> {
   try {
+    // Check if agent is properly initialized before streaming
+    if (typeof agent.stream !== "function") {
+      console.error("Agent is not properly initialized");
+      return "Sorry, the CoinToss agent is not properly initialized. Please try again later.";
+    }
+
     const stream = await agent.stream(
       { messages: [new HumanMessage(message)] },
       config,
@@ -188,60 +210,87 @@ export async function parseNaturalLanguageToss(
   config: AgentConfig,
   prompt: string,
 ): Promise<ParsedToss> {
-  try {
-    // Default values in case parsing fails
-    const defaultResult: ParsedToss = {
-      topic: prompt,
+  // Default values in case parsing fails
+  const defaultResult: ParsedToss = {
+    topic: prompt,
+    options: DEFAULT_OPTIONS,
+    amount: DEFAULT_AMOUNT,
+  };
+
+  if (!prompt || prompt.length < 3) {
+    return defaultResult;
+  }
+
+  console.log(`🔄 Parsing natural language toss: "${prompt}"`);
+
+  // Check for amount directly in the prompt with regex
+  // This is a fallback in case the agent fails
+  const amountMatch = prompt.match(/for\s+(\d+(\.\d+)?)\s*$/i);
+  let extractedAmount = null;
+  if (amountMatch && amountMatch[1]) {
+    extractedAmount = amountMatch[1];
+    console.log(`💰 Directly extracted amount: ${extractedAmount}`);
+  }
+
+  // If agent is not available, use direct parsing
+  if (typeof agent.stream !== "function") {
+    console.log("Agent unavailable, using direct parsing");
+
+    // Simple extraction logic for direct parsing
+    const simpleTopic = prompt.replace(/for\s+\d+(\.\d+)?\s*$/i, "").trim();
+
+    return {
+      topic: simpleTopic,
       options: DEFAULT_OPTIONS,
-      amount: DEFAULT_AMOUNT,
+      amount: extractedAmount || DEFAULT_AMOUNT,
     };
+  }
 
-    if (!prompt || prompt.length < 3) {
-      return defaultResult;
-    }
-
-    console.log(`🔄 Parsing natural language toss: "${prompt}"`);
-
-    // Format specific request for parsing
-    const parsingRequest = `
+  // Format specific request for parsing
+  const parsingRequest = `
       Parse this toss request into structured format: "${prompt}"
       
-      Return only a valid JSON object with these fields:
+      First, do a vibe check:
+      1. Is this a genuine toss topic like "Will it rain tomorrow" or "Lakers vs Celtics"?
+      2. Is it NOT a join attempt or command?
+      3. Is it NOT inappropriate content?
+      
+      If it fails the vibe check, return:
       {
+        "valid": false,
+        "reason": "brief explanation why"
+      }
+      
+      If it passes the vibe check, return only a valid JSON object with these fields:
+      {
+        "valid": true,
         "topic": "the tossing topic",
         "options": ["option1", "option2"],
         "amount": "toss amount"
       }
     `;
 
-    // Process with the agent
-    const response = await processMessage(agent, config, parsingRequest);
-    const parsedJson = extractJsonFromResponse(response);
+  // Process with the agent
+  const response = await processMessage(agent, config, parsingRequest);
+  const parsedJson = extractJsonFromResponse(response) as TossJsonResponse;
 
-    if (parsedJson) {
-      // Validate and provide defaults if needed
-      const result: ParsedToss = {
-        topic: parsedJson.topic ?? prompt,
-        options:
-          Array.isArray(parsedJson.options) && parsedJson.options.length >= 2
-            ? [parsedJson.options[0], parsedJson.options[1]]
-            : DEFAULT_OPTIONS,
-        amount: parsedJson.amount ?? DEFAULT_AMOUNT,
-      };
-
-      console.log(
-        `✅ Parsed toss: "${result.topic}" with options [${result.options.join(", ")}] for ${result.amount} USDC`,
-      );
-      return result;
-    }
-
-    return defaultResult;
-  } catch (error) {
-    console.error("Error parsing natural language toss:", error);
-    return {
-      topic: prompt,
-      options: DEFAULT_OPTIONS,
-      amount: DEFAULT_AMOUNT,
-    };
+  if (parsedJson.valid === false) {
+    throw new Error(`Invalid toss request: ${parsedJson.reason}`);
   }
+
+  // Validate and provide defaults if needed
+  const result: ParsedToss = {
+    topic: parsedJson.topic ?? prompt,
+    options:
+      Array.isArray(parsedJson.options) && parsedJson.options.length >= 2
+        ? [parsedJson.options[0], parsedJson.options[1]]
+        : DEFAULT_OPTIONS,
+    // Prioritize directly extracted amount if available
+    amount: extractedAmount || parsedJson.amount || DEFAULT_AMOUNT,
+  };
+
+  console.log(
+    `✅ Parsed toss: "${result.topic}" with options [${result.options.join(", ")}] for ${result.amount} USDC`,
+  );
+  return result;
 }

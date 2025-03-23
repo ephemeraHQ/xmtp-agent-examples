@@ -37,12 +37,12 @@ export class TossManager {
   }
 
   // Get a player's wallet address from their user ID
-  async getPlayerWalletAddress(userId: string): Promise<string | undefined> {
+  async getPlayerWalletAddress(inboxId: string): Promise<string | undefined> {
     try {
-      const walletData = await this.walletService.getWallet(userId);
+      const walletData = await this.walletService.getWallet(inboxId);
       return walletData?.agent_address;
     } catch (error) {
-      console.error(`Error getting wallet address for ${userId}:`, error);
+      console.error(`Error getting wallet address for ${inboxId}:`, error);
       return undefined;
     }
   }
@@ -135,7 +135,7 @@ export class TossManager {
 
     // Add player with their chosen option
     toss.participantOptions.push({
-      userId: player,
+      inboxId: player,
       option: chosenOption,
     });
 
@@ -171,14 +171,14 @@ export class TossManager {
     return toss;
   }
 
-  async verifyPayment(userId: string, tossId: string): Promise<boolean> {
+  async verifyPayment(inboxId: string, tossId: string): Promise<boolean> {
     const toss = await storage.getToss(tossId);
     if (!toss) {
       return false;
     }
 
     // Get user's wallet
-    const userWallet = await this.walletService.getWallet(userId);
+    const userWallet = await this.walletService.getWallet(inboxId);
     if (!userWallet) {
       return false;
     }
@@ -199,13 +199,13 @@ export class TossManager {
   }
 
   async makePayment(
-    userId: string,
+    inboxId: string,
     tossId: string,
     amount: string,
     chosenOption: string,
   ): Promise<boolean> {
     console.log(`💸 PROCESSING PAYMENT`);
-    console.log(`👤 User: ${userId}`);
+    console.log(`👤 User: ${inboxId}`);
     console.log(`🎮 Toss ID: ${tossId}`);
     console.log(`💰 Amount: ${amount} USDC`);
     console.log(`🎯 Chosen Option: ${chosenOption}`);
@@ -213,9 +213,9 @@ export class TossManager {
     try {
       // Get user's wallet
       console.log(`🔑 Getting user wallet...`);
-      const userWallet = await this.walletService.getWallet(userId);
+      const userWallet = await this.walletService.getWallet(inboxId);
       if (!userWallet) {
-        console.error(`❌ User wallet not found for ${userId}`);
+        console.error(`❌ User wallet not found for ${inboxId}`);
         throw new Error("User wallet not found");
       }
       console.log(`✅ User wallet found: ${userWallet.agent_address}`);
@@ -231,10 +231,10 @@ export class TossManager {
 
       // Transfer funds from user to toss wallet
       console.log(
-        `💸 Transferring ${amount} USDC from ${userId} to toss wallet ${toss.walletAddress}...`,
+        `💸 Transferring ${amount} USDC from ${inboxId} to toss wallet ${toss.walletAddress}...`,
       );
       const transfer = await this.walletService.transfer(
-        userId,
+        inboxId,
         toss.walletAddress,
         parseFloat(amount),
       );
@@ -366,7 +366,7 @@ export class TossManager {
 
     // Update toss with results
     toss.status = TossStatus.COMPLETED;
-    toss.winner = winners.map((w) => w.userId).join(","); // Comma-separated list of winner IDs
+    toss.winner = winners.map((w) => w.inboxId).join(","); // Comma-separated list of winner IDs
 
     // Transfer winnings from toss wallet to winners
     console.log(`💸 Transferring winnings to ${winners.length} winners...`);
@@ -387,21 +387,21 @@ export class TossManager {
       // Process transfers for each winner
       for (const winner of winners) {
         try {
-          if (!winner.userId) {
+          if (!winner.inboxId) {
             console.error(`❌ Winner ID is undefined, skipping transfer`);
             allTransfersSuccessful = false;
             continue;
           }
 
-          console.log(`🏆 Processing transfer for winner: ${winner.userId}`);
+          console.log(`🏆 Processing transfer for winner: ${winner.inboxId}`);
 
           // Get the winner's wallet address
           const winnerWalletData = await this.walletService.getWallet(
-            winner.userId,
+            winner.inboxId,
           );
           if (!winnerWalletData) {
             console.error(
-              `❌ Winner wallet data not found for ${winner.userId}`,
+              `❌ Winner wallet data not found for ${winner.inboxId}`,
             );
             allTransfersSuccessful = false;
             continue;
@@ -412,16 +412,16 @@ export class TossManager {
 
           // Transfer the winner's share
           const transfer = await this.walletService.transfer(
-            winner.userId,
+            winner.inboxId,
             winnerWalletAddress,
             prizePerWinner,
           );
 
           if (transfer) {
             console.log(
-              `✅ Successfully transferred ${prizePerWinner.toFixed(6)} USDC to ${winner.userId}`,
+              `✅ Successfully transferred ${prizePerWinner.toFixed(6)} USDC to ${winner.inboxId}`,
             );
-            successfulTransfers.push(winner.userId);
+            successfulTransfers.push(winner.inboxId);
 
             // Extract transaction link from the first successful transfer
             if (!toss.transactionLink) {
@@ -438,12 +438,14 @@ export class TossManager {
               }
             }
           } else {
-            console.error(`❌ Failed to transfer winnings to ${winner.userId}`);
+            console.error(
+              `❌ Failed to transfer winnings to ${winner.inboxId}`,
+            );
             allTransfersSuccessful = false;
           }
         } catch (error) {
           console.error(
-            `❌ Error processing transfer for ${winner.userId}:`,
+            `❌ Error processing transfer for ${winner.inboxId}:`,
             error,
           );
           allTransfersSuccessful = false;
@@ -514,13 +516,15 @@ export class TossManager {
     return toss;
   }
 
-  async getUserBalance(userId: string): Promise<number> {
+  async getUserBalance(
+    inboxId: string,
+  ): Promise<{ address: string | undefined; balance: number }> {
     try {
-      const balance = await this.walletService.checkBalance(userId);
-      return balance.balance;
+      const balance = await this.walletService.checkBalance(inboxId);
+      return { address: balance.address, balance: balance.balance };
     } catch (error) {
       console.error("Error getting user balance:", error);
-      return 0;
+      return { address: undefined, balance: 0 };
     }
   }
 
@@ -549,6 +553,9 @@ export class TossManager {
       naturalLanguagePrompt,
     );
 
+    if (typeof parsedToss === "string") {
+      throw new Error(parsedToss);
+    }
     // Store the toss details
     console.log(`📝 Parsed toss topic: "${parsedToss.topic}"`);
     console.log(`🎯 Parsed options: [${parsedToss.options.join(", ")}]`);

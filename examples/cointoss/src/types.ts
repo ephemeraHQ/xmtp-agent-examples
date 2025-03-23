@@ -1,6 +1,10 @@
 import type { Wallet, WalletData } from "@coinbase/coinbase-sdk";
 
-export function validateEnvironment() {
+export function validateEnvironment(): {
+  coinbaseApiKeyName: string;
+  coinbaseApiKeyPrivateKey: string;
+  networkId: string;
+} {
   const requiredVars = [
     "CDP_API_KEY_NAME",
     "CDP_API_KEY_PRIVATE_KEY",
@@ -22,15 +26,12 @@ export function validateEnvironment() {
     process.env.CDP_API_KEY_PRIVATE_KEY =
       process.env.CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n");
   }
-  return [
-    process.env.CDP_API_KEY_NAME,
-    process.env.CDP_API_KEY_PRIVATE_KEY,
-    process.env.NETWORK_ID,
-  ];
+  return {
+    coinbaseApiKeyName: process.env.CDP_API_KEY_NAME as string,
+    coinbaseApiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY as string,
+    networkId: process.env.NETWORK_ID as string,
+  };
 }
-export const ERROR_MESSAGE = `Sorry, I couldn't process your natural language toss. Please try again with a different wording or use explicit commands.
-
-Example: "Will the price of Bitcoin reach $100k this year for 5"`;
 
 export const HELP_MESSAGE = `Available commands:
 
@@ -50,7 +51,7 @@ Other commands:
 `;
 // Interface to track participant options
 export interface Participant {
-  userId: string;
+  inboxId: string;
   option: string;
 }
 
@@ -126,4 +127,6 @@ export interface TossJsonResponse {
   topic?: string;
   options?: string[];
   amount?: string;
+  valid?: boolean;
+  reason?: string;
 }

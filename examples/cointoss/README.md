@@ -1,6 +1,8 @@
-# CoinToss Agent
+# Cointoss Agent
 
 A coin toss agent built using CDP AgentKit that operates over the XMTP messaging protocol, enabling group coin toss on custom topics.
+
+![](/media/toss.png)
 
 ## Prerequisites
 

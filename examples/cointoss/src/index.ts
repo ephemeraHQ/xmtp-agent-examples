@@ -1,16 +1,11 @@
 import "dotenv/config";
-import type { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { getAddressOfMember } from "@helpers";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
-import { handleCommand as processCommand } from "./commands";
+import { handleCommand } from "./commands";
+import { initializeAgent } from "./langchain";
 import { TossManager } from "./toss";
-import { validateEnvironment, type AgentConfig } from "./types";
+import { validateEnvironment } from "./types";
 import { initializeXmtpClient, startMessageListener } from "./xmtp";
-
-// Global CDP agent
-const cdpAgent: ReturnType<typeof createReactAgent> | null = null;
-const cdpAgentConfig: AgentConfig | null = null;
-
-validateEnvironment();
 
 async function handleMessage(
   message: DecodedMessage,
@@ -18,16 +13,26 @@ async function handleMessage(
   command: string,
 ) {
   try {
-    const address = message.senderInboxId;
     const tossManager = new TossManager();
     const commandContent = command.replace(/^@toss\s+/i, "").trim();
 
-    const response = await processCommand(
+    // Use the sender's address as the user ID
+    const inboxId = message.senderInboxId;
+    const members = await conversation.members();
+    const address = getAddressOfMember(members, inboxId);
+    if (!address) {
+      console.log("Unable to find address, skipping");
+      return;
+    }
+    // Initialize or get the agent for this user
+    const { agent, config } = await initializeAgent(inboxId);
+
+    const response = await handleCommand(
       commandContent,
-      address,
+      inboxId,
       tossManager,
-      cdpAgent as ReturnType<typeof createReactAgent>,
-      cdpAgentConfig as AgentConfig,
+      agent,
+      config,
     );
 
     await conversation.send(response);

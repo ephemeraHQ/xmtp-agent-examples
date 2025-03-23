@@ -9,15 +9,15 @@ import { isAddress } from "viem";
 import { storage } from "./storage";
 import { validateEnvironment, type AgentWalletData } from "./types";
 
-const [coinbaseApiKeyName, coinbaseApiKeyPrivateKey, networkId] =
+const { coinbaseApiKeyName, coinbaseApiKeyPrivateKey, networkId } =
   validateEnvironment();
 
 // Initialize Coinbase SDK
 function initializeCoinbaseSDK(): boolean {
   try {
     Coinbase.configure({
-      apiKeyName: coinbaseApiKeyName as string,
-      privateKey: coinbaseApiKeyPrivateKey as string,
+      apiKeyName: coinbaseApiKeyName,
+      privateKey: coinbaseApiKeyPrivateKey,
     });
     console.log("Coinbase SDK initialized successfully, network:", networkId);
     return true;
@@ -66,14 +66,6 @@ export class WalletService {
       console.log("Getting default address...");
       const address = await wallet.getDefaultAddress();
       const walletAddress = address.getId();
-
-      // Make the wallet address visible in the logs for funding
-      console.log("-----------------------------------------------------");
-      console.log(`NEW WALLET CREATED FOR USER: ${inboxId}`);
-      console.log(`WALLET ADDRESS: ${walletAddress}`);
-      console.log(`NETWORK: ${networkId}`);
-      console.log(`SEND FUNDS TO THIS ADDRESS TO TEST: ${walletAddress}`);
-      console.log("-----------------------------------------------------");
 
       const walletInfo: AgentWalletData = {
         id: walletAddress,
@@ -127,23 +119,22 @@ export class WalletService {
   }
 
   async transfer(
-    userId: string,
+    inboxId: string,
     toAddress: string,
     amount: number,
   ): Promise<Transfer | undefined> {
-    userId = userId.toLowerCase();
     toAddress = toAddress.toLowerCase();
 
     console.log("📤 TRANSFER INITIATED");
     console.log(`💸 Amount: ${amount} USDC`);
-    console.log(`🔍 From user: ${userId}`);
+    console.log(`🔍 From user: ${inboxId}`);
     console.log(`🔍 To: ${toAddress}`);
 
     // Get the source wallet
-    console.log(`🔑 Retrieving source wallet for user: ${userId}...`);
-    const from = await this.getWallet(userId);
+    console.log(`🔑 Retrieving source wallet for user: ${inboxId}...`);
+    const from = await this.getWallet(inboxId);
     if (!from) {
-      console.error(`❌ No wallet found for sender: ${userId}`);
+      console.error(`❌ No wallet found for sender: ${inboxId}`);
       return undefined;
     }
     console.log(`✅ Source wallet found: ${from.agent_address}`);
@@ -206,9 +197,6 @@ export class WalletService {
       try {
         await transfer?.wait();
         console.log(`✅ Transfer completed successfully!`);
-        console.log(
-          `📝 Transaction details: ${JSON.stringify(transfer, null, 2)}`,
-        );
       } catch (err) {
         if (err instanceof TimeoutError) {
           console.log(
@@ -233,10 +221,9 @@ export class WalletService {
   }
 
   async checkBalance(
-    humanAddress: string,
+    inboxId: string,
   ): Promise<{ address: string | undefined; balance: number }> {
-    humanAddress = humanAddress.toLowerCase();
-    const walletData = await this.getWallet(humanAddress);
+    const walletData = await this.getWallet(inboxId);
 
     if (!walletData) {
       return { address: undefined, balance: 0 };
