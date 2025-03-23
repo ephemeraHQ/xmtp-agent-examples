@@ -18,6 +18,7 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 - [grok](/examples/grok/): Integrate your agent with the Grok API
 - [gaia](/examples/gaia/): Integrate with the Gaia API
 - [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
+- [cointoss](/examples/cointoss/): Enabling group cointosses with friends inside a group chat
 
 ## Getting started
 
