@@ -52,7 +52,7 @@ export async function saveWalletData(
   walletData: string,
   networkId: string,
 ): Promise<void> {
-  const key = `${WALLET_KEY_PREFIX}${inboxId}-${networkId}`;
+  const key = `${WALLET_KEY_PREFIX}${inboxId}`;
   if (redisClient && redisClient.isReady) {
     // Save to Redis
     await redisClient.set(key, walletData);

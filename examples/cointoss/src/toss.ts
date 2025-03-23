@@ -15,25 +15,22 @@ interface Transfer {
 }
 
 export class TossManager {
-  private lastGameId: number = 0;
   private walletService: WalletService;
 
   constructor() {
     this.walletService = new WalletService();
-    // Initialize lastGameId from storage
-    void this.initializeLastGameId();
   }
 
-  private async initializeLastGameId() {
-    const tosses = await storage.listActiveTosses();
-    this.lastGameId = tosses.reduce((maxId, toss) => {
-      const id = parseInt(toss.id);
-      return isNaN(id) ? maxId : Math.max(maxId, id);
-    }, 0);
-  }
-
-  private getNextGameId(): string {
-    return (++this.lastGameId).toString();
+  async getBalance(
+    inboxId: string,
+  ): Promise<{ address: string | undefined; balance: number }> {
+    try {
+      const balance = await this.walletService.checkBalance(inboxId);
+      return { address: balance.address, balance: balance.balance };
+    } catch (error) {
+      console.error("Error getting user balance:", error);
+      return { address: undefined, balance: 0 };
+    }
   }
 
   // Get a player's wallet address from their user ID
@@ -54,7 +51,10 @@ export class TossManager {
 
     // Create a new wallet for this toss
     console.log(`🔑 Creating wallet for the toss...`);
-    const tossId = this.getNextGameId();
+
+    // Get the total count of tosses (including completed/cancelled) for debugging
+    const lastIdToss = await this.getLastIdToss();
+    const tossId = (lastIdToss + 1).toString();
     console.log(`🆔 Generated Toss ID: ${tossId}`);
 
     const tossWallet = await this.walletService.createWallet(tossId);
@@ -383,6 +383,30 @@ export class TossManager {
     return storage.getToss(tossId);
   }
 
+  async getLastIdToss(): Promise<number> {
+    try {
+      const tossesDir = storage.getTossStorageDir();
+      const files = await fs.readdir(tossesDir);
+
+      // Extract numeric IDs from filenames (handling pattern like "1-base-sepolia.json")
+      const tossIds = files
+        .filter((file) => file.endsWith(".json"))
+        .map((file) => {
+          // Match the numeric ID at the beginning of the filename
+          const match = file.match(/^(\d+)-/);
+          return match ? parseInt(match[1], 10) : 0;
+        });
+
+      // Find the maximum ID (or return 0 if no files exist)
+      const maxId = tossIds.length > 0 ? Math.max(...tossIds) : 0;
+      console.log(`Highest toss ID found: ${maxId}`);
+      return maxId;
+    } catch (error) {
+      console.error("Error counting total tosses:", error);
+      return 0;
+    }
+  }
+
   async getTotalTossCount(): Promise<number> {
     try {
       const tossesDir = storage.getTossStorageDir();
@@ -409,18 +433,6 @@ export class TossManager {
     toss.status = TossStatus.CANCELLED;
     await storage.updateToss(toss);
     return toss;
-  }
-
-  async getUserBalance(
-    inboxId: string,
-  ): Promise<{ address: string | undefined; balance: number }> {
-    try {
-      const balance = await this.walletService.checkBalance(inboxId);
-      return { address: balance.address, balance: balance.balance };
-    } catch (error) {
-      console.error("Error getting user balance:", error);
-      return { address: undefined, balance: 0 };
-    }
   }
 
   /**

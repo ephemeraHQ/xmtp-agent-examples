@@ -103,7 +103,7 @@ async function handleExplicitCommand(
       }
 
       // Check user's balance
-      const { balance } = await tossManager.getUserBalance(inboxId);
+      const { balance } = await tossManager.getBalance(inboxId);
       if (balance < parseFloat(toss.tossAmount)) {
         return `Insufficient USDC balance. You need ${toss.tossAmount} USDC to join this toss. Your balance: ${balance} USDC`;
       }
@@ -120,7 +120,7 @@ async function handleExplicitCommand(
         return `Payment failed. Please ensure you have enough USDC and try again.`;
       }
 
-      // Add player to toss after payment
+      // Add player to toss after payment is confirmed
       const updatedToss = await tossManager.addPlayerToGame(
         tossId,
         inboxId,
@@ -177,6 +177,11 @@ async function handleExplicitCommand(
 
       if (toss.participants.length < 2) {
         return "At least 2 players are needed to close the toss.";
+      }
+
+      const balance = await tossManager.getBalance(toss.id);
+      if (balance.balance < parseFloat(toss.tossAmount)) {
+        return `Insufficient TOSS balance. You need ${toss.tossAmount} TOSS to close this toss. Your balance: ${balance.balance} TOSS`;
       }
 
       // Validate winning option
@@ -322,7 +327,9 @@ async function handleExplicitCommand(
         }
       }
 
+      const balance = await tossManager.getBalance(toss.id);
       statusMessage += `Status: ${toss.status}\n`;
+      statusMessage += `Balance: ${balance.balance} USDC\n`;
       statusMessage += `Toss Amount: ${toss.tossAmount} USDC\n`;
       statusMessage += `Prize Pool: ${parseFloat(toss.tossAmount) * toss.participants.length} USDC\n`;
 
@@ -415,7 +422,8 @@ async function handleExplicitCommand(
             "..." +
             creatorWallet.substring(creatorWallet.length - 6);
 
-          return `Toss ID: ${toss.id}\nToss Amount: ${toss.tossAmount} USDC\nStatus: ${toss.status}\nPlayers: ${toss.participants.length}\nCreator: ${shortCreatorWallet}\nToss Wallet: ${toss.walletAddress}`;
+          const balance = await tossManager.getBalance(toss.id);
+          return `Toss ID: ${toss.id}\nToss Amount: ${toss.tossAmount} USDC\nBalance: ${balance.balance} USDC\nStatus: ${toss.status}\nPlayers: ${toss.participants.length}\nCreator: ${shortCreatorWallet}\nToss Wallet: ${toss.walletAddress}`;
         }),
       );
 
@@ -423,7 +431,7 @@ async function handleExplicitCommand(
     }
 
     case "balance": {
-      const { balance, address } = await tossManager.getUserBalance(inboxId);
+      const { balance, address } = await tossManager.getBalance(inboxId);
       return `Your USDC balance: ${balance}\nYour wallet address: ${address}`;
     }
 
@@ -454,7 +462,7 @@ async function handleNaturalLanguageCommand(
   console.log(`🧠 Processing natural language prompt: "${prompt}"`);
 
   // Check if user has sufficient balance (default check for minimum amount)
-  const { balance, address } = await tossManager.getUserBalance(inboxId);
+  const { balance, address } = await tossManager.getBalance(inboxId);
   if (balance < 0.01) {
     return `Insufficient USDC balance. You need at least 0.01 USDC to create a toss. Your balance: ${balance} USDC\nTransfer USDC to your wallet address: ${address}`;
   }

@@ -206,23 +206,7 @@ export class WalletService {
         // Continue with the existing wallet, don't create a new one
       }
     } else {
-      // Normal wallet lookup or creation if needed
-      const to = await this.getWallet(toAddress);
-      if (to) {
-        destinationAddress = to.agent_address;
-        console.log(`✅ Destination wallet found: ${destinationAddress}`);
-      } else {
-        console.log(
-          `ℹ️ Using raw address as destination: ${destinationAddress}`,
-        );
-      }
-    }
-
-    if (destinationAddress.includes(":")) {
-      console.error(
-        `❌ Invalid destination address format: ${destinationAddress}`,
-      );
-      return undefined;
+      console.log(`ℹ️ Using raw address as destination: ${destinationAddress}`);
     }
 
     try {
