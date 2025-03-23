@@ -1,6 +1,6 @@
 import "dotenv/config";
+import { getAddressOfMember } from "@helpers";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
-import { getAddressOfMember } from "@/helpers";
 import { initializeAgent, processMessage } from "./langchain";
 import { initializeStorage } from "./storage";
 import type { XMTPUser } from "./types";

@@ -1,7 +1,7 @@
 import "dotenv/config";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db

@@ -6,6 +6,8 @@ This agent replies `gm`
 
 ![](/media/gm.png)
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/UCyz5b)
+
 ## Run the agent
 
 ```bash

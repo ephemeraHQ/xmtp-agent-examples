@@ -18,3 +18,4 @@ jobs:
       - run: yarn format
       - run: yarn typecheck
       - run: yarn lint
+      - run: yarn build:examples

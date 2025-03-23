@@ -19,7 +19,7 @@
     "target": "ESNext",
     "types": ["node"],
     "paths": {
-      "@/helpers": ["./helpers/index.ts"]
+      "@helpers": ["./helpers/index.ts"]
     }
   },
   "include": ["**/*.ts"]

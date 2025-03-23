@@ -1,10 +1,10 @@
 import "dotenv/config";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import {
   createSigner,
   getAddressOfMember,
   getEncryptionKeyFromHex,
-} from "@/helpers";
+} from "@helpers";
+import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db

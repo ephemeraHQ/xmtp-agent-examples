@@ -1,7 +1,7 @@
 import "dotenv/config";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { Client, type Group, type XmtpEnv } from "@xmtp/node-sdk";
 import { Alchemy, Network } from "alchemy-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 const settings = {
   apiKey: process.env.ALCHEMY_API_KEY,
