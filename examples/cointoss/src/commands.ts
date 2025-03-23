@@ -41,9 +41,7 @@ export async function handleCommand(
     }
   } catch (error) {
     console.error("Error handling natural language command:", error);
-    return Promise.resolve(
-      error instanceof Error ? error.message : String(error),
-    );
+    return error instanceof Error ? error.message : String(error);
   }
 }
 

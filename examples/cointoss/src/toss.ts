@@ -412,7 +412,7 @@ export class TossManager {
 
           // Transfer the winner's share
           const transfer = await this.walletService.transfer(
-            winner.inboxId,
+            tossWallet.inboxId,
             winnerWalletAddress,
             prizePerWinner,
           );

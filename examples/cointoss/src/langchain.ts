@@ -64,22 +64,7 @@ const AGENT_INSTRUCTIONS = `
   /balance - Check your wallet balance
   /help - Show available commands
   
-  Before executing any action:
-  1. Check if the user has sufficient balance for the requested action
-  2. Verify toss exists when joining
-  3. Ensure proper toss state transitions
-  4. Handle any errors gracefully
-  
   Keep responses concise and clear, focusing on payment verification and toss status.
-  If there is a 5XX (internal) HTTP error, ask the user to try again later.
-  
-  IMPORTANT: Command pattern recognition rules:
-  - If a message contains "@toss" followed by only a number (e.g., "@toss 1", "@toss 42"), 
-    this is likely a join attempt. Respond with: "It seems you're trying to join a toss. Please use '/join <tossId> <option>' instead."
-  - If a message contains "@toss" followed by a number and words like "join", "yes", or "no" (e.g., "@toss 1 join", "@toss 5 yes"), 
-    this is definitely a join attempt. Respond with: "To join toss #[number], please use '/join [number] [option]' instead."
-  - Only treat a message as a new toss creation if it contains descriptive text about a topic, not just numbers or join-related words.
-  - Always prioritize detecting join attempts over creating new tosses with ambiguous text.
 `;
 
 export async function initializeAgent(inboxId: string) {
@@ -147,12 +132,6 @@ export async function processMessage(
   message: string,
 ): Promise<string> {
   try {
-    // Check if agent is properly initialized before streaming
-    if (typeof agent.stream !== "function") {
-      console.error("Agent is not properly initialized");
-      return "Sorry, the CoinToss agent is not properly initialized. Please try again later.";
-    }
-
     const stream = await agent.stream(
       { messages: [new HumanMessage(message)] },
       config,
@@ -230,20 +209,6 @@ export async function parseNaturalLanguageToss(
   if (amountMatch && amountMatch[1]) {
     extractedAmount = amountMatch[1];
     console.log(`💰 Directly extracted amount: ${extractedAmount}`);
-  }
-
-  // If agent is not available, use direct parsing
-  if (typeof agent.stream !== "function") {
-    console.log("Agent unavailable, using direct parsing");
-
-    // Simple extraction logic for direct parsing
-    const simpleTopic = prompt.replace(/for\s+\d+(\.\d+)?\s*$/i, "").trim();
-
-    return {
-      topic: simpleTopic,
-      options: DEFAULT_OPTIONS,
-      amount: extractedAmount || DEFAULT_AMOUNT,
-    };
   }
 
   // Format specific request for parsing

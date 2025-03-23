@@ -118,6 +118,30 @@ export class WalletService {
     };
   }
 
+  /**
+   * Check if an address belongs to a toss wallet and return the corresponding toss ID
+   */
+  private async getTossIdFromAddress(address: string): Promise<string | null> {
+    if (!isAddress(address)) return null;
+
+    try {
+      // Look for toss games with this wallet address
+      const tosses = await storage.listActiveTosses();
+      const matchingToss = tosses.find(
+        (toss) => toss.walletAddress.toLowerCase() === address.toLowerCase(),
+      );
+
+      if (matchingToss) {
+        console.log(`📌 Address ${address} belongs to toss:${matchingToss.id}`);
+        return matchingToss.id;
+      }
+    } catch (error) {
+      console.log(`ℹ️ Error checking for toss wallet: ${error}`);
+    }
+
+    return null;
+  }
+
   async transfer(
     inboxId: string,
     toAddress: string,
@@ -167,12 +191,29 @@ export class WalletService {
     // Get or validate destination wallet
     let destinationAddress = toAddress;
     console.log(`🔑 Validating destination: ${toAddress}...`);
-    const to = await this.getWallet(toAddress);
-    if (to) {
-      destinationAddress = to.agent_address;
-      console.log(`✅ Destination wallet found: ${destinationAddress}`);
+
+    // First check if this address belongs to a toss wallet
+    const tossId = await this.getTossIdFromAddress(toAddress);
+    if (tossId) {
+      // Use the toss ID instead of the address
+      console.log(`🎮 Found toss ID: ${tossId} for address: ${toAddress}`);
+      const tossWallet = await this.getWallet(`toss:${tossId}`);
+      if (tossWallet) {
+        destinationAddress = tossWallet.agent_address;
+        console.log(`✅ Using toss wallet: ${destinationAddress}`);
+        // Continue with the existing wallet, don't create a new one
+      }
     } else {
-      console.log(`ℹ️ Using raw address as destination: ${destinationAddress}`);
+      // Normal wallet lookup or creation if needed
+      const to = await this.getWallet(toAddress);
+      if (to) {
+        destinationAddress = to.agent_address;
+        console.log(`✅ Destination wallet found: ${destinationAddress}`);
+      } else {
+        console.log(
+          `ℹ️ Using raw address as destination: ${destinationAddress}`,
+        );
+      }
     }
 
     if (destinationAddress.includes(":")) {
@@ -223,6 +264,24 @@ export class WalletService {
   async checkBalance(
     inboxId: string,
   ): Promise<{ address: string | undefined; balance: number }> {
+    // First check if this is an address that belongs to a toss wallet
+    const tossId = await this.getTossIdFromAddress(inboxId);
+    if (tossId) {
+      // Use the toss ID instead of the address
+      console.log(`🎮 Using toss ID: ${tossId} instead of address: ${inboxId}`);
+      const tossWallet = await this.getWallet(`toss:${tossId}`);
+      if (tossWallet) {
+        const balance = await tossWallet.wallet?.getBalance(
+          Coinbase.assets.Usdc,
+        );
+        return {
+          address: tossWallet.agent_address,
+          balance: Number(balance),
+        };
+      }
+    }
+
+    // Normal wallet lookup
     const walletData = await this.getWallet(inboxId);
 
     if (!walletData) {
@@ -243,6 +302,35 @@ export class WalletService {
     amount: number,
   ): Promise<Trade | undefined> {
     address = address.toLowerCase();
+
+    // First check if this is an address that belongs to a toss wallet
+    const tossId = await this.getTossIdFromAddress(address);
+    if (tossId) {
+      // Use the toss ID instead of the address
+      console.log(`🎮 Using toss ID: ${tossId} instead of address: ${address}`);
+      const tossWallet = await this.getWallet(`toss:${tossId}`);
+      if (tossWallet) {
+        const trade = await tossWallet.wallet?.createTrade({
+          amount,
+          fromAssetId,
+          toAssetId,
+        });
+
+        if (!trade) return undefined;
+
+        try {
+          await trade.wait();
+        } catch (err) {
+          if (!(err instanceof TimeoutError)) {
+            console.error("Error while waiting for trade to complete: ", err);
+          }
+        }
+
+        return trade;
+      }
+    }
+
+    // Normal wallet lookup
     const walletData = await this.getWallet(address);
     if (!walletData) return undefined;
 
