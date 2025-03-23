@@ -2,7 +2,7 @@
 
 A coin toss agent built using CDP AgentKit that operates over the XMTP messaging protocol, enabling group coin toss on custom topics.
 
-![](/media/toss.png)
+![](./screenshot.png)
 
 ## Prerequisites
 
@@ -10,6 +10,31 @@ A coin toss agent built using CDP AgentKit that operates over the XMTP messaging
 - [OpenAI](https://platform.openai.com/) API key
 - [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
 - [USDC Faucet](https://portal.cdp.coinbase.com/products/faucet)
+
+### Environment variables
+
+To run your XMTP agent, you must create a `.env` file with the following variables:
+
+```bash
+WALLET_KEY= # the private key for the wallet
+ENCRYPTION_KEY= # the encryption key for the wallet
+# public key is
+
+NETWORK_ID=base-sepolia # base-mainnet or others
+OPENAI_API_KEY= # the OpenAI API key
+CDP_API_KEY_NAME= # the name of the CDP API key
+CDP_API_KEY_PRIVATE_KEY= # the private key for the CDP API key
+XMTP_ENV=local # local, dev, production
+```
+
+You can generate random xmtp keys with the following command:
+
+```tsx
+yarn gen:keys <name>
+```
+
+> [!WARNING]
+> Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
 
 ## Usage
 

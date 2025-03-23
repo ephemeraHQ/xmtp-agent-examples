@@ -4,7 +4,7 @@ This agent replies `gm`
 
 > Try XMTP using [xmtp.chat](https://xmtp.chat) and sending a message to `gm.xmtp.eth`
 
-![](/media/gm.png)
+![](./screenshot.png)
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/UCyz5b)
 
