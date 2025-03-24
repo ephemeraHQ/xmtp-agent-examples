@@ -12,12 +12,9 @@
   },
   "dependencies": {
     "@xmtp/content-type-transaction-reference": "^2.0.1",
-    "@xmtp/node-sdk": "1.0.2",
-    "add": "^2.0.6",
-    "yarn": "^1.22.22"
+    "@xmtp/node-sdk": "1.0.2"
   },
   "devDependencies": {
-    "@types/add": "^2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },

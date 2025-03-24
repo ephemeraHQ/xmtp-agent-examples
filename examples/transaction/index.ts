@@ -33,6 +33,7 @@ const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
 
 async function main() {
+  console.log("Starting transaction agent...");
   console.log(`Creating client on the '${env}' network...`);
   /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, {
@@ -45,9 +46,9 @@ async function main() {
   await client.conversations.sync();
 
   const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
+  const agentAddress = identifier.identifier;
   console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
+    `Agent initialized on ${agentAddress}\nSend a message on http://xmtp.chat/dm/${agentAddress}?env=${env}`,
   );
 
   console.log("Waiting for messages...");
@@ -78,10 +79,6 @@ async function main() {
     }
     const members = await conversation.members();
 
-    const address = getAddressOfMember(members, message.senderInboxId);
-    console.log(`Sending transaction request to ${address}...`);
-    /* Send a message to the conversation */
-
     const memberAddress = getAddressOfMember(members, client.inboxId);
 
     if (!memberAddress) {
@@ -89,24 +86,57 @@ async function main() {
       continue;
     }
 
-    // CORRECT - Use Base Sepolia USDC address
-    const USDC_TOKEN_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"; // Base Sepolia USDC
+    // Transaction data parameters for USDC transfer
+    const transferAmount = 100000; // 0.1 USDC (100000 = 0.1 * 10^6 due to 6 decimal places)
+    const recipientAddress = agentAddress; // The address receiving the USDC
+    const methodSignature = "0xa9059cbb"; // Function signature for ERC20 'transfer(address,uint256)'
+
+    // Format the transaction data following ERC20 transfer standard:
+    // methodSignature + paddedRecipientAddress + paddedAmount
+    const transactionData = `${methodSignature}${recipientAddress
+      .slice(2)
+      .padStart(
+        64,
+        "0",
+      )}${BigInt(transferAmount).toString(16).padStart(64, "0")}`;
+
+    // Configuration for Base Sepolia USDC transfers
+    const usdcConfig = {
+      tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // Base Sepolia USDC contract
+      chainId: "0x14A34", // Base Sepolia network ID (84532 in hex)
+      decimals: 6, // USDC uses 6 decimal places
+      platform: "base", // The network platform
+    };
+
+    // Create the wallet send calls parameters
     const walletSendCalls: WalletSendCallsParams = {
-      version: "1.0",
-      from: address as `0x${string}`,
-      chainId: "0x14A34", // Base Sepolia (84532 in hex)
+      version: "1.0", // Protocol version
+      from: memberAddress as `0x${string}`, // The sender's address
+      chainId: usdcConfig.chainId as `0x${string}`,
       calls: [
         {
-          to: USDC_TOKEN_ADDRESS,
-          // For 0.1 USDC: 0.1 * 10^6 = 100000
-          data: `0xa9059cbb${address?.slice(2).padStart(64, "0")}${BigInt("100000").toString(16).padStart(64, "0")}`,
+          to: usdcConfig.tokenAddress as `0x${string}`, // Contract address to interact with
+          data: transactionData as `0x${string}`, // Encoded transaction data
+          metadata: {
+            description: "Transfer 0.1 USDC on Base Sepolia", // Human-readable description
+            transactionType: "transfer", // Type of transaction
+            currency: "USDC", // Token being transferred
+            amount: transferAmount, // Amount in base units
+            decimals: usdcConfig.decimals, // Token decimal places
+            platform: usdcConfig.platform, // Network platform
+          },
+        },
+        // Second identical transfer
+        {
+          to: usdcConfig.tokenAddress as `0x${string}`,
+          data: transactionData as `0x${string}`,
           metadata: {
             description: "Transfer 0.1 USDC on Base Sepolia",
             transactionType: "transfer",
             currency: "USDC",
-            amount: 100000, // 0.1 USDC in base units
-            decimals: 6,
-            platform: "base",
+            amount: transferAmount,
+            decimals: usdcConfig.decimals,
+            platform: usdcConfig.platform,
           },
         },
       ],
