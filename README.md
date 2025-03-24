@@ -10,16 +10,6 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 - **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure.
 - **Multi-agent**: Allows multi-agent multi-human confidential communication over MLS group chats.
 
-## Examples
-
-- [gm](/gm/): A simple agent that replies to all text messages with "gm".
-- [gpt](/examples/gpt/): An example using GPT API's to answer messages.
-- [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
-- [grok](/examples/grok/): Integrate your agent with the Grok API
-- [gaia](/examples/gaia/): Integrate with the Gaia API
-- [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
-- [cointoss](/examples/cointoss/): Enabling group cointosses with friends inside a group chat
-
 ## Getting started
 
 > [!NOTE]
@@ -43,6 +33,47 @@ yarn gen:keys <name>
 
 > [!WARNING]
 > Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
+
+### Basic usage
+
+These are the steps to initialize the XMTP listener and send messages.
+
+```tsx
+import { Client, type XmtpEnv, type Signer } from “@xmtp/node-sdk”;
+// encryption key, must be consistent across runs
+const encryptionKey: Uint8Array = ...;
+const signer: Signer = ...;
+const env: XmtpEnv = “dev”;
+
+async function main() {
+  const client = await Client.create(signer, encryptionKey, { env });
+  await client.conversations.sync();
+  const stream = client.conversations.streamAllMessages();
+  for await (const message of await stream) {
+    // ignore messages from the agent
+   if (message?.senderInboxId === client.inboxId ) {
+      continue;
+    }
+    const conversation = client.conversations.getConversationById(message.conversationId,
+    );
+    // send a message from the agent
+    await conversation.send("gm");
+  }
+}
+main().catch(console.error);
+```
+
+## Examples
+
+- [gm](/gm/): A simple agent that replies to all text messages with "gm".
+- [gpt](/examples/gpt/): An example using GPT API's to answer messages.
+- [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
+- [grok](/examples/grok/): Integrate your agent with the Grok API
+- [gaia](/examples/gaia/): Integrate with the Gaia API
+- [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
+- [cointoss](/examples/cointoss/): Enabling group cointosses with friends inside a group chat
+
+## Development
 
 ### Run the gm agent
 
