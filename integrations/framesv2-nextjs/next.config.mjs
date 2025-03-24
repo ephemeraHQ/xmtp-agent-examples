@@ -12,7 +12,6 @@ const nextConfig = {
     ],
   },
   swcMinify: false,
-  transpilePackages: ["@xmtp/browser-sdk", "@xmtp/node-sdk"],
 };
 
 export default nextConfig;
