@@ -116,6 +116,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     const inboxState = await client.preferences.inboxStateFromInboxIds([
       message.senderInboxId,
     ]);
+    // assuming there is 1 only one identifier
     const addressFromInboxId = inboxState[0].identifiers[0].identifier;
 
     // INCORRECT:
