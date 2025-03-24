@@ -861,17 +861,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/transaction@workspace:examples/transaction":
-  version: 0.0.0-use.local
-  resolution: "@examples/transaction@workspace:examples/transaction"
-  dependencies:
-    "@xmtp/content-type-transaction-reference": "npm:^2.0.1"
-    "@xmtp/node-sdk": "npm:1.0.2"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
-  languageName: unknown
-  linkType: soft
-
 "@fastify/busboy@npm:^2.0.0":
   version: 2.1.1
   resolution: "@fastify/busboy@npm:2.1.1"
@@ -1834,15 +1823,6 @@ __metadata:
   dependencies:
     "@xmtp/content-type-primitives": "npm:^2.0.1"
   checksum: 10/7febd12cfbb69a80c434caef4111ccd02d5e9b24eb58fb0f27a35d5f14c61c47e949322b1715a25918ff4d70d0392116ac310a4e2e59f1e23dc2223ca8a141fc
-  languageName: node
-  linkType: hard
-
-"@xmtp/content-type-transaction-reference@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@xmtp/content-type-transaction-reference@npm:2.0.1"
-  dependencies:
-    "@xmtp/content-type-primitives": "npm:^2.0.1"
-  checksum: 10/809fa9e24241e358fe86030b52ba0005555ffc2bfb0520decbbe9057b54b784c92c5bb2ddaffe27ef0b21cec5d8809c74ded2a0ac297f5f6c747af95be6c133d
   languageName: node
   linkType: hard
 
