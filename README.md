@@ -39,11 +39,12 @@ yarn gen:keys <name>
 These are the steps to initialize the XMTP listener and send messages.
 
 ```tsx
-import { Client, type XmtpEnv, type Signer } from “@xmtp/node-sdk”;
+// import the xmtp sdk
+import { Client, type XmtpEnv, type Signer } from "@xmtp/node-sdk";
 // encryption key, must be consistent across runs
 const encryptionKey: Uint8Array = ...;
 const signer: Signer = ...;
-const env: XmtpEnv = “dev”;
+const env: XmtpEnv = "dev";
 
 async function main() {
   const client = await Client.create(signer, encryptionKey, { env });
@@ -54,8 +55,7 @@ async function main() {
    if (message?.senderInboxId === client.inboxId ) {
       continue;
     }
-    const conversation = client.conversations.getConversationById(message.conversationId,
-    );
+    const conversation = client.conversations.getConversationById(message.conversationId);
     // send a message from the agent
     await conversation.send("gm");
   }
