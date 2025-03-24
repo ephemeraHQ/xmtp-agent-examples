@@ -4,6 +4,7 @@ import {
   getAddressOfMember,
   getEncryptionKeyFromHex,
 } from "@helpers";
+import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import {
   ContentTypeWalletSendCalls,
@@ -36,7 +37,7 @@ async function main() {
   /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, {
     env,
-    codecs: [new WalletSendCallsCodec()],
+    codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
   });
 
   console.log("Syncing conversations...");
@@ -88,21 +89,23 @@ async function main() {
       continue;
     }
 
+    // CORRECT - Use Base Sepolia USDC address
+    const USDC_TOKEN_ADDRESS = "0x5dEaC602762362FE5f135FA5904351916053cF70"; // Base Mainnet USDC
     const walletSendCalls: WalletSendCallsParams = {
       version: "1.0",
       from: address as `0x${string}`,
-      chainId: "0x84532", // Base Sepolia
+      chainId: "0x14A34", // Base Sepolia (84532 in hex)
       calls: [
         {
-          to: memberAddress as `0x${string}`,
-          data: `0xa9059cbb${memberAddress.slice(2).padStart(64, "0")}${BigInt("100000").toString(16).padStart(64, "0")}`, // transfer(address,uint256)
+          to: USDC_TOKEN_ADDRESS, // USDC contract address
+          data: `0xa9059cbb${memberAddress.slice(2).padStart(64, "0")}${BigInt("100000").toString(16).padStart(64, "0")}`,
           metadata: {
-            description: "Transfer .1 USDC on Base Sepolia",
+            description: "Transfer .1 USDC on Base",
             transactionType: "transfer",
             currency: "USDC",
-            amount: 100000, // 0.1 USDC
+            amount: 100000,
             decimals: 6,
-            platform: "base-sepolia",
+            platform: "base",
           },
         },
       ],
