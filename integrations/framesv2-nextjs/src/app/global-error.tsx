@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Error from 'next/error';
+import Error from "next/error";
+import * as React from "react";
 
 export type GlobalErrorProps = {
   error: Error & { digest?: string };
@@ -9,7 +9,7 @@ export type GlobalErrorProps = {
 };
 
 export default function GlobalError(
-  props: GlobalErrorProps
+  props: GlobalErrorProps,
 ): React.JSX.Element {
   React.useEffect(() => {
     // For example
