@@ -10,7 +10,7 @@ import {
   SafeGroupMember,
 } from "@xmtp/browser-sdk";
 import ky from "ky";
-import { ArrowLeftIcon, ChevronUp, ChevronUpIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronUpIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/shadcn/button";
@@ -42,6 +42,7 @@ export default function HomeContent() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [currentConversationName, setCurrentConversationName] = useState("");
   const [showInviteUsers, setShowInviteUsers] = useState(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   const { data: searchResults, isLoading: isSearchLoading } = useQuery({
     queryKey: ["search", searchQuery],
@@ -51,7 +52,7 @@ export default function HomeContent() {
           `/api/farcaster/search?q=${searchQuery}&viewer_fid=${context?.user?.fid ?? 2}&limit=10`,
         )
         .json(),
-    enabled: handleSearch,
+    enabled: handleSearch && searchQuery.length > 0,
   });
 
   useEffect(() => {
@@ -75,10 +76,23 @@ export default function HomeContent() {
     void loadConversations();
   }, []);
 
+  const scrollToBottom = () => {
+    if (viewportRef !== null && viewportRef.current !== null) {
+      setTimeout(() => {
+        const scrollArea = viewportRef.current!;
+        scrollArea.scroll({
+          behavior: "smooth",
+          top: scrollArea.scrollHeight,
+        });
+      }, 1000);
+    }
+  };
+
   const loadMessages = async () => {
     const messages = await getMessages(undefined, true);
     if (messages) {
       setCurrentConversationMessages(messages);
+      scrollToBottom();
     }
   };
 
@@ -142,6 +156,7 @@ export default function HomeContent() {
 
   const handleSend = async () => {
     const tmpMessage = message;
+    if (tmpMessage.trim() === "") return;
     setMessage("");
     await send(tmpMessage);
     void loadMessages();
@@ -187,7 +202,7 @@ export default function HomeContent() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="relative h-[85%] flex flex-col gap-2">
           <div className="flex flex-row items-center justify-start gap-2">
             <button
               onClick={handleBackToConversations}
@@ -202,7 +217,7 @@ export default function HomeContent() {
             <h2 className="text-sm font-light text-white">
               Invite other users on this XMTP chat
             </h2>
-            <div className="flex flex-col gap-2">
+            <div className="relative flex flex-col gap-2">
               <div className="flex flex-row items-center gap-2">
                 <input
                   type="text"
@@ -223,7 +238,7 @@ export default function HomeContent() {
                 </Button>
               </div>
               {showInviteUsers ? (
-                <div className="flex flex-col gap-2 w-full">
+                <div className="absolute top-0 left-0 flex flex-col gap-0 w-full z-10">
                   <ScrollArea className="h-[200px]">
                     <div className="flex flex-col gap-2 bg-gray-900 rounded-b-lg py-2 px-2">
                       {searchResults ? (
@@ -265,7 +280,7 @@ export default function HomeContent() {
                   <Button
                     variant="outline"
                     onClick={() => setShowInviteUsers(false)}
-                    className="flex flex-row items-center justify-center gap-2 w-full py-1 px-2 text-white">
+                    className="flex flex-row items-center justify-center gap-2 w-full py-1 px-2 text-white bg-black rounded-b-none">
                     <ChevronUpIcon className="w-4 h-4 text-white" />
                     Close
                   </Button>
@@ -274,7 +289,7 @@ export default function HomeContent() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[75%]" viewportRef={viewportRef}>
               <div className="flex flex-col gap-2 w-full min-h-[400px]">
                 {currentConversationMessages.map((message) => {
                   const isSender = client?.inboxId === message.senderInboxId;
@@ -298,19 +313,19 @@ export default function HomeContent() {
                 })}
               </div>
             </ScrollArea>
-            <div className="flex flex-row items-center gap-2">
+            <div className="absolute bottom-0 left-0 flex flex-row items-center gap-2 w-full">
               <input
                 ref={inputRef}
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Message..."
-                className="w-full px-2 py-1 rounded-xl border border-gray-300 bg-gray-800 text-white"
+                className="w-full px-3 py-2 rounded-xl border border-gray-300 bg-gray-800 text-white"
               />
               <Button
                 variant="default"
                 onClick={handleSend}
-                className="bg-blue-600 hover:bg-blue-600/80 text-white"
+                className="bg-blue-600 hover:bg-blue-600/80 text-white border border-blue-300"
                 disabled={sending}>
                 {sending ? "Sending..." : "Send"}
               </Button>
