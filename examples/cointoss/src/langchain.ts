@@ -21,7 +21,7 @@ import {
 // Constants for default values
 const DEFAULT_OPTIONS = ["yes", "no"];
 const DEFAULT_AMOUNT = "0.1";
-const USDC_TOKEN_ADDRESS = "0x5dEaC602762362FE5f135FA5904351916053cF70";
+const USDC_TOKEN_ADDRESS = "0x5dEaC602762362FE5f135FA5904351916053cF70"; // Base Mainnet USDC
 
 /**
  * Agent instruction template for coin toss activities
