@@ -3,7 +3,7 @@ import ky from "ky";
 import { useEffect, useState } from "react";
 import { useXMTP } from "@/context/xmtp-context";
 import { useConversations } from "@/hooks/use-conversations";
-import { DEFAULT_CONVERSATION_ID } from "@/lib/constants";
+import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
 interface ConversationsPageProps {
@@ -21,7 +21,7 @@ export default function ConversationsPage({
   useEffect(() => {
     if (conversations.length > 0) {
       const foundGroup = conversations.find(
-        (conv) => conv.id === DEFAULT_CONVERSATION_ID,
+        (conv) => conv.id === env.NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID,
       );
       if (foundGroup) {
         setIsGroupJoined(true);

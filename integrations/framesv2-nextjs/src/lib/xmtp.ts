@@ -1,6 +1,5 @@
 import { Client, Group } from "@xmtp/node-sdk";
 import { hexToUint8Array, uint8ArrayToHex } from "uint8array-extras";
-import { DEFAULT_CONVERSATION_ID } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { createNodeEphemeralSigner } from "@/lib/utils";
 
@@ -31,7 +30,7 @@ export const addUserToDefaultGroupChat = async (
   try {
     // Get the group chat by id
     const conversation = await client.conversations.getConversationById(
-      DEFAULT_CONVERSATION_ID,
+      env.NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID,
     );
     if (!conversation) throw new Error("Conversation not found");
 
