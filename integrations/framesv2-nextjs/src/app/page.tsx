@@ -20,14 +20,8 @@ const HomePage = dynamic(() => import("@/components/pages/home"), {
 const frame = (_searchParams: {
   [key: string]: string | string[] | undefined;
 }) => {
-  const searchParamsString = Object.entries(_searchParams)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  const { conversationId } = _searchParams;
-  const buttonTitle = conversationId ? "Join chat" : "Start a conversation";
-  const imageUrl = conversationId
-    ? `${env.NEXT_PUBLIC_URL}/api/og${conversationId ? `/${conversationId}` : ""}`
-    : `${env.NEXT_PUBLIC_URL}/images/frame-default-image.png`;
+  const buttonTitle = "Join chat";
+  const imageUrl = `${env.NEXT_PUBLIC_URL}/api/og`;
 
   return {
     version: "next",
@@ -37,9 +31,7 @@ const frame = (_searchParams: {
       action: {
         type: "launch_frame",
         name: buttonTitle,
-        url: `${env.NEXT_PUBLIC_URL}/${
-          searchParamsString ? `?${searchParamsString}` : ""
-        }`,
+        url: env.NEXT_PUBLIC_URL,
         splashImageUrl: `${env.NEXT_PUBLIC_URL}/images/splash.png`,
         splashBackgroundColor: "#0d0d0d",
       },
@@ -57,13 +49,10 @@ export async function generateMetadata({
   searchParams,
 }: NextProps): Promise<Metadata> {
   const _searchParams = await searchParams;
-  const { conversationId } = _searchParams;
-  const ogTitle = conversationId ? "Join chat" : "Start a conversation";
+  const ogTitle = "Join chat";
   const ogDescription =
     "Start a conversation with your friends on Farcaster. 💬";
-  const ogImageUrl = conversationId
-    ? `${env.NEXT_PUBLIC_URL}/api/og${conversationId ? `/${conversationId}` : ""}`
-    : `${env.NEXT_PUBLIC_URL}/images/frame-default-image.png`;
+  const ogImageUrl = `${env.NEXT_PUBLIC_URL}/images/frame-default-image.png`;
 
   return {
     title: ogTitle,

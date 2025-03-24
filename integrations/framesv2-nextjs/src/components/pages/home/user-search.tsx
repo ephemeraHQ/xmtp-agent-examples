@@ -1,0 +1,107 @@
+import { ChevronUpIcon } from "lucide-react";
+import Image from "next/image";
+import { Button } from "@/components/shadcn/button";
+import { ScrollArea, ScrollBar } from "@/components/shadcn/scroll-area";
+import { FarcasterUserBulkResponse } from "@/types";
+
+interface UserSearchProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleSearch: boolean;
+  setHandleSearch: (handle: boolean) => void;
+  showInviteUsers: boolean;
+  setShowInviteUsers: React.Dispatch<React.SetStateAction<boolean>>;
+  searchResults?: FarcasterUserBulkResponse;
+  isSearchLoading: boolean;
+  onInviteUser: (userFid: number) => void;
+}
+
+export default function UserSearch({
+  searchQuery,
+  setSearchQuery,
+  handleSearch,
+  setHandleSearch,
+  showInviteUsers,
+  setShowInviteUsers,
+  searchResults,
+  isSearchLoading,
+  onInviteUser,
+}: UserSearchProps) {
+  return (
+    <div className="flex flex-col gap-1">
+      <h2 className="text-sm font-light text-white">
+        Invite other users on this XMTP chat
+      </h2>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-row items-center gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search for a farcaster user..."
+            className="w-full px-2 py-1 rounded-xl border border-gray-300 bg-gray-800 text-white"
+          />
+          <Button
+            variant="outline"
+            onClick={() => {
+              setHandleSearch(!handleSearch);
+              setShowInviteUsers((prev) => !prev);
+            }}
+            className="text-white"
+            disabled={isSearchLoading}>
+            {isSearchLoading ? "Searching..." : "Search"}
+          </Button>
+        </div>
+        <div className="relative">
+          {showInviteUsers ? (
+            <div className="absolute top-0 left-0 flex flex-col gap-0 w-full z-10">
+              <ScrollArea className="h-max max-h-[200px]">
+                <div className="h-full flex flex-col gap-2 bg-gray-900 rounded-b-lg py-2 px-2">
+                  {searchResults ? (
+                    searchResults.data.users.map((user) => (
+                      <div
+                        key={user.fid}
+                        className="flex items-center justify-between gap-2 px-2 py-1 bg-gray-800 rounded-lg">
+                        <div className="flex flex-row items-center gap-2">
+                          <Image
+                            src={user.pfp_url}
+                            alt={user.username}
+                            width={32}
+                            height={32}
+                            className="rounded-full w-[32px] h-[32px] object-cover"
+                          />
+                          <span className="text-lg font-semibold text-gray-400">
+                            {user.username}
+                          </span>
+                        </div>
+                        <Button
+                          onClick={() => onInviteUser(user.fid)}
+                          className="bg-blue-600 hover:bg-blue-600/80 text-white">
+                          Invite
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="h-full flex flex-col gap-2 bg-gray-800 rounded-b-lg py-2 px-2">
+                      <p className="text-white">
+                        {isSearchLoading ? "Searching..." : "No users found"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <ScrollBar orientation="vertical" className="bg-gray-300" />
+              </ScrollArea>
+              <Button
+                variant="outline"
+                onClick={() => setShowInviteUsers(false)}
+                className="flex flex-row items-center justify-center gap-2 w-full py-1 px-2 text-white bg-black rounded-b-none">
+                <ChevronUpIcon className="w-4 h-4 text-white" />
+                Close
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
