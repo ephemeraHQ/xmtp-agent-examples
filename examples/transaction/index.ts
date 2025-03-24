@@ -78,22 +78,29 @@ async function main() {
     const members = await conversation.members();
 
     const address = getAddressOfMember(members, message.senderInboxId);
-    console.log(`Sending "gm" response to ${address}...`);
+    console.log(`Sending transaction request to ${address}...`);
     /* Send a message to the conversation */
+
+    const memberAddress = getAddressOfMember(members, client.inboxId);
+
+    if (!memberAddress) {
+      console.log("Unable to find member address, skipping");
+      continue;
+    }
 
     const walletSendCalls: WalletSendCallsParams = {
       version: "1.0",
       from: address as `0x${string}`,
-      chainId: "0x2105",
+      chainId: "0x84532", // Base Sepolia
       calls: [
         {
-          to: "0x789...cba",
-          data: "0xdead...beef",
+          to: memberAddress as `0x${string}`,
+          data: `0xa9059cbb${memberAddress.slice(2).padStart(64, "0")}${BigInt("100000").toString(16).padStart(64, "0")}`, // transfer(address,uint256)
           metadata: {
             description: "Transfer .1 USDC on Base Sepolia",
             transactionType: "transfer",
             currency: "USDC",
-            amount: 10000000,
+            amount: 100000, // 0.1 USDC
             decimals: 6,
             platform: "base-sepolia",
           },

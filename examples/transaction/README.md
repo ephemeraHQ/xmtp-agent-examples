@@ -75,7 +75,3 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
-
-```
-
-```
