@@ -65,13 +65,14 @@ main().catch(console.error);
 
 ## Examples
 
-- [gm](/gm/): A simple agent that replies to all text messages with "gm".
+- [gm](/examples/gm/): A simple agent that replies to all text messages with "gm".
 - [gpt](/examples/gpt/): An example using GPT API's to answer messages.
 - [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
-- [grok](/examples/grok/): Integrate your agent with the Grok API
-- [gaia](/examples/gaia/): Integrate with the Gaia API
 - [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
 - [cointoss](/examples/cointoss/): Enabling group cointosses with friends inside a group chat
+- [gaia](/examples/gaia/): Integrate with the Gaia API
+
+See all the examples [here](/examples).
 
 ## Development
 

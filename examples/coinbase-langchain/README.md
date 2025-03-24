@@ -9,7 +9,7 @@ A DeFi agent built using Langchain and powered by CDP SDK, operating over the XM
 - Node.js (v20+)
 - [OpenAI](https://platform.openai.com/) API key
 - [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
-- [USDC Faucet](https://portal.cdp.coinbase.com/products/faucet)
+- [USDC Faucet](https://faucet.circle.com/)
 
 ### Environment variables
 
