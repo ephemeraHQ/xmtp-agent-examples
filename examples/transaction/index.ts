@@ -8,9 +8,10 @@ import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-refere
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import {
   ContentTypeWalletSendCalls,
+  createUSDCTransferCalls,
+  getUSDCBalance,
   WalletSendCallsCodec,
-  type WalletSendCallsParams,
-} from "./WalletSendCalls";
+} from "./helper";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -69,82 +70,64 @@ async function main() {
     );
 
     /* Get the conversation by id */
-    const conversation = client.conversations.getDmByInboxId(
-      message.senderInboxId,
+    const conversation = await client.conversations.getConversationById(
+      message.conversationId,
     );
 
     if (!conversation) {
       console.log("Unable to find conversation, skipping");
       continue;
     }
-    const members = await conversation.members();
 
-    const memberAddress = getAddressOfMember(members, client.inboxId);
+    const members = await conversation.members();
+    const memberAddress = getAddressOfMember(members, message.senderInboxId);
 
     if (!memberAddress) {
       console.log("Unable to find member address, skipping");
       continue;
     }
 
-    // Transaction data parameters for USDC transfer
-    const transferAmount = 100000; // 0.1 USDC (100000 = 0.1 * 10^6 due to 6 decimal places)
-    const recipientAddress = agentAddress; // The address receiving the USDC
-    const methodSignature = "0xa9059cbb"; // Function signature for ERC20 'transfer(address,uint256)'
+    const messageContent = message.content as string;
+    const command = messageContent.toLowerCase().trim();
 
-    // Format the transaction data following ERC20 transfer standard:
-    // methodSignature + paddedRecipientAddress + paddedAmount
-    const transactionData = `${methodSignature}${recipientAddress
-      .slice(2)
-      .padStart(
-        64,
-        "0",
-      )}${BigInt(transferAmount).toString(16).padStart(64, "0")}`;
+    try {
+      if (command === "/balance") {
+        const balance = await getUSDCBalance(agentAddress);
+        await conversation.send(`Your USDC balance is: ${balance} USDC`);
+      } else if (command.startsWith("/tx ")) {
+        const amount = parseFloat(command.split(" ")[1]);
+        if (isNaN(amount) || amount <= 0) {
+          await conversation.send(
+            "Please provide a valid amount. Usage: /tx <amount>",
+          );
+          continue;
+        }
 
-    // Configuration for Base Sepolia USDC transfers
-    const usdcConfig = {
-      tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // Base Sepolia USDC contract
-      chainId: "0x14A34", // Base Sepolia network ID (84532 in hex)
-      decimals: 6, // USDC uses 6 decimal places
-      platform: "base", // The network platform
-    };
+        // Convert amount to USDC decimals (6 decimal places)
+        const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
 
-    // Create the wallet send calls parameters
-    const walletSendCalls: WalletSendCallsParams = {
-      version: "1.0", // Protocol version
-      from: memberAddress as `0x${string}`, // The sender's address
-      chainId: usdcConfig.chainId as `0x${string}`,
-      calls: [
-        {
-          to: usdcConfig.tokenAddress as `0x${string}`, // Contract address to interact with
-          data: transactionData as `0x${string}`, // Encoded transaction data
-          metadata: {
-            description: "Transfer 0.1 USDC on Base Sepolia", // Human-readable description
-            transactionType: "transfer", // Type of transaction
-            currency: "USDC", // Token being transferred
-            amount: transferAmount, // Amount in base units
-            decimals: usdcConfig.decimals, // Token decimal places
-            platform: usdcConfig.platform, // Network platform
-          },
-        },
-        // Second identical transfer
-        {
-          to: usdcConfig.tokenAddress as `0x${string}`,
-          data: transactionData as `0x${string}`,
-          metadata: {
-            description: "Transfer 0.1 USDC on Base Sepolia",
-            transactionType: "transfer",
-            currency: "USDC",
-            amount: transferAmount,
-            decimals: usdcConfig.decimals,
-            platform: usdcConfig.platform,
-          },
-        },
-      ],
-    };
+        const walletSendCalls = createUSDCTransferCalls(
+          memberAddress,
+          agentAddress,
+          amountInDecimals,
+        );
 
-    await conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
-
-    console.log("Waiting for messages...");
+        await conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
+      } else {
+        await conversation.send(
+          "Available commands:\n" +
+            "/balance - Check your USDC balance\n" +
+            "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
+        );
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("Error processing command:", errorMessage);
+      await conversation.send(
+        "Sorry, I encountered an error processing your command.",
+      );
+    }
   }
 }
 
