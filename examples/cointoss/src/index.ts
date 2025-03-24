@@ -1,5 +1,4 @@
 import "dotenv/config";
-import { getAddressOfMember } from "@helpers";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { handleCommand } from "./commands";
 import { initializeAgent } from "./langchain";
@@ -15,15 +14,8 @@ async function handleMessage(
   try {
     const tossManager = new TossManager();
     const commandContent = command.replace(/^@toss\s+/i, "").trim();
-
     // Use the sender's address as the user ID
     const inboxId = message.senderInboxId;
-    const members = await conversation.members();
-    const address = getAddressOfMember(members, inboxId);
-    if (!address) {
-      console.log("Unable to find address, skipping");
-      return;
-    }
     // Initialize or get the agent for this user
     const { agent, config } = await initializeAgent(inboxId);
 

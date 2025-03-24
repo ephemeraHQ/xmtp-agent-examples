@@ -1,5 +1,4 @@
 import "dotenv/config";
-import { getAddressOfMember } from "@helpers";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { initializeAgent, processMessage } from "./langchain";
 import { initializeStorage } from "./storage";
@@ -48,16 +47,8 @@ async function handleMessage(
   message: DecodedMessage,
   conversation: Conversation,
 ) {
-  // Use the sender's address as the user ID
-  const inboxId = message.senderInboxId;
-  const members = await conversation.members();
-  const address = getAddressOfMember(members, inboxId);
-  if (!address) {
-    console.log("Unable to find address, skipping");
-    return;
-  }
   // Initialize or get the agent for this user
-  const { agent, config } = await initializeAgent(inboxId);
+  const { agent, config } = await initializeAgent(message.senderInboxId);
 
   // Process the message with the agent
   const response = await processMessage(
@@ -66,8 +57,7 @@ async function handleMessage(
     message.content as string,
   );
 
-  // Send the response back to the user
-  console.log(`Sending response to ${address}...`);
+  console.log(`Sending response to ${message.senderInboxId}...`);
   await conversation.send(response);
 
   console.log("Waiting for more messages...");

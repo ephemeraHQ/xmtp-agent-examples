@@ -1,9 +1,5 @@
 import "dotenv/config";
-import {
-  createSigner,
-  getAddressOfMember,
-  getEncryptionKeyFromHex,
-} from "@helpers";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
@@ -67,10 +63,11 @@ async function main() {
       console.log("Unable to find conversation, skipping");
       continue;
     }
-    const members = await conversation.members();
-
-    const address = getAddressOfMember(members, message.senderInboxId);
-    console.log(`Sending "gm" response to ${address}...`);
+    const inboxState = await client.preferences.inboxStateFromInboxIds([
+      message.senderInboxId,
+    ]);
+    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
     /* Send a message to the conversation */
     await conversation.send("gm");
 

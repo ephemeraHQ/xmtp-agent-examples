@@ -69,14 +69,14 @@ main().catch(console.error);
 - [gpt](/examples/gpt/): An example using GPT API's to answer messages.
 - [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
 - [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
-- [cointoss](/examples/cointoss/): Enabling group cointosses with friends inside a group chat
-- [gaia](/examples/gaia/): Integrate with the Gaia API
 
 See all the examples [here](/examples).
 
 ## Development
 
-### Run the gm agent
+As a starter you can run the `gm` example by following these steps:
+
+### Run the agent
 
 ```bash
 # git clone repo
