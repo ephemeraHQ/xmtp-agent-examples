@@ -2,6 +2,8 @@
 
 This example uses [content-type-transaction-reference](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-transaction-reference) and [content-type-wallet-send-calls](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-wallet-send-calls).
 
+> Testing on https://xmtp.heyelsa.ai/conversations/0edf5b5bf1f5057b41a172cc55f479d3
+
 ![Transaction agent example](./screenshot.png)
 
 ### Environment variables

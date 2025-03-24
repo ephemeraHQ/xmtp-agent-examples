@@ -90,33 +90,23 @@ async function main() {
     }
 
     // CORRECT - Use Base Sepolia USDC address
-    const USDC_TOKEN_ADDRESS = "0x5dEaC602762362FE5f135FA5904351916053cF70"; // Base Mainnet USDC
+    const USDC_TOKEN_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"; // Base Sepolia USDC
     const walletSendCalls: WalletSendCallsParams = {
       version: "1.0",
       from: address as `0x${string}`,
       chainId: "0x14A34", // Base Sepolia (84532 in hex)
       calls: [
         {
-          to: USDC_TOKEN_ADDRESS, // USDC contract address
-          data: `0xa9059cbb${memberAddress.slice(2).padStart(64, "0")}${BigInt("100000").toString(16).padStart(64, "0")}`,
+          to: USDC_TOKEN_ADDRESS,
+          // For 0.1 USDC: 0.1 * 10^6 = 100000
+          data: `0xa9059cbb${address?.slice(2).padStart(64, "0")}${BigInt("100000").toString(16).padStart(64, "0")}`,
           metadata: {
-            description: "Transfer 0.1 USDC on Base",
+            description: "Transfer 0.1 USDC on Base Sepolia",
             transactionType: "transfer",
             currency: "USDC",
-            amount: "100000",
+            amount: 100000, // 0.1 USDC in base units
             decimals: 6,
             platform: "base",
-            tokenStandard: "ERC20",
-            value: {
-              type: "token",
-              token: {
-                address: USDC_TOKEN_ADDRESS,
-                decimals: 6,
-                name: "USD Coin",
-                symbol: "USDC",
-              },
-              amount: "100000",
-            },
           },
         },
       ],
