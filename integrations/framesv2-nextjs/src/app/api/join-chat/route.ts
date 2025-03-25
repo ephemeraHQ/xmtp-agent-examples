@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { addUserToDefaultGroupChat } from "@/lib/xmtp";
 
+export const runtime = "nodejs";
+
 // Input validation schema
 const joinChatSchema = z.object({
   inboxId: z.string().min(1),
