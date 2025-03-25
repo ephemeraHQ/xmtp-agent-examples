@@ -36,12 +36,14 @@ export const addUserToDefaultGroupChat = async (
 
     // Get the metadata
     const metadata = await conversation.metadata();
+    console.log("Conversation found", metadata);
     if (metadata?.conversationType !== "group")
       throw new Error("Conversation is not a group");
 
     // load members from the group
     const group = conversation as Group;
     const groupMembers = await group.members();
+    console.log("Group members", groupMembers);
     if (groupMembers.some((member) => member.inboxId === newUserInboxId)) {
       console.warn("User already in group, skipping...");
       return true;

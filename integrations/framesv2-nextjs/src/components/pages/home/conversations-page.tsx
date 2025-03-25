@@ -16,6 +16,7 @@ export default function ConversationsPage({
   const { client, conversations, setConversations } = useXMTP();
   const [joining, setJoining] = useState(false);
   const { loading, list } = useConversations();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isGroupJoined, setIsGroupJoined] = useState(false);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function ConversationsPage({
       }
     } catch (error) {
       console.error("Error adding me to the default conversation", error);
+      setErrorMessage("Failed to add me to the default conversation");
       setJoining(false);
     }
   };
@@ -72,6 +74,9 @@ export default function ConversationsPage({
             ? "Joined 'XMTP & Frames v2'"
             : "Join Chat"}
       </button>
+      {errorMessage ? (
+        <div className="text-red-500 text-sm">{errorMessage}</div>
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold text-white">My Conversations</h2>

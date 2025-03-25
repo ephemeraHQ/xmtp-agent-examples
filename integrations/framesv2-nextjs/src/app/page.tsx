@@ -3,14 +3,14 @@ import dynamic from "next/dynamic";
 import { OG_IMAGE_SIZE } from "@/lib/constants";
 import { env } from "@/lib/env";
 
+const HomePage = dynamic(() => import("@/components/pages/home"), {
+  ssr: false,
+});
+
 type NextProps = {
   params: Promise<{ conversationId: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
-
-const HomePage = dynamic(() => import("@/components/pages/home"), {
-  ssr: false,
-});
 
 /**
  * Frames frame configuration to be used in the opengraph fc:frame tag

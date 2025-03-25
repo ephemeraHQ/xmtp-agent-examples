@@ -8,7 +8,7 @@ import {
   type WalletClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
+import { mainnet } from "viem/chains";
 
 /**
  * Creates a browser signer for XMTP from the user connected wallet
@@ -55,7 +55,7 @@ export const createUser = (key: Hex): User => {
     account,
     wallet: createWalletClient({
       account,
-      chain: base,
+      chain: mainnet,
       transport: http(),
     }),
   };
@@ -68,6 +68,7 @@ export const createUser = (key: Hex): User => {
  */
 export const createNodeEphemeralSigner = (privateKey: Hex): NodeSigner => {
   const user = createUser(privateKey);
+  console.log("Creating node ephemeral signer for user", user.account.address);
   return {
     type: "EOA",
     getIdentifier: () => ({
