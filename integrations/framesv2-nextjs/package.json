@@ -27,6 +27,7 @@
     "@xmtp/content-type-reaction": "^2.0.0",
     "@xmtp/content-type-remote-attachment": "^2.0.0",
     "@xmtp/content-type-reply": "^2.0.0",
+    "@xmtp/node-bindings": "^1.1.1",
     "@xmtp/node-sdk": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

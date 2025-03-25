@@ -4272,6 +4272,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xmtp/node-bindings@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@xmtp/node-bindings@npm:1.1.1"
+  checksum: 10/90756102b7160506fddfe4cf3ecf6ff7a3b11015d28efbca4c9049e3d2c3005ccc85e30e1f77d1ada80a9e3bedaeee952a8cf7c8867581f0459dde78737a307d
+  languageName: node
+  linkType: hard
+
 "@xmtp/node-sdk@npm:1.0.0-rc1":
   version: 1.0.0-rc1
   resolution: "@xmtp/node-sdk@npm:1.0.0-rc1"
@@ -6955,6 +6962,7 @@ __metadata:
     "@xmtp/content-type-reaction": "npm:^2.0.0"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.0"
     "@xmtp/content-type-reply": "npm:^2.0.0"
+    "@xmtp/node-bindings": "npm:^1.1.1"
     "@xmtp/node-sdk": "npm:^1.0.0"
     class-variance-authority: "npm:^0.7.1"
     clsx: "npm:^2.1.1"
