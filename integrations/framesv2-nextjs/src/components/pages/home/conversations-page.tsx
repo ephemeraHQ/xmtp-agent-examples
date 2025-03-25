@@ -49,6 +49,7 @@ export default function ConversationsPage({
         setConversations(newConversations);
       } else {
         console.warn("Failed to add me to the default conversation", data);
+        setErrorMessage(data.message);
       }
     } catch (error) {
       console.error("Error adding me to the default conversation", error);

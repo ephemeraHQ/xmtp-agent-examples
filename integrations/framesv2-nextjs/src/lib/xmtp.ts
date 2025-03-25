@@ -27,33 +27,30 @@ export const addUserToDefaultGroupChat = async (
   // Sync the conversations from the network to update the local db
   await client.conversations.sync();
 
-  try {
-    // Get the group chat by id
-    const conversation = await client.conversations.getConversationById(
-      env.NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID,
-    );
-    if (!conversation) throw new Error("Conversation not found");
+  // Get the group chat by id
+  const conversation = await client.conversations.getConversationById(
+    env.NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID,
+  );
+  if (!conversation) throw new Error("Conversation not found");
 
-    // Get the metadata
-    const metadata = await conversation.metadata();
-    console.log("Conversation found", metadata);
-    if (metadata?.conversationType !== "group")
-      throw new Error("Conversation is not a group");
+  // Get the metadata
+  const metadata = await conversation.metadata();
+  console.log("Conversation found", metadata);
+  if (metadata?.conversationType !== "group")
+    throw new Error("Conversation is not a group");
 
-    // load members from the group
-    const group = conversation as Group;
-    const groupMembers = await group.members();
-    console.log("Group members", groupMembers);
-    if (groupMembers.some((member) => member.inboxId === newUserInboxId)) {
-      console.warn("User already in group, skipping...");
-      return true;
-    }
-
+  // load members from the group
+  const group = conversation as Group;
+  const groupMembers = await group.members();
+  console.log("Group members", groupMembers);
+  const isMember = groupMembers.some(
+    (member) => member.inboxId === newUserInboxId,
+  );
+  if (isMember) {
+    console.warn("User already in group, skipping...");
+  } else {
     // Add the user to the group chat
     await group.addMembers([newUserInboxId]);
-    return true;
-  } catch (error) {
-    console.error("Error adding user to group", error);
-    return false;
   }
+  return true;
 };

@@ -15,17 +15,32 @@ export async function POST(request: Request) {
     const { inboxId } = joinChatSchema.parse(body);
 
     // Initialize XMTP client
-    const success = await addUserToDefaultGroupChat(inboxId);
-    if (!success) {
+    try {
+      const success = await addUserToDefaultGroupChat(inboxId);
+      if (!success) {
+        return NextResponse.json(
+          { success: false, message: "Failed to add user to group chat" },
+          { status: 200 },
+        );
+      } else {
+        return NextResponse.json(
+          {
+            success,
+            message: `Successfully added ${inboxId} to the group chat`,
+          },
+          { status: 200 },
+        );
+      }
+    } catch (error) {
+      console.error("Error joining chat:", error);
       return NextResponse.json(
-        { error: "Failed to add user to group chat" },
-        { status: 500 },
+        {
+          success: false,
+          message: (error as Error).message ?? "Failed to join chat",
+        },
+        { status: 200 },
       );
     }
-    return NextResponse.json({
-      success,
-      message: `Successfully added ${inboxId} to the group chat`,
-    });
   } catch (error) {
     console.error("Error joining chat:", error);
 

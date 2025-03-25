@@ -11,6 +11,7 @@ import { FullPageLoader } from "@/components/ui/fullpage-loader";
 import { Header } from "@/components/ui/header";
 import { SafeAreaContainer } from "@/components/ui/safe-area-container";
 import { useXMTP } from "@/context/xmtp-context";
+import { env } from "@/lib/env";
 import { createBrowserSigner } from "@/lib/utils";
 import { useFrame } from "@/providers/frame-provider";
 
@@ -24,7 +25,6 @@ export default function HomePage() {
   const { context, actions } = useFrame();
   const insets = context ? context.client.safeAreaInsets : undefined;
   const { initialize, initializing } = useXMTP();
-  const [env] = useLocalStorage<XmtpEnv>("XMTP_NETWORK", "dev");
   const { data: walletData } = useWalletClient();
   const { isConnected, address } = useAccount();
   const { connect } = useConnect();
@@ -51,13 +51,13 @@ export default function HomePage() {
     if (walletData?.account) {
       void initialize({
         encryptionKey: hexToUint8Array(encryptionKey),
-        env,
+        env: env.XMTP_ENV,
         loggingLevel,
         signer: createBrowserSigner(walletData.account.address, walletData),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletData, env]);
+  }, [walletData]);
 
   // Save the frame to the Farcaster context
   useEffect(() => {
