@@ -1439,7 +1439,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@frames.js/debugger@npm:^0.4.3":
+"@frames.js/debugger@npm:^0.4.4":
   version: 0.4.4
   resolution: "@frames.js/debugger@npm:0.4.4"
   dependencies:
@@ -2496,10 +2496,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/secp256k1@npm:1.7.1, @noble/secp256k1@npm:^1.7.1":
+"@noble/secp256k1@npm:1.7.1":
   version: 1.7.1
   resolution: "@noble/secp256k1@npm:1.7.1"
   checksum: 10/214d4756c20ed20809d948d0cc161e95664198cb127266faf747fd7deffe5444901f05fe9f833787738f2c6e60b09e544c2f737f42f73b3699e3999ba15b1b63
+  languageName: node
+  linkType: hard
+
+"@noble/secp256k1@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "@noble/secp256k1@npm:2.2.3"
+  checksum: 10/ea2947063136819f07e3c1493888c778c49555432322b11f50030daa297fe5c0446f672711728aef695b51ff4d9be8747b065793b95396c2ed8dd826fa08941c
   languageName: node
   linkType: hard
 
@@ -4158,17 +4165,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/browser-sdk@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@xmtp/browser-sdk@npm:1.1.0"
+"@xmtp/browser-sdk@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "@xmtp/browser-sdk@npm:1.1.2"
   dependencies:
-    "@xmtp/content-type-group-updated": "npm:^2.0.0"
-    "@xmtp/content-type-primitives": "npm:^2.0.0"
-    "@xmtp/content-type-text": "npm:^2.0.0"
-    "@xmtp/proto": "npm:^3.72.3"
-    "@xmtp/wasm-bindings": "npm:^1.1.0"
-    uuid: "npm:^11.0.3"
-  checksum: 10/220dffb75594d16ded0bbf6448a3923c55e4e0b26b253aa663df3ebae372378735c24d0268c9f76a17da0a87ad5e7aab0b2fdf59666e759332676391c2c3c57e
+    "@xmtp/content-type-group-updated": "npm:^2.0.1"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/content-type-text": "npm:^2.0.1"
+    "@xmtp/proto": "npm:^3.78.0"
+    "@xmtp/wasm-bindings": "npm:^1.1.1"
+    uuid: "npm:^11.1.0"
+  checksum: 10/be58007c2e98f61e7e96051f6542676a4dac328784e52cd95e33905a01a5776859f3427cfad1e4eb8741204286b5ad856a25b05647e5fa747c49efeaac7f88ee
   languageName: node
   linkType: hard
 
@@ -4192,6 +4199,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xmtp/content-type-group-updated@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-group-updated@npm:2.0.1"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/75d8f30fedf2524335745865c286ef4b240e2c2c9b981d9044ef4d6b09f5c5324f13b448ef8358c4a13d3d0c49fd6a964dab6d94974cf2fcc887ecaefb2e6671
+  languageName: node
+  linkType: hard
+
 "@xmtp/content-type-primitives@npm:^1.0.1, @xmtp/content-type-primitives@npm:^1.0.3":
   version: 1.0.3
   resolution: "@xmtp/content-type-primitives@npm:1.0.3"
@@ -4210,33 +4227,42 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-reaction@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@xmtp/content-type-reaction@npm:2.0.0"
+"@xmtp/content-type-primitives@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-primitives@npm:2.0.1"
   dependencies:
-    "@xmtp/content-type-primitives": "npm:^2.0.0"
-  checksum: 10/1659fecafd5993c95ca81528b426e6125a3955cceeeea9c2e84ade956e2b8ca266d08c99283a24f43a7214602fdee4ba4741bec7e98737063afd43d2ef2bc0e7
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/966d17a2ef9b70452348651e7eb56d858608d4b910343bdc8886bc73693040ea34ce69bac74bd4367404f6cf6f7b6ec7b25a2dd25c507fc35bee1447065ea02d
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-remote-attachment@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@xmtp/content-type-remote-attachment@npm:2.0.0"
+"@xmtp/content-type-reaction@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-reaction@npm:2.0.1"
   dependencies:
-    "@noble/secp256k1": "npm:^1.7.1"
-    "@xmtp/content-type-primitives": "npm:^2.0.0"
-    "@xmtp/proto": "npm:^3.72.0"
-  checksum: 10/b5e20a277a943c12c74616ec384cb96c40bce7963e6409f968b4be1b3b7cd8c72ebbea4a8aed9fa11287b3a6905f5f22477b82fccbd167e71e5fa0ad2f4d233f
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+  checksum: 10/e2544e9146d92e67a03345545118c63b633d062fd6347d05d5ec8486059324450d3c96a72f56913bf342614fb778ee148dd4f6c03e95f98419b972d3763213b6
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-reply@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@xmtp/content-type-reply@npm:2.0.0"
+"@xmtp/content-type-remote-attachment@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-remote-attachment@npm:2.0.1"
   dependencies:
-    "@xmtp/content-type-primitives": "npm:^2.0.0"
-    "@xmtp/proto": "npm:^3.72.0"
-  checksum: 10/e173a3fc70605055c5bcd81299f2bb548be0f5a48d2eb0d36d448c0e6828d0a7d2cfe7a29d02765556df4a4240acd285ccae531a6ceabffe92764297f763aa5b
+    "@noble/secp256k1": "npm:^2.2.3"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/c0e3710f585a1a81cc0fbd7e8d1d71c2ae40a820b01c52bd36b59fed1159cef17ec689ba3cd8e4e83870db23ca119ba9d094656431033b1c8413e5af1bfa44e9
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-reply@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-reply@npm:2.0.1"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/c34d4fbcc6e7e5f056d87bf017721c70b06bbe30657caedb528236160df43e1ce5bbaee1e7d316dfab87f56027c8e56488ad46bc055afd15c30bbb2b79920acf
   languageName: node
   linkType: hard
 
@@ -4255,6 +4281,15 @@ __metadata:
   dependencies:
     "@xmtp/content-type-primitives": "npm:^2.0.0"
   checksum: 10/8d1291983d9a52fb2465f65f4e03926cd3f30ab7d0801a8e42891e3491468415104144fe0188f6c872aefc37733d7a268072ace2a7fa65bedc98eae2bb4e60c1
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-text@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-text@npm:2.0.1"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+  checksum: 10/7febd12cfbb69a80c434caef4111ccd02d5e9b24eb58fb0f27a35d5f14c61c47e949322b1715a25918ff4d70d0392116ac310a4e2e59f1e23dc2223ca8a141fc
   languageName: node
   linkType: hard
 
@@ -4305,7 +4340,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/proto@npm:^3.62.1":
+"@xmtp/node-sdk@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "@xmtp/node-sdk@npm:1.0.3"
+  dependencies:
+    "@xmtp/content-type-group-updated": "npm:^2.0.1"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/content-type-text": "npm:^2.0.1"
+    "@xmtp/node-bindings": "npm:^1.1.1"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/b7e76bc220b4b7131a70bf7dafc53274519794c832196aca13fcdb3f2ef270f69be05503fcd71615cbd0ca841c98107d32bf3c612d69ea1a1992dc49b5924eed
+  languageName: node
+  linkType: hard
+
+"@xmtp/proto@npm:^3.62.1, @xmtp/proto@npm:^3.78.0":
   version: 3.78.0
   resolution: "@xmtp/proto@npm:3.78.0"
   dependencies:
@@ -4336,10 +4384,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/wasm-bindings@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@xmtp/wasm-bindings@npm:1.1.0"
-  checksum: 10/8e3cc6d89fb3d3fbf3c9e7868ac97f9eaebc94b1cbcda9f77c896562df3c7863abae96efc0bce357c97d3395bf12f14b52906366eaefacec3e9f22a5c2a7c37d
+"@xmtp/wasm-bindings@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@xmtp/wasm-bindings@npm:1.1.1"
+  checksum: 10/524d535a09e778331ed0d0cfb4363e3ca8cd6954bdc9bc21e37d7ce3d62138b34090c7e52e14e15fe88ee1d064e855d6b8743768a147b378573ca52c7799ede2
   languageName: node
   linkType: hard
 
@@ -6947,7 +6995,7 @@ __metadata:
     "@farcaster/frame-node": "npm:^0.0.18"
     "@farcaster/frame-sdk": "npm:^0.0.31"
     "@farcaster/frame-wagmi-connector": "npm:^0.0.19"
-    "@frames.js/debugger": "npm:^0.4.3"
+    "@frames.js/debugger": "npm:^0.4.4"
     "@radix-ui/react-popover": "npm:^1.1.6"
     "@radix-ui/react-scroll-area": "npm:^1.2.3"
     "@radix-ui/react-slot": "npm:^1.1.2"
@@ -6957,12 +7005,11 @@ __metadata:
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
     "@vercel/og": "npm:^0.6.5"
-    "@xmtp/browser-sdk": "npm:^1.1.0"
-    "@xmtp/content-type-reaction": "npm:^2.0.0"
-    "@xmtp/content-type-remote-attachment": "npm:^2.0.0"
-    "@xmtp/content-type-reply": "npm:^2.0.0"
-    "@xmtp/node-bindings": "npm:^1.1.1"
-    "@xmtp/node-sdk": "npm:^1.0.0"
+    "@xmtp/browser-sdk": "npm:^1.1.2"
+    "@xmtp/content-type-reaction": "npm:^2.0.1"
+    "@xmtp/content-type-remote-attachment": "npm:^2.0.1"
+    "@xmtp/content-type-reply": "npm:^2.0.1"
+    "@xmtp/node-sdk": "npm:^1.0.3"
     class-variance-authority: "npm:^0.7.1"
     clsx: "npm:^2.1.1"
     dotenv: "npm:^16.4.7"
@@ -11595,7 +11642,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^11.0.3, uuid@npm:^11.1.0":
+"uuid@npm:^11.1.0":
   version: 11.1.0
   resolution: "uuid@npm:11.1.0"
   bin:

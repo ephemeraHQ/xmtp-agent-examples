@@ -43,6 +43,7 @@ export default function HomePage() {
       connect({ connector: farcasterFrame() });
       return;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address]);
 
   // Initialize XMTP client with wallet signer
@@ -55,6 +56,7 @@ export default function HomePage() {
         signer: createBrowserSigner(walletData.account.address, walletData),
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletData, env]);
 
   // Save the frame to the Farcaster context

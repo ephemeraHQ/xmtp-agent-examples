@@ -20,6 +20,7 @@ export default function HomeContent() {
       setConversations(newConversations);
     };
     void loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSetConversation = (conv: Conversation) => {

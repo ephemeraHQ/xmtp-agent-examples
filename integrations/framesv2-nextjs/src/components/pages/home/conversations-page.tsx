@@ -80,6 +80,10 @@ export default function ConversationsPage({
 
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold text-white">My Conversations</h2>
+        <p className="text-xs text-gray-400">
+          Inbox ID: {client?.inboxId?.slice(0, 6)}...
+          {client?.inboxId?.slice(-4)}
+        </p>
         {conversations.map(async (conv) => {
           let convName = "";
           if (conv.metadata?.conversationType === "dm") {

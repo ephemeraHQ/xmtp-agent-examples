@@ -95,6 +95,7 @@ export default function CurrentConversationPage({
 
   useEffect(() => {
     void loadMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation]);
 
   const handleInviteUser = async (userFid: number) => {
