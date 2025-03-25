@@ -12,6 +12,7 @@ export const env = createEnv({
     XMTP_ENCRYPTION_KEY: z.string().optional(),
   },
   client: {
+    NEXT_PUBLIC_XMTP_ENV: z.enum(["production", "local", "dev"]).default("dev"),
     NEXT_PUBLIC_URL: z.string().url().min(1),
     NEXT_PUBLIC_APP_ENV: z
       .enum(["development", "production"])
@@ -25,5 +26,6 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
     NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID:
       process.env.NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID,
+    NEXT_PUBLIC_XMTP_ENV: process.env.XMTP_ENV,
   },
 });

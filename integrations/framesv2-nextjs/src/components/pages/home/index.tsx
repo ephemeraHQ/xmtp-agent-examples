@@ -51,7 +51,7 @@ export default function HomePage() {
     if (walletData?.account) {
       void initialize({
         encryptionKey: hexToUint8Array(encryptionKey),
-        env: env.XMTP_ENV,
+        env: env.NEXT_PUBLIC_XMTP_ENV,
         loggingLevel,
         signer: createBrowserSigner(walletData.account.address, walletData),
       });
