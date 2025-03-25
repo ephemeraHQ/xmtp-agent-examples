@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# XMTP x Framesv2 with Next.js
+
+A Farcaster Framesv2 with XMTP private chat integration.
 
 ## Getting Started
+
+This Farcaster Frame is a [Next.js](https://nextjs.org) project bootstrapped with the [`Builders Garden miniapp template`](https://github.com/builders-garden/miniapp-next-template), you can find more information about the template [here](https://frames-v2.builders.garden).
+
+## Prerequisites
+
+- Node.js >=20
+- Yarn @4.6.0 package manager
+- A Farcaster account on your phone
+
+
+## Local Development
 
 First, run the development server:
 
 ```bash
-npm run dev
-# or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then, you can run the frames.js debugger, from there you can enter the NEXT_PUBLIC_URL (eg. http://localhost:3000) and see the frame embed and interact with it:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+yarn frames
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+To run the frame you need to create a .env.local file with the following variables:
 
-To learn more about Next.js, take a look at the following resources:
+First, copy the `.env.example` file to `.env.local`.
+```bash
+cp .env.example .env.local
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Update the `NEXT_PUBLIC_URL` environment variable with your local/production URL.
+2. Since farcaster frames (and miniapps in general) dont have a console, you can use [Eruda](https://github.com/liriliri/eruda) to debug the app. Set the `NEXT_PUBLIC_APP_ENV` environment variable to `development` to enable it.
+3. Go to [Neynar](https://neynar.com/) and generate a *FREE* API key.
+4. Generate a JWT secret and copy it to the `.env.local` file.
+  ```bash
+  openssl rand -base64 32
+  ```
+1. With a fresh wallet/private key that you wont use anywhere else, go to [XMTP](https://xmtp.chat/) and create a group conversation on the XMTP environment you want to use (**dev** or **production**).
+2. Send a message to the group and click on the message to copy the conversation id of the group.
+3. Update the `NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID` environment variable with the conversation id of the XMTP group you want to use.
+4. Update the `XMTP_PRIVATE_KEY` environment variable with the private key of the account you have freshly created.
+5. Update the `XMTP_ENV` environment variable with the XMTP environment you want to use.
+6.  `XMTP_ENCRYPTION_KEY` is the encryption key of the @xmtp/node-sdk client, it is optional because it is generated automatically by the XMTP client, so you can leave it blank for the first time you run the app. But it is recommended to use the same encryptionKey for the xmtp/node-sdk client, so once it will be generated via clicking on "Join conversation" button on the frame, copy it from the console and paste it here.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Testing the frame
 
-## Deploy on Vercel
+Once you setup the environment variables, you can run the frame by doing `yarn dev`.
+In order to access the frame from Farcaster, you need to deploy it to a public URL or expose your local environment to the internet, for that you can use [ngrok](https://ngrok.com/) or [cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/create-local-tunnel/).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Using ngrok
+Go to [Ngrok Dashboard](https://dashboard.ngrok.com/), download and install ngrok, then obtain a custom static domain for your ngrok tunnel, so you will be able to access the frame from Farcaster using this custom domain name.
+```bash
+ngrok http --url=your-custom-domain.ngrok-free.app 3000
+```
+Now update the `NEXT_PUBLIC_URL` environment variable on `.env.local` with the ngrok static URL.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Using Cloudflare Tunnel
+TBD
+
+## Deploy
+
+This is a standard Next.js app, so you can deploy it to any hosting provider you want, you can choose how to deploy it on [this guide](https://nextjs.org/docs/14/app/building-your-application/deploying).
+
+### Using Vercel
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/).
