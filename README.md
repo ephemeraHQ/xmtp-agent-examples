@@ -1,4 +1,4 @@
-# XMTP agent examples 
+# XMTP agent examples
 
 This repository contains examples of agents that use the [XMTP](https://docs.xmtp.org/) network.
 
