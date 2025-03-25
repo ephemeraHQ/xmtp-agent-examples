@@ -25,8 +25,21 @@
     "viem": "^2.22.17"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.2.6",
+    "@eslint/js": "^9.19.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^22.13.0",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "prettier-plugin-packagejson": "^2.5.8",
+    "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.22.0"
   },
   "packageManager": "yarn@4.6.0",
   "engines": {
