@@ -3328,7 +3328,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-query@npm:^5.67.2":
+"@tanstack/react-query@npm:^5.69.0":
   version: 5.69.0
   resolution: "@tanstack/react-query@npm:5.69.0"
   dependencies:
@@ -7000,7 +7000,7 @@ __metadata:
     "@radix-ui/react-scroll-area": "npm:^1.2.3"
     "@radix-ui/react-slot": "npm:^1.1.2"
     "@t3-oss/env-nextjs": "npm:^0.12.0"
-    "@tanstack/react-query": "npm:^5.67.2"
+    "@tanstack/react-query": "npm:^5.69.0"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
@@ -7031,8 +7031,8 @@ __metadata:
     uint8array-extras: "npm:^1.4.0"
     usehooks-ts: "npm:^3.1.1"
     uuid: "npm:^11.1.0"
-    viem: "npm:^2.23.9"
-    wagmi: "npm:^2.14.13"
+    viem: "npm:^2.23.15"
+    wagmi: "npm:^2.14.15"
     zod: "npm:^3.24.2"
   languageName: unknown
   linkType: soft
@@ -11736,7 +11736,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2.1.1, viem@npm:^2.23.9":
+"viem@npm:^2.1.1":
   version: 2.23.12
   resolution: "viem@npm:2.23.12"
   dependencies:
@@ -11778,7 +11778,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wagmi@npm:^2.14.13":
+"viem@npm:^2.23.15":
+  version: 2.23.15
+  resolution: "viem@npm:2.23.15"
+  dependencies:
+    "@noble/curves": "npm:1.8.1"
+    "@noble/hashes": "npm:1.7.1"
+    "@scure/bip32": "npm:1.6.2"
+    "@scure/bip39": "npm:1.5.4"
+    abitype: "npm:1.0.8"
+    isows: "npm:1.0.6"
+    ox: "npm:0.6.9"
+    ws: "npm:8.18.1"
+  peerDependencies:
+    typescript: ">=5.0.4"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10/b6e89bd681787874e3fc8398c52b91a7788c25fee376eba491b144043cf8e3b915f7f8184be8f911ac8043f5e652b195a6ed94c060760ad6c5ec0e653579c715
+  languageName: node
+  linkType: hard
+
+"wagmi@npm:^2.14.15":
   version: 2.14.15
   resolution: "wagmi@npm:2.14.15"
   dependencies:

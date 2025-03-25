@@ -2,12 +2,14 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useAccount } from "wagmi";
 import { Skeleton } from "@/components/shadcn/skeleton";
 import { useFrame } from "@/providers/frame-provider";
 import { Logo } from "./logo";
 
 export const Header = () => {
   const { context } = useFrame();
+  const { address } = useAccount();
 
   let pfpUrl = context && context.user.pfpUrl ? context.user.pfpUrl : undefined;
 
@@ -23,17 +25,24 @@ export const Header = () => {
         <h1 className="text-xl font-bold text-white">XMTP Chat</h1>
       </div>
 
-      {pfpUrl ? (
-        <Image
-          src={pfpUrl}
-          alt="user-pfp"
-          className="w-[36px] h-[36px] aspect-square shrink-0 rounded-full border object-cover bg-app border-default"
-          width={36}
-          height={36}
-        />
-      ) : (
-        <Skeleton className="h-[36px] w-[36px] rounded-full bg-white/20" />
-      )}
+      <div className="flex flex-row gap-2 items-center justify-center">
+        {address && (
+          <p className="text-white text-xs font-mono">
+            {address.slice(0, 6)}...{address.slice(-4)}
+          </p>
+        )}
+        {pfpUrl ? (
+          <Image
+            src={pfpUrl}
+            alt="user-pfp"
+            className="w-[36px] h-[36px] aspect-square shrink-0 rounded-full border object-cover bg-app border-default"
+            width={36}
+            height={36}
+          />
+        ) : (
+          <Skeleton className="h-[36px] w-[36px] rounded-full bg-white/20" />
+        )}
+      </div>
     </motion.header>
   );
 };

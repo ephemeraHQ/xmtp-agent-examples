@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import { hexToUint8Array, uint8ArrayToHex } from "uint8array-extras";
 import { useLocalStorage } from "usehooks-ts";
-import { useAccount, useConnect, useWalletClient } from "wagmi";
+import { injected, useAccount, useConnect, useWalletClient } from "wagmi";
 import { FullPageLoader } from "@/components/ui/fullpage-loader";
 import { Header } from "@/components/ui/header";
 import { SafeAreaContainer } from "@/components/ui/safe-area-container";
@@ -40,7 +40,12 @@ export default function HomePage() {
   // Connect to Farcaster wallet
   useEffect(() => {
     if (!isConnected || !address) {
-      connect({ connector: farcasterFrame() });
+      // if you are on warpcast, connect to farcasterFrame
+      if (context) {
+        connect({ connector: farcasterFrame() });
+      } else {
+        connect({ connector: injected() });
+      }
       return;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

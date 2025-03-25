@@ -12,11 +12,17 @@ const ErudaProvider = dynamic(
   },
 );
 
-export const Providers = ({ children }: { children: React.ReactNode }) => {
+export const Providers = ({
+  children,
+  cookies,
+}: {
+  children: React.ReactNode;
+  cookies: string | null;
+}) => {
   return (
     <ErudaProvider>
       <FrameProvider>
-        <CustomWagmiProvider>
+        <CustomWagmiProvider cookies={cookies}>
           <XMTPProvider>{children}</XMTPProvider>
         </CustomWagmiProvider>
       </FrameProvider>
