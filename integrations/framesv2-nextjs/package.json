@@ -11,7 +11,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@farcaster/auth-client": "^0.3.0",
     "@farcaster/frame-core": "^0.0.29",
     "@farcaster/frame-node": "^0.0.18",
     "@farcaster/frame-sdk": "^0.0.31",

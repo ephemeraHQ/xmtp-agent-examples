@@ -6943,7 +6943,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "framesv2-nextjs-basic@workspace:integrations/framesv2-nextjs"
   dependencies:
-    "@farcaster/auth-client": "npm:^0.3.0"
     "@farcaster/frame-core": "npm:^0.0.29"
     "@farcaster/frame-node": "npm:^0.0.18"
     "@farcaster/frame-sdk": "npm:^0.0.31"

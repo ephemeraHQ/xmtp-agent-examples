@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
   devIndicators: {
     appIsrStatus: false,
   },
@@ -11,7 +12,9 @@ const nextConfig = {
       },
     ],
   },
-  swcMinify: false,
+  experimental: {
+    serverComponentsExternalPackages: ["@xmtp/node-sdk"],
+  },
 };
 
 export default nextConfig;
