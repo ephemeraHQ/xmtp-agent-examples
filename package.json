@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "build:all": "yarn workspaces foreach --all --include \"examples/*\" run build",
+    "build:examples": "yarn workspaces foreach --all --include \"examples/*\" run build",
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
     "dev": "tsx --watch examples/gm/index.ts",
