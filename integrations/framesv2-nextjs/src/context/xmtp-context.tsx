@@ -15,7 +15,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useConversations } from "@/hooks/use-conversations";
 
 export type InitializeClientOptions = {
   encryptionKey: Uint8Array;
@@ -62,7 +61,6 @@ export const XMTPProvider: React.FC<XMTPProviderProps> = ({
   children,
   client: initialClient,
 }) => {
-  const { list } = useConversations();
   const [client, setClient] = useState<Client | undefined>(initialClient);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [initializing, setInitializing] = useState(false);
