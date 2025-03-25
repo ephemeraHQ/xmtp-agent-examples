@@ -170,6 +170,55 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     }
     ```
 
+19. Always use the built-in key generation command instead of creating your own script:
+
+### Environment variables
+
+To run your XMTP agent, you must create a `.env` file with the following variables:
+
+```tsx
+WALLET_KEY= # the private key of the wallet
+ENCRYPTION_KEY= # encryption key for the local database
+XMTP_ENV= # local, dev, production
+```
+
+### Generating XMTP Keys
+
+Always use the built-in key generation command instead of creating your own script:
+
+```bash
+# Generate generic keys
+yarn gen:keys
+
+# Generate keys for a specific user
+yarn gen:keys <name>
+```
+
+This command will:
+
+1. Generate a secure wallet private key
+2. Create an encryption key for the local database
+3. Output the corresponding public key
+4. Automatically append the keys to your `.env` file
+
+Example output in `.env`:
+
+```bash
+# Generic keys
+WALLET_KEY=0x...
+ENCRYPTION_KEY=...
+# public key is 0x...
+
+# User-specific keys
+# alice
+WALLET_KEY_ALICE=0x...
+ENCRYPTION_KEY_ALICE=...
+# public key is 0x...
+```
+
+> [!IMPORTANT]
+> Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies (@xmtp/node-sdk v1.0.2).
+
 ## Example: XMTP Group Creator Agent
 
 ### Prompt:
@@ -772,7 +821,7 @@ When working with these classes:
    - Check permission level with `member.permissionLevel`
    - Verify consent state with `member.consentState`
 
-## Advanced Usage
+## Other Notes
 
 ### Handling local database
 
@@ -816,4 +865,25 @@ Example package.json for a project that uses XMTP:
     "node": ">=20"
   }
 }
+```
+
+### Web inbox
+
+Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+
+### Work in local network
+
+`Dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself, so it's faster for development purposes.
+
+- 1. Install docker
+- 2. Start the XMTP service and database
+
+```tsx
+./dev/up
+```
+
+- 3. Change the .env file to use the local network
+
+```tsx
+XMTP_ENV = local;
 ```
