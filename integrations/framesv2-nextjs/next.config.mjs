@@ -29,15 +29,7 @@ const nextConfig = {
     "@xmtp/content-type-reply",
   ],
   experimental: {
-    serverComponentsExternalPackages: [
-      "node:path",
-      "node:fs/promises",
-      "node:process",
-      "node:module",
-      "@xmtp/node-bindings",
-      "@xmtp/node-bindings/version.json",
-      "@xmtp/proto",
-    ],
+    serverComponentsExternalPackages: ["@xmtp/node-bindings"],
     esmExternals: "loose",
   },
 };

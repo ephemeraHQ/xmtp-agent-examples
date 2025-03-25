@@ -25,13 +25,16 @@ export const addUserToDefaultGroupChat = async (
     env: env.XMTP_ENV,
   });
   // Sync the conversations from the network to update the local db
-  await client.conversations.sync();
+  await client.conversations.syncAll();
 
   // Get the group chat by id
   const conversation = await client.conversations.getConversationById(
     env.NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID,
   );
-  if (!conversation) throw new Error("Conversation not found");
+  if (!conversation)
+    throw new Error(
+      `Conversation not found with id: ${env.NEXT_PUBLIC_XMTP_DEFAULT_CONVERSATION_ID} on env: ${env.XMTP_ENV}`,
+    );
 
   // Get the metadata
   const metadata = await conversation.metadata();
