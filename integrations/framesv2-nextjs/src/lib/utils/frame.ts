@@ -43,14 +43,24 @@ export async function getFonts(): Promise<
  * @returns The farcaster manifest for the frame
  */
 export async function getFarcasterManifest() {
-  return {
-    accountAssociation: {
+  let accountAssociation = {
+    header:
+      "eyJmaWQiOjE4OTYzNiwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDQ1QzViNUI3QzREMUQxMWQzNjVjZGZFRWFkMDMxNGFFMzZmRDYyRDUifQ",
+    payload: "eyJkb21haW4iOiJ4bXRwLWZyYW1lc3YyLnZlcmNlbC5hcHAifQ",
+    signature:
+      "MHhkYTdiOTQwNDU0YjExNjkxYTdiMGU4MDQ5OTdhOGFjMzExMjk5NDlhYTQwOWNhMDQxMjkzYjIxMWYyZTAwMzNkNzAyNGZkYzQwY2JiNGVkZjJkODhhYjI3NWI5OGMwMzRhN2Q5M2RjZDVjYmE2ZTFlMTNkNmE3MzdjNGQ5MTQzNTFj",
+  };
+  if (env.NEXT_PUBLIC_APP_ENV === "development") {
+    accountAssociation = {
       header:
-        "eyJmaWQiOjE4OTYzNiwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDQ1QzViNUI3QzREMUQxMWQzNjVjZGZFRWFkMDMxNGFFMzZmRDYyRDUifQ",
-      payload: "eyJkb21haW4iOiJ4bXRwLWZyYW1lc3YyLnZlcmNlbC5hcHAifQ",
+        "eyJmaWQiOjE4OTYzNiwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweGMwODNEYjQxNThkNzdDMWNDYjIxMkI5MUQ3MWMwZmEzODcyMTc4YzEifQ",
+      payload: "eyJkb21haW4iOiJsb2NhbGhvc3Q6MzAwMCJ9",
       signature:
-        "MHhkYTdiOTQwNDU0YjExNjkxYTdiMGU4MDQ5OTdhOGFjMzExMjk5NDlhYTQwOWNhMDQxMjkzYjIxMWYyZTAwMzNkNzAyNGZkYzQwY2JiNGVkZjJkODhhYjI3NWI5OGMwMzRhN2Q5M2RjZDVjYmE2ZTFlMTNkNmE3MzdjNGQ5MTQzNTFj",
-    },
+        "MHg3ZjQzZjIyNTM0NjkxZGZlZjAyYTk3MTMyM2VkMWZhOTI4NjJlZDg4YTg5NzY0OTZlMzY5NWZjNzdlOTc1NDMxMjVmYWZiNzc2ZWMwOTdiMmU1ODcwZmNmNWIxYjc3ZmZmMjYwOWVkYTVkNGIwYjM4MjYwMTk3ZThjZThiYjUzOTFj",
+    };
+  }
+  return {
+    accountAssociation,
     frame: {
       version: "1",
       name: "XMTP Frames v2",

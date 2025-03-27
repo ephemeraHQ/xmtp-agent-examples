@@ -1,6 +1,7 @@
 import { Conversation, Dm, Group } from "@xmtp/browser-sdk";
 import ky from "ky";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/shadcn/button";
 import { useXMTP } from "@/context/xmtp-context";
 import { useConversations } from "@/hooks/use-conversations";
 import { env } from "@/lib/env";
@@ -18,6 +19,7 @@ export default function ConversationsPage({
   const { loading, list } = useConversations();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isGroupJoined, setIsGroupJoined] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (conversations.length > 0) {
@@ -58,6 +60,19 @@ export default function ConversationsPage({
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      const newConversations = await list(undefined, true);
+      setConversations(newConversations);
+    } catch (error) {
+      console.error("Error refreshing conversations", error);
+      setErrorMessage("Failed to refresh conversations");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2 text-center mt-4">
       <button
@@ -66,11 +81,21 @@ export default function ConversationsPage({
           "px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200",
           {
             "opacity-50":
-              loading || joining || isGroupJoined || !client || !client.inboxId,
+              isRefreshing ||
+              loading ||
+              joining ||
+              isGroupJoined ||
+              !client ||
+              !client.inboxId,
           },
         )}
         disabled={
-          loading || joining || isGroupJoined || !client || !client.inboxId
+          isRefreshing ||
+          loading ||
+          joining ||
+          isGroupJoined ||
+          !client ||
+          !client.inboxId
         }>
         {loading || joining
           ? "Joining..."
@@ -84,10 +109,19 @@ export default function ConversationsPage({
 
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold text-white">My Conversations</h2>
-        <p className="text-xs text-gray-400">
-          Inbox ID: {client?.inboxId?.slice(0, 6)}...
-          {client?.inboxId?.slice(-4)}
-        </p>
+        <div className="flex flex-row gap-2 items-center justify-center">
+          <p className="text-xs text-gray-400">
+            Inbox ID: {client?.inboxId?.slice(0, 6)}...
+            {client?.inboxId?.slice(-4)}
+          </p>
+          <Button
+            variant="link"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="text-xs text-gray-400 w-[100px]">
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
         {conversations.map(async (conv) => {
           let convName = "";
           if (conv.metadata?.conversationType === "dm") {

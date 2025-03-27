@@ -68,7 +68,13 @@ export default function HomePage() {
   useEffect(() => {
     async function saveFrame() {
       if (context) {
-        if (!context.client.added) await actions?.addFrame();
+        if (!context.client.added) {
+          try {
+            await actions?.addFrame();
+          } catch (e) {
+            console.error("Error adding frame:", e);
+          }
+        }
       }
     }
     saveFrame();

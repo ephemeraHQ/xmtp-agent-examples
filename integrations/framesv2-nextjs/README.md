@@ -55,15 +55,64 @@ cp .env.example .env.local
 Once you setup the environment variables, you can run the frame by doing `yarn dev`.
 In order to access the frame from Farcaster, you need to deploy it to a public URL or expose your local environment to the internet, for that you can use [ngrok](https://ngrok.com/) or [cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/create-local-tunnel/).
 
+### Using localtunnel
+If you have set the .env.local variable as provided in .env.example, with USE_TUNNEL set to true and NEXT_PUBLIC_URL set to `https://localhost:3000`, the `yarn dev` command will automatically start a localtunnel tunnel and you can access the frame from Farcaster using the localtunnel URL.
+Then you can:
+1. Go to the [warpcast frames dev dashboard](https://warpcast.com/~/developers/frames)
+2. Scroll down to the "Preview Frame" tool
+3. Enter this URL: `https://localhost:3000`
+4. Click "Preview" to test your frame
+
 ### Using ngrok
 Go to [Ngrok Dashboard](https://dashboard.ngrok.com/), download and install ngrok, then obtain a custom static domain for your ngrok tunnel, so you will be able to access the frame from Farcaster using this custom domain name.
 ```bash
 ngrok http --url=your-custom-domain.ngrok-free.app 3000
 ```
+or if you want to use ngrok with USE_TUNNEL set to true, you can use the following command:
+```bash
+ngrok http https://localhost:3000 --host-header="localhost:3000"
+```
+
 Now update the `NEXT_PUBLIC_URL` environment variable on `.env.local` with the ngrok static URL.
 
 ### Using Cloudflare Tunnel
-TBD
+Follow the steps on [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/create-local-tunnel/) to create a tunnel and obtain a custom domain name.
+
+Basic steps:
+0. Add your website to Cloudflare
+1. Change your domain nameservers to Cloudflare ones
+2. Install `cloudflared`
+  ```bash
+  brew install cloudflared
+  ```
+3. Authenticate to Cloudflare
+  ```bash
+  cloudflared tunnel login
+  ```
+4. Create config.yml file, update the `<Tunnel-UUID>` with the tunnel UUID you obtained from the Cloudflare Tunnel dashboard.
+  ```bash
+  echo """url: http://localhost:3000
+  tunnel: <Tunnel-UUID>
+  credentials-file: /root/.cloudflared/<Tunnel-UUID>.json""" > config.yml
+  vi config.yml
+  ```
+5. Start routing traffic
+  ```bash
+  cloudflared tunnel route dns <UUID or NAME> <hostname>
+  ```
+  ## OR
+  ```bash
+  cloudflared tunnel route ip add <IP/CIDR> <UUID or NAME>
+  ```
+6. Run the tunnel
+  ```bash
+  cloudflared tunnel run <UUID or NAME>
+  ```
+7. Check the tunnel
+  ```bash
+  cloudflared tunnel info <UUID or NAME>
+  ```
+8. Update the `NEXT_PUBLIC_URL` environment variable on `.env.local` with the Cloudflare Tunnel static URL.
 
 ## Deploy
 
