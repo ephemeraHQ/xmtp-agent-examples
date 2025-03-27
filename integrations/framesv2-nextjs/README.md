@@ -2,6 +2,8 @@
 
 A Farcaster Framesv2 with XMTP private chat integration.
 
+![screenshot](./public/images/screenshot.png)
+
 ## Getting Started
 
 This Farcaster Frame is a [Next.js](https://nextjs.org) project bootstrapped with the [`Builders Garden miniapp template`](https://github.com/builders-garden/miniapp-next-template), you can find more information about the template [here](https://frames-v2.builders.garden).
@@ -55,6 +57,13 @@ cp .env.example .env.local
 Once you setup the environment variables, you can run the frame by doing `yarn dev`.
 In order to access the frame from Farcaster, you need to deploy it to a public URL or expose your local environment to the internet, for that you can use [ngrok](https://ngrok.com/) or [cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/create-local-tunnel/).
 
+### Using frames.js debugger
+While you are running the frame with `yarn dev` you can use the frames.js debugger to test the frame by entering the NEXT_PUBLIC_URL (eg. https://localhost:3000) and see the frame embed and interact with it.
+Just open a new terminal tab and run:
+```bash
+yarn frames
+```
+
 ### Using localtunnel
 If you have set the .env.local variable as provided in .env.example, with USE_TUNNEL set to true and NEXT_PUBLIC_URL set to `https://localhost:3000`, the `yarn dev` command will automatically start a localtunnel tunnel and you can access the frame from Farcaster using the localtunnel URL.
 Then you can:
@@ -99,9 +108,9 @@ Basic steps:
 5. Start routing traffic
   ```bash
   cloudflared tunnel route dns <UUID or NAME> <hostname>
-  ```
-  ## OR
-  ```bash
+
+  # OR
+
   cloudflared tunnel route ip add <IP/CIDR> <UUID or NAME>
   ```
 6. Run the tunnel
