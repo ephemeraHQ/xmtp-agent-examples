@@ -1,8 +1,8 @@
 import { sdk } from "@farcaster/frame-sdk";
 import ky from "ky";
 import { useCallback, useState } from "react";
+import { useFrame } from "@/context/frame-context";
 import { MESSAGE_EXPIRATION_TIME } from "@/lib/constants";
-import { useFrame } from "@/providers/frame-provider";
 
 export const useSignIn = () => {
   const { context } = useFrame();

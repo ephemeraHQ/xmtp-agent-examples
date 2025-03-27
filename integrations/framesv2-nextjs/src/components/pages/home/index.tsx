@@ -10,10 +10,10 @@ import { injected, useAccount, useConnect, useWalletClient } from "wagmi";
 import { FullPageLoader } from "@/components/ui/fullpage-loader";
 import { Header } from "@/components/ui/header";
 import { SafeAreaContainer } from "@/components/ui/safe-area-container";
+import { useFrame } from "@/context/frame-context";
 import { useXMTP } from "@/context/xmtp-context";
 import { env } from "@/lib/env";
 import { createBrowserSigner } from "@/lib/utils";
-import { useFrame } from "@/providers/frame-provider";
 
 const HomeContent = dynamic(
   () => import("@/components/pages/home/home-content"),

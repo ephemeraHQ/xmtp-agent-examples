@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useAccount } from "wagmi";
 import { Skeleton } from "@/components/shadcn/skeleton";
-import { useFrame } from "@/providers/frame-provider";
+import { useFrame } from "@/context/frame-context";
 import { Logo } from "./logo";
 
 export const Header = () => {

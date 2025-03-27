@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { FrameProvider } from "@/context/frame-context";
 import { XMTPProvider } from "@/context/xmtp-context";
 import { CustomWagmiProvider } from "./custom-wagmi-provider";
-import { FrameProvider } from "./frame-provider";
 
 const ErudaProvider = dynamic(
   () => import("@/providers/eruda").then((c) => c.ErudaProvider),
