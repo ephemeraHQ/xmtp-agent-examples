@@ -7,6 +7,7 @@ A Farcaster Framesv2 with XMTP private chat integration.
 ## Getting Started
 
 This Farcaster Frame is a [Next.js](https://nextjs.org) project bootstrapped with the [`Builders Garden miniapp template`](https://github.com/builders-garden/miniapp-next-template), you can find more information about the template [here](https://frames-v2.builders.garden).
+For more information about Farcaster Framesv2, you can find more information [here](https://framesv2.com/).
 
 ## Prerequisites
 
@@ -129,3 +130,39 @@ This is a standard Next.js app, so you can deploy it to any hosting provider you
 
 ### Using Vercel
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/).
+
+### Mandatory steps
+
+1. Update the  production environment variables:
+   - `NEXT_PUBLIC_URL` with the production url on the `.env.local` file.
+   - `NEXT_PUBLIC_APP_ENV` with the environment you want to use.
+   - `XMTP_ENV` with the XMTP `prod` environment you want to use.
+   - `XMTP_CONVERSATION_ID` with the conversation id of the XMTP group **on the prod XMTP network** you want to use (go to [xmtp.chat](https://xmtp.chat) go to settings > network: production).
+2. Update the `farcaster.json` manifest file with a generated manifest for the production url.
+   If you go to ´./src/lib/utils/frame.ts´ you will see the `getFarcasterManifest` function, you just need to update the `accountAssociation` with the production generated in the mobile warpcast app.
+   On Warpcast Mobile:
+   - Go to Settings > Developer > Domains > insert website **hostname** (eg. xmtp-framesv2.vercel.app for the website https://xmtp-framesv2.vercel.app) > Generate domain manifest
+   - This will link the domain to your Farcaster account
+   - Copy the generated manifest `accountAssociation` and paste it into the `accountAssociation` variable on the `getFarcasterManifest` function, pay attention to only replace the `accountAssociation` variable and not the whole object, while keeping the rest of the function as it is, needed for the development environment.
+
+  ```json
+  {
+    "accountAssociation": {
+       "header":
+        "REPLACE_WITH_PRODUCTION_ACCOUNT_ASSOCIATION_HEADER",
+      "payload": "REPLACE_WITH_PRODUCTION_ACCOUNT_ASSOCIATION_PAYLOAD",
+      "signature": "REPLACE_WITH_PRODUCTION_ACCOUNT_ASSOCIATION_SIGNATURE",
+    },
+    "frame": {
+      "version": "1",
+      "name": "XMTP Frames v2",
+      "iconUrl": `${env.NEXT_PUBLIC_URL}/images/icon.png`,
+      "homeUrl": env.NEXT_PUBLIC_URL,
+      "imageUrl": `${env.NEXT_PUBLIC_URL}/api/og`,
+      "buttonTitle": "Launch XMTP Frames v2",
+      "splashImageUrl": `${env.NEXT_PUBLIC_URL}/images/splash.png`,
+      "splashBackgroundColor": "#0d0d0d",
+      "webhookUrl": `${env.NEXT_PUBLIC_URL}/api/webhook/farcaster`,
+    },
+  }
+  ```
