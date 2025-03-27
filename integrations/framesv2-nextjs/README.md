@@ -58,7 +58,7 @@ Once you setup the environment variables, you can run the frame by doing `yarn d
 In order to access the frame from Farcaster, you need to deploy it to a public URL or expose your local environment to the internet, for that you can use [ngrok](https://ngrok.com/) or [cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/create-local-tunnel/).
 
 ### Using frames.js debugger
-While you are running the frame with `yarn dev` you can use the frames.js debugger to test the frame by entering the NEXT_PUBLIC_URL (eg. https://localhost:3000) and see the frame embed and interact with it.
+While you are running the frame with `yarn dev:local` you can use the frames.js debugger to test the frame by entering the NEXT_PUBLIC_URL (eg. http://localhost:3000) and see the frame embed and interact with it.
 Just open a new terminal tab and run:
 ```bash
 yarn frames
