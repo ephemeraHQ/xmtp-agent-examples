@@ -1,42 +1,88 @@
-# Contributing
+# How to contribute an XMTP example
 
-Thank you for considering contributing to this repo! Community contributions like yours are key to the development and adoption of XMTP. Your questions, feedback, suggestions, and code contributions are welcome!
+This guide explains how to help develop or improve an example using the XMTP protocol.
 
-## ❔ Questions
+## Prerequisites
 
-Have a question about how to build with XMTP? Ask your question and learn with the community in the [XMTP Community Forums](https://community.xmtp.org/).
+- Know Node.js and TypeScript
+- Use Node.js version 20 or higher
+- Use Yarn package manager
 
-## 🐞 Bugs
+## Steps to Contribute
 
-Report a bug using [GitHub Issues](https://github.com/ephemeraHQ/xmtp-agent-examples/issues).
+1. **Fork the repository**
 
-## ✨ Feature Requests
+   Fork the repository to your GitHub account.
 
-Request a feature using [GitHub Issues](https://github.com/ephemeraHQ/xmtp-agent-examples/issues).
+2. **Clone your fork**
 
-## 🔀 Pull Requests
+   Clone the repository to your computer.
 
-PRs are encouraged, but consider starting with a feature request to temperature-check first. If the PR involves a major change to the protocol, the work should be fleshed out as an [XMTP Improvement Proposal](https://community.xmtp.org/t/xip-0-xip-purpose-process-guidelines/475) before work begins.
+   ```bash
+   git clone https://github.com/your-username/xmtp-agent-examples.git
+   cd xmtp-agent-examples
+   ```
 
-After a pull request is submitted, a single approval is required to merge it.
+3. **Create a new branch**
 
-## 🔧 Developing
+   Make a new branch for your changes.
 
-### Prerequisites
+   ```bash
+   git checkout -b example/your-example-name
+   ```
 
-#### Node
+4. **Install dependencies**
 
-Please make sure you have a compatible version as specified in `package.json`. We recommend using a Node version manager such as [nvm](https://github.com/nvm-sh/nvm) or [nodenv](https://github.com/nodenv/nodenv).
+   Go to the example directory and install packages.
 
-#### Yarn
+   ```bash
+   cd examples/your-example
+   yarn
+   ```
 
-This repository uses the [Yarn package manager](https://yarnpkg.com/). To use it, enable [Corepack](https://yarnpkg.com/corepack), if it isn't already, by running `corepack enable`.
+5. **Make changes**
 
-### Useful commands
+   Edit the `index.ts` file or other files.
 
-- `yarn`: Installs all dependencies
-- `yarn clean`: Remove all `node_modules` folders
-- `yarn format`: Run prettier format and write changes
-- `yarn format:check`: Run prettier format check
-- `yarn lint`: Lint with ESLint
-- `yarn typecheck`: Typecheck with `tsc`
+6. **Test changes**
+
+   Run the example to check your changes.
+
+   ```bash
+   yarn dev
+   ```
+
+7. **Commit changes**
+
+   Save your changes with a message.
+
+   ```bash
+   git add .
+   git commit -m "Add example: description of your example"
+   ```
+
+8. **Push changes**
+
+   Send your changes to your forked repository.
+
+   ```bash
+   git push origin example/your-example-name
+   ```
+
+## Submit a Pull Request
+
+1. **Create a pull request**
+
+   Go to the original repository and make a pull request.
+
+2. **Describe changes**
+
+   Explain what you changed and why.
+
+3. **Respond to feedback**
+
+   Make more changes if needed.
+
+## Code of Conduct
+
+Follow the project's rules in all interactions.

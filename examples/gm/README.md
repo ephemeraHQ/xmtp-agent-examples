@@ -4,78 +4,9 @@ This agent replies `gm`
 
 > Try XMTP using [xmtp.chat](https://xmtp.chat) and sending a message to `gm.xmtp.eth`
 
-![](/media/gm.png)
+![](./screenshot.png)
 
-## Overview
-
-```tsx
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
-
-const { WALLET_KEY, ENCRYPTION_KEY } = process.env;
-
-if (!WALLET_KEY) {
-  throw new Error("WALLET_KEY must be set");
-}
-
-if (!ENCRYPTION_KEY) {
-  throw new Error("ENCRYPTION_KEY must be set");
-}
-
-const signer = createSigner(WALLET_KEY);
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-
-/* Set the environment to local, dev or production */
-const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
-
-async function main() {
-  console.log(`Creating client on the '${env}' network...`);
-  const client = await Client.create(signer, encryptionKey, { env });
-
-  console.log("Syncing conversations...");
-  /* Sync the conversations from the network to update the local db */
-  await client.conversations.sync();
-
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-  console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
-
-  console.log("Waiting for messages...");
-  const stream = client.conversations.streamAllMessages();
-
-  for await (const message of await stream) {
-    /* Ignore messages from the same agent or non-text messages */
-    if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
-    ) {
-      continue;
-    }
-
-    console.log(
-      `Received message: ${message.content as string} by ${message.senderInboxId}`,
-    );
-
-    const conversation = client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    console.log(`Sending "gm" response...`);
-    await conversation.send("gm");
-
-    console.log("Waiting for messages...");
-  }
-}
-
-main().catch(console.error);
-```
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/UCyz5b)
 
 ## Run the agent
 
@@ -86,8 +17,8 @@ git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 cd xmtp-agent-examples
 # install packages
 yarn
-# generate random keys (optional)
+# generate random xmtp keys (optional)
 yarn gen:keys
 # run the example
-yarn examples:gm
+yarn dev
 ```

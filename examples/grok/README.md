@@ -1,6 +1,6 @@
-# GPT agent example
+# Grok agent example
 
-This example uses the [OpenAI](https://openai.com) API for GPT-based responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
+This example uses the [Grok](https://x.ai/api) API for responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
 
 ### Environment variables
 
@@ -9,7 +9,7 @@ To run your XMTP agent, you must create a `.env` file with the following variabl
 ```bash
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
-OPENAI_API_KEY= # the API key for the OpenAI API
+GROK_API_KEY= # the API key for the Grok API
 XMTP_ENV= # local, dev, production
 ```
 
@@ -29,10 +29,10 @@ yarn gen:keys <name>
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples
-cd gpt
 # install packages
 yarn
+# go to the folder
+cd examples/grok
 # generate random xmtp keys (optional)
 yarn gen:keys
 # run the example
