@@ -28,12 +28,19 @@ export const SendMessage = ({
   };
 
   return (
-    <div className="absolute bottom-0 left-0 flex flex-row items-center gap-2 w-full">
+    <div className="flex flex-row items-center gap-2 w-full py-2">
       <input
         ref={inputRef}
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleSend();
+          } else if (e.key === "Escape") {
+            inputRef.current?.blur();
+          }
+        }}
         placeholder="Message..."
         className="w-full px-3 py-2 rounded-xl border border-gray-300 bg-gray-800 text-white"
       />

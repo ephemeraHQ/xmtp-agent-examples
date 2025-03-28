@@ -1,6 +1,6 @@
 # XMTP x Framesv2 with Next.js
 
-A Farcaster Framesv2 with XMTP private chat integration.
+A Farcaster Framesv2 with XMTP private chat example.
 
 ![screenshot](./public/images/screenshot.png)
 

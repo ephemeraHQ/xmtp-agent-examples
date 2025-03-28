@@ -1,7 +1,6 @@
-import { ChevronUpIcon } from "lucide-react";
+import { ChevronUpIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/shadcn/button";
-import { ScrollArea, ScrollBar } from "@/components/shadcn/scroll-area";
 import { FarcasterUserBulkResponse } from "@/types";
 
 interface UserSearchProps {
@@ -34,13 +33,34 @@ export default function UserSearch({
       </h2>
       <div className="flex flex-col gap-2">
         <div className="flex flex-row items-center gap-2">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for a farcaster user..."
-            className="w-full px-2 py-1 rounded-xl border border-gray-300 bg-gray-800 text-white"
-          />
+          <div className="relative flex flex-row items-center gap-2 w-full ">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setHandleSearch(!handleSearch);
+                  setShowInviteUsers((prev) => !prev);
+                } else if (e.key === "Escape") {
+                  setShowInviteUsers(false);
+                }
+              }}
+              placeholder="Search for a farcaster user..."
+              className="w-full px-2 py-1 rounded-xl border border-gray-300 bg-gray-800 text-white"
+              disabled={searchQuery?.length === 0 && isSearchLoading}
+            />
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setSearchQuery("");
+                setHandleSearch(false);
+                setShowInviteUsers(false);
+              }}
+              className="absolute right-0">
+              <XIcon className="w-4 h-4 text-white" />
+            </Button>
+          </div>
           <Button
             variant="outline"
             onClick={() => {
@@ -54,8 +74,8 @@ export default function UserSearch({
         </div>
         <div className="relative">
           {showInviteUsers ? (
-            <div className="absolute top-0 left-0 flex flex-col gap-0 w-full z-10">
-              <ScrollArea className="h-max max-h-[200px]">
+            <div className="absolute top-0 left-0 flex flex-col gap-0 w-full z-20">
+              <div className="h-max max-h-[200px] overflow-y-scroll">
                 <div className="h-full flex flex-col gap-2 bg-gray-900 rounded-b-lg py-2 px-2">
                   {searchResults ? (
                     searchResults.data.users.map((user) => (
@@ -89,8 +109,7 @@ export default function UserSearch({
                     </div>
                   )}
                 </div>
-                <ScrollBar orientation="vertical" className="bg-gray-300" />
-              </ScrollArea>
+              </div>
               <Button
                 variant="outline"
                 onClick={() => setShowInviteUsers(false)}

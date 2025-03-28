@@ -141,11 +141,6 @@ Note: You may need to accept the self-signed certificate in your browser when fi
   }
 
   // Start next dev with appropriate configuration
-  const nextBin =
-    process.platform === "win32"
-      ? path.join(projectRoot, "node_modules", ".bin", "next.cmd")
-      : path.join(projectRoot, "node_modules", ".bin", "next");
-
   nextDev = spawn(
     "next",
     ["dev", ...(useTunnel ? [] : ["--experimental-https"])],

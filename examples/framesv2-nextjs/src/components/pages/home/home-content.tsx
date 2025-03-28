@@ -32,7 +32,7 @@ export default function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col gap-2 px-4 py-2">
+    <div className="flex flex-col gap-2 px-4 py-1 h-full">
       {!currentConversation ? (
         <ConversationsPage onSelectConversation={handleSetConversation} />
       ) : (

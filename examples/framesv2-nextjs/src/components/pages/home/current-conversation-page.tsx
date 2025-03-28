@@ -9,6 +9,7 @@ import {
 import ky from "ky";
 import { ArrowLeftIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/shadcn/button";
 import { ScrollArea } from "@/components/shadcn/scroll-area";
 import { useFrame } from "@/context/frame-context";
 import { useXMTP } from "@/context/xmtp-context";
@@ -116,17 +117,33 @@ export default function CurrentConversationPage({
     onBack();
   };
 
+  const handleRefresh = async () => {
+    await loadMessages();
+  };
+
   return (
-    <div className="relative h-[85%] flex flex-col gap-2">
-      <div className="flex flex-row items-center justify-start gap-2">
-        <button
-          onClick={handleBack}
-          className="px-2 py-2 bg-gray-800 rounded-lg">
-          <ArrowLeftIcon className="w-4 h-4 text-white" />
-        </button>
-        <h2 className="text-2xl font-bold text-white">{conversationName}</h2>
+    <div className="relative h-full flex flex-col justify-between gap-2">
+      {/* Page Header */}
+      <div className="flex flex-row items-center justify-between gap-2">
+        <div className="flex flex-row items-center justify-start gap-2">
+          <button
+            onClick={handleBack}
+            className="px-2 py-2 bg-gray-800 rounded-lg">
+            <ArrowLeftIcon className="w-4 h-4 text-white" />
+          </button>
+          <h2 className="text-2xl font-bold text-white">{conversationName}</h2>
+        </div>
+        <div className="flex flex-row items-center justify-end gap-2">
+          <Button
+            variant="link"
+            className="text-xs text-gray-400"
+            onClick={handleRefresh}>
+            Refresh
+          </Button>
+        </div>
       </div>
 
+      {/* User Search */}
       <UserSearch
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -139,17 +156,21 @@ export default function CurrentConversationPage({
         onInviteUser={handleInviteUser}
       />
 
-      <div className="flex flex-col gap-2">
-        <ScrollArea className="h-[430px]" viewportRef={viewportRef}>
-          <MessageList
-            messages={currentConversationMessages}
-            groupMembers={groupMembers}
-            clientInboxId={client?.inboxId}
-          />
-        </ScrollArea>
-
-        <SendMessage conversation={conversation} loadMessages={loadMessages} />
+      {/* Message List */}
+      <div className="flex flex-col gap-2 h-full">
+        <div className="flex flex-col gap-2 h-full">
+          <ScrollArea className="h-[430px]" viewportRef={viewportRef}>
+            <MessageList
+              messages={currentConversationMessages}
+              groupMembers={groupMembers}
+              clientInboxId={client?.inboxId}
+            />
+          </ScrollArea>
+        </div>
       </div>
+
+      {/* Send Message */}
+      <SendMessage conversation={conversation} loadMessages={loadMessages} />
     </div>
   );
 }
