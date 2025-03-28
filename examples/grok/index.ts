@@ -1,28 +1,6 @@
-# Grok agent example
-
-This example uses the [Grok](https://x.ai/api) API for responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
-
-## Environment variables
-
-Add the following keys to a `.env` file:
-
-```bash
-WALLET_KEY= # the private key of the wallet
-ENCRYPTION_KEY= # a second random 32 bytes encryption key for local db encryption
-GROK_API_KEY= # the API key for the Grok API
-```
-
-You can generate random keys with the following command:
-
-```bash
-yarn gen:keys
-```
-
-## Usage
-
-```tsx
+import "dotenv/config";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@/helpers";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -89,8 +67,8 @@ async function main() {
     );
 
     /* Get the conversation from the local db */
-    const conversation = client.conversations.getConversationById(
-      message.conversationId,
+    const conversation = client.conversations.getDmByInboxId(
+      message.senderInboxId,
     );
 
     /* If the conversation is not found, skip the message */
@@ -138,21 +116,3 @@ async function main() {
 }
 
 main().catch(console.error);
-```
-
-## Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-cd integrations
-cd grok
-# install packages
-yarn
-# generate random keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
-```
