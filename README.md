@@ -67,9 +67,8 @@ main().catch(console.error);
 
 - [gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
 - [gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
-- [agentkit](/examples/xmtp-agentkit/): Agent that uses a CDP for gassless USDC on base
-- [group-toss](/examples/xmtp-group-toss/): Agent that uses a CDP for gassless USDC on base
 - [nft-gated-group](/examples/xmtp-nft-gated-group/): Agent that uses a CDP for gassless USDC on base
+- [agentkit](/examples/xmtp-agentkit/): Agent that uses a CDP for gassless USDC on base
 
 See all the examples [here](/examples).
 
@@ -105,12 +104,12 @@ Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the officia
 - 1. Install docker
 - 2. Start the XMTP service and database
 
-```tsx
+```bash
 ./dev/up
 ```
 
 - 3. Change the .env file to use the local network
 
-```tsx
-XMTP_ENV = local;
+```bash
+XMTP_ENV = local
 ```
