@@ -1,14 +1,14 @@
 {
-  "name": "@examples/xmtp-group-toss",
+  "name": "@examples/xmtp-coinbase-cdp-group-toss",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "clean": "cd ../../ && rm -rf examples/xmtp-group-toss/.data",
+    "clean": "cd ../../ && rm -rf examples/xmtp-coinbase-cdp-group-toss/.data",
     "dev": "tsx --watch src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-group-toss",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-coinbase-cdp-group-toss",
     "start": "tsx src/index.ts"
   },
   "dependencies": {

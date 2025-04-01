@@ -68,7 +68,7 @@ main().catch(console.error);
 - [gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
 - [gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
 - [nft-gated-group](/examples/xmtp-nft-gated-group/): Agent that uses a CDP for gassless USDC on base
-- [agentkit](/examples/xmtp-agentkit/): Agent that uses a CDP for gassless USDC on base
+- [agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
 
 See all the examples [here](/examples).
 

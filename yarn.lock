@@ -881,9 +881,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@examples/xmtp-agentkit@workspace:examples/xmtp-agentkit":
+"@examples/xmtp-coinbase-agentkit@workspace:examples/xmtp-coinbase-agentkit":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-agentkit@workspace:examples/xmtp-agentkit"
+  resolution: "@examples/xmtp-coinbase-agentkit@workspace:examples/xmtp-coinbase-agentkit"
   dependencies:
     "@coinbase/agentkit": "npm:latest"
     "@coinbase/agentkit-langchain": "npm:latest"
@@ -897,6 +897,21 @@ __metadata:
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.7.15"
     zod: "npm:^3.22.4"
+  languageName: unknown
+  linkType: soft
+
+"@examples/xmtp-coinbase-cdp-group-toss@workspace:examples/xmtp-coinbase-cdp-group-toss":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-coinbase-cdp-group-toss@workspace:examples/xmtp-coinbase-cdp-group-toss"
+  dependencies:
+    "@coinbase/agentkit": "npm:^0.2.0"
+    "@coinbase/agentkit-langchain": "npm:^0.2.0"
+    "@langchain/core": "npm:^0.3.20"
+    "@langchain/langgraph": "npm:^0.2.24"
+    "@langchain/openai": "npm:^0.3.14"
+    "@xmtp/node-sdk": "npm:1.0.5"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
   languageName: unknown
   linkType: soft
 
@@ -917,21 +932,6 @@ __metadata:
   dependencies:
     "@xmtp/node-sdk": "npm:1.0.5"
     openai: "npm:latest"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
-  languageName: unknown
-  linkType: soft
-
-"@examples/xmtp-group-toss@workspace:examples/xmtp-group-toss":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-group-toss@workspace:examples/xmtp-group-toss"
-  dependencies:
-    "@coinbase/agentkit": "npm:^0.2.0"
-    "@coinbase/agentkit-langchain": "npm:^0.2.0"
-    "@langchain/core": "npm:^0.3.20"
-    "@langchain/langgraph": "npm:^0.2.24"
-    "@langchain/openai": "npm:^0.3.14"
-    "@xmtp/node-sdk": "npm:1.0.5"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown

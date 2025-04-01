@@ -87,7 +87,7 @@ The agent responds to commands in group chats when tagged with `@toss`:
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-group-toss
+cd examples/xmtp-coinbase-cdp-group-toss
 # install packages
 yarn
 # generate random xmtp keys (optional)
