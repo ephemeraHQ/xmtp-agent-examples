@@ -1,5 +1,5 @@
 {
-  "name": "@examples/xmtp-gated-group",
+  "name": "@examples/xmtp-nft-gated-group",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-gated-group",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-nft-gated-group",
     "start": "tsx index.ts"
   },
   "dependencies": {

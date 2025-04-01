@@ -911,17 +911,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-gated-group@workspace:examples/xmtp-gated-group":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-gated-group@workspace:examples/xmtp-gated-group"
-  dependencies:
-    "@xmtp/node-sdk": "npm:1.0.5"
-    alchemy-sdk: "npm:^3.0.0"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-gpt@workspace:examples/xmtp-gpt":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gpt@workspace:examples/xmtp-gpt"
@@ -943,6 +932,17 @@ __metadata:
     "@langchain/langgraph": "npm:^0.2.24"
     "@langchain/openai": "npm:^0.3.14"
     "@xmtp/node-sdk": "npm:1.0.5"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
+"@examples/xmtp-nft-gated-group@workspace:examples/xmtp-nft-gated-group":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-nft-gated-group@workspace:examples/xmtp-nft-gated-group"
+  dependencies:
+    "@xmtp/node-sdk": "npm:1.0.5"
+    alchemy-sdk: "npm:^3.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
