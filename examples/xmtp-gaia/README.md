@@ -36,7 +36,7 @@ cd xmtp-agent-examples
 # install packages
 yarn
 # go to the folder
-cd examples/gaia
+cd examples/xmtp-gaia
 # generate random xmtp keys (optional)
 yarn gen:keys
 # run the example

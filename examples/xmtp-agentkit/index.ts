@@ -20,7 +20,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // Storage constants
-const XMTP_STORAGE_DIR = ".wallets/";
+const XMTP_STORAGE_DIR = ".data/";
 
 // Global stores for memory and agent instances
 const memoryStore: Record<string, MemorySaver> = {};
@@ -119,14 +119,7 @@ async function initializeAgent(
   userId: string,
 ): Promise<{ agent: Agent; config: AgentConfig }> {
   try {
-    if (agentStore[userId]) {
-      console.log(`Using existing agent for user: ${userId}`);
-      const agentConfig = {
-        configurable: { thread_id: userId },
-      };
-      return { agent: agentStore[userId], config: agentConfig };
-    }
-
+    // Always create a new agent for each user
     console.log(`Creating new agent for user: ${userId}`);
 
     const llm = new ChatOpenAI({
@@ -174,12 +167,9 @@ async function initializeAgent(
 
     const tools = await getLangChainTools(agentkit);
 
-    if (!memoryStore[userId]) {
-      console.log(`Creating new memory store for user: ${userId}`);
-      memoryStore[userId] = new MemorySaver();
-    } else {
-      console.log(`Using existing memory store for user: ${userId}`);
-    }
+    // Always create a new memory store for each user
+    console.log(`Creating new memory store for user: ${userId}`);
+    memoryStore[userId] = new MemorySaver();
 
     const agentConfig: AgentConfig = {
       configurable: { thread_id: userId },
@@ -249,8 +239,11 @@ async function processMessage(
     );
 
     for await (const chunk of stream) {
-      if ("agent" in chunk) {
-        response += String(chunk.agent.messages[0].content) + "\n";
+      if (chunk && typeof chunk === "object" && "agent" in chunk) {
+        const agentChunk = chunk as {
+          agent: { messages: Array<{ content: unknown }> };
+        };
+        response += String(agentChunk.agent.messages[0].content) + "\n";
       }
     }
 

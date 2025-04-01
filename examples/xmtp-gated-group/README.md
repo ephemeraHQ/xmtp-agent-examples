@@ -108,7 +108,7 @@ cd xmtp-agent-examples
 # install packages
 yarn
 # go to the folder
-cd examples/gated-group
+cd examples/xmtp-gated-group
 # generate random xmtp keys (optional)
 yarn gen:keys
 # run the example
