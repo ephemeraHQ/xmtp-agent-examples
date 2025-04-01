@@ -50,7 +50,7 @@ Example prompts:
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/coinbase-langchain
+cd examples/xmtp-agentkit
 # install packages
 yarn
 # generate random xmtp keys (optional)
