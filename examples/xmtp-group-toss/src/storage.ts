@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { TossStatus, type AgentWalletData, type CoinTossGame } from "./types";
+import { TossStatus, type AgentWalletData, type GroupTossName } from "./types";
 
 const networkId = process.env.NETWORK_ID;
 export const WALLET_STORAGE_DIR = ".data/wallet_data";
@@ -84,7 +84,7 @@ class StorageService {
   /**
    * Save a coin toss game
    */
-  public async saveToss(toss: CoinTossGame): Promise<void> {
+  public async saveToss(toss: GroupTossName): Promise<void> {
     if (!this.initialized) this.initialize();
     await this.saveToFile(TOSS_STORAGE_DIR, toss.id, JSON.stringify(toss));
   }
@@ -92,18 +92,18 @@ class StorageService {
   /**
    * Get a coin toss game by ID
    */
-  public async getToss(tossId: string): Promise<CoinTossGame | null> {
+  public async getToss(tossId: string): Promise<GroupTossName | null> {
     if (!this.initialized) this.initialize();
-    return this.readFromFile<CoinTossGame>(TOSS_STORAGE_DIR, tossId);
+    return this.readFromFile<GroupTossName>(TOSS_STORAGE_DIR, tossId);
   }
 
   /**
    * List all active games
    */
-  public async listActiveTosses(): Promise<CoinTossGame[]> {
+  public async listActiveTosses(): Promise<GroupTossName[]> {
     if (!this.initialized) this.initialize();
 
-    const tosses: CoinTossGame[] = [];
+    const tosses: GroupTossName[] = [];
     try {
       const files = await fs.readdir(TOSS_STORAGE_DIR);
 
@@ -130,7 +130,7 @@ class StorageService {
   /**
    * Update an existing game (alias for saveToss)
    */
-  public async updateToss(toss: CoinTossGame): Promise<void> {
+  public async updateToss(toss: GroupTossName): Promise<void> {
     await this.saveToss(toss);
   }
 

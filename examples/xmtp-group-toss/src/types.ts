@@ -55,7 +55,7 @@ export interface Participant {
   option: string;
 }
 
-export interface CoinTossGame {
+export interface GroupTossName {
   id: string;
   creator: string;
   tossAmount: string;

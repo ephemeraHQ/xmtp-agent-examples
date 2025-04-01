@@ -1,5 +1,5 @@
 {
-  "name": "@examples/gpt",
+  "name": "@examples/xmtp-gated-group",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,12 +7,12 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/gpt",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-gated-group",
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "1.0.2",
-    "openai": "latest"
+    "@xmtp/node-sdk": "1.0.5",
+    "alchemy-sdk": "^3.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

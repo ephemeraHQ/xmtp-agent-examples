@@ -853,7 +853,7 @@ Example package.json for a project that uses XMTP:
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "1.0.2"
+    "@xmtp/node-sdk": "1.0.5"
     /* other dependencies */
   },
   "devDependencies": {

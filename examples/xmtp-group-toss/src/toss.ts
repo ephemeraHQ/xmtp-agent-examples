@@ -3,7 +3,7 @@ import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { WalletService } from "./cdp";
 import { parseNaturalLanguageToss } from "./langchain";
 import { storage } from "./storage";
-import { TossStatus, type AgentConfig, type CoinTossGame } from "./types";
+import { TossStatus, type AgentConfig, type GroupTossName } from "./types";
 
 // Interface for transfer response
 interface Transfer {
@@ -44,7 +44,10 @@ export class TossManager {
     }
   }
 
-  async createGame(creator: string, tossAmount: string): Promise<CoinTossGame> {
+  async createGame(
+    creator: string,
+    tossAmount: string,
+  ): Promise<GroupTossName> {
     console.log(`🎮 CREATING NEW TOSS`);
     console.log(`👤 Creator: ${creator}`);
     console.log(`💰 Toss Amount: ${tossAmount} USDC`);
@@ -60,7 +63,7 @@ export class TossManager {
     const tossWallet = await this.walletService.createWallet(tossId);
     console.log(`✅ Toss wallet created: ${tossWallet.agent_address}`);
 
-    const toss: CoinTossGame = {
+    const toss: GroupTossName = {
       id: tossId,
       creator,
       tossAmount,
@@ -95,7 +98,7 @@ export class TossManager {
     player: string,
     chosenOption: string,
     hasPaid: boolean,
-  ): Promise<CoinTossGame> {
+  ): Promise<GroupTossName> {
     const toss = await storage.getToss(tossId);
     if (!toss) {
       throw new Error("Toss not found");
@@ -150,7 +153,7 @@ export class TossManager {
     return toss;
   }
 
-  async joinGame(tossId: string, player: string): Promise<CoinTossGame> {
+  async joinGame(tossId: string, player: string): Promise<GroupTossName> {
     const toss = await storage.getToss(tossId);
     if (!toss) {
       throw new Error("Toss not found");
@@ -253,7 +256,7 @@ export class TossManager {
   async executeCoinToss(
     tossId: string,
     winningOption: string,
-  ): Promise<CoinTossGame> {
+  ): Promise<GroupTossName> {
     console.log(`🎲 EXECUTING TOSS for Toss: ${tossId}`);
 
     const toss = await storage.getToss(tossId);
@@ -375,11 +378,11 @@ export class TossManager {
     return toss;
   }
 
-  async listActiveTosses(): Promise<CoinTossGame[]> {
+  async listActiveTosses(): Promise<GroupTossName[]> {
     return storage.listActiveTosses();
   }
 
-  async getToss(tossId: string): Promise<CoinTossGame | null> {
+  async getToss(tossId: string): Promise<GroupTossName | null> {
     return storage.getToss(tossId);
   }
 
@@ -420,7 +423,7 @@ export class TossManager {
     }
   }
 
-  async cancelGame(tossId: string): Promise<CoinTossGame> {
+  async cancelGame(tossId: string): Promise<GroupTossName> {
     const toss = await storage.getToss(tossId);
     if (!toss) {
       throw new Error("Toss not found");
@@ -448,7 +451,7 @@ export class TossManager {
     naturalLanguagePrompt: string,
     agent: ReturnType<typeof createReactAgent>,
     agentConfig: AgentConfig,
-  ): Promise<CoinTossGame> {
+  ): Promise<GroupTossName> {
     console.log(`🎲 CREATING TOSS FROM NATURAL LANGUAGE PROMPT`);
     console.log(`👤 Creator: ${creator}`);
     console.log(`💬 Prompt: "${naturalLanguagePrompt}"`);

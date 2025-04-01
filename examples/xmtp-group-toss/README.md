@@ -1,4 +1,4 @@
-# Cointoss Agent
+# Group Toss Agent
 
 A coin toss agent built using CDP AgentKit that operates over the XMTP messaging protocol, enabling group coin toss on custom topics.
 
@@ -87,7 +87,7 @@ The agent responds to commands in group chats when tagged with `@toss`:
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/cointoss
+cd examples/xmtp-group-toss
 # install packages
 yarn
 # generate random xmtp keys (optional)

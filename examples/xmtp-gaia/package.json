@@ -1,17 +1,18 @@
 {
-  "name": "@examples/grok",
-  "version": "0.0.0",
+  "name": "@examples/xmtp-gaia",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/grok",
-    "start": "tsx index.ts"
+    "lint": "cd ../.. && yarn eslint examples/xmtp-gaia",
+    "start": "tsx  index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "1.0.2"
+    "@xmtp/node-sdk": "1.0.5",
+    "openai": "latest"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

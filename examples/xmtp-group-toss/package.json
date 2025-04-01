@@ -1,14 +1,14 @@
 {
-  "name": "cointoss",
+  "name": "@examples/xmtp-group-toss",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "clean": "cd ../../ && rm -rf examples/cointoss/.data",
+    "clean": "cd ../../ && rm -rf examples/xmtp-group-toss/.data",
     "dev": "tsx --watch src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/cointoss",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-group-toss",
     "start": "tsx src/index.ts"
   },
   "dependencies": {
@@ -17,7 +17,7 @@
     "@langchain/core": "^0.3.20",
     "@langchain/langgraph": "^0.2.24",
     "@langchain/openai": "^0.3.14",
-    "@xmtp/node-sdk": "1.0.2"
+    "@xmtp/node-sdk": "1.0.5"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

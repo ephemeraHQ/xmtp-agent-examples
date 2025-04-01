@@ -1,0 +1,29 @@
+{
+  "name": "@examples/xmtp-agentkit",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-agentkit",
+    "start": "tsx  index.ts"
+  },
+  "dependencies": {
+    "@coinbase/agentkit": "latest",
+    "@coinbase/agentkit-langchain": "latest",
+    "@langchain/core": "^0.3.19",
+    "@langchain/langgraph": "^0.2.21",
+    "@langchain/openai": "^0.3.14",
+    "@xmtp/node-sdk": "1.0.5",
+    "dotenv": "^16.4.5",
+    "uint8arrays": "^5.1.0",
+    "viem": "^2.7.15",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
