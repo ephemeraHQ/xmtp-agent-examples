@@ -15,6 +15,12 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 > [!NOTE]
 > See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
 
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
+
 ### Environment variables
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
@@ -33,6 +39,38 @@ yarn gen:keys <name>
 
 > [!WARNING]
 > Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
+
+### Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```
+
+### Work in local network
+
+`Dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself, so it's faster for development purposes.
+
+- 1. Install docker
+- 2. Start the XMTP service and database
+
+```bash
+./dev/up
+```
+
+- 3. Change the .env file to use the local network
+
+```bash
+XMTP_ENV = local
+```
 
 ### Basic usage
 
@@ -72,44 +110,8 @@ main().catch(console.error);
 
 See all the examples [here](/examples).
 
-## Development
-
-As a starter you can run the `gm` example by following these steps:
-
-### Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-# install packages
-yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
-```
-
 ### Web inbox
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
 ![](/media/chat.png)
-
-### Work in local network
-
-`Dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself, so it's faster for development purposes.
-
-- 1. Install docker
-- 2. Start the XMTP service and database
-
-```bash
-./dev/up
-```
-
-- 3. Change the .env file to use the local network
-
-```bash
-XMTP_ENV = local
-```
