@@ -1,4 +1,5 @@
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
+import { logAgentDetails } from "@utils";
 import {
   Client,
   type Conversation,
@@ -37,9 +38,7 @@ export async function initializeXmtpClient() {
   console.log("Syncing conversations...");
   await client.conversations.sync();
 
-  console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
+  logAgentDetails(address, env);
 
   return client;
 }
