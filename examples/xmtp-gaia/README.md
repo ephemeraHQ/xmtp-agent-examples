@@ -31,11 +31,11 @@ GAIA_MODEL_NAME= # Model name running in your Gaia node or a public node, ex: ll
 You can generate random xmtp keys with the following command:
 
 ```bash
-yarn gen:keys <name>
+yarn gen:keys
 ```
 
 > [!WARNING]
-> Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
+> Running the `gen:keys` command will append keys to your existing `.env` file.
 
 ### Run the agent
 

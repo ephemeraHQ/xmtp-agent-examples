@@ -196,7 +196,7 @@ Always use the built-in key generation command instead of creating your own scri
 yarn gen:keys
 
 # Generate keys for a specific user
-yarn gen:keys <name>
+yarn gen:keys
 ```
 
 This command will:
