@@ -22,7 +22,7 @@ To run your XMTP agent, you must create a `.env` file with the following variabl
 ```bash
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # a second random 32 bytes encryption key for local db encryption
-XMTP_ENV= # local, dev, production
+XMTP_ENV=dev # local, dev, production
 GAIA_API_KEY= # Your API key from https://gaianet.ai
 GAIA_NODE_URL= # Your custom Gaia node URL or a public node, ex: https://llama8b.gaia.domains/v1
 GAIA_MODEL_NAME= # Model name running in your Gaia node or a public node, ex: llama

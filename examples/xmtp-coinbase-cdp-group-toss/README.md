@@ -31,7 +31,7 @@ NETWORK_ID=base-sepolia # base-mainnet or others
 OPENAI_API_KEY= # the OpenAI API key
 CDP_API_KEY_NAME= # the name of the CDP API key
 CDP_API_KEY_PRIVATE_KEY= # the private key for the CDP API key
-XMTP_ENV=local # local, dev, production
+XMTP_ENV=dev # local, dev, production
 ```
 
 You can generate random xmtp keys with the following command:
