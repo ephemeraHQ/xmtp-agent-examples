@@ -29,8 +29,7 @@ yarn gen:keys <name>
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples
-cd gpt
+cd examples/xmtp-gpt
 # install packages
 yarn
 # generate random xmtp keys (optional)
