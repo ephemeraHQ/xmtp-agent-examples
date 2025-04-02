@@ -19,7 +19,7 @@ export async function initializeXmtpClient() {
     );
   }
   // Create the signer using viem
-  const signer = createSigner(WALLET_KEY as `0x${string}`); // TODO: Fix this
+  const signer = createSigner(WALLET_KEY);
   const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
   const identifier = await signer.getIdentifier();
