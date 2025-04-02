@@ -1,12 +1,8 @@
 # Transaction agent example
 
-This example uses [content-type-transaction-reference](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-transaction-reference) and [content-type-wallet-send-calls](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-wallet-send-calls).
+This example uses [content-type-transaction-reference]() and [content-type-wallet-send-calls]().
 
-> Testing on https://xmtp.heyelsa.ai/conversations/0edf5b5bf1f5057b41a172cc55f479d3
-
-> chain-calls-via-wallet-sendcalls [XIP](https://community.xmtp.org/t/xip-59-trigger-on-chain-calls-via-wallet-sendcalls/889)
-
-![Transaction agent example](./screenshot.png)
+![](./screenshot.png)
 
 ## Getting started
 
@@ -38,11 +34,11 @@ XMTP_ENV=local # local, dev, production
 You can generate random xmtp keys with the following command:
 
 ```tsx
-yarn gen:keys <name>
+yarn gen:keys
 ```
 
 > [!WARNING]
-> Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
+> Running the `gen:keys` command will append keys to your existing `.env` file.
 
 ### Run the agent
 
