@@ -30,7 +30,7 @@ GAIA_MODEL_NAME= # Model name running in your Gaia node or a public node, ex: ll
 
 You can generate random xmtp keys with the following command:
 
-```tsx
+```bash
 yarn gen:keys <name>
 ```
 

@@ -19,7 +19,7 @@ To create a gated group chat using XMTP, you will need an admin bot within the g
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
-```tsx
+```bash
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV= # local, dev, production
@@ -28,7 +28,7 @@ ALCHEMY_API_KEY= # alchemy api to check NFT ownership
 
 You can generate random xmtp keys with the following command:
 
-```tsx
+```bash
 yarn gen:keys <name>
 ```
 
@@ -62,7 +62,7 @@ yarn dev
 
 - `/create` - Creates a new gated group
 
-```tsx
+```bash
 if (message.content === "/create") {
   console.log("Creating group");
   const group = await client.conversations.newGroup([]);
@@ -78,7 +78,7 @@ if (message.content === "/create") {
 
 - `/add <group_id> <wallet_address>` - Adds a wallet to an existing group (if they own the required NFT)
 
-```tsx
+```bash
 // Handle /add command
 if (message.content.startsWith("/add")) {
   const groupId = message.content.split(" ")[1];
@@ -101,7 +101,7 @@ if (message.content.startsWith("/add")) {
 
 The bot checks if a wallet owns the required NFT using Alchemy's API:
 
-```tsx
+```bash
 async function checkNft(
   walletAddress: string,
   collectionSlug: string,

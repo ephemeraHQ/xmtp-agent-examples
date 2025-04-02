@@ -25,7 +25,7 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
-```tsx
+```bash
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV= # local, dev, production
@@ -33,7 +33,7 @@ XMTP_ENV= # local, dev, production
 
 You can generate random xmtp keys with the following command:
 
-```tsx
+```bash
 yarn gen:keys <name>
 ```
 
