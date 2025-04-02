@@ -68,24 +68,6 @@ Example prompts:
 - "Deploy an NFT that will go super viral!"
 - "Deploy an ERC-20 token with total supply 1 billion"
 
-## Run the agent
-
-This will install the dependencies and build the packages locally. The chatbot example uses the local `@coinbase/agentkit-langchain`, `@coinbase/agentkit`, and `@xmtp/node-sdk` packages. If you make changes to the packages, you can run `npm run build` from root again to rebuild the packages, and your changes will be reflected in the chatbot example.
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-cd examples/xmtp-coinbase-agentkit
-# install packages
-yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
-```
-
 ## License
 
 Apache-2.0
