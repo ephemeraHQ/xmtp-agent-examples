@@ -11,11 +11,11 @@ interface User {
   wallet: ReturnType<typeof createWalletClient>;
 }
 
-export const createUser = (key: `0x${string}`): User => {
-  const accountKey = key;
-  const account = privateKeyToAccount(accountKey);
+export const createUser = (key: string): User => {
+  const sanitizedKey = key.startsWith("0x") ? key : `0x${key}`;
+  const account = privateKeyToAccount(sanitizedKey as `0x${string}`);
   return {
-    key: accountKey,
+    key: sanitizedKey as `0x${string}`,
     account,
     wallet: createWalletClient({
       account,
