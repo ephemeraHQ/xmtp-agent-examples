@@ -1,38 +1,5 @@
 import type { Wallet, WalletData } from "@coinbase/coinbase-sdk";
 
-export function validateEnvironment(): {
-  coinbaseApiKeyName: string;
-  coinbaseApiKeyPrivateKey: string;
-  networkId: string;
-} {
-  const requiredVars = [
-    "CDP_API_KEY_NAME",
-    "CDP_API_KEY_PRIVATE_KEY",
-    "WALLET_KEY",
-    "XMTP_ENV",
-    "OPENAI_API_KEY",
-    "ENCRYPTION_KEY",
-  ];
-
-  const missing = requiredVars.filter((v) => !process.env[v]);
-
-  if (missing.length) {
-    console.error("Missing env vars:", missing.join(", "));
-    process.exit(1);
-  }
-
-  // Replace \\n with actual newlines if present in the private key
-  if (process.env.CDP_API_KEY_PRIVATE_KEY) {
-    process.env.CDP_API_KEY_PRIVATE_KEY =
-      process.env.CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n");
-  }
-  return {
-    coinbaseApiKeyName: process.env.CDP_API_KEY_NAME as string,
-    coinbaseApiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY as string,
-    networkId: process.env.NETWORK_ID as string,
-  };
-}
-
 export const HELP_MESSAGE = `Available commands:
 
 @toss <natural language toss> - Create a toss using natural language

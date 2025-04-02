@@ -30,3 +30,18 @@ export const logAgentDetails = (address: string, env: string) => {
 
   console.log(box);
 };
+
+export function validateEnvironment(vars: string[]): Record<string, string> {
+  const requiredVars = vars;
+  const missing = requiredVars.filter((v) => !process.env[v]);
+
+  if (missing.length) {
+    console.error("Missing env vars:", missing.join(", "));
+    process.exit(1);
+  }
+
+  return requiredVars.reduce<Record<string, string>>((acc, key) => {
+    acc[key] = process.env[key] as string;
+    return acc;
+  }, {});
+}

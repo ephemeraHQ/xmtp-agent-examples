@@ -12,10 +12,9 @@ interface User {
 }
 
 export const createUser = (key: string): User => {
-  const sanitizedKey = key.startsWith("0x") ? key : `0x${key}`;
-  const account = privateKeyToAccount(sanitizedKey as `0x${string}`);
+  const account = privateKeyToAccount(key as `0x${string}`);
   return {
-    key: sanitizedKey as `0x${string}`,
+    key: key as `0x${string}`,
     account,
     wallet: createWalletClient({
       account,
@@ -25,8 +24,9 @@ export const createUser = (key: string): User => {
   };
 };
 
-export const createSigner = (key: `0x${string}`): Signer => {
-  const user = createUser(key);
+export const createSigner = (key: string): Signer => {
+  const sanitizedKey = key.startsWith("0x") ? key : `0x${key}`;
+  const user = createUser(sanitizedKey);
   return {
     type: "EOA",
     getIdentifier: () => ({

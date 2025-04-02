@@ -1,5 +1,5 @@
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
-import { logAgentDetails } from "@utils";
+import { logAgentDetails, validateEnvironment } from "@utils";
 import {
   Client,
   type Conversation,
@@ -8,17 +8,16 @@ import {
 } from "@xmtp/node-sdk";
 import { XMTP_STORAGE_DIR } from "./storage";
 
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+  "WALLET_KEY",
+  "ENCRYPTION_KEY",
+  "XMTP_ENV",
+]);
+
 /**
  * Initialize the XMTP client
  */
 export async function initializeXmtpClient() {
-  const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = process.env;
-
-  if (!WALLET_KEY || !ENCRYPTION_KEY || !XMTP_ENV) {
-    throw new Error(
-      "Some environment variables are not set. Please check your .env file.",
-    );
-  }
   // Create the signer using viem
   const signer = createSigner(WALLET_KEY);
   const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
@@ -26,19 +25,16 @@ export async function initializeXmtpClient() {
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
 
-  // Set the environment to dev or production
-  const env: XmtpEnv = XMTP_ENV as XmtpEnv;
-
-  console.log(`Creating XMTP client on the '${env}' network...`);
+  console.log(`Creating XMTP client on the '${XMTP_ENV}' network...`);
   const client = await Client.create(signer, encryptionKey, {
-    env,
-    dbPath: XMTP_STORAGE_DIR + `/${env}-${address}`,
+    env: XMTP_ENV as XmtpEnv,
+    dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
   });
 
   console.log("Syncing conversations...");
   await client.conversations.sync();
 
-  logAgentDetails(address, env);
+  logAgentDetails(address, XMTP_ENV);
 
   return client;
 }

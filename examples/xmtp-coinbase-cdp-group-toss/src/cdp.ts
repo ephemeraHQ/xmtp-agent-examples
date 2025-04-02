@@ -5,21 +5,26 @@ import {
   type Trade,
   type Transfer,
 } from "@coinbase/coinbase-sdk";
+import { validateEnvironment } from "@utils";
 import { isAddress } from "viem";
 import { storage } from "./storage";
-import { validateEnvironment, type AgentWalletData } from "./types";
+import { type AgentWalletData } from "./types";
 
-const { coinbaseApiKeyName, coinbaseApiKeyPrivateKey, networkId } =
-  validateEnvironment();
+const { CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY, NETWORK_ID } =
+  validateEnvironment([
+    "CDP_API_KEY_NAME",
+    "CDP_API_KEY_PRIVATE_KEY",
+    "NETWORK_ID",
+  ]);
 
 // Initialize Coinbase SDK
 function initializeCoinbaseSDK(): boolean {
   try {
     Coinbase.configure({
-      apiKeyName: coinbaseApiKeyName,
-      privateKey: coinbaseApiKeyPrivateKey,
+      apiKeyName: CDP_API_KEY_NAME,
+      privateKey: CDP_API_KEY_PRIVATE_KEY,
     });
-    console.log("Coinbase SDK initialized successfully, network:", networkId);
+    console.log("Coinbase SDK initialized successfully, network:", NETWORK_ID);
     return true;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -48,11 +53,11 @@ export class WalletService {
       }
 
       // Log the network we're using
-      console.log(`Creating wallet on network: ${networkId}`);
+      console.log(`Creating wallet on network: ${NETWORK_ID}`);
 
       // Create wallet
       const wallet = await Wallet.create({
-        networkId: networkId,
+        networkId: NETWORK_ID,
       }).catch((err: unknown) => {
         const errorDetails =
           typeof err === "object" ? JSON.stringify(err, null, 2) : err;

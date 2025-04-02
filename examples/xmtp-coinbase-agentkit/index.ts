@@ -13,8 +13,15 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
+import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type DecodedMessage, type XmtpEnv } from "@xmtp/node-sdk";
 import * as dotenv from "dotenv";
+
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+  "WALLET_KEY",
+  "ENCRYPTION_KEY",
+  "XMTP_ENV",
+]);
 
 // Initialize environment variables
 dotenv.config();
@@ -81,20 +88,13 @@ function getWalletData(userId: string): string | null {
  * @returns An initialized XMTP Client instance
  */
 async function initializeXmtpClient() {
-  const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = process.env;
-
-  if (!WALLET_KEY || !ENCRYPTION_KEY || !XMTP_ENV) {
-    throw new Error(
-      "Some environment variables are not set. Please check your .env file.",
-    );
-  }
-
   const signer = createSigner(WALLET_KEY);
   const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-  const env: XmtpEnv = XMTP_ENV as XmtpEnv;
 
-  console.log(`Creating XMTP client on the '${env}' network...`);
-  const client = await Client.create(signer, encryptionKey, { env });
+  console.log(`Creating XMTP client on the '${XMTP_ENV}' network...`);
+  const client = await Client.create(signer, encryptionKey, {
+    env: XMTP_ENV as XmtpEnv,
+  });
 
   console.log("Syncing conversations...");
   await client.conversations.sync();
@@ -102,9 +102,7 @@ async function initializeXmtpClient() {
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
 
-  console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
+  logAgentDetails(address, XMTP_ENV);
 
   return client;
 }
@@ -324,45 +322,19 @@ async function startMessageListener(client: Client) {
 }
 
 /**
- * Validates that required environment variables are set.
- */
-function validateEnvironment(): void {
-  const missingVars: string[] = [];
-
-  const requiredVars = [
-    "OPENAI_API_KEY",
-    "CDP_API_KEY_NAME",
-    "CDP_API_KEY_PRIVATE_KEY",
-    "WALLET_KEY",
-    "ENCRYPTION_KEY",
-  ];
-
-  requiredVars.forEach((varName) => {
-    if (!process.env[varName]) {
-      missingVars.push(varName);
-    }
-  });
-
-  if (missingVars.length > 0) {
-    console.error("Error: Required environment variables are not set");
-    missingVars.forEach((varName) => {
-      console.error(`${varName}=your_${varName.toLowerCase()}_here`);
-    });
-    process.exit(1);
-  }
-
-  if (!process.env.NETWORK_ID) {
-    console.warn("Warning: NETWORK_ID not set, defaulting to base-sepolia");
-  }
-}
-
-/**
  * Main function to start the chatbot.
  */
 async function main(): Promise<void> {
   console.log("Initializing Agent on XMTP...");
 
-  validateEnvironment();
+  validateEnvironment([
+    "OPENAI_API_KEY",
+    "CDP_API_KEY_NAME",
+    "CDP_API_KEY_PRIVATE_KEY",
+    "WALLET_KEY",
+    "ENCRYPTION_KEY",
+    "XMTP_ENV",
+  ]);
   ensureLocalStorage();
 
   const xmtpClient = await initializeXmtpClient();

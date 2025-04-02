@@ -10,8 +10,8 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
+import { validateEnvironment } from "@utils";
 import {
-  validateEnvironment,
   type AgentConfig,
   type ParsedToss,
   type StreamChunk,
@@ -75,22 +75,24 @@ export async function initializeAgent(inboxId: string) {
       modelName: "gpt-4o",
     });
 
-    const { coinbaseApiKeyName, coinbaseApiKeyPrivateKey } =
-      validateEnvironment();
+    const { CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY } = validateEnvironment([
+      "CDP_API_KEY_NAME",
+      "CDP_API_KEY_PRIVATE_KEY",
+    ]);
 
     const agentkit = await AgentKit.from({
-      cdpApiKeyName: coinbaseApiKeyName,
-      cdpApiKeyPrivateKey: coinbaseApiKeyPrivateKey,
+      cdpApiKeyName: CDP_API_KEY_NAME,
+      cdpApiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY,
       actionProviders: [
         walletActionProvider(),
         erc20ActionProvider(),
         cdpApiActionProvider({
-          apiKeyName: coinbaseApiKeyName,
-          apiKeyPrivateKey: coinbaseApiKeyPrivateKey,
+          apiKeyName: CDP_API_KEY_NAME,
+          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY,
         }),
         cdpWalletActionProvider({
-          apiKeyName: coinbaseApiKeyName,
-          apiKeyPrivateKey: coinbaseApiKeyPrivateKey,
+          apiKeyName: CDP_API_KEY_NAME,
+          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY,
         }),
       ],
     });

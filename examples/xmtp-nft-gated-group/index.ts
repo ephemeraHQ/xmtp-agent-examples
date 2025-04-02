@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
+import { logAgentDetails, validateEnvironment } from "@utils";
 import {
   Client,
   IdentifierKind,
@@ -8,10 +9,16 @@ import {
 } from "@xmtp/node-sdk";
 import { Alchemy, Network } from "alchemy-sdk";
 
-const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
-if (!ALCHEMY_API_KEY) {
-  throw new Error("ALCHEMY_API_KEY must be set");
-}
+/* Get the wallet key associated to the public key of
+ * the agent and the encryption key for the local db
+ * that stores your agent's messages */
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, ALCHEMY_API_KEY } =
+  validateEnvironment([
+    "WALLET_KEY",
+    "ENCRYPTION_KEY",
+    "XMTP_ENV",
+    "ALCHEMY_API_KEY",
+  ]);
 
 const NFT_COLLECTION_SLUG = "XMTPeople";
 const settings = {
@@ -19,30 +26,14 @@ const settings = {
   network: Network.BASE_MAINNET,
 };
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY } = process.env;
-
-if (!WALLET_KEY) {
-  throw new Error("WALLET_KEY must be set");
-}
-
-if (!ENCRYPTION_KEY) {
-  throw new Error("ENCRYPTION_KEY must be set");
-}
-
 /* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-/* Set the environment to local, dev or production */
-const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
-
 async function main() {
-  console.log(`Creating client on the '${env}' network...`);
+  console.log(`Creating client on the '${XMTP_ENV}' network...`);
   const client = await Client.create(signer, encryptionKey, {
-    env,
+    env: XMTP_ENV as XmtpEnv,
   });
 
   console.log("Syncing conversations...");
@@ -50,10 +41,7 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
-
-  console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
+  logAgentDetails(address, XMTP_ENV);
 
   console.log("Waiting for messages...");
   const stream = client.conversations.streamAllMessages();

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
+import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
 
@@ -9,35 +10,18 @@ import OpenAI from "openai";
 const {
   WALLET_KEY,
   ENCRYPTION_KEY,
+  XMTP_ENV,
   GAIA_NODE_URL,
   GAIA_API_KEY,
   GAIA_MODEL_NAME,
-} = process.env;
-
-/* Check if the environment variables are set */
-if (!WALLET_KEY) {
-  throw new Error("WALLET_KEY must be set");
-}
-
-/* Check if the encryption key is set */
-if (!ENCRYPTION_KEY) {
-  throw new Error("ENCRYPTION_KEY must be set");
-}
-
-/* Check if the OpenAI API key is set */
-if (!GAIA_API_KEY) {
-  throw new Error("GAIA_API_KEY must be set");
-}
-
-/* Check if the Gaia node's base URL is set */
-if (!GAIA_NODE_URL) {
-  throw new Error("GAIA_NODE_URL must be set");
-}
-
-/* Check if the the model name for the Gaia node is set */
-if (!GAIA_MODEL_NAME) {
-  throw new Error("GAIA_MODEL_NAME must be set");
-}
+} = validateEnvironment([
+  "WALLET_KEY",
+  "ENCRYPTION_KEY",
+  "XMTP_ENV",
+  "GAIA_NODE_URL",
+  "GAIA_API_KEY",
+  "GAIA_MODEL_NAME",
+]);
 
 /* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(WALLET_KEY);
@@ -49,17 +33,14 @@ const openai = new OpenAI({
   apiKey: GAIA_API_KEY,
 });
 
-/* Set the environment to local, dev or production */
-const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
-
 /**
  * Main function to run the agent
  */
 async function main() {
-  console.log(`Creating client on the '${env}' network...`);
+  console.log(`Creating client on the '${XMTP_ENV}' network...`);
   /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, {
-    env,
+    env: XMTP_ENV as XmtpEnv,
   });
 
   console.log("Syncing conversations...");
@@ -68,9 +49,7 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
-  console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
+  logAgentDetails(address, XMTP_ENV);
 
   console.log("Waiting for messages...");
   /* Stream all messages from the network */
@@ -104,7 +83,7 @@ async function main() {
       /* Get the AI response */
       const completion = await openai.chat.completions.create({
         messages: [{ role: "user", content: message.content as string }],
-        model: GAIA_MODEL_NAME as string,
+        model: GAIA_MODEL_NAME,
       });
 
       /* Get the AI response */
