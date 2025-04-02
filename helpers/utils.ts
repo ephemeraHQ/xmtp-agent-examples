@@ -19,13 +19,19 @@ export const logAgentDetails = (address: string, env: string) => {
   const url = `http://xmtp.chat/dm/${address}?env=${env}`;
   const maxLength = Math.max(url.length + 12, address.length + 15, 30);
 
+  // Get the current folder name from the process working directory
+  const currentFolder = process.cwd().split("/").pop() || "";
+  const dbPath = `../${currentFolder}/xmtp-${env}-${address}.db3`;
+  const maxLengthWithDbPath = Math.max(maxLength, dbPath.length + 15);
+
   const box = [
-    `╔${createLine(maxLength)}╗`,
-    `║   ${centerText("Agent Details", maxLength - 6)} ║`,
-    `╟${createLine(maxLength, "─")}╢`,
-    `║ 📍 Address: ${address}${" ".repeat(maxLength - address.length - 15)}║`,
-    `║ 🔗 URL: ${url}${" ".repeat(maxLength - url.length - 11)}║`,
-    `╚${createLine(maxLength)}╝`,
+    `╔${createLine(maxLengthWithDbPath)}╗`,
+    `║   ${centerText("Agent Details", maxLengthWithDbPath - 6)} ║`,
+    `╟${createLine(maxLengthWithDbPath, "─")}╢`,
+    `║ 📍 Address: ${address}${" ".repeat(maxLengthWithDbPath - address.length - 15)}║`,
+    `║ 📂 DB Path: ${dbPath}${" ".repeat(maxLengthWithDbPath - dbPath.length - 15)}║`,
+    `║ 🔗 URL: ${url}${" ".repeat(maxLengthWithDbPath - url.length - 11)}║`,
+    `╚${createLine(maxLengthWithDbPath)}╝`,
   ].join("\n");
 
   console.log(box);
