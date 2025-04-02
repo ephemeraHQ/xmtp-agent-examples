@@ -72,7 +72,7 @@ yarn dev
 XMTP_ENV = local
 ```
 
-### Basic usage
+## Basic usage
 
 These are the steps to initialize the XMTP listener and send messages.
 
@@ -110,7 +110,7 @@ main().catch(console.error);
 
 See all the examples [here](/examples).
 
-### Web inbox
+## Web inbox
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
