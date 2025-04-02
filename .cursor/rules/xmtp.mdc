@@ -874,11 +874,11 @@ Example package.json for a project that uses XMTP:
 
 ### Web inbox
 
-Interact with the XMTP network using [https://xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
 ### Work in local network
 
-`Dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself, so it's faster for development purposes.
+`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
 
 - 1. Install docker
 - 2. Start the XMTP service and database

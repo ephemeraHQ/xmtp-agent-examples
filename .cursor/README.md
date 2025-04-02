@@ -873,7 +873,7 @@ Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the officia
 
 ### Work in local network
 
-`Dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself, so it's faster for development purposes.
+`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
 
 - 1. Install docker
 - 2. Start the XMTP service and database
