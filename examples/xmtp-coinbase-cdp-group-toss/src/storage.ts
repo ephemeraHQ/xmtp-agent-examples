@@ -1,9 +1,11 @@
 import { existsSync, mkdirSync } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
+import { validateEnvironment } from "@utils";
 import { TossStatus, type AgentWalletData, type GroupTossName } from "./types";
 
-const networkId = process.env.NETWORK_ID;
+const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);
+
 export const WALLET_STORAGE_DIR = ".data/wallet_data";
 export const XMTP_STORAGE_DIR = ".data/xmtp";
 export const TOSS_STORAGE_DIR = ".data/tosses";
@@ -44,7 +46,7 @@ class StorageService {
     identifier: string,
     data: string,
   ): Promise<boolean> {
-    const toRead = `${identifier}-${networkId}`;
+    const toRead = `${identifier}-${NETWORK_ID}`;
     try {
       const filePath = path.join(directory, `${toRead}.json`);
       await fs.writeFile(filePath, data);
@@ -63,7 +65,7 @@ class StorageService {
     identifier: string,
   ): Promise<T | null> {
     try {
-      const key = `${identifier}-${networkId}`;
+      const key = `${identifier}-${NETWORK_ID}`;
       const filePath = path.join(directory, `${key}.json`);
       const data = await fs.readFile(filePath, "utf-8");
       return JSON.parse(data) as T;
@@ -109,7 +111,7 @@ class StorageService {
 
       for (const file of files) {
         if (file.endsWith(".json")) {
-          const tossId = file.replace(`-${networkId}.json`, "");
+          const tossId = file.replace(`-${NETWORK_ID}.json`, "");
           const toss = await this.getToss(tossId);
           if (
             toss &&

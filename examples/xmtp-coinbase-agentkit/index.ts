@@ -17,10 +17,20 @@ import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type DecodedMessage, type XmtpEnv } from "@xmtp/node-sdk";
 import * as dotenv from "dotenv";
 
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+const {
+  WALLET_KEY,
+  ENCRYPTION_KEY,
+  XMTP_ENV,
+  CDP_API_KEY_NAME,
+  CDP_API_KEY_PRIVATE_KEY,
+  NETWORK_ID,
+} = validateEnvironment([
   "WALLET_KEY",
   "ENCRYPTION_KEY",
   "XMTP_ENV",
+  "CDP_API_KEY_NAME",
+  "CDP_API_KEY_PRIVATE_KEY",
+  "NETWORK_ID",
 ]);
 
 // Initialize environment variables
@@ -130,13 +140,10 @@ async function initializeAgent(
     );
 
     const config = {
-      apiKeyName: process.env.CDP_API_KEY_NAME,
-      apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-        /\\n/g,
-        "\n",
-      ),
+      apiKeyName: CDP_API_KEY_NAME,
+      apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
       cdpWalletData: storedWalletData || undefined,
-      networkId: process.env.NETWORK_ID || "base-sepolia",
+      networkId: NETWORK_ID || "base-sepolia",
     };
 
     const walletProvider = await CdpWalletProvider.configureWithWallet(config);
@@ -147,18 +154,12 @@ async function initializeAgent(
         walletActionProvider(),
         erc20ActionProvider(),
         cdpApiActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n",
-          ),
+          apiKeyName: CDP_API_KEY_NAME,
+          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
         }),
         cdpWalletActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n",
-          ),
+          apiKeyName: CDP_API_KEY_NAME,
+          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
         }),
       ],
     });

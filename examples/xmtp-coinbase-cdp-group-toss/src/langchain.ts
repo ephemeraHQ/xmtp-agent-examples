@@ -18,6 +18,11 @@ import {
   type TossJsonResponse,
 } from "./types";
 
+const { CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY } = validateEnvironment([
+  "CDP_API_KEY_NAME",
+  "CDP_API_KEY_PRIVATE_KEY",
+]);
+
 // Constants for default values
 const DEFAULT_OPTIONS = ["yes", "no"];
 const DEFAULT_AMOUNT = "0.1";
@@ -74,11 +79,6 @@ export async function initializeAgent(inboxId: string) {
     const llm = new ChatOpenAI({
       modelName: "gpt-4o",
     });
-
-    const { CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY } = validateEnvironment([
-      "CDP_API_KEY_NAME",
-      "CDP_API_KEY_PRIVATE_KEY",
-    ]);
 
     const agentkit = await AgentKit.from({
       cdpApiKeyName: CDP_API_KEY_NAME,

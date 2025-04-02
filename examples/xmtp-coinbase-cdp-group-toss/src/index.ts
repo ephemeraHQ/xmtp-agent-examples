@@ -1,18 +1,9 @@
 import "dotenv/config";
-import { validateEnvironment } from "@utils";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { handleCommand } from "./commands";
 import { initializeAgent } from "./langchain";
 import { TossManager } from "./toss";
 import { initializeXmtpClient, startMessageListener } from "./xmtp";
-
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = process.env;
-
-if (!WALLET_KEY || !ENCRYPTION_KEY || !XMTP_ENV) {
-  throw new Error(
-    "Some environment variables are not set. Please check your .env file.",
-  );
-}
 
 async function handleMessage(
   message: DecodedMessage,
@@ -43,16 +34,6 @@ async function handleMessage(
 }
 async function main(): Promise<void> {
   console.log("Starting agent...");
-
-  // Validate environment variables
-  validateEnvironment([
-    "OPENAI_API_KEY",
-    "CDP_API_KEY_NAME",
-    "CDP_API_KEY_PRIVATE_KEY",
-    "WALLET_KEY",
-    "ENCRYPTION_KEY",
-    "XMTP_ENV",
-  ]);
 
   // Initialize XMTP client
   const xmtpClient = await initializeXmtpClient();
