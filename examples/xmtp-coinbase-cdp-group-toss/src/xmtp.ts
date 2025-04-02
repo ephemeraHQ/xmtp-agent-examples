@@ -70,7 +70,12 @@ export async function startMessageListener(
     }
     // Extract command from the message content
     const command = extractCommand(message.content as string);
-    if (!command) continue; // No command found, skip
+    if (!command) {
+      console.log(
+        `Received message: ${message.content as string} by ${message.senderInboxId}`,
+      );
+      continue; // No command found, skip
+    }
 
     console.log(
       `Received message: ${message.content as string} by ${message.senderInboxId}`,
