@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import open from "open";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -36,9 +37,11 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
-  console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
+  const chatUrl = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`Agent initialized on ${address}\nSend a message on ${chatUrl}`);
+
+  // Open the chat URL in the browser
+  await open(chatUrl);
 
   console.log("Waiting for messages...");
   /* Stream all messages from the network */

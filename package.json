@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@xmtp/node-sdk": "1.0.5",
+    "open": "^10.1.0",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"
   },

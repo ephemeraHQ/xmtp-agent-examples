@@ -1,8 +1,15 @@
-# Coinbase-Langchain
+# CDP AgentKit LangChain XMTP Extension Examples - Chatbot Typescript
 
-A DeFi agent built using Langchain and powered by CDP SDK, operating over the XMTP messaging protocol.
+This example demonstrates an agent setup on XMTP Network with access to the full set of CDP AgentKit actions.
 
 ![](./screenshot.png)
+
+## Ask the chatbot to engage in the Web3 ecosystem!
+
+- "Transfer a portion of your ETH to a random address"
+- "What is the price of BTC?"
+- "Deploy an NFT that will go super viral!"
+- "Deploy an ERC-20 token with total supply 1 billion"
 
 ## Prerequisites
 
@@ -45,6 +52,8 @@ Example prompts:
 
 ## Run the agent
 
+This will install the dependencies and build the packages locally. The chatbot example uses the local `@coinbase/agentkit-langchain`, `@coinbase/agentkit`, and `@xmtp/node-sdk` packages. If you make changes to the packages, you can run `npm run build` from root again to rebuild the packages, and your changes will be reflected in the chatbot example.
+
 ```bash
 # git clone repo
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
@@ -58,3 +67,7 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
+
+## License
+
+Apache-2.0
