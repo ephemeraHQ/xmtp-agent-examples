@@ -37,14 +37,15 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
-  const chatUrl = `http://xmtp.chat/dm/${address}?env=${env}`;
-  console.log(`Agent initialized on ${address}\nSend a message on ${chatUrl}`);
+  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`Agent initialized on ${address}\nSend a message on ${url}`);
 
-  // Open the chat URL in the browser
-  await open(chatUrl);
+  // Only open the URL if we're in a terminal environment
+  if (process.stdout.isTTY) {
+    await open(url);
+  }
 
   console.log("Waiting for messages...");
-  /* Stream all messages from the network */
   const stream = client.conversations.streamAllMessages();
 
   for await (const message of await stream) {
@@ -81,4 +82,10 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+main().catch((error: unknown) => {
+  console.error(
+    "Unhandled error:",
+    error instanceof Error ? error.message : String(error),
+  );
+  process.exit(1);
+});
