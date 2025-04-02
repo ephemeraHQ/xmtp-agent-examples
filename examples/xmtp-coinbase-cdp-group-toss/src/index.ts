@@ -1,4 +1,3 @@
-import "dotenv/config";
 import type { Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { handleCommand } from "./commands";
 import { initializeAgent } from "./langchain";

@@ -228,7 +228,6 @@ ENCRYPTION_KEY_ALICE=...
 ### Solution:
 
 ```typescript
-import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
 

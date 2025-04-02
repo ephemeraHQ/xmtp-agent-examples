@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";

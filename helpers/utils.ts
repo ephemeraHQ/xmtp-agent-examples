@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 export const logAgentDetails = (address: string, env: string) => {
   const createLine = (length: number, char = "═"): string =>
     char.repeat(length - 2);

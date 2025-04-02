@@ -15,7 +15,6 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type DecodedMessage, type XmtpEnv } from "@xmtp/node-sdk";
-import * as dotenv from "dotenv";
 
 const {
   WALLET_KEY,
@@ -32,9 +31,6 @@ const {
   "CDP_API_KEY_PRIVATE_KEY",
   "NETWORK_ID",
 ]);
-
-// Initialize environment variables
-dotenv.config();
 
 // Storage constants
 const XMTP_STORAGE_DIR = ".data/";
