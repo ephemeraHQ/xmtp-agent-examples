@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { generateEncryptionKeyHex } from "@helpers";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -20,10 +20,21 @@ const publicKey = account.address;
 
 const filePath = join(process.cwd(), ".env");
 
-const envContent = `# generic keys
+// Read existing .env file if it exists
+let existingEnv = "";
+try {
+  existingEnv = await readFile(filePath, "utf-8");
+} catch {
+  // File doesn't exist, that's fine
+}
+
+// Check if XMTP_ENV is already set
+const xmtpEnvExists = existingEnv.includes("XMTP_ENV=");
+
+const envContent = `\n# generic keys
 WALLET_KEY=${walletKey}
 ENCRYPTION_KEY=${encryptionKeyHex}
-# public key is ${publicKey}
+${!xmtpEnvExists ? "XMTP_ENV=dev\n" : ""}# public key is ${publicKey}
 `;
 
 await writeFile(filePath, envContent, { flag: "a" });
