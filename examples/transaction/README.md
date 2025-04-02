@@ -8,14 +8,31 @@ This example uses [content-type-transaction-reference](https://github.com/xmtp/x
 
 ![Transaction agent example](./screenshot.png)
 
+## Getting started
+
+> [!NOTE]
+> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
+
 ### Environment variables
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV= # local, dev, production
+WALLET_KEY= # the private key for the wallet
+ENCRYPTION_KEY= # the encryption key for the wallet
+# public key is
+
+NETWORK_ID=base-sepolia # base-mainnet or others
+OPENAI_API_KEY= # the OpenAI API key
+CDP_API_KEY_NAME= # the name of the CDP API key
+CDP_API_KEY_PRIVATE_KEY= # the private key for the CDP API key
+XMTP_ENV=local # local, dev, production
 ```
 
 You can generate random xmtp keys with the following command:
@@ -26,6 +43,22 @@ yarn gen:keys <name>
 
 > [!WARNING]
 > Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
+
+### Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/transaction
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```
 
 ## Usage
 
@@ -61,21 +94,4 @@ Once you have a transaction reference, you can send it as part of your conversat
 
 ```tsx
 await conversation.messages.send(walletSendCalls, ContentTypeWalletSendCalls);
-```
-
-## Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-# install packages
-yarn
-# go to the folder
-cd examples/transaction
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
 ```
