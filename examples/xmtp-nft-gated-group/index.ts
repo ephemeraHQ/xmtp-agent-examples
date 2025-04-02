@@ -1,10 +1,21 @@
 import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
-import { Client, type Group, type XmtpEnv } from "@xmtp/node-sdk";
+import {
+  Client,
+  IdentifierKind,
+  type Group,
+  type XmtpEnv,
+} from "@xmtp/node-sdk";
 import { Alchemy, Network } from "alchemy-sdk";
 
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
+if (!ALCHEMY_API_KEY) {
+  throw new Error("ALCHEMY_API_KEY must be set");
+}
+
+const NFT_COLLECTION_SLUG = "XMTPeople";
 const settings = {
-  apiKey: process.env.ALCHEMY_API_KEY,
+  apiKey: ALCHEMY_API_KEY,
   network: Network.BASE_MAINNET,
 };
 
@@ -112,20 +123,29 @@ async function main() {
         await conversation.send("Please provide a wallet address");
         return;
       }
-      const result = await checkNft(walletAddress, "XMTPeople");
+      const result = await checkNft(walletAddress, NFT_COLLECTION_SLUG);
       if (!result) {
         console.log("User can't be added to the group");
         return;
       } else {
-        await (group as Group).addMembers([walletAddress]);
+        await (group as Group).addMembersByIdentifiers([
+          {
+            identifierKind: IdentifierKind.Ethereum,
+            identifier: walletAddress,
+          },
+        ]);
         await conversation.send(
           `User added to the group\n- Group ID: ${groupId}\n- Wallet Address: ${walletAddress}`,
         );
       }
     } else {
       await conversation.send(
-        "👋 Welcome to the Gated Bot Group!\nTo get started, type /create to set up a new group. 🚀\nThis example will check if the user has a particular nft and add them to the group if they do.\nOnce your group is created, you'll receive a unique Group ID and URL.\nShare the URL with friends to invite them to join your group!",
+        "Available commands:\n\n" +
+          "/create - Create a new gated group\n" +
+          "/add <group_id> <wallet_address> - Add a member to an existing group (requires XMTPeople NFT)\n" +
+          "Note: The bot verifies NFT ownership before adding members to groups.",
       );
+      return;
     }
   }
 }
