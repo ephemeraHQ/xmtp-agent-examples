@@ -4,18 +4,29 @@ To create a gated group chat using XMTP, you will need an admin bot within the g
 
 ![](./screenshot.png)
 
+## Getting started
+
+> [!NOTE]
+> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
+
 ### Environment variables
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
-```bash
+```tsx
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
-ALCHEMY_API_KEY= #alchemy api to check NFT ownership
 XMTP_ENV= # local, dev, production
+ALCHEMY_API_KEY= # alchemy api to check NFT ownership
 ```
 
-You can generate random keys with the following command:
+You can generate random xmtp keys with the following command:
 
 ```tsx
 yarn gen:keys <name>
@@ -24,9 +35,30 @@ yarn gen:keys <name>
 > [!WARNING]
 > Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
 
-## Start the XMTP agent
+### Run the agent
 
-Start your XMTP client and begin listening to messages. The bot responds to the following commands:
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/xmtp-nft-gated-group
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```
+
+## Basic usage
+
+1. Start the bot with your environment variables configured
+2. Message the bot at its address to create a new group using `/create`
+3. Once you have the group ID, you can add members using `/add <group_id> <wallet_address>`
+4. The bot will verify NFT ownership and add the wallet if they own the required NFT
+
+### Commands
 
 - `/create` - Creates a new gated group
 
@@ -89,28 +121,4 @@ async function checkNft(
   }
   return false;
 }
-```
-
-## Usage
-
-1. Start the bot with your environment variables configured
-2. Message the bot at its address to create a new group using `/create`
-3. Once you have the group ID, you can add members using `/add <group_id> <wallet_address>`
-4. The bot will verify NFT ownership and add the wallet if they own the required NFT
-
-## Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-# install packages
-yarn
-# go to the folder
-cd examples/xmtp-nft-gated-group
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
 ```

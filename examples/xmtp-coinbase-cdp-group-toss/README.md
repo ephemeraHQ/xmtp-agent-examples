@@ -4,9 +4,16 @@ A coin toss agent built using CDP AgentKit that operates over the XMTP messaging
 
 ![](./screenshot.png)
 
-## Prerequisites
+## Getting started
 
-- Node.js (v20+)
+> [!NOTE]
+> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
 - [OpenAI](https://platform.openai.com/) API key
 - [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
 - [USDC Faucet](https://faucet.circle.com/)
@@ -35,6 +42,22 @@ yarn gen:keys <name>
 
 > [!WARNING]
 > Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
+
+### Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/xmtp-coinbase-cdp-group-toss
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```
 
 ## Usage
 
