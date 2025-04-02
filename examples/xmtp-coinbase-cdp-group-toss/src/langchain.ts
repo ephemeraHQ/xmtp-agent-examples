@@ -88,11 +88,11 @@ export async function initializeAgent(inboxId: string) {
         erc20ActionProvider(),
         cdpApiActionProvider({
           apiKeyName: CDP_API_KEY_NAME,
-          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY,
+          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
         }),
         cdpWalletActionProvider({
           apiKeyName: CDP_API_KEY_NAME,
-          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY,
+          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
         }),
       ],
     });
