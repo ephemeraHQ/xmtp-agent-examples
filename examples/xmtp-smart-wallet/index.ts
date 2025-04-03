@@ -21,15 +21,10 @@ const {
   "CDP_API_KEY_PRIVATE_KEY",
 ]);
 
-// Generate a new random SCW
-//await createSCWallet();
-
-// Later, load it back
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-
-const walletData = loadWalletData();
+const walletData = await initializeWallet();
 /* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(walletData?.seed || "");
+const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 // Log connection details
 const identifier = await signer.getIdentifier();
@@ -137,14 +132,17 @@ export function saveWalletData(
  * @param filePath - Path to load the wallet data from (default: 'wallet.json')
  * @returns WalletData object or null if file doesn't exist
  */
-export function loadWalletData(
+export async function initializeWallet(
   filePath: string = "wallet.json",
-): WalletData | null {
+): Promise<WalletData | null> {
   try {
     let walletData: WalletData | null = null;
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, "utf8");
       walletData = JSON.parse(data) as WalletData;
+    } else {
+      // Generate a new random SCW
+      await createSCWallet();
     }
     return walletData;
   } catch (error) {
