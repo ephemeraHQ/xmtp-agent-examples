@@ -1,9 +1,5 @@
 import "dotenv/config";
-import {
-  createSigner,
-  getAddressOfMember,
-  getEncryptionKeyFromHex,
-} from "@helpers";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import {
@@ -79,9 +75,10 @@ async function main() {
       continue;
     }
 
-    const members = await conversation.members();
-    const memberAddress = getAddressOfMember(members, message.senderInboxId);
-
+    const inboxState = await client.preferences.inboxStateFromInboxIds([
+      message.senderInboxId,
+    ]);
+    const memberAddress = inboxState[0].identifiers[0].identifier;
     if (!memberAddress) {
       console.log("Unable to find member address, skipping");
       continue;
