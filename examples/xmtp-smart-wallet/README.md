@@ -54,3 +54,26 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
+
+## Usage
+
+Use coinbase sdk to create a smart contract wallet.
+
+```tsx
+Coinbase.configure({
+  apiKeyName: CDP_API_KEY_NAME,
+  privateKey: CDP_API_KEY_PRIVATE_KEY,
+});
+const wallet = await Wallet.create({
+  networkId: NETWORK_ID,
+});
+
+console.log("Wallet created successfully, exporting data...");
+const data = wallet.export();
+console.log("Getting default address...");
+const walletInfo: WalletData = {
+  seed: data.seed || "",
+  walletId: wallet.getId() || "",
+  networkId: wallet.getNetworkId(),
+};
+```

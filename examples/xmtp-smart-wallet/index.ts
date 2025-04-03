@@ -101,7 +101,6 @@ async function initializeWallet(walletPath: string): Promise<WalletData> {
 
       console.log("Wallet created successfully, exporting data...");
       const data = wallet.export();
-      console.log("Data:", data);
       console.log("Getting default address...");
       const walletInfo: WalletData = {
         seed: data.seed || "",
