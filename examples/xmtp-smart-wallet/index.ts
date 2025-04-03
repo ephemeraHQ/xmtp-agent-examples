@@ -4,6 +4,8 @@ import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
+const WALLET_PATH = "wallet.json";
+
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
@@ -21,9 +23,9 @@ const {
   "CDP_API_KEY_PRIVATE_KEY",
 ]);
 
-const walletData = await initializeWallet();
+const walletData = await initializeWallet(WALLET_PATH);
 /* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(walletData?.seed || "");
+const signer = createSigner(walletData.seed || "");
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 // Log connection details
@@ -80,74 +82,40 @@ const main = async () => {
  * @returns WalletData object containing all necessary wallet information
  */
 
-async function createSCWallet(): Promise<WalletData> {
+async function initializeWallet(walletPath: string): Promise<WalletData> {
   try {
-    console.log(`Creating wallet on network: ${NETWORK_ID}`);
-    Coinbase.configure({
-      apiKeyName: CDP_API_KEY_NAME,
-      privateKey: CDP_API_KEY_PRIVATE_KEY,
-    });
-    const wallet = await Wallet.create({
-      networkId: NETWORK_ID,
-    });
+    let walletData: WalletData | null = null;
+    if (fs.existsSync(walletPath)) {
+      const data = fs.readFileSync(walletPath, "utf8");
+      walletData = JSON.parse(data) as WalletData;
+      return walletData;
+    } else {
+      console.log(`Creating wallet on network: ${NETWORK_ID}`);
+      Coinbase.configure({
+        apiKeyName: CDP_API_KEY_NAME,
+        privateKey: CDP_API_KEY_PRIVATE_KEY,
+      });
+      const wallet = await Wallet.create({
+        networkId: NETWORK_ID,
+      });
 
-    console.log("Wallet created successfully, exporting data...");
-    const data = wallet.export();
-    console.log("Data:", data);
-    console.log("Getting default address...");
-    const walletInfo: WalletData = {
-      seed: data.seed || "",
-      walletId: wallet.getId() || "",
-      networkId: wallet.getNetworkId(),
-    };
-    saveWalletData(walletInfo);
-    return walletInfo;
+      console.log("Wallet created successfully, exporting data...");
+      const data = wallet.export();
+      console.log("Data:", data);
+      console.log("Getting default address...");
+      const walletInfo: WalletData = {
+        seed: data.seed || "",
+        walletId: wallet.getId() || "",
+        networkId: wallet.getNetworkId(),
+      };
+
+      fs.writeFileSync(walletPath, JSON.stringify(walletInfo, null, 2));
+      console.log(`Wallet data saved to ${walletPath}`);
+      return walletInfo;
+    }
   } catch (error) {
     console.error("Error creating wallet:", error);
     throw error;
-  }
-}
-
-/**
- * Saves wallet data to a JSON file
- * @param walletData - The wallet data to save
- * @param filePath - Path to save the wallet data (default: 'wallet.json')
- */
-export function saveWalletData(
-  walletData: WalletData,
-  filePath: string = "wallet.json",
-): void {
-  try {
-    const data = JSON.stringify(walletData, null, 2);
-    fs.writeFileSync(filePath, data);
-    console.log(`Wallet data saved to ${filePath}`);
-  } catch (error) {
-    console.error("Error saving wallet data:", error);
-    throw error;
-  }
-}
-
-/**
- * Loads wallet data from a JSON file
- * @param filePath - Path to load the wallet data from (default: 'wallet.json')
- * @returns WalletData object or null if file doesn't exist
- */
-export async function initializeWallet(
-  filePath: string = "wallet.json",
-): Promise<WalletData | null> {
-  try {
-    let walletData: WalletData | null = null;
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, "utf8");
-      walletData = JSON.parse(data) as WalletData;
-    } else {
-      // Generate a new random SCW
-      await createSCWallet();
-    }
-    return walletData;
-  } catch (error) {
-    console.error("Error loading wallet data:", error);
-    return null;
   }
 }
 
