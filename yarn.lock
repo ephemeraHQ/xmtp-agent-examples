@@ -861,9 +861,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/transaction@workspace:examples/transaction":
+"@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type":
   version: 0.0.0-use.local
-  resolution: "@examples/transaction@workspace:examples/transaction"
+  resolution: "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type"
   dependencies:
     "@xmtp/content-type-transaction-reference": "npm:^2.0.1"
     "@xmtp/node-sdk": "npm:1.0.2"
