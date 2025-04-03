@@ -1,5 +1,5 @@
 import fs from "fs";
-import { Wallet } from "@coinbase/coinbase-sdk/dist/coinbase/wallet";
+import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
@@ -7,30 +7,34 @@ import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { XMTP_ENV, ENCRYPTION_KEY, NETWORK_ID } = validateEnvironment([
+const {
+  XMTP_ENV,
+  ENCRYPTION_KEY,
+  NETWORK_ID,
+  CDP_API_KEY_NAME,
+  CDP_API_KEY_PRIVATE_KEY,
+} = validateEnvironment([
   "XMTP_ENV",
   "ENCRYPTION_KEY",
   "NETWORK_ID",
+  "CDP_API_KEY_NAME",
+  "CDP_API_KEY_PRIVATE_KEY",
 ]);
 
-type WalletData = {
-  privateKey: string;
-  smartWalletAddress: string;
-  walletId: string;
-  seed: string;
-  networkId: string;
-  address: string;
-};
-
 // Generate a new random SCW
-const walletData = await createSCWallet();
+await createSCWallet();
 
 // Later, load it back
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
+const walletData = loadWalletData();
 /* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(walletData.privateKey);
+const signer = createSigner(walletData?.seed || "");
 
+// Log connection details
+const identifier = await signer.getIdentifier();
+const address = identifier.identifier;
+console.log(`Smart Wallet Address: ${address}`);
 const main = async () => {
   console.log(`Creating client on the '${XMTP_ENV}' network...`);
   const client = await Client.create(signer, encryptionKey, {
@@ -84,7 +88,10 @@ const main = async () => {
 async function createSCWallet(): Promise<WalletData> {
   try {
     console.log(`Creating wallet on network: ${NETWORK_ID}`);
-
+    Coinbase.configure({
+      apiKeyName: CDP_API_KEY_NAME,
+      privateKey: CDP_API_KEY_PRIVATE_KEY,
+    });
     const wallet = await Wallet.create({
       networkId: NETWORK_ID,
     });
@@ -93,15 +100,9 @@ async function createSCWallet(): Promise<WalletData> {
     const data = wallet.export();
     console.log("Data:", data);
     console.log("Getting default address...");
-    const address = await wallet.getDefaultAddress();
-    const walletAddress = address.getId();
-
     const walletInfo: WalletData = {
-      privateKey: data.seed || "",
-      smartWalletAddress: walletAddress,
+      seed: data.seed || "",
       walletId: wallet.getId() || "",
-      seed: wallet.export().seed || "",
-      address: walletAddress,
       networkId: wallet.getNetworkId(),
     };
     saveWalletData(walletInfo);
