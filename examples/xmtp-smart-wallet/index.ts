@@ -23,13 +23,16 @@ type WalletData = {
   networkId: string;
 };
 
+/* Generate a new SCW and save it to a file */
 generateSCW("base-sepolia");
 
-// Later, load it back
+/* Load the SCW from the file */
 const walletData = loadWalletData("wallet.json");
+
+/* Get the encryption key */
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-/* Create the signer using viem and parse the encryption key for the local db */
+/* Create the signer using viem */
 const signer = createSigner(walletData?.privateKey as string);
 
 const main = async () => {
