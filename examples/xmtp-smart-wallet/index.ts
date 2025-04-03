@@ -22,7 +22,7 @@ const {
 ]);
 
 // Generate a new random SCW
-await createSCWallet();
+//await createSCWallet();
 
 // Later, load it back
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
