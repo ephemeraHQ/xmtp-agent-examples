@@ -83,4 +83,6 @@ Once all configurations are set, Railway will automatically deploy your applicat
 
 Consider registering an [ENS domain](https://ens.domains/) for your agent to make it more accessible and professional.
 
-For more detailed information, visit the [Railway documentation](https://docs.railway.app/).
+## Example Railway Deployment
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/UCyz5b)
