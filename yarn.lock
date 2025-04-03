@@ -907,12 +907,8 @@ __metadata:
     "@langchain/langgraph": "npm:^0.2.21"
     "@langchain/openai": "npm:^0.3.14"
     "@xmtp/node-sdk": "npm:1.0.5"
-    dotenv: "npm:^16.4.5"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
-    uint8arrays: "npm:^5.1.0"
-    viem: "npm:^2.7.15"
-    zod: "npm:^3.22.4"
   languageName: unknown
   linkType: soft
 
@@ -969,6 +965,17 @@ __metadata:
   dependencies:
     "@xmtp/node-sdk": "npm:1.0.5"
     alchemy-sdk: "npm:^3.0.0"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
+"@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
+  dependencies:
+    "@coinbase/agentkit": "npm:latest"
+    "@xmtp/node-sdk": "npm:1.0.5"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -5279,7 +5286,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2.21.26, viem@npm:^2.22.16, viem@npm:^2.22.17, viem@npm:^2.7.15":
+"viem@npm:^2.21.26, viem@npm:^2.22.16, viem@npm:^2.22.17":
   version: 2.24.3
   resolution: "viem@npm:2.24.3"
   dependencies:
