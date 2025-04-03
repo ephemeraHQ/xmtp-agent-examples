@@ -12,7 +12,7 @@ This example uses the [OpenAI](https://openai.com) API for GPT-based responses a
 - Node.js v20 or higher
 - Yarn v4 or higher
 - Docker (optional, for local network)
-- OpenAI API key
+- [OpenAI](https://platform.openai.com/api-keys) API key
 
 ### Environment variables
 

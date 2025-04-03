@@ -14,7 +14,7 @@ A coin toss agent built using CDP AgentKit that operates over the XMTP messaging
 - Node.js v20 or higher
 - Yarn v4 or higher
 - Docker (optional, for local network)
-- [OpenAI](https://platform.openai.com/) API key
+- [OpenAI](https://platform.openai.com/api-keys) API key
 - [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
 - [USDC Faucet](https://faucet.circle.com/)
 
