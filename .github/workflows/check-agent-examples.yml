@@ -1,0 +1,49 @@
+name: Check agent-examples
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps: # sd
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Clone XMTP agent examples
+        run: |
+          git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+          cd xmtp-agent-examples
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "yarn"
+        env:
+          SKIP_YARN_COREPACK_CHECK: "1"
+
+      - name: Install dependencies
+        run: |
+          cd xmtp-agent-examples
+          yarn install
+
+      - name: Generate keys
+        run: |
+          cd xmtp-agent-examples
+          yarn gen:keys
+          echo "XMTP_ENV=${{ vars.XMTP_ENV }}" >> .env
+
+      - name: Run agent
+        run: |
+          cd xmtp-agent-examples
+          timeout 20s yarn dev | tee output.log
+          if grep -q "Waiting for messages..." output.log; then
+            echo "Success: Agent started successfully and is waiting for messages"
+            exit 0
+          else
+            echo "Error: Agent did not reach 'Waiting for messages...' state"
+            exit 1
+          fi
