@@ -9,14 +9,14 @@ export const logAgentDetails = (address: string, env: string) => {
     return " ".repeat(leftPadding) + text + " ".repeat(padding - leftPadding);
   };
 
-  console.log(`
+  console.log(`\x1b[38;2;252;76;52m
     ██╗  ██╗███╗   ███╗████████╗██████╗ 
     ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
      ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
      ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ 
     ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     
     ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
-  `);
+  \x1b[0m`);
 
   const url = `http://xmtp.chat/dm/${address}?env=${env}`;
   const maxLength = Math.max(url.length + 12, address.length + 15, 30);
