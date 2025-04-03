@@ -97,7 +97,7 @@ async function main() {
    if (message?.senderInboxId === client.inboxId ) {
       continue;
     }
-    const conversation = client.conversations.getConversationById(message.conversationId);
+    const conversation = await client.conversations.getConversationById(message.conversationId);
     // send a message from the agent
     await conversation.send("gm");
   }
