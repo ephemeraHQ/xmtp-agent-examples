@@ -1,17 +1,16 @@
-import { randomBytes } from "crypto";
 import fs from "fs";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import type { Address, Hex } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { XMTP_ENV, ENCRYPTION_KEY } = validateEnvironment([
+const { XMTP_ENV, ENCRYPTION_KEY, NETWORK_ID } = validateEnvironment([
   "XMTP_ENV",
   "ENCRYPTION_KEY",
+  "NETWORK_ID",
 ]);
 
 type WalletData = {
@@ -23,17 +22,13 @@ type WalletData = {
 };
 
 // Generate a new random SCW
-const randomWalletData = generateRandomSCW("base-sepolia");
-
-// Save it to a file
-saveWalletData(randomWalletData);
+const walletData = await createSCWallet();
 
 // Later, load it back
-const walletData = loadWalletData("wallet.json");
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 /* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(walletData?.privateKey as string);
+const signer = createSigner(walletData.privateKey as string);
 
 const main = async () => {
   console.log(`Creating client on the '${XMTP_ENV}' network...`);
@@ -84,27 +79,42 @@ const main = async () => {
  * @param networkId - The network ID (e.g., 'base-sepolia', 'base-mainnet')
  * @returns WalletData object containing all necessary wallet information
  */
-export function generateRandomSCW(networkId: string): WalletData {
-  // Generate random private key (32 bytes)
-  const privateKey = `0x${randomBytes(32).toString("hex")}`;
 
-  // Generate random seed (32 bytes)
-  const seed = randomBytes(32).toString("hex");
+async function createSCWallet(): Promise<WalletData> {
+  try {
+    // Log the network we're using
+    console.log(`Creating wallet on network: ${NETWORK_ID}`);
 
-  // Generate random wallet ID (UUID v4)
-  const walletId = crypto.randomUUID();
+    // Create wallet
+    const wallet = await Wallet.create({
+      networkId: NETWORK_ID,
+    }).catch((err: unknown) => {
+      const errorDetails =
+        typeof err === "object" ? JSON.stringify(err, null, 2) : err;
+      console.error("Detailed wallet creation error:", errorDetails);
+      throw err;
+    });
 
-  // Create account from private key to get the address
-  const account = privateKeyToAccount(privateKey as Hex);
-  const smartWalletAddress = account.address;
+    console.log("Wallet created successfully, exporting data...");
+    const data = wallet.export();
 
-  return {
-    privateKey: privateKey as Hex,
-    smartWalletAddress,
-    walletId,
-    seed,
-    networkId,
-  };
+    console.log("Getting default address...");
+    const address = await wallet.getDefaultAddress();
+    const walletAddress = address.getId();
+
+    const walletInfo: WalletData = {
+      privateKey: wallet.getPrivateKey(),
+      smartWalletAddress: walletAddress,
+      walletId: wallet.getId(),
+      seed: wallet.getSeed(),
+      networkId: wallet.getNetworkId(),
+    };
+    saveWalletData(walletInfo);
+    return walletInfo;
+  } catch (error) {
+    console.error("Error creating wallet:", error);
+    throw error;
+  }
 }
 
 /**
