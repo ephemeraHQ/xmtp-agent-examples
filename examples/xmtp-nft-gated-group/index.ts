@@ -40,7 +40,7 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
-  logAgentDetails(address, XMTP_ENV);
+  logAgentDetails(address, client.inboxId, XMTP_ENV);
 
   console.log("Waiting for messages...");
   const stream = client.conversations.streamAllMessages();

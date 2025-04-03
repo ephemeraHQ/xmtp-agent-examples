@@ -108,7 +108,7 @@ async function initializeXmtpClient() {
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
 
-  logAgentDetails(address, XMTP_ENV);
+  logAgentDetails(address, client.inboxId, XMTP_ENV);
 
   return client;
 }

@@ -34,7 +34,7 @@ export async function initializeXmtpClient() {
   console.log("Syncing conversations...");
   await client.conversations.sync();
 
-  logAgentDetails(address, XMTP_ENV);
+  logAgentDetails(address, client.inboxId, XMTP_ENV);
 
   return client;
 }
