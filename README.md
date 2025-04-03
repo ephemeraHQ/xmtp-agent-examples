@@ -6,8 +6,8 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 - **End-to-end & compliant**: Data is encrypted in transit and at rest, meeting strict security and regulatory standards.
 - **Open-source & trustless**: Built on top of the [MLS](https://messaginglayersecurity.rocks/) protocol, it replaces trust in centralized certificate authorities with cryptographic proofs.
-- **Privacy & metadata protection**: Offers anonymous or pseudonymous usage with nodes tracking only minimum required metadata, while SDKs don't track user data. Nodes cannot identify users as they don't collect sender routes, IPs, or device and message timestamps.
-- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure.
+- **Privacy & metadata protection**: Offers anonymous usage through SDKs and pseudonymous usage with nodes tracking minimum metadata.
+- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure and ensuring continued operation even if some nodes go offline.
 - **Multi-agent**: Allows confidential communication between multiple agents and humans through MLS group chats.
 
 ## Getting started
