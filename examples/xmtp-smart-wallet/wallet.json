@@ -1,7 +1,7 @@
 {
-  "privateKey": "0x0481844cdc49c53d1bc621f98cf3d357f85be8e6257b21e770483fba93975501",
-  "smartWalletAddress": "0xEf43ACe444aD8f3C547Cd69f3b2F7c25cf2B14FB",
-  "walletId": "dda13e1d-9c90-4c86-90a2-f1d87f1c5fcc",
-  "seed": "befb4292288b0dfeff9953c1c85723daf89d86fe15d2e00d28c37cf038415625",
+  "privateKey": "0x3f9718a9d51e2008715c1503ebb8e6b643c7c8a60494f068482eecfe93e88894",
+  "smartWalletAddress": "0x2CC3c6E848fC1068e3E29B4Bdc2DCe34e3E63897",
+  "walletId": "3e7dd755-7fb5-478e-ad93-4f5afbea8a39",
+  "seed": "57ff874d6b264f7e6c5dc4a101c15b6bdac5f9d106ac5869d50189704835022b",
   "networkId": "base-sepolia"
 }

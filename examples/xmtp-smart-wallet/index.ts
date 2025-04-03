@@ -9,9 +9,10 @@ import { privateKeyToAccount } from "viem/accounts";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { XMTP_ENV, ENCRYPTION_KEY } = validateEnvironment([
+const { XMTP_ENV, ENCRYPTION_KEY, WALLET_KEY } = validateEnvironment([
   "XMTP_ENV",
   "ENCRYPTION_KEY",
+  "WALLET_KEY",
 ]);
 
 type WalletData = {
@@ -22,11 +23,7 @@ type WalletData = {
   networkId: string;
 };
 
-// Generate a new random SCW
-const randomWalletData = generateRandomSCW("base-sepolia");
-
-// Save it to a file
-saveWalletData(randomWalletData);
+generateSCW("base-sepolia");
 
 // Later, load it back
 const walletData = loadWalletData("wallet.json");
@@ -84,10 +81,9 @@ const main = async () => {
  * @param networkId - The network ID (e.g., 'base-sepolia', 'base-mainnet')
  * @returns WalletData object containing all necessary wallet information
  */
-export function generateRandomSCW(networkId: string): WalletData {
+export function generateSCW(networkId: string): WalletData {
   // Generate random private key (32 bytes)
-  const privateKey = `0x${randomBytes(32).toString("hex")}`;
-
+  const privateKey = WALLET_KEY;
   // Generate random seed (32 bytes)
   const seed = randomBytes(32).toString("hex");
 
@@ -98,32 +94,24 @@ export function generateRandomSCW(networkId: string): WalletData {
   const account = privateKeyToAccount(privateKey as Hex);
   const smartWalletAddress = account.address;
 
-  return {
+  const walletData = {
     privateKey: privateKey as Hex,
     smartWalletAddress,
     walletId,
     seed,
     networkId,
   };
-}
-
-/**
- * Saves wallet data to a JSON file
- * @param walletData - The wallet data to save
- * @param filePath - Path to save the wallet data (default: 'wallet.json')
- */
-export function saveWalletData(
-  walletData: WalletData,
-  filePath: string = "wallet.json",
-): void {
+  // Save it to a file
   try {
     const data = JSON.stringify(walletData, null, 2);
-    fs.writeFileSync(filePath, data);
-    console.log(`Wallet data saved to ${filePath}`);
+    fs.writeFileSync("wallet.json", data);
+    console.log(`Wallet data saved to wallet.json`);
   } catch (error) {
     console.error("Error saving wallet data:", error);
     throw error;
   }
+
+  return walletData;
 }
 
 /**
