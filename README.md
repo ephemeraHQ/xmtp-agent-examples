@@ -72,6 +72,10 @@ yarn dev
 XMTP_ENV = local
 ```
 
+### Deployment
+
+- [Railway](/guides/RAILWAY.md)
+
 ## Basic usage
 
 These are the steps to initialize the XMTP listener and send messages.
