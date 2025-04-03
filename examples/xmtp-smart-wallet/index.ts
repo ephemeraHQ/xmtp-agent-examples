@@ -1,8 +1,8 @@
 import fs from "fs";
+import { Wallet } from "@coinbase/coinbase-sdk/dist/coinbase/wallet";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import type { Address, Hex } from "viem";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -14,11 +14,12 @@ const { XMTP_ENV, ENCRYPTION_KEY, NETWORK_ID } = validateEnvironment([
 ]);
 
 type WalletData = {
-  privateKey: Hex;
-  smartWalletAddress: Address;
+  privateKey: string;
+  smartWalletAddress: string;
   walletId: string;
   seed: string;
   networkId: string;
+  address: string;
 };
 
 // Generate a new random SCW
@@ -28,7 +29,7 @@ const walletData = await createSCWallet();
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 /* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(walletData.privateKey as string);
+const signer = createSigner(walletData.privateKey);
 
 const main = async () => {
   console.log(`Creating client on the '${XMTP_ENV}' network...`);
@@ -82,31 +83,25 @@ const main = async () => {
 
 async function createSCWallet(): Promise<WalletData> {
   try {
-    // Log the network we're using
     console.log(`Creating wallet on network: ${NETWORK_ID}`);
 
-    // Create wallet
     const wallet = await Wallet.create({
       networkId: NETWORK_ID,
-    }).catch((err: unknown) => {
-      const errorDetails =
-        typeof err === "object" ? JSON.stringify(err, null, 2) : err;
-      console.error("Detailed wallet creation error:", errorDetails);
-      throw err;
     });
 
     console.log("Wallet created successfully, exporting data...");
     const data = wallet.export();
-
+    console.log("Data:", data);
     console.log("Getting default address...");
     const address = await wallet.getDefaultAddress();
     const walletAddress = address.getId();
 
     const walletInfo: WalletData = {
-      privateKey: wallet.getPrivateKey(),
+      privateKey: data.seed || "",
       smartWalletAddress: walletAddress,
-      walletId: wallet.getId(),
-      seed: wallet.getSeed(),
+      walletId: wallet.getId() || "",
+      seed: wallet.export().seed || "",
+      address: walletAddress,
       networkId: wallet.getNetworkId(),
     };
     saveWalletData(walletInfo);
