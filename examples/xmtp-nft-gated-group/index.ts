@@ -58,7 +58,7 @@ async function main() {
       `Received message: ${message.content as string} by ${message.senderInboxId}`,
     );
 
-    const conversation = client.conversations.getDmByInboxId(
+    const conversation = await client.conversations.getConversationById(
       message.senderInboxId,
     );
 

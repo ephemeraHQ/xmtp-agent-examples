@@ -39,7 +39,7 @@ async function main() {
       continue;
     }
 
-    const conversation = client.conversations.getDmByInboxId(
+    const conversation = await client.conversations.getConversationById(
       message.senderInboxId,
     );
 

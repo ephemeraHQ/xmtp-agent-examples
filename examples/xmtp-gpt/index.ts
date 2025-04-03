@@ -57,7 +57,7 @@ async function main() {
     );
 
     /* Get the conversation from the local db */
-    const conversation = client.conversations.getDmByInboxId(
+    const conversation = await client.conversations.getConversationById(
       message.senderInboxId,
     );
 
