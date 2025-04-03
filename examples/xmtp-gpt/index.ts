@@ -58,7 +58,7 @@ async function main() {
 
     /* Get the conversation from the local db */
     const conversation = await client.conversations.getConversationById(
-      message.senderInboxId,
+      message.conversationId,
     );
 
     /* If the conversation is not found, skip the message */

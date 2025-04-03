@@ -59,7 +59,7 @@ async function main() {
     );
 
     const conversation = await client.conversations.getConversationById(
-      message.senderInboxId,
+      message.conversationId,
     );
 
     if (!conversation) {
