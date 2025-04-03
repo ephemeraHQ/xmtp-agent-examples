@@ -118,4 +118,4 @@ See all the examples [here](/examples).
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
-![](/media/chat.png)
+![](/examples/xmtp-gm/screenshot.png)
