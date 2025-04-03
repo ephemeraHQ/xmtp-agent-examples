@@ -1,6 +1,6 @@
-# GPT agent example
+# CDP Smart Contract Wallet
 
-This example uses the [OpenAI](https://openai.com) API for GPT-based responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
+This example demonstrates an agent setup on XMTP Network with access to the full set of CDP Smart Contract Wallets.
 
 ## Getting started
 
@@ -12,17 +12,22 @@ This example uses the [OpenAI](https://openai.com) API for GPT-based responses a
 - Node.js v20 or higher
 - Yarn v4 or higher
 - Docker (optional, for local network)
-- [OpenAI](https://platform.openai.com/api-keys) API key
+- [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
+- [USDC Faucet](https://faucet.circle.com/)
 
 ### Environment variables
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-ENCRYPTION_KEY= # encryption key for the local database
+WALLET_KEY= # the private key for the wallet
+ENCRYPTION_KEY= # the encryption key for the wallet
+# public key is
+
+NETWORK_ID=base-sepolia # base-mainnet or others
+CDP_API_KEY_NAME= # the name of the CDP API key
+CDP_API_KEY_PRIVATE_KEY= # the private key for the CDP API key
 XMTP_ENV=dev # local, dev, production
-OPENAI_API_KEY= # the API key for the OpenAI API
 ```
 
 You can generate random xmtp keys with the following command:
@@ -41,7 +46,7 @@ yarn gen:keys
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-gpt
+cd examples/xmtp-smart-wallet
 # install packages
 yarn
 # generate random xmtp keys (optional)
