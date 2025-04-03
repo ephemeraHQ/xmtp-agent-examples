@@ -49,9 +49,3 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
-
-## Try it out
-
-> Try XMTP using [xmtp.chat](https://xmtp.chat) and sending a message to `gm.xmtp.eth`
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/UCyz5b)
