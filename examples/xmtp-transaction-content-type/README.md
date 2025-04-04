@@ -1,4 +1,4 @@
-# Transaction agent example
+# Transaction Content Type example
 
 This example uses 2 content types related to transaction requests and receipts.
 
