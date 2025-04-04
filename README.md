@@ -111,6 +111,7 @@ main().catch(console.error);
 - [gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
 - [nft-gated-group](/examples/xmtp-nft-gated-group/): Agent that uses a CDP for gassless USDC on base
 - [agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
+- [transaction-content-type](/examples/xmtp-transaction-content-type/): Use XMTP content types to send transactions
 
 See all the examples [here](/examples).
 
