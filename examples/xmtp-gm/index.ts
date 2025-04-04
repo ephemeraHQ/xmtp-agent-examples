@@ -1,5 +1,5 @@
-import { createSigner, getEncryptionKeyFromHex } from "@helpers";
-import { logAgentDetails, validateEnvironment } from "@utils";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of

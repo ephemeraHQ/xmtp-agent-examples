@@ -75,7 +75,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
     ```typescript
     // CORRECT:
-    import { createSigner, getEncryptionKeyFromHex } from "@helpers";
+    import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 
     // INCORRECT:
     import { createSigner, getEncryptionKeyFromHex } from "./helpers";
@@ -233,7 +233,7 @@ ENCRYPTION_KEY_ALICE=...
 ### Solution:
 
 ```typescript
-import { createSigner, getEncryptionKeyFromHex } from "@helpers";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
 
 // Environment variables validation

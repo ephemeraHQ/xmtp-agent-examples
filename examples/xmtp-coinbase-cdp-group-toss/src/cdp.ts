@@ -5,7 +5,7 @@ import {
   type Trade,
   type Transfer,
 } from "@coinbase/coinbase-sdk";
-import { validateEnvironment } from "@utils";
+import { validateEnvironment } from "@helpers/utils";
 import { isAddress } from "viem";
 import { storage } from "./storage";
 import { type AgentWalletData } from "./types";

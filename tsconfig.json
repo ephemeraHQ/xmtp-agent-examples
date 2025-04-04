@@ -19,8 +19,9 @@
     "target": "ESNext",
     "types": ["node"],
     "paths": {
-      "@helpers": ["./helpers/index.ts"],
-      "@utils": ["./helpers/utils.ts"]
+      "@helpers/client": ["./helpers/client.ts"],
+      "@helpers/utils": ["./helpers/utils.ts"],
+      "@helpers/transaction": ["./helpers/transaction.ts"]
     }
   },
   "include": ["**/*.ts"]

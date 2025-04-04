@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { generateEncryptionKeyHex } from "@helpers";
+import { generateEncryptionKeyHex } from "@helpers/client";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 // Check Node.js version

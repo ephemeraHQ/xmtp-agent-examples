@@ -1,12 +1,12 @@
-import { createSigner, getEncryptionKeyFromHex } from "@helpers";
-import { logAgentDetails, validateEnvironment } from "@utils";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { createUSDCTransferCalls, getUSDCBalance } from "@helpers/transaction";
+import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import {
   ContentTypeWalletSendCalls,
   WalletSendCallsCodec,
 } from "@xmtp/content-type-wallet-send-calls";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { createUSDCTransferCalls, getUSDCBalance } from "./helper";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { validateEnvironment } from "@utils";
+import { validateEnvironment } from "@helpers/utils";
 import { TossStatus, type AgentWalletData, type GroupTossName } from "./types";
 
 const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);

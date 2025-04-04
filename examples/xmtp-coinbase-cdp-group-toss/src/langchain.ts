@@ -6,11 +6,11 @@ import {
   walletActionProvider,
 } from "@coinbase/agentkit";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
+import { validateEnvironment } from "@helpers/utils";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import { validateEnvironment } from "@utils";
 import {
   type AgentConfig,
   type ParsedToss,

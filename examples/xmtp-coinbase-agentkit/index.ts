@@ -8,12 +8,12 @@ import {
   walletActionProvider,
 } from "@coinbase/agentkit";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import { logAgentDetails, validateEnvironment } from "@utils";
 import { Client, type DecodedMessage, type XmtpEnv } from "@xmtp/node-sdk";
 
 const {

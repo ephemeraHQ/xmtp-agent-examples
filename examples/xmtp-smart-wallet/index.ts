@@ -1,7 +1,7 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers";
-import { logAgentDetails, validateEnvironment } from "@utils";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 const WALLET_PATH = "wallet.json";
