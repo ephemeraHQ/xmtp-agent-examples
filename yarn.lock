@@ -181,8 +181,8 @@ __metadata:
   linkType: hard
 
 "@coinbase/agentkit@npm:latest":
-  version: 0.5.0
-  resolution: "@coinbase/agentkit@npm:0.5.0"
+  version: 0.6.0
+  resolution: "@coinbase/agentkit@npm:0.6.0"
   dependencies:
     "@across-protocol/app-sdk": "npm:^0.2.0"
     "@alloralabs/allora-sdk": "npm:^0.1.0"
@@ -201,7 +201,7 @@ __metadata:
     twitter-api-v2: "npm:^1.18.2"
     viem: "npm:^2.22.16"
     zod: "npm:^3.23.8"
-  checksum: 10/475c19daec934a3b537f664c2c778a98bfd9a0c59ff37f9fa23c08e30a8da56a95c121e223746773d3c0140802f82d1f0703c8fce4c4cb7437bc44a7680e518a
+  checksum: 10/97d077b9bfbb45eefbc41dcc4f8a0ece0341f13d5c3a0fc5c16f13b5a103e808fd5d5e9ac161eb1b375ebba1f8d159b720c1882f6d8afa6f71a4a2898d69eae3
   languageName: node
   linkType: hard
 
@@ -1347,8 +1347,8 @@ __metadata:
   linkType: hard
 
 "@privy-io/server-auth@npm:^1.18.4":
-  version: 1.19.2
-  resolution: "@privy-io/server-auth@npm:1.19.2"
+  version: 1.19.3
+  resolution: "@privy-io/server-auth@npm:1.19.3"
   dependencies:
     "@noble/curves": "npm:^1.6.0"
     "@noble/hashes": "npm:^1.5.0"
@@ -1366,7 +1366,7 @@ __metadata:
   peerDependenciesMeta:
     viem:
       optional: true
-  checksum: 10/99d6f2c605eccbf270560f2aeda67e572fdf7e6fa31f56fdd1852a3f50e5e2ca067a503a26a72237d71b9704128c8b0ed317fd973cf579dedb5f9d0712820848
+  checksum: 10/85984f5d45517c05edfcfbc16f0027872b2063d94e1c07428aa66e13456703d38dedb1d9382739af32949734bb2ac9ac8ede2bfe4e3758b9a2e4c47acac48ba7
   languageName: node
   linkType: hard
 
@@ -1715,11 +1715,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.10.5, @types/node@npm:^22.13.0, @types/node@npm:^22.7.5":
-  version: 22.13.17
-  resolution: "@types/node@npm:22.13.17"
+  version: 22.14.0
+  resolution: "@types/node@npm:22.14.0"
   dependencies:
-    undici-types: "npm:~6.20.0"
-  checksum: 10/b2bb532c6c7a8e8f87a49b3d2f7d5372a5c79f3b015522cfb116c974a89e438b40e03a1d46398871cba119085b5efd2e02e5acdbfc7596d6c60142f77ae9547c
+    undici-types: "npm:~6.21.0"
+  checksum: 10/d0669a8a37a18532c886ccfa51eb3fe1e46088deb4d3d27ebcd5d7d68bd6343ad1c7a3fcb85164780a57629359c33a6c917ecff748ea232bceac7692acc96537
   languageName: node
   linkType: hard
 
@@ -2228,9 +2228,9 @@ __metadata:
   linkType: hard
 
 "bignumber.js@npm:^9.0.1":
-  version: 9.1.2
-  resolution: "bignumber.js@npm:9.1.2"
-  checksum: 10/d89b8800a987225d2c00dcbf8a69dc08e92aa0880157c851c287b307d31ceb2fc2acb0c62c3e3a3d42b6c5fcae9b004035f13eb4386e56d529d7edac18d5c9d8
+  version: 9.2.0
+  resolution: "bignumber.js@npm:9.2.0"
+  checksum: 10/6ec4e8791f9f1cc9084893e98f679bb7b8753729958ea5710ccd47ecf40ac6281f91d72e10c9af9c030d670d979d598a42b8fe2f1f00718bf5adc316789ce880
   languageName: node
   linkType: hard
 
@@ -2913,11 +2913,11 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-prettier@npm:^5.2.3":
-  version: 5.2.5
-  resolution: "eslint-plugin-prettier@npm:5.2.5"
+  version: 5.2.6
+  resolution: "eslint-plugin-prettier@npm:5.2.6"
   dependencies:
     prettier-linter-helpers: "npm:^1.0.0"
-    synckit: "npm:^0.10.2"
+    synckit: "npm:^0.11.0"
   peerDependencies:
     "@types/eslint": ">=8.0.0"
     eslint: ">=8.0.0"
@@ -2928,7 +2928,7 @@ __metadata:
       optional: true
     eslint-config-prettier:
       optional: true
-  checksum: 10/b211c2e71e20bd8c5953ce0383d389dff74f223126e24009cc0633e1ad2592a9a05653725d8bd41a136bc40684f1a0f61f68c622c94301761c26e5c6956f8046
+  checksum: 10/8f82a3c6bbf2db358476e745501349c8f3d5f0976f15c4af2a07dd62bb70291d29500ad09a354bb33e645c98a378d35544a92e9758aeb65530b1ec6e2dc8b8f9
   languageName: node
   linkType: hard
 
@@ -4991,8 +4991,8 @@ __metadata:
   linkType: hard
 
 "svix@npm:>=1.29.0 <= 1.37.0 || ^1.40.0":
-  version: 1.63.0
-  resolution: "svix@npm:1.63.0"
+  version: 1.63.1
+  resolution: "svix@npm:1.63.1"
   dependencies:
     "@stablelib/base64": "npm:^1.0.0"
     "@types/node": "npm:^22.7.5"
@@ -5000,7 +5000,7 @@ __metadata:
     fast-sha256: "npm:^1.3.0"
     svix-fetch: "npm:^3.0.0"
     url-parse: "npm:^1.5.10"
-  checksum: 10/4eec73974b7495770514e284dc23f6c6172f7158da5182d90fcb263e0d85876638439d9890889a4f021798b8c4bd371c53148335656b22531766deb04f89c0bb
+  checksum: 10/a3d6f5596a168076cd37b647ccd2e25c816a3836cbc7ec415ee5cca7d6fbfb1b8f670efa6f18b22944a376d5599169c052336ad6008703a0fc6b5e2fce47adc6
   languageName: node
   linkType: hard
 
@@ -5014,13 +5014,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"synckit@npm:^0.10.2":
-  version: 0.10.3
-  resolution: "synckit@npm:0.10.3"
+"synckit@npm:^0.11.0":
+  version: 0.11.2
+  resolution: "synckit@npm:0.11.2"
   dependencies:
     "@pkgr/core": "npm:^0.2.0"
     tslib: "npm:^2.8.1"
-  checksum: 10/bab2193585139f972b3725a9db8fedb6a93fe50bb5db06c0e8d3c93dbf83157e1eeba9fbd9c4922a1a41e9912b754ffe3906a3a7fa639ed502105de67d888207
+  checksum: 10/8dbf20a9f1cb9f168062b505302f87b434b6f808d61af94183583b1201f33ba0026469fb81dd20074c980bc56237c6bd4ccb640433b5734eef14f5a90c1bbf18
   languageName: node
   linkType: hard
 
@@ -5241,10 +5241,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~6.20.0":
-  version: 6.20.0
-  resolution: "undici-types@npm:6.20.0"
-  checksum: 10/583ac7bbf4ff69931d3985f4762cde2690bb607844c16a5e2fbb92ed312fe4fa1b365e953032d469fa28ba8b224e88a595f0b10a449332f83fa77c695e567dbe
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: 10/ec8f41aa4359d50f9b59fa61fe3efce3477cc681908c8f84354d8567bb3701fafdddf36ef6bff307024d3feb42c837cf6f670314ba37fc8145e219560e473d14
   languageName: node
   linkType: hard
 
@@ -5339,8 +5339,8 @@ __metadata:
   linkType: hard
 
 "viem@npm:^2.21.26, viem@npm:^2.22.16, viem@npm:^2.22.17":
-  version: 2.24.3
-  resolution: "viem@npm:2.24.3"
+  version: 2.25.0
+  resolution: "viem@npm:2.25.0"
   dependencies:
     "@noble/curves": "npm:1.8.1"
     "@noble/hashes": "npm:1.7.1"
@@ -5355,7 +5355,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10/758a8952abe804a5482717593b3d0e39e9cd196348930640be64766b0bd3ce1a19eaa4a28bdf49b9be261abb502732d4fc7a871db5fa052e43ab17243f206d27
+  checksum: 10/e01bda8a85cef2f55f8ed6041e5aa57fd6ebf3d577c1972dd3170f0a298da83775c1f18cf7e5840dc2a74e9a87c599d23f7bf1ae03cf39d272fc7f7cd3087411
   languageName: node
   linkType: hard
 
