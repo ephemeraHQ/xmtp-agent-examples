@@ -12,7 +12,7 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 ## Getting started
 
-> [!IMPORTANT]
+> [!TIP]
 > See our [cursor rules](/.cursor/README.md) for vibe coding.
 
 ### Requirements
