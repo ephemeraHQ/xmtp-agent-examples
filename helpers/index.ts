@@ -1,5 +1,5 @@
 import { getRandomValues } from "node:crypto";
-import { IdentifierKind, type GroupMember, type Signer } from "@xmtp/node-sdk";
+import { IdentifierKind, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
 import { createWalletClient, http, toBytes } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -11,11 +11,10 @@ interface User {
   wallet: ReturnType<typeof createWalletClient>;
 }
 
-export const createUser = (key: `0x${string}`): User => {
-  const accountKey = key;
-  const account = privateKeyToAccount(accountKey);
+export const createUser = (key: string): User => {
+  const account = privateKeyToAccount(key as `0x${string}`);
   return {
-    key: accountKey,
+    key: key as `0x${string}`,
     account,
     wallet: createWalletClient({
       account,
@@ -25,8 +24,9 @@ export const createUser = (key: `0x${string}`): User => {
   };
 };
 
-export const createSigner = (key: `0x${string}`): Signer => {
-  const user = createUser(key);
+export const createSigner = (key: string): Signer => {
+  const sanitizedKey = key.startsWith("0x") ? key : `0x${key}`;
+  const user = createUser(sanitizedKey);
   return {
     type: "EOA",
     getIdentifier: () => ({
@@ -42,25 +42,6 @@ export const createSigner = (key: `0x${string}`): Signer => {
     },
   };
 };
-
-/**
- * Get the address of a member
- * @param members - The members of the group
- * @param inboxId - The inboxId of the member
- * @returns The address of the member
- */
-export function getAddressOfMember(members: GroupMember[], inboxId: string) {
-  for (const member of members) {
-    for (const identifier of member.accountIdentifiers) {
-      if (
-        identifier.identifierKind === IdentifierKind.Ethereum &&
-        member.inboxId === inboxId
-      ) {
-        return identifier.identifier;
-      }
-    }
-  }
-}
 
 /**
  * Generate a random encryption key

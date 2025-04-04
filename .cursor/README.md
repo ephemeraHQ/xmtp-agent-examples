@@ -4,60 +4,60 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 ## Guidelines
 
-1. Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
+1.  Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
-2. Use the XMTP node-sdk v1.0.2 or newer, which offers enhanced functionality including group conversations.
+2.  Use the XMTP node-sdk v1.0.2 or newer, which offers enhanced functionality including group conversations.
 
-3. Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
+3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
 
-   - Never use the deprecated @xmtp/xmtp-js library, which has been completely replaced by @xmtp/node-sdk
-   - Always import directly from @xmtp/node-sdk as shown below:
+    - Never use the deprecated @xmtp/xmtp-js library, which has been completely replaced by @xmtp/node-sdk
+    - Always import directly from @xmtp/node-sdk as shown below:
 
-   ```typescript
-   // CORRECT:
-   import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
+    ```typescript
+    // CORRECT:
+    import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
 
-   // INCORRECT - DEPRECATED:
-   import { Client } from "@xmtp/xmtp-js";
-   import { XmtpClient } from "some-other-package";
-   ```
+    // INCORRECT - DEPRECATED:
+    import { Client } from "@xmtp/xmtp-js";
+    import { XmtpClient } from "some-other-package";
+    ```
 
-4. Follow the consistent pattern for initializing XMTP clients:
+4.  Follow the consistent pattern for initializing XMTP clients:
 
-   ```typescript
-   const signer = createSigner(WALLET_KEY);
-   const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-   const client = await Client.create(signer, encryptionKey, { env });
-   ```
+    ```typescript
+    const signer = createSigner(WALLET_KEY);
+    const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+    const client = await Client.create(signer, encryptionKey, { env });
+    ```
 
-5. Use proper environment variable validation at the start of each application. Check for required environment variables and show descriptive errors if missing.
+5.  Use proper environment variable validation at the start of each application. Check for required environment variables and show descriptive errors if missing.
 
-6. Never use the concept of "topic" when working with XMTP. The current SDK doesn't use topics for message organization - work directly with conversations, groups, and DMs instead.
+6.  Never use the concept of "topic" when working with XMTP. The current SDK doesn't use topics for message organization - work directly with conversations, groups, and DMs instead.
 
-7. Handle both Group and DM conversations properly. The `Group` and `Dm` classes extend the `Conversation` class and provide specific functionality:
+7.  Handle both Group and DM conversations properly. The `Group` and `Dm` classes extend the `Conversation` class and provide specific functionality:
 
-   ```typescript
-   if (conversation instanceof Group) {
-     // Group-specific functionality like group.name or group.addMembers
-   } else if (conversation instanceof Dm) {
-     // DM-specific functionality like conversation.peerInboxId
-   }
-   ```
+    ```typescript
+    if (conversation instanceof Group) {
+      // Group-specific functionality like group.name or group.addMembers
+    } else if (conversation instanceof Dm) {
+      // DM-specific functionality like conversation.peerInboxId
+    }
+    ```
 
-8. Always sync conversations before streaming messages:
+8.  Always sync conversations before streaming messages:
 
-   ```typescript
-   await client.conversations.sync();
-   const stream = client.conversations.streamAllMessages();
-   ```
+    ```typescript
+    await client.conversations.sync();
+    const stream = client.conversations.streamAllMessages();
+    ```
 
-9. Filter out messages from the agent itself to prevent endless loops:
+9.  Filter out messages from the agent itself to prevent endless loops:
 
-   ```typescript
-   if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-     continue;
-   }
-   ```
+    ```typescript
+    if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+      continue;
+    }
+    ```
 
 10. Consistent error handling pattern with try/catch blocks and specific error messages.
 
@@ -65,7 +65,6 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
     - `createSigner` - Creates a signer from a private key
     - `getEncryptionKeyFromHex` - Converts a hex string to an encryption key
-    - `getAddressOfMember` - Gets the Ethereum address of a group member
 
 12. Always import helpers from the `@helpers` path, not from a relative path:
 
@@ -113,35 +112,12 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 15. Get information about a message sender by using the conversation's members method, not by trying to call a non-existent sender() method on the message:
 
     ```typescript
-    // CORRECT:
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-    if (!conversation) continue;
-
-    const members = await conversation.members();
-    const senderMember = members.find(
-      (member) =>
-        member.inboxId.toLowerCase() === message.senderInboxId.toLowerCase(),
-    );
-
-    if (senderMember) {
-      const ethIdentifier = senderMember.accountIdentifiers.find(
-        (id) => id.identifierKind === IdentifierKind.Ethereum,
-      );
-
-      if (ethIdentifier) {
-        senderAddress = ethIdentifier.identifier;
-      }
-
-      // Get installation ID
-      if (
-        senderMember.installationIds &&
-        senderMember.installationIds.length > 0
-      ) {
-        const installationId = senderMember.installationIds[0];
-      }
-    }
+    // CORRECT: Use inboxStateFromInboxIds to get the address from the inboxId
+    const inboxState = await client.preferences.inboxStateFromInboxIds([
+      message.senderInboxId,
+    ]);
+    // assuming there is 1 only one identifier
+    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
 
     // INCORRECT:
     const sender = await message.sender();
@@ -194,79 +170,54 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     }
     ```
 
-## Example Agent Structure
+19. Always use the built-in key generation command instead of creating your own script:
 
-Here's the recommended structure for XMTP agents:
+### Environment variables
 
-```typescript
-import "dotenv/config";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers";
-import { Client, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
+To run your XMTP agent, you must create a `.env` file with the following variables:
 
-// Environment variables validation
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = process.env;
-if (!WALLET_KEY) throw new Error("WALLET_KEY must be set");
-if (!ENCRYPTION_KEY) throw new Error("ENCRYPTION_KEY must be set");
-if (!XMTP_ENV) throw new Error("XMTP_ENV must be set");
-
-// Initialize client
-const signer = createSigner(WALLET_KEY);
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
-
-async function main() {
-  console.log(`Creating client on the '${env}' network...`);
-  const client = await Client.create(signer, encryptionKey, { env });
-
-  console.log("Syncing conversations...");
-  await client.conversations.sync();
-
-  // Log connection details
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-  console.log(
-    `Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
-
-  // Start listening for messages
-  console.log("Waiting for messages...");
-  const stream = client.conversations.streamAllMessages();
-
-  for await (const message of await stream) {
-    /* Ignore messages from the same agent or non-text messages */
-    if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
-    ) {
-      continue;
-    }
-
-    try {
-      // Process the message here
-      console.log(`Received message: ${message.content as string}`);
-
-      const conversation = await client.conversations.getConversationById(
-        message.conversationId,
-      );
-      if (conversation) {
-        await conversation.send("Reply message");
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error("Error processing message:", errorMessage);
-    }
-  }
-}
-
-main().catch((error: unknown) => {
-  console.error(
-    "Unhandled error:",
-    error instanceof Error ? error.message : String(error),
-  );
-  process.exit(1);
-});
+```bash
+WALLET_KEY= # the private key of the wallet
+ENCRYPTION_KEY= # encryption key for the local database
+XMTP_ENV=dev # local, dev, production
 ```
+
+### Generating XMTP Keys
+
+Always use the built-in key generation command instead of creating your own script:
+
+```bash
+# Generate generic keys
+yarn gen:keys
+
+# Generate keys for a specific user
+yarn gen:keys
+```
+
+This command will:
+
+1. Generate a secure wallet private key
+2. Create an encryption key for the local database
+3. Output the corresponding public key
+4. Automatically append the keys to your `.env` file
+
+Example output in `.env`:
+
+```bash
+# Generic keys
+WALLET_KEY=0x...
+ENCRYPTION_KEY=...
+# public key is 0x...
+
+# User-specific keys
+# alice
+WALLET_KEY_ALICE=0x...
+ENCRYPTION_KEY_ALICE=...
+# public key is 0x...
+```
+
+> [!IMPORTANT]
+> Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies (@xmtp/node-sdk v1.0.2).
 
 ## Example: XMTP Group Creator Agent
 
@@ -277,7 +228,6 @@ main().catch((error: unknown) => {
 ### Solution:
 
 ```typescript
-import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
 
@@ -296,7 +246,6 @@ const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
 
 async function main() {
-  console.log(`Creating client on the '${env}' network...`);
   const client = await Client.create(signer, encryptionKey, { env });
 
   console.log("Syncing conversations...");
@@ -443,6 +392,84 @@ main().catch((error: unknown) => {
   );
   process.exit(1);
 });
+```
+
+## XMTP Helper Functions
+
+```typescript
+import { getRandomValues } from "node:crypto";
+import { IdentifierKind, type Signer } from "@xmtp/node-sdk";
+import { fromString, toString } from "uint8arrays";
+import { createWalletClient, http, toBytes } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { sepolia } from "viem/chains";
+
+interface User {
+  key: `0x${string}`;
+  account: ReturnType<typeof privateKeyToAccount>;
+  wallet: ReturnType<typeof createWalletClient>;
+}
+
+export const createUser = (key: `0x${string}`): User => {
+  const accountKey = key;
+  const account = privateKeyToAccount(accountKey);
+  return {
+    key: accountKey,
+    account,
+    wallet: createWalletClient({
+      account,
+      chain: sepolia,
+      transport: http(),
+    }),
+  };
+};
+
+export const createSigner = (key: `0x${string}`): Signer => {
+  const user = createUser(key);
+  return {
+    type: "EOA",
+    getIdentifier: () => ({
+      identifierKind: IdentifierKind.Ethereum,
+      identifier: user.account.address.toLowerCase(),
+    }),
+    signMessage: async (message: string) => {
+      const signature = await user.wallet.signMessage({
+        message,
+        account: user.account,
+      });
+      return toBytes(signature);
+    },
+  };
+};
+
+/**
+ * Generate a random encryption key
+ * @returns The encryption key
+ */
+export const generateEncryptionKeyHex = () => {
+  /* Generate a random encryption key */
+  const uint8Array = getRandomValues(new Uint8Array(32));
+  /* Convert the encryption key to a hex string */
+  return toString(uint8Array, "hex");
+};
+
+/**
+ * Get the encryption key from a hex string
+ * @param hex - The hex string
+ * @returns The encryption key
+ */
+export const getEncryptionKeyFromHex = (hex: string) => {
+  /* Convert the hex string to an encryption key */
+  return fromString(hex, "hex");
+};
+```
+
+## XMTP Packages Reference
+
+```tsx
+// Client Class
+declare class Client {
+  constructor(client: Client$1, signer: Signer, codecs: ContentCodec[]);
 ```
 
 ## XMTP Identifiers Reference
@@ -630,42 +657,25 @@ const messages = await conversation.messages();
 
 ## Key Type References
 
-### DecodedMessage Class
-
-```typescript
-declare class DecodedMessage<T = any> {
-  #private;
-  content: T; // The content of the message
-  contentType: ContentTypeId | undefined; // Type info about the content (text, attachment, etc)
-  conversationId: string; // ID of the conversation the message belongs to
-  deliveryStatus: MessageDeliveryStatus; // Delivery status of the message
-  fallback?: string; // Fallback text for non-text content
-  compression?: number; // Compression info
-  id: string; // Unique message ID
-  kind: MessageKind; // Kind of message
-  parameters: Record<string, string>; // Additional parameters
-  senderInboxId: string; // InboxID of the sender
-  sentAt: Date; // When the message was sent
-  sentAtNs: number; // Nanosecond precision timestamp
-  constructor(client: Client, message: Message);
+```tsx
+// Client Class
+declare class Client {
+  constructor(client: Client$1, signer: Signer, codecs: ContentCodec[]);
+  static create(
+    signer: Signer,
+    encryptionKey: Uint8Array,
+    options?: ClientOptions,
+  ): Promise<Client>;
+  get inboxId(): string;
+  get installationId(): string;
+  get conversations(): Conversations;
+  get preferences(): Preferences;
 }
-```
 
-Note that `DecodedMessage`:
-
-- Does NOT have a `sender()` method
-- Does NOT have a `senderInstallationId` property
-- Has `senderInboxId` (string) which can be used to look up the sender in the members list
-
-### Conversations Class
-
-```typescript
+// Conversations Class
 declare class Conversations {
-  #private;
   constructor(client: Client, conversations: Conversations$1);
   getConversationById(id: string): Promise<Dm | Group | undefined>;
-  getDmByInboxId(inboxId: string): Dm | undefined;
-  getMessageById<T = any>(id: string): DecodedMessage<T> | undefined;
   newGroupWithIdentifiers(
     identifiers: Identifier[],
     options?: CreateGroupOptions,
@@ -676,68 +686,28 @@ declare class Conversations {
     options?: CreateDmOptions,
   ): Promise<Dm>;
   newDm(inboxId: string, options?: CreateDmOptions): Promise<Dm>;
-  list(options?: ListConversationsOptions): Promise<(Dm | Group)[]>;
-  listGroups(
-    options?: Omit<ListConversationsOptions, "conversationType">,
-  ): Group[];
-  listDms(options?: Omit<ListConversationsOptions, "conversationType">): Dm[];
   sync(): Promise<void>;
-  syncAll(consentStates?: ConsentState[]): Promise<bigint>;
-  stream(callback?: StreamCallback<Group | Dm>): AsyncStream<Dm | Group>;
-  streamGroups(callback?: StreamCallback<Group>): AsyncStream<Group>;
-  streamDms(callback?: StreamCallback<Dm>): AsyncStream<Dm>;
   streamAllMessages(
     callback?: StreamCallback<DecodedMessage>,
   ): Promise<AsyncStream<DecodedMessage<any>>>;
-  streamAllGroupMessages(
-    callback?: StreamCallback<DecodedMessage>,
-  ): Promise<AsyncStream<DecodedMessage<any>>>;
-  streamAllDmMessages(
-    callback?: StreamCallback<DecodedMessage>,
-  ): Promise<AsyncStream<DecodedMessage<any>>>;
-  hmacKeys(): Record<string, _xmtp_node_bindings.HmacKey[]>;
 }
-```
 
-### Conversation Base Class
-
-```typescript
+// Conversation Base Class
 declare class Conversation {
-  #private;
   client: Client;
-  conversation: Conversation$1;
-  lastMessage: Message | null;
   constructor(
     client: Client,
     conversation: Conversation$1,
     lastMessage?: Message | null,
   );
   get id(): string;
-  get topic(): string;
-  get isReady(): boolean;
   send<T>(content: T, options?: SendOptions): Promise<string>;
-  streamMessages(
-    callback?: StreamCallback<DecodedMessage>,
-  ): Promise<AsyncStream<DecodedMessage<any>>>;
   messages<T>(options?: PaginationOptions): Promise<Array<DecodedMessage<T>>>;
-  messagesAfter<T>(
-    cursor: string | Date,
-    options?: PaginationOptions,
-  ): Promise<Array<DecodedMessage<T>>>;
-  messagesPaginated<T>(
-    options?: PaginationOptions,
-  ): Promise<MessagePaginatedResponse<T>>;
   members(): Promise<GroupMember[]>;
 }
-```
 
-Note that the base `Conversation` class has a `members()` method that works for both Group and DM instances.
-
-### Dm Class
-
-```typescript
+// Dm Class
 declare class Dm extends Conversation {
-  #private;
   constructor(
     client: Client,
     conversation: Conversation$1,
@@ -745,13 +715,9 @@ declare class Dm extends Conversation {
   );
   get peerInboxId(): string;
 }
-```
 
-### Group Class
-
-```typescript
+// Group Class
 declare class Group extends Conversation {
-  #private;
   constructor(
     client: Client,
     conversation: Conversation$1,
@@ -763,45 +729,40 @@ declare class Group extends Conversation {
   updateImageUrl(imageUrl: string): Promise<void>;
   get description(): string;
   updateDescription(description: string): Promise<void>;
-  get permissions(): {
-    policyType: _xmtp_node_bindings.GroupPermissionsOptions;
-    policySet: _xmtp_node_bindings.PermissionPolicySet;
-  };
-  updatePermission(
-    permissionType: PermissionUpdateType,
-    policy: PermissionPolicy,
-    metadataField?: MetadataField,
-  ): Promise<void>;
   get admins(): string[];
   get superAdmins(): string[];
   isAdmin(inboxId: string): boolean;
   isSuperAdmin(inboxId: string): boolean;
   addMembersByIdentifiers(identifiers: Identifier[]): Promise<void>;
   addMembers(inboxIds: string[]): Promise<void>;
-  removeMembersByIdentifiers(identifiers: Identifier[]): Promise<void>;
   removeMembers(inboxIds: string[]): Promise<void>;
   addAdmin(inboxId: string): Promise<void>;
   removeAdmin(inboxId: string): Promise<void>;
   addSuperAdmin(inboxId: string): Promise<void>;
   removeSuperAdmin(inboxId: string): Promise<void>;
 }
-```
 
-### GroupMember Class
-
-```typescript
+// GroupMember Class
 declare class GroupMember {
-  inboxId: string; // XMTP inbox ID
-  accountIdentifiers: Array<Identifier>; // Associated identifiers like Ethereum addresses
-  installationIds: Array<string>; // List of installation IDs
-  permissionLevel: PermissionLevel; // Member permission level in the group
-  consentState: ConsentState; // Consent state
+  inboxId: string;
+  accountIdentifiers: Array<Identifier>;
+  installationIds: Array<string>;
+  permissionLevel: PermissionLevel;
+  consentState: ConsentState;
 }
-```
 
-### Identifier Interface
+// DecodedMessage Class
+declare class DecodedMessage<T = any> {
+  content: T;
+  contentType: ContentTypeId | undefined;
+  conversationId: string;
+  id: string;
+  senderInboxId: string;
+  sentAt: Date;
+  constructor(client: Client, message: Message);
+}
 
-```typescript
+// Identifier Interface
 export interface Identifier {
   identifier: string;
   identifierKind: IdentifierKind;
@@ -811,67 +772,12 @@ export declare const enum IdentifierKind {
   Ethereum = 0,
   Passkey = 1,
 }
-```
 
-### Client Class
-
-```typescript
-declare class Client {
-  #private;
-  constructor(client: Client$1, signer: Signer, codecs: ContentCodec[]);
-  static create(
-    signer: Signer,
-    encryptionKey: Uint8Array,
-    options?: ClientOptions,
-  ): Promise<Client>;
-  get identifier(): Identifier;
-  get inboxId(): string;
-  get installationId(): string;
-  get installationIdBytes(): Uint8Array<ArrayBufferLike>;
-  get isRegistered(): boolean;
-  get conversations(): Conversations;
-  get preferences(): Preferences;
-  unsafe_addAccount(
-    newAccountSigner: Signer,
-    allowInboxReassign?: boolean,
-  ): Promise<void>;
-  removeAccount(identifier: Identifier): Promise<void>;
-  revokeAllOtherInstallations(): Promise<void>;
-  revokeInstallations(installationIds: Uint8Array[]): Promise<void>;
-  canMessage(identifiers: Identifier[]): Promise<Map<string, boolean>>;
-  static canMessage(
-    identifiers: Identifier[],
-    env?: XmtpEnv,
-  ): Promise<Map<string, boolean>>;
-  codecFor(contentType: ContentTypeId): ContentCodec | undefined;
-  encodeContent(
-    content: any,
-    contentType: ContentTypeId,
-  ): EncodedContent<Record<string, string>>;
-  decodeContent(message: Message, contentType: ContentTypeId): any;
-  requestHistorySync(): Promise<void>;
-  getInboxIdByIdentifier(identifier: Identifier): Promise<string | null>;
-  signWithInstallationKey(signatureText: string): Uint8Array<ArrayBufferLike>;
-  verifySignedWithInstallationKey(
-    signatureText: string,
-    signatureBytes: Uint8Array,
-  ): boolean;
-  static verifySignedWithPublicKey(
-    signatureText: string,
-    signatureBytes: Uint8Array,
-    publicKey: Uint8Array,
-  ): boolean;
-  static isAddressAuthorized(
-    inboxId: string,
-    address: string,
-    options?: NetworkOptions,
-  ): Promise<boolean>;
-  static isInstallationAuthorized(
-    inboxId: string,
-    installation: Uint8Array,
-    options?: NetworkOptions,
-  ): Promise<boolean>;
-  static get version(): string;
+// CreateGroupOptions Interface
+export interface CreateGroupOptions {
+  groupName?: string;
+  groupImageUrlSquare?: string;
+  groupDescription?: string;
 }
 ```
 
@@ -912,3 +818,70 @@ When working with these classes:
    - Access installation IDs through `member.installationIds`
    - Check permission level with `member.permissionLevel`
    - Verify consent state with `member.consentState`
+
+## Other Notes
+
+### Handling local database
+
+```jsx
+// Railway deployment support
+let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+const dbPath = `${volumePath}/${signer.getAddress()}-${env}`;
+
+// Create database directory if it doesn't exist
+if (!fs.existsSync(dbPath)) {
+  fs.mkdirSync(dbPath, { recursive: true });
+}
+```
+
+### Package.js
+
+Example package.json for a project that uses XMTP:
+
+```json
+{
+  "name": "xmtp-agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch index.ts",
+    "gen:keys": "tsx scripts/generateKeys.ts",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@xmtp/node-sdk": "1.0.5"
+    /* other dependencies */
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "yarn@4.6.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
+```
+
+### Web inbox
+
+Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+
+### Work in local network
+
+`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
+
+- 1. Install docker
+- 2. Start the XMTP service and database
+
+```tsx
+./dev/up
+```
+
+- 3. Change the .env file to use the local network
+
+```tsx
+XMTP_ENV = local;
+```

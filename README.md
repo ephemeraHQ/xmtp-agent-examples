@@ -6,35 +6,77 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 - **End-to-end & compliant**: Data is encrypted in transit and at rest, meeting strict security and regulatory standards.
 - **Open-source & trustless**: Built on top of the [MLS](https://messaginglayersecurity.rocks/) protocol, it replaces trust in centralized certificate authorities with cryptographic proofs.
-- **Privacy & metadata protection**: Offers anonymous or pseudonymous usage with no tracking of sender routes, IPs, or device and message timestamps.
-- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure.
-- **Multi-agent**: Allows multi-agent multi-human confidential communication over MLS group chats.
+- **Privacy & metadata protection**: Offers anonymous usage through SDKs and pseudonymous usage with nodes tracking minimum metadata.
+- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure and ensuring continued operation even if some nodes go offline.
+- **Multi-agent**: Allows confidential communication between multiple agents and humans through MLS group chats.
 
 ## Getting started
 
-> [!NOTE]
-> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
 
 ### Environment variables
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
-```tsx
+```bash
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV= # local, dev, production
+XMTP_ENV=dev # local, dev, production
 ```
 
 You can generate random xmtp keys with the following command:
 
-```tsx
-yarn gen:keys <name>
+```bash
+yarn gen:keys
 ```
 
 > [!WARNING]
-> Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
+> Running the `gen:keys` command will append keys to your existing `.env` file.
 
-### Basic usage
+### Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```
+
+### Work in local network
+
+`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
+
+- 1. Install docker
+- 2. Start the XMTP service and database
+
+```bash
+./dev/up
+```
+
+- 3. Change the .env file to use the local network
+
+```bash
+XMTP_ENV = local
+```
+
+### Deployment
+
+We have a guide for deploying the agent on [Railway](https://github.com/ephemeraHQ/xmtp-agent-examples/discussions/77).
+
+## Basic usage
 
 These are the steps to initialize the XMTP listener and send messages.
 
@@ -55,7 +97,7 @@ async function main() {
    if (message?.senderInboxId === client.inboxId ) {
       continue;
     }
-    const conversation = client.conversations.getConversationById(message.conversationId);
+    const conversation = await client.conversations.getConversationById(message.conversationId);
     // send a message from the agent
     await conversation.send("gm");
   }
@@ -65,50 +107,15 @@ main().catch(console.error);
 
 ## Examples
 
-- [gm](/gm/): A simple agent that replies to all text messages with "gm".
-- [gpt](/examples/gpt/): An example using GPT API's to answer messages.
-- [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
-- [grok](/examples/grok/): Integrate your agent with the Grok API
-- [gaia](/examples/gaia/): Integrate with the Gaia API
-- [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
-- [cointoss](/examples/cointoss/): Enabling group cointosses with friends inside a group chat
+- [gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
+- [gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
+- [nft-gated-group](/examples/xmtp-nft-gated-group/): Agent that uses a CDP for gassless USDC on base
+- [agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
 
-## Development
+See all the examples [here](/examples).
 
-### Run the gm agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-# install packages
-yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
-```
-
-### Web inbox
+## Web inbox
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
-![](/media/chat.png)
-
-### Work in local network
-
-`Dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself, so it's faster for development purposes.
-
-- 1. Install docker
-- 2. Start the XMTP service and database
-
-```tsx
-./dev/up
-```
-
-- 3. Change the .env file to use the local network
-
-```tsx
-XMTP_ENV = local;
-```
+![](/examples/xmtp-gm/screenshot.png)
