@@ -6,8 +6,8 @@ Using Gaia, you can also run your own [node](https://docs.gaianet.ai/getting-sta
 
 ## Getting started
 
-> [!NOTE]
-> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
 ### Requirements
 

@@ -6,8 +6,8 @@ This example demonstrates an agent setup on XMTP Network with access to the full
 
 ## Getting started
 
-> [!NOTE]
-> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
 ### Requirements
 
