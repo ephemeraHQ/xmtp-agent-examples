@@ -41,6 +41,7 @@ const main = async () => {
   const address = identifier.identifier;
   logAgentDetails(address, client.inboxId, XMTP_ENV);
 
+  /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 

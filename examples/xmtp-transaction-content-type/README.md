@@ -62,6 +62,16 @@ yarn dev
 
 ## Usage
 
+### Commands
+
+```bash
+# send a transaction request
+/tx <amount>
+
+# check your balance
+/balance
+```
+
 ### Create a transaction request
 
 With XMTP, a transaction request is represented using wallet_sendCalls RPC specification from EIP-5792 with additional metadata for display:

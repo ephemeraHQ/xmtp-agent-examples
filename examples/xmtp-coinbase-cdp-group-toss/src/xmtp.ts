@@ -25,16 +25,16 @@ export async function initializeXmtpClient() {
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
 
-  console.log(`Creating XMTP client on the '${XMTP_ENV}' network...`);
   const client = await Client.create(signer, encryptionKey, {
     env: XMTP_ENV as XmtpEnv,
     dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
   });
 
-  console.log("Syncing conversations...");
-  await client.conversations.sync();
-
   logAgentDetails(address, client.inboxId, XMTP_ENV);
+
+  /* Sync the conversations from the network to update the local db */
+  console.log("✓ Syncing conversations...");
+  await client.conversations.sync();
 
   return client;
 }
@@ -66,9 +66,7 @@ export async function startMessageListener(
     // Extract command from the message content
     const command = extractCommand(message.content as string);
     if (!command) {
-      console.log(
-        `Received message: ${message.content as string} by ${message.senderInboxId}`,
-      );
+      console.log(`Not a command, skipping`);
       continue; // No command found, skip
     }
 

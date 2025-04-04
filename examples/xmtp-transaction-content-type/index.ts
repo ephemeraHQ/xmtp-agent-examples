@@ -25,21 +25,19 @@ const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
 
 async function main() {
-  console.log("Starting transaction agent...");
-  console.log(`Creating client on the '${env}' network...`);
   /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, {
     env,
     codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
   });
 
-  console.log("Syncing conversations...");
-  /* Sync the conversations from the network to update the local db */
-  await client.conversations.sync();
-
   const identifier = await signer.getIdentifier();
   const agentAddress = identifier.identifier;
   logAgentDetails(agentAddress, client.inboxId, env);
+
+  /* Sync the conversations from the network to update the local db */
+  console.log("✓ Syncing conversations...");
+  await client.conversations.sync();
 
   console.log("Waiting for messages...");
   /* Stream all messages from the network */
@@ -82,7 +80,20 @@ async function main() {
 
     try {
       if (command === "/balance") {
-        const balance = await getUSDCBalance(agentAddress);
+        let balance = "";
+        try {
+          const result = await getUSDCBalance(agentAddress);
+          if (typeof result === "string") {
+            balance = result;
+          } else {
+            throw new Error("Invalid balance result");
+          }
+        } catch (error) {
+          console.error("Error getting balance:", error);
+          await conversation.send("Sorry, I couldn't retrieve your balance.");
+          continue;
+        }
+
         await conversation.send(`Your USDC balance is: ${balance} USDC`);
       } else if (command.startsWith("/tx ")) {
         const amount = parseFloat(command.split(" ")[1]);
@@ -96,11 +107,25 @@ async function main() {
         // Convert amount to USDC decimals (6 decimal places)
         const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
 
-        const walletSendCalls = createUSDCTransferCalls(
-          memberAddress,
-          agentAddress,
-          amountInDecimals,
-        );
+        let walletSendCalls;
+        try {
+          const result = createUSDCTransferCalls(
+            memberAddress,
+            agentAddress,
+            amountInDecimals,
+          );
+          if (result && typeof result === "object" && "version" in result) {
+            walletSendCalls = result;
+          } else {
+            throw new Error("Invalid wallet send calls result");
+          }
+        } catch (error) {
+          console.error("Error creating transfer calls:", error);
+          await conversation.send(
+            "Sorry, I couldn't process your transfer request.",
+          );
+          continue;
+        }
 
         await conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
       } else {
