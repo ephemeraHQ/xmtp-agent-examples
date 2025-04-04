@@ -12,8 +12,8 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 ## Getting started
 
-> [!NOTE]
-> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+> [!IMPORTANT]
+> See our [cursor rules](/.cursor/README.md) for vibe coding.
 
 ### Requirements
 
