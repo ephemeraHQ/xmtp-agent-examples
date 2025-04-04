@@ -112,7 +112,7 @@ main().catch(console.error);
 - [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-transaction-content-type](/examples/xmtp-transaction-content-type/): Use XMTP content types to send transactions
-- [xmtp-coinbase-cdp-group-toss](/examples/xmtp-coinbase-cdp-group-toss/): Agent that uses a CDP for gassless USDC on base
+- [xmtp-group-toss](/examples/xmtp-group-toss/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 

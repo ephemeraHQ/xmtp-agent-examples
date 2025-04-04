@@ -934,9 +934,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-coinbase-cdp-group-toss@workspace:examples/xmtp-coinbase-cdp-group-toss":
+"@examples/xmtp-group-toss@workspace:examples/xmtp-group-toss":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-coinbase-cdp-group-toss@workspace:examples/xmtp-coinbase-cdp-group-toss"
+  resolution: "@examples/xmtp-group-toss@workspace:examples/xmtp-group-toss"
   dependencies:
     "@coinbase/agentkit": "npm:^0.2.0"
     "@coinbase/agentkit-langchain": "npm:^0.2.0"
