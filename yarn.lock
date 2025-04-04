@@ -866,6 +866,7 @@ __metadata:
   resolution: "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type"
   dependencies:
     "@xmtp/content-type-transaction-reference": "npm:^2.0.1"
+    "@xmtp/content-type-wallet-send-calls": "npm:^1.0.0"
     "@xmtp/node-sdk": "npm:1.0.2"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
@@ -1843,6 +1844,15 @@ __metadata:
   dependencies:
     "@xmtp/content-type-primitives": "npm:^2.0.1"
   checksum: 10/809fa9e24241e358fe86030b52ba0005555ffc2bfb0520decbbe9057b54b784c92c5bb2ddaffe27ef0b21cec5d8809c74ded2a0ac297f5f6c747af95be6c133d
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-wallet-send-calls@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@xmtp/content-type-wallet-send-calls@npm:1.0.0"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+  checksum: 10/8157fe51b8917c12c924cb011faedd0391b6881915a1401de34909379f03559f5b4507c7bd9759671f744ebdea7d43d54ade957b77a6fad95cd99cbb96902a7e
   languageName: node
   linkType: hard
 
