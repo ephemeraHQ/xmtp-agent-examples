@@ -60,6 +60,9 @@ function ensureLocalStorage() {
   if (!fs.existsSync(XMTP_STORAGE_DIR)) {
     fs.mkdirSync(XMTP_STORAGE_DIR, { recursive: true });
   }
+  if (!fs.existsSync(WALLET_STORAGE_DIR)) {
+    fs.mkdirSync(WALLET_STORAGE_DIR, { recursive: true });
+  }
 }
 
 /**
@@ -106,12 +109,13 @@ async function initializeXmtpClient() {
   const signer = createSigner(WALLET_KEY);
   const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-  const client = await Client.create(signer, encryptionKey, {
-    env: XMTP_ENV as XmtpEnv,
-  });
-
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
+
+  const client = await Client.create(signer, encryptionKey, {
+    env: XMTP_ENV as XmtpEnv,
+    dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
+  });
 
   logAgentDetails(address, client.inboxId, XMTP_ENV);
 
@@ -186,18 +190,14 @@ async function initializeAgent(
         1. Always check the wallet details first to see what network you're on
         2. If on base-sepolia testnet, you can request funds from the faucet if needed
         3. For mainnet operations, provide wallet details and request funds from the user
+        4. If the user doesn't have any funds, ask them to deposit on your wallet address
 
-        Your default network is Base Sepolia testnet.
-        Your main and only token for transactions is USDC. Token address is 0x036CbD53842c5426634e7929541eC2318f3dCF7e. USDC is gasless on Base.
+        IMPORTANT:
+        Your default network is Base Sepolia testnet. Your main and only token for transactions is USDC. Token address is 0x036CbD53842c5426634e7929541eC2318f3dCF7e. USDC is gasless on Base.
 
-        You can only perform payment and wallet-related tasks. For other requests, politely explain that you're 
-        specialized in processing payments and can't assist with other tasks.
-                
-        If you encounter an error:
-        - For 5XX errors: Ask the user to try again later
-        - For other errors: Provide clear troubleshooting advice and offer to retry
         
-        Be concise, helpful, and security-focused in all your interactions.
+        Be concise, helpful, and security-focused in all your interactions. You can only perform payment and wallet-related tasks. For other requests, politely explain that you're 
+        specialized in processing payments and can't assist with other tasks.
       `,
     });
 
@@ -319,14 +319,6 @@ async function startMessageListener(client: Client) {
 async function main(): Promise<void> {
   console.log("Initializing Agent on XMTP...");
 
-  validateEnvironment([
-    "OPENAI_API_KEY",
-    "CDP_API_KEY_NAME",
-    "CDP_API_KEY_PRIVATE_KEY",
-    "WALLET_KEY",
-    "ENCRYPTION_KEY",
-    "XMTP_ENV",
-  ]);
   ensureLocalStorage();
 
   const xmtpClient = await initializeXmtpClient();
