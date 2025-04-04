@@ -13,6 +13,8 @@ https://github.com/user-attachments/assets/efb8006d-9758-483d-ad1b-9287ea4d426d
 
 - Node.js v20 or higher
 - Yarn v4 or higher
+- This example works on `Base` Sepolia
+- You'll need some `ETH` in your wallet to pay for the transaction
 - Connect with a wallet extension like [MetaMask](https://metamask.io/) or Coinbase Wallet
 - Docker (optional, for `local` network)
 - [USDC Faucet](https://portal.cdp.coinbase.com/products/faucet)

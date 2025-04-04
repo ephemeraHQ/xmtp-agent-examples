@@ -11,7 +11,7 @@ import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment([
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "WALLET_KEY",
   "ENCRYPTION_KEY",
   "XMTP_ENV",
@@ -21,19 +21,16 @@ const { WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment([
 const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-/* Set the environment to local, dev or production */
-const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
-
 async function main() {
   /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, {
-    env,
+    env: XMTP_ENV as XmtpEnv,
     codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
   });
 
   const identifier = await signer.getIdentifier();
   const agentAddress = identifier.identifier;
-  logAgentDetails(agentAddress, client.inboxId, env);
+  logAgentDetails(agentAddress, client.inboxId, XMTP_ENV);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");
@@ -80,21 +77,9 @@ async function main() {
 
     try {
       if (command === "/balance") {
-        let balance = "";
-        try {
-          const result = await getUSDCBalance(agentAddress);
-          if (typeof result === "string") {
-            balance = result;
-          } else {
-            throw new Error("Invalid balance result");
-          }
-        } catch (error) {
-          console.error("Error getting balance:", error);
-          await conversation.send("Sorry, I couldn't retrieve your balance.");
-          continue;
-        }
+        const result = await getUSDCBalance(agentAddress);
 
-        await conversation.send(`Your USDC balance is: ${balance} USDC`);
+        await conversation.send(`Your USDC balance is: ${result} USDC`);
       } else if (command.startsWith("/tx ")) {
         const amount = parseFloat(command.split(" ")[1]);
         if (isNaN(amount) || amount <= 0) {
@@ -107,25 +92,11 @@ async function main() {
         // Convert amount to USDC decimals (6 decimal places)
         const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
 
-        let walletSendCalls;
-        try {
-          const result = createUSDCTransferCalls(
-            memberAddress,
-            agentAddress,
-            amountInDecimals,
-          );
-          if (result && typeof result === "object" && "version" in result) {
-            walletSendCalls = result;
-          } else {
-            throw new Error("Invalid wallet send calls result");
-          }
-        } catch (error) {
-          console.error("Error creating transfer calls:", error);
-          await conversation.send(
-            "Sorry, I couldn't process your transfer request.",
-          );
-          continue;
-        }
+        const walletSendCalls = createUSDCTransferCalls(
+          memberAddress,
+          agentAddress,
+          amountInDecimals,
+        );
 
         await conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
       } else {
