@@ -33,7 +33,6 @@ const identifier = await signer.getIdentifier();
 const address = identifier.identifier;
 console.log(`Smart Wallet Address: ${address}`);
 const main = async () => {
-  console.log(`Creating client on the '${XMTP_ENV}' network...`);
   const client = await Client.create(signer, encryptionKey, {
     env: XMTP_ENV as XmtpEnv,
   });
