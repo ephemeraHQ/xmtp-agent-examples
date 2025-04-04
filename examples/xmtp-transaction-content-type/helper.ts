@@ -73,18 +73,7 @@ export function createUSDCTransferCalls(
           platform: USDC_CONFIG.platform,
         },
       },
-      {
-        to: USDC_CONFIG.tokenAddress as `0x${string}`,
-        data: transactionData as `0x${string}`,
-        metadata: {
-          description: `Transfer ${amount / Math.pow(10, USDC_CONFIG.decimals)} USDC on Base Sepolia`,
-          transactionType: "transfer",
-          currency: "USDC",
-          amount: amount,
-          decimals: USDC_CONFIG.decimals,
-          platform: USDC_CONFIG.platform,
-        },
-      },
+      /* add more calls here */
     ],
   };
 }
