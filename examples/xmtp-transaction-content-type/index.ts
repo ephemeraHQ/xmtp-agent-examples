@@ -1,13 +1,12 @@
 import "dotenv/config";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import {
   ContentTypeWalletSendCalls,
-  createUSDCTransferCalls,
-  getUSDCBalance,
   WalletSendCallsCodec,
-} from "./helper";
+} from "@xmtp/content-type-wallet-send-calls";
+import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { createUSDCTransferCalls, getUSDCBalance } from "./helper";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
