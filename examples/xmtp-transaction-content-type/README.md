@@ -1,6 +1,6 @@
 # Transaction agent example
 
-This example uses [content-type-transaction-reference]() and [content-type-wallet-send-calls]().
+This example uses 2 content types related to transaction requests and receipts.
 
 ![](./screenshot.png)
 
@@ -14,6 +14,9 @@ This example uses [content-type-transaction-reference]() and [content-type-walle
 - Node.js v20 or higher
 - Yarn v4 or higher
 - Docker (optional, for local network)
+- USDC Faucet
+- [@xmtp/content-type-transaction-reference](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-transaction-reference)
+- [@xmtp/content-type-wallet-send-calls](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-wallet-send-calls)
 
 ### Environment variables
 
