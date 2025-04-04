@@ -1,5 +1,5 @@
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { createUSDCTransferCalls, getUSDCBalance } from "@helpers/transaction";
+import { createUSDCTransferCalls, getUSDCBalance } from "@helpers/usdc";
 import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import {
