@@ -37,6 +37,7 @@ export const logAgentDetails = (
     `║ 📍 Address: ${address}${" ".repeat(maxLengthWithDbPath - address.length - 15)}║`,
     `║ 📍 inboxId: ${inboxId}${" ".repeat(maxLengthWithDbPath - inboxId.length - 15)}║`,
     `║ 📂 DB Path: ${dbPath}${" ".repeat(maxLengthWithDbPath - dbPath.length - 15)}║`,
+    `║ 🛜  Network: ${env}${" ".repeat(maxLengthWithDbPath - env.length - 15)}║`,
     `║ 🔗 URL: ${url}${" ".repeat(maxLengthWithDbPath - url.length - 11)}║`,
     `╚${createLine(maxLengthWithDbPath)}╝`,
   ].join("\n");

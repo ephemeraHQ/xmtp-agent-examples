@@ -16,7 +16,6 @@ const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 async function main() {
-  console.log(`Creating client on the '${XMTP_ENV}' network...`);
   const client = await Client.create(signer, encryptionKey, {
     env: XMTP_ENV as XmtpEnv,
   });

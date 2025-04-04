@@ -246,7 +246,6 @@ const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
 
 async function main() {
-  console.log(`Creating client on the '${env}' network...`);
   const client = await Client.create(signer, encryptionKey, { env });
 
   console.log("Syncing conversations...");

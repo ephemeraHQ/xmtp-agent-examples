@@ -36,7 +36,6 @@ const openai = new OpenAI({
  * Main function to run the agent
  */
 async function main() {
-  console.log(`Creating client on the '${XMTP_ENV}' network...`);
   /* Initialize the xmtp client */
   const client = await Client.create(signer, encryptionKey, {
     env: XMTP_ENV as XmtpEnv,
