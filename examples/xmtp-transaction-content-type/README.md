@@ -13,8 +13,9 @@ This example uses 2 content types related to transaction requests and receipts.
 
 - Node.js v20 or higher
 - Yarn v4 or higher
-- Docker (optional, for local network)
-- USDC Faucet
+- Connect with a wallet extension like [MetaMask](https://metamask.io/) or Coinbase Wallet
+- Docker (optional, for `local` network)
+- [USDC Faucet](https://portal.cdp.coinbase.com/products/faucet)
 - [@xmtp/content-type-transaction-reference](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-transaction-reference)
 - [@xmtp/content-type-wallet-send-calls](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-wallet-send-calls)
 
