@@ -172,52 +172,146 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 19. Always use the built-in key generation command instead of creating your own script:
 
-### Environment variables
+    Environment variables
 
-To run your XMTP agent, you must create a `.env` file with the following variables:
+    To run your XMTP agent, you must create a `.env` file with the following variables:
 
-```bash
-WALLET_KEY= # the private key of the wallet
-ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV=dev # local, dev, production
-```
+    ```bash
+    WALLET_KEY= # the private key of the wallet
+    ENCRYPTION_KEY= # encryption key for the local database
+    XMTP_ENV=dev # local, dev, production
+    ```
 
-### Generating XMTP Keys
+    Generating XMTP Keys
 
-Always use the built-in key generation command instead of creating your own script:
+    Always use the built-in key generation command instead of creating your own script:
 
-```bash
-# Generate generic keys
-yarn gen:keys
+    ```bash
+    # Generate generic keys
+    yarn gen:keys
+    ```
 
-# Generate keys for a specific user
-yarn gen:keys
-```
+    This command will:
 
-This command will:
+    1. Generate a secure wallet private key
+    2. Create an encryption key for the local database
+    3. Output the corresponding public key
+    4. Automatically append the keys to your `.env` file
 
-1. Generate a secure wallet private key
-2. Create an encryption key for the local database
-3. Output the corresponding public key
-4. Automatically append the keys to your `.env` file
+    Example output in `.env`:
 
-Example output in `.env`:
+    ```bash
+    # Generic keys
+    WALLET_KEY=0x...
+    ENCRYPTION_KEY=...
+    XMTP_ENV=dev
+    # public key is 0x...
+    ```
 
-```bash
-# Generic keys
-WALLET_KEY=0x...
-ENCRYPTION_KEY=...
-# public key is 0x...
+    > [!IMPORTANT]
+    > Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies (@xmtp/node-sdk v1.0.2).
 
-# User-specific keys
-# alice
-WALLET_KEY_ALICE=0x...
-ENCRYPTION_KEY_ALICE=...
-# public key is 0x...
-```
+20. Package.json Guidelines
 
-> [!IMPORTANT]
-> Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies (@xmtp/node-sdk v1.0.2).
+    Use proper package naming convention:
+
+    ```json
+    {
+      "name": "@examples/xmtp-your-agent-name"
+    }
+    ```
+
+    Always include these standard fields:
+
+    ```json
+    {
+      "version": "0.0.1",
+      "private": true,
+      "type": "module"
+    }
+    ```
+
+    Standard scripts configuration:
+
+    ```json
+    {
+      "scripts": {
+        "build": "tsc",
+        "dev": "tsx --watch index.ts",
+        "gen:keys": "tsx ../../scripts/generateKeys.ts",
+        "lint": "cd ../.. && yarn eslint examples/your-agent-folder",
+        "start": "tsx index.ts"
+      }
+    }
+    ```
+
+    Dependencies:
+
+    - Use exact version of @xmtp/node-sdk (not ^)
+    - Current version should be 1.0.5
+
+    ```json
+    {
+      "dependencies": {
+        "@xmtp/node-sdk": "1.0.5"
+        /* other dependencies */
+      }
+    }
+    ```
+
+    DevDependencies:
+
+    - Use tsx instead of ts-node
+    - Include specific versions
+
+    ```json
+    {
+      "devDependencies": {
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.3"
+      }
+    }
+    ```
+
+    Package manager and engine specifications:
+
+    ```json
+    {
+      "packageManager": "yarn@4.6.0",
+      "engines": {
+        "node": ">=20"
+      }
+    }
+    ```
+
+    Here's how the correct package.json should look for a simple agent:
+
+    ```json
+    {
+      "name": "@examples/xmtp-number-multiplier",
+      "version": "0.0.1",
+      "private": true,
+      "type": "module",
+      "scripts": {
+        "build": "tsc",
+        "dev": "tsx --watch index.ts",
+        "gen:keys": "tsx ../../scripts/generateKeys.ts",
+        "lint": "cd ../.. && yarn eslint examples/xmtp-number-multiplier",
+        "start": "tsx index.ts"
+      },
+      "dependencies": {
+        "@xmtp/node-sdk": "1.0.5"
+      },
+      "devDependencies": {
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.3"
+      },
+      "packageManager": "yarn@4.6.0",
+      "engines": {
+        "node": ">=20"
+      }
+    }
+    ```
 
 ## Example: XMTP Group Creator Agent
 
@@ -545,7 +639,7 @@ if (member) {
   }
 
   // Get installation ID
-  if (member.installationIds && member.installationIds.length > 0) {
+  if (member.installationIds.length > 0) {
     const installationId = member.installationIds[0];
     console.log(`Found installation ID: ${installationId}`);
   }
@@ -832,37 +926,6 @@ const dbPath = `${volumePath}/${signer.getAddress()}-${env}`;
 // Create database directory if it doesn't exist
 if (!fs.existsSync(dbPath)) {
   fs.mkdirSync(dbPath, { recursive: true });
-}
-```
-
-### Package.js
-
-Example package.json for a project that uses XMTP:
-
-```json
-{
-  "name": "xmtp-agent",
-  "version": "0.0.1",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsx --watch index.ts",
-    "gen:keys": "tsx scripts/generateKeys.ts",
-    "start": "tsx index.ts"
-  },
-  "dependencies": {
-    "@xmtp/node-sdk": "1.0.5"
-    /* other dependencies */
-  },
-  "devDependencies": {
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
-  },
-  "packageManager": "yarn@4.6.0",
-  "engines": {
-    "node": ">=20"
-  }
 }
 ```
 
