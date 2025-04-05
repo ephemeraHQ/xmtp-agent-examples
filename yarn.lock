@@ -992,16 +992,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-number-multiplier@workspace:examples/xmtp-number-multiplier":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-number-multiplier@workspace:examples/xmtp-number-multiplier"
-  dependencies:
-    "@xmtp/node-sdk": "npm:1.0.5"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
