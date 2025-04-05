@@ -11,31 +11,43 @@ if (major < 20) {
   process.exit(1);
 }
 
-console.log("Generating keys...");
+console.log("Generating keys for example...");
 
 const walletKey = generatePrivateKey();
 const account = privateKeyToAccount(walletKey);
 const encryptionKeyHex = generateEncryptionKeyHex();
 const publicKey = account.address;
 
-const filePath = join(process.cwd(), ".env");
+// Get the current working directory (should be the example directory)
+const exampleDir = process.cwd();
+const exampleName = exampleDir.split("/").pop() || "example";
+const filePath = join(exampleDir, ".env");
+
+console.log(`Creating .env file in: ${exampleDir}`);
 
 // Read existing .env file if it exists
 let existingEnv = "";
 try {
   existingEnv = await readFile(filePath, "utf-8");
+  console.log("Found existing .env file");
 } catch {
   // File doesn't exist, that's fine
+  console.log("No existing .env file found, creating new one");
 }
 
 // Check if XMTP_ENV is already set
 const xmtpEnvExists = existingEnv.includes("XMTP_ENV=");
 
-const envContent = `\n# generic keys
+const envContent = `# XMTP keys for ${exampleName}
 WALLET_KEY=${walletKey}
 ENCRYPTION_KEY=${encryptionKeyHex}
 ${!xmtpEnvExists ? "XMTP_ENV=dev\n" : ""}# public key is ${publicKey}
 `;
 
-await writeFile(filePath, envContent, { flag: "a" });
-console.log(`Generic keys written to ${filePath}`);
+// Write the .env file to the example directory
+await writeFile(filePath, envContent, { flag: "w" });
+console.log(`Keys written to ${filePath}`);
+console.log(`Public key: ${publicKey}`);
+console.log(
+  `\nTo use this agent, send a message to: http://xmtp.chat/dm/${publicKey}?env=dev`,
+);

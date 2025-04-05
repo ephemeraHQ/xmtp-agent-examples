@@ -27,7 +27,9 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     ```typescript
     const signer = createSigner(WALLET_KEY);
     const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-    const client = await Client.create(signer, encryptionKey, { env });
+    const client = await Client.create(signer, encryptionKey, {
+      env: XMTP_ENV as XmtpEnv,
+    });
     ```
 
 5.  Use proper environment variable validation at the start of each application. Check for required environment variables and show descriptive errors if missing.
@@ -237,10 +239,11 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     {
       "scripts": {
         "build": "tsc",
-        "dev": "tsx --watch index.ts",
+        "clean": "cd ../../ && rm -rf examples/xmtp-group-toss/.data",
+        "dev": "tsx --watch src/index.ts",
         "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/your-agent-folder",
-        "start": "tsx index.ts"
+        "lint": "cd ../.. && yarn eslint examples/xmtp-group-toss",
+        "start": "tsx src/index.ts"
       }
     }
     ```
@@ -323,13 +326,17 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 ```typescript
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
+import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import { Client, IdentifierKind } from "@xmtp/node-sdk";
 
-// Environment variables validation
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = process.env;
-if (!WALLET_KEY) throw new Error("WALLET_KEY must be set");
-if (!ENCRYPTION_KEY) throw new Error("ENCRYPTION_KEY must be set");
-if (!XMTP_ENV) throw new Error("XMTP_ENV must be set");
+/* Get the wallet key associated to the public key of
+ * the agent and the encryption key for the local db
+ * that stores your agent's messages */
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+  "WALLET_KEY",
+  "ENCRYPTION_KEY",
+  "XMTP_ENV",
+]);
 
 // Define the address to always add to new groups
 const MEMBER_ADDRESS = "0x7c40611372d354799d138542e77243c284e460b2";
@@ -337,17 +344,17 @@ const MEMBER_ADDRESS = "0x7c40611372d354799d138542e77243c284e460b2";
 // Initialize client
 const signer = createSigner(WALLET_KEY);
 const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-const env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
 
 async function main() {
-  const client = await Client.create(signer, encryptionKey, { env });
+  const client = await Client.create(signer, encryptionKey, {
+    env: XMTP_ENV as XmtpEnv,
+  });
 
   // Log connection details
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
-  console.log(
-    `Group Creator Agent initialized on ${address}\nSend a message on http://xmtp.chat/dm/${address}?env=${env}`,
-  );
+
+  logAgentDetails(address, client.inboxId, XMTP_ENV);
 
   console.log("✓ Syncing conversations...");
   /* Sync the conversations from the network to update the local db */
@@ -921,7 +928,7 @@ When working with these classes:
 ```jsx
 // Railway deployment support
 let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-const dbPath = `${volumePath}/${signer.getAddress()}-${env}`;
+const dbPath = `${volumePath}/${signer.getAddress()}-${XMTP_ENV}`;
 
 // Create database directory if it doesn't exist
 if (!fs.existsSync(dbPath)) {
