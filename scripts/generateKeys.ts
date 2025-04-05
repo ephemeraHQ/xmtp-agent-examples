@@ -48,6 +48,3 @@ ${!xmtpEnvExists ? "XMTP_ENV=dev\n" : ""}# public key is ${publicKey}
 await writeFile(filePath, envContent, { flag: "w" });
 console.log(`Keys written to ${filePath}`);
 console.log(`Public key: ${publicKey}`);
-console.log(
-  `\nTo use this agent, send a message to: http://xmtp.chat/dm/${publicKey}?env=dev`,
-);
