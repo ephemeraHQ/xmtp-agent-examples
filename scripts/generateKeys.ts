@@ -45,6 +45,6 @@ ${!xmtpEnvExists ? "XMTP_ENV=dev\n" : ""}# public key is ${publicKey}
 `;
 
 // Write the .env file to the example directory
-await writeFile(filePath, envContent, { flag: "w" });
+await writeFile(filePath, envContent, { flag: "a" });
 console.log(`Keys written to ${filePath}`);
 console.log(`Public key: ${publicKey}`);
