@@ -41,6 +41,7 @@ yarn gen:keys
 
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
+> You will need to rename the vars for it to work with the example.
 
 ### Run the agents
 
