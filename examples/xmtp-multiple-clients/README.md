@@ -58,3 +58,43 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
+
+## Usage
+
+This example demonstrates how to run multiple XMTP clients simultaneously
+
+```tsx
+const workerConfigs: WorkerConfig[] = [
+  {
+    name: "agent1",
+    walletKey: WALLET_KEY_AGENT1,
+    encryptionKey: ENCRYPTION_KEY_AGENT1,
+    xmtpEnv: XMTP_ENV as XmtpEnv,
+  },
+  {
+    name: "agent2",
+    walletKey: WALLET_KEY_AGENT2,
+    encryptionKey: ENCRYPTION_KEY_AGENT2,
+    xmtpEnv: XMTP_ENV as XmtpEnv,
+  },
+  {
+    name: "agent3",
+    walletKey: WALLET_KEY_AGENT3,
+    encryptionKey: ENCRYPTION_KEY_AGENT3,
+    xmtpEnv: XMTP_ENV as XmtpEnv,
+  },
+];
+
+// Create worker manager and initialize workers
+console.log("Initializing XMTP client workers...");
+const workers = await createXmtpWorkers(workerConfigs);
+
+// Start message streams for all workers
+console.log("Starting message streams for all workers...");
+
+await Promise.all([
+  workers.startMessageStream("agent1", gmMessageHandler),
+  workers.startMessageStream("agent2", gmMessageHandler),
+  workers.startMessageStream("agent3", gmMessageHandler),
+]);
+```

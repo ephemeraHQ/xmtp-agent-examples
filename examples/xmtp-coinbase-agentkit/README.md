@@ -59,7 +59,7 @@ yarn gen:keys
 yarn dev
 ```
 
-### Usage
+## Usage
 
 Example prompts:
 

@@ -919,6 +919,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@examples/xmtp-attachment-content-type@workspace:examples/xmtp-attachment-content-type":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-attachment-content-type@workspace:examples/xmtp-attachment-content-type"
+  dependencies:
+    "@xmtp/content-type-remote-attachment": "npm:^2.0.1"
+    "@xmtp/node-sdk": "npm:1.0.5"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-coinbase-agentkit@workspace:examples/xmtp-coinbase-agentkit":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-coinbase-agentkit@workspace:examples/xmtp-coinbase-agentkit"
@@ -1273,6 +1284,13 @@ __metadata:
   version: 1.7.1
   resolution: "@noble/hashes@npm:1.7.1"
   checksum: 10/ca3120da0c3e7881d6a481e9667465cc9ebbee1329124fb0de442e56d63fef9870f8cc96f264ebdb18096e0e36cebc0e6e979a872d545deb0a6fed9353f17e05
+  languageName: node
+  linkType: hard
+
+"@noble/secp256k1@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "@noble/secp256k1@npm:2.2.3"
+  checksum: 10/ea2947063136819f07e3c1493888c778c49555432322b11f50030daa297fe5c0446f672711728aef695b51ff4d9be8747b065793b95396c2ed8dd826fa08941c
   languageName: node
   linkType: hard
 
@@ -1925,6 +1943,17 @@ __metadata:
   dependencies:
     "@xmtp/proto": "npm:^3.78.0"
   checksum: 10/966d17a2ef9b70452348651e7eb56d858608d4b910343bdc8886bc73693040ea34ce69bac74bd4367404f6cf6f7b6ec7b25a2dd25c507fc35bee1447065ea02d
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-remote-attachment@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@xmtp/content-type-remote-attachment@npm:2.0.1"
+  dependencies:
+    "@noble/secp256k1": "npm:^2.2.3"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/c0e3710f585a1a81cc0fbd7e8d1d71c2ae40a820b01c52bd36b59fed1159cef17ec689ba3cd8e4e83870db23ca119ba9d094656431033b1c8413e5af1bfa44e9
   languageName: node
   linkType: hard
 
