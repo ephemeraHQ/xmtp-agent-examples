@@ -54,6 +54,8 @@ yarn dev
 
 ### Import the content type
 
+The content type is required to send and receive attachments.
+
 ```tsx
 import {
   AttachmentCodec,
@@ -63,6 +65,8 @@ import {
 ```
 
 ### Register the codec
+
+Registering the codec is required to send and receive attachments. If not provided it will render an error.
 
 ```tsx
 const client = await Client.create(signer, encryptionKey, {
