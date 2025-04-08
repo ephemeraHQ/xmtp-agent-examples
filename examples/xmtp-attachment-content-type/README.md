@@ -49,3 +49,53 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
+
+## Usage
+
+### Import the content type
+
+```tsx
+import {
+  AttachmentCodec,
+  ContentTypeAttachment,
+  RemoteAttachmentCodec,
+} from "@xmtp/content-type-remote-attachment";
+```
+
+### Register the codec
+
+```tsx
+const client = await Client.create(signer, encryptionKey, {
+  codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
+});
+```
+
+### Send an image
+
+```tsx
+let imgArray: Uint8Array;
+let mimeType: string;
+let filename: string;
+
+const MAX_SIZE = 1024 * 1024; // 1MB in bytes
+
+  const file = await readFile(source);
+
+  // Check file size
+  if (file.length > MAX_SIZE) {
+    throw new Error("Image size exceeds 1MB limit");
+  }
+
+  filename = path.basename(source);
+  const extname = path.extname(source);
+  mimeType = `image/${extname.replace(".", "").replace("jpg", "jpeg")}`;
+  imgArray = new Uint8Array(file);
+}
+
+const attachment: Attachment = {
+  filename,
+  mimeType,
+  data: imgArray,
+};
+await conversation.send(attachment, ContentTypeAttachment);
+```
