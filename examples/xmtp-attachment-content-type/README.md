@@ -13,6 +13,7 @@ This agent replies with an attachment.
 - Yarn v4 or higher
 - Docker (optional, for local network)
 - [Pinata API key](https://app.pinata.cloud/developers/api-keys)
+- [@xmtp/content-type-remote-attachment](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-remote-attachment)
 
 ### Environment variables
 
