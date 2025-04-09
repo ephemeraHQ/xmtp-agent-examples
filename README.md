@@ -97,8 +97,8 @@ const env: XmtpEnv = "dev";
 async function main() {
   const client = await Client.create(signer, encryptionKey, { env });
   await client.conversations.sync();
-  const stream = client.conversations.streamAllMessages();
-  for await (const message of await stream) {
+  const stream = await client.conversations.streamAllMessages();
+  for await (const message of  stream) {
     // ignore messages from the agent
    if (message?.senderInboxId === client.inboxId ) {
       continue;

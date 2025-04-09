@@ -53,9 +53,9 @@ export async function startMessageListener(
   handleMessage: MessageHandler,
 ) {
   console.log("Waiting for messages...");
-  const stream = client.conversations.streamAllMessages();
+  const stream = await client.conversations.streamAllMessages();
 
-  for await (const message of await stream) {
+  for await (const message of stream) {
     // Ignore messages from the same agent or non-text messages
     if (
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||

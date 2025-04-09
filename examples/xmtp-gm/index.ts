@@ -28,9 +28,9 @@ async function main() {
   await client.conversations.sync();
 
   console.log("Waiting for messages...");
-  const stream = client.conversations.streamAllMessages();
+  const stream = await client.conversations.streamAllMessages();
 
-  for await (const message of await stream) {
+  for await (const message of stream) {
     if (
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
       message?.contentType?.typeId !== "text"

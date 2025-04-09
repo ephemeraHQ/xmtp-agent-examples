@@ -362,9 +362,9 @@ async function main() {
 
   // Start listening for messages
   console.log("Waiting for messages...");
-  const stream = client.conversations.streamAllMessages();
+  const stream = await client.conversations.streamAllMessages();
 
-  for await (const message of await stream) {
+  for await (const message of stream) {
     /* Ignore messages from the same agent or non-text messages */
     if (
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
@@ -738,8 +738,8 @@ There are two ways to retrieve messages from conversations:
 Stream all messages to process them in real-time:
 
 ```typescript
-const stream = client.conversations.streamAllMessages();
-for await (const message of await stream) {
+const stream = await client.conversations.streamAllMessages();
+for await (const message of stream) {
   // Process each message as it arrives
   console.log(`Received message: ${message.content as string}`);
 }
