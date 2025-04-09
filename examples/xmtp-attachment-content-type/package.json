@@ -11,13 +11,10 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@web3-storage/upload-client": "^17.1.4",
-    "@web3-storage/w3up-client": "^17.2.0",
     "@xmtp/content-type-remote-attachment": "^2.0.1",
     "@xmtp/node-sdk": "1.0.5",
     "axios": "^1.8.4",
-    "form-data": "^4.0.2",
-    "web3.storage": "^4.5.5"
+    "form-data": "^4.0.2"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

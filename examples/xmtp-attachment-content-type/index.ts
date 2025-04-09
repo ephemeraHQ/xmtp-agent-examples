@@ -4,7 +4,6 @@ import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import {
   AttachmentCodec,
-  ContentTypeAttachment,
   ContentTypeRemoteAttachment,
   RemoteAttachmentCodec,
   type Attachment,
