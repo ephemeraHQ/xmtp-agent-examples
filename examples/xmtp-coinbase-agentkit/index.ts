@@ -326,7 +326,4 @@ async function main(): Promise<void> {
 }
 
 // Start the chatbot
-main().catch((error: unknown) => {
-  console.error("Fatal error:", error);
-  process.exit(1);
-});
+main().catch(console.error);

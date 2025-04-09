@@ -492,13 +492,7 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(
-    "Unhandled error:",
-    error instanceof Error ? error.message : String(error),
-  );
-  process.exit(1);
-});
+main().catch(console.error);
 ```
 
 ## XMTP Helper Functions
@@ -943,7 +937,7 @@ if (!fs.existsSync(dbPath)) {
 
 ### Web inbox
 
-Interact with the XMTP network using [xmtp.chat]mtp.chat), the official web inbox for developers.
+Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
 ### Work in local network
 

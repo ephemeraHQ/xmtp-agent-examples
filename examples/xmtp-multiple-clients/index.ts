@@ -128,10 +128,4 @@ async function main(): Promise<void> {
 }
 
 // Run the main function
-main().catch((error: unknown) => {
-  console.error(
-    "Unhandled error:",
-    error instanceof Error ? error.message : String(error),
-  );
-  process.exit(1);
-});
+main().catch(console.error);
