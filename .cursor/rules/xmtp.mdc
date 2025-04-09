@@ -11,7 +11,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 1.  Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
-2.  Use the XMTP node-sdk v1.0.2 or newer, which offers enhanced functionality including group conversations.
+2.  Use the XMTP node-sdk v1.1.1 or newer, which offers enhanced functionality including group conversations.
 
 3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
 
@@ -216,7 +216,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     ```
 
     > [!IMPORTANT]
-    > Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies (@xmtp/node-sdk v1.0.2).
+    > Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies
 
 20. Package.json Guidelines
 
@@ -256,7 +256,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     Dependencies:
 
     - Use exact version of @xmtp/node-sdk (not ^)
-    - Current version should be 1.0.5
+    - Current version should be 1.1.1
 
     ```json
     {
