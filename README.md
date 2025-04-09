@@ -121,7 +121,8 @@ main().catch(console.error);
 - [xmtp-group-toss](/examples/xmtp-group-toss/): Agent that uses a group to toss a coin
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
-- [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Agent that uses multiple clients to send messages
+- [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Parallel agents listening and sending messages
+- [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
 
 ## Web inbox
 

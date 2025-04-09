@@ -925,7 +925,7 @@ __metadata:
   resolution: "@examples/xmtp-attachment-content-type@workspace:examples/xmtp-attachment-content-type"
   dependencies:
     "@xmtp/content-type-remote-attachment": "npm:^2.0.1"
-    "@xmtp/node-sdk": "npm:1.0.5"
+    "@xmtp/node-sdk": "npm:1.1.1"
     axios: "npm:^1.8.4"
     form-data: "npm:^4.0.2"
     tsx: "npm:^4.19.2"
