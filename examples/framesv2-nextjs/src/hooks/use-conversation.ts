@@ -3,8 +3,20 @@ import type {
   DecodedMessage,
   SafeListMessagesOptions,
 } from "@xmtp/browser-sdk";
+import { ContentTypeReaction } from "@xmtp/content-type-reaction";
+import { ContentTypeRemoteAttachment } from "@xmtp/content-type-remote-attachment";
+import { ContentTypeReply } from "@xmtp/content-type-reply";
+import { ContentTypeTransactionReference } from "@xmtp/content-type-transaction-reference";
+import { ContentTypeWalletSendCalls } from "@xmtp/content-type-wallet-send-calls";
 import { useState } from "react";
 import { useXMTP } from "@/context/xmtp-context";
+
+type ContentType =
+  | typeof ContentTypeReaction
+  | typeof ContentTypeRemoteAttachment
+  | typeof ContentTypeReply
+  | typeof ContentTypeTransactionReference
+  | typeof ContentTypeWalletSendCalls;
 
 export const useConversation = (conversation?: Conversation) => {
   const { client } = useXMTP();
@@ -50,15 +62,13 @@ export const useConversation = (conversation?: Conversation) => {
     }
   };
 
-  const send = async (message: string) => {
-    if (!client) {
-      return;
-    }
+  const send = async (content: any, contentType?: ContentType) => {
+    if (!client) return;
 
     setSending(true);
 
     try {
-      await conversation?.send(message);
+      await conversation?.send(content, contentType);
     } finally {
       setSending(false);
     }

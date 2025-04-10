@@ -40,6 +40,33 @@ export default function CurrentConversationPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [handleSearch, setHandleSearch] = useState(false);
   const [showInviteUsers, setShowInviteUsers] = useState(false);
+  const [clientAddress, setClientAddress] = useState<`0x${string}` | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    const loadClientAddress = async () => {
+      if (!client || !client.inboxId) return;
+
+      const inboxState = await client.preferences.inboxStateFromInboxIds([
+        client.inboxId,
+      ]);
+      for (const member of inboxState[0].accountIdentifiers) {
+        const memberAddress = member.identifier;
+        if (!memberAddress) {
+          console.log("Unable to find member address, skipping");
+          continue;
+        }
+        if (member.identifierKind === "Ethereum") {
+          if (memberAddress.startsWith("0x")) {
+            setClientAddress(memberAddress as `0x${string}`);
+            break;
+          }
+        }
+      }
+    };
+    void loadClientAddress();
+  }, [client, conversation]);
 
   const conversationName =
     conversation.metadata?.conversationType === "dm"
@@ -164,13 +191,18 @@ export default function CurrentConversationPage({
               messages={currentConversationMessages}
               groupMembers={groupMembers}
               clientInboxId={client?.inboxId}
+              conversation={conversation}
             />
           </ScrollArea>
         </div>
       </div>
 
       {/* Send Message */}
-      <SendMessage conversation={conversation} loadMessages={loadMessages} />
+      <SendMessage
+        conversation={conversation}
+        loadMessages={loadMessages}
+        memberAddress={clientAddress}
+      />
     </div>
   );
 }

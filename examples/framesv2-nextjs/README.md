@@ -1,20 +1,19 @@
 # XMTP x Framesv2 with Next.js
 
-A Farcaster Framesv2 with XMTP private chat example.
+A Farcaster MiniApp (ex Framesv2) with XMTP private chat example.
 
 ![screenshot](./public/images/screenshot.png)
 
 ## Getting Started
 
-This Farcaster Frame is a [Next.js](https://nextjs.org) project bootstrapped with the [`Builders Garden miniapp template`](https://github.com/builders-garden/miniapp-next-template), you can find more information about the template [here](https://frames-v2.builders.garden).
-For more information about Farcaster Framesv2, you can find more information [here](https://framesv2.com/).
+This Farcaster Miniapp (Framev2) is a [Next.js](https://nextjs.org) project bootstrapped with the [`Builders Garden miniapp template`](https://github.com/builders-garden/miniapp-next-template), you can find more information about the template [here](https://frames-v2.builders.garden).
+For more information about Farcaster Miniapps, you can find more information [here](https://miniapps.farcaster.xyz/).
 
 ## Prerequisites
 
 - Node.js >=20
 - Yarn @4.6.0 package manager
 - A Farcaster account on your phone
-
 
 ## Local Development
 
@@ -56,31 +55,22 @@ cp .env.example .env.local
 ## Testing the frame
 
 Once you setup the environment variables, you can run the frame by doing `yarn dev`.
-In order to access the frame from Farcaster, you need to deploy it to a public URL or expose your local environment to the internet, for that you can use [ngrok](https://ngrok.com/) or [cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/create-local-tunnel/).
+Now you can access the frame from Farcaster official link: just go to https://warpcast.com/~/developers/mini-apps/debug and insert http://localhost:3000 as the URL of the frame.
+If you want to access a responsive layout, you can use the frames.js debugger via `yarn frames` to test the frame by entering the NEXT_PUBLIC_URL (eg. http://localhost:3000) and see the frame embed and interact with it.
+
+Alternatively, you can try it out on your phone either deploying it, or exposing your local environment to the internet, for that you can use [ngrok](https://ngrok.com/) or [cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/create-local-tunnel/).
 
 ### Using frames.js debugger
-While you are running the frame with `yarn dev:local` you can use the frames.js debugger to test the frame by entering the NEXT_PUBLIC_URL (eg. http://localhost:3000) and see the frame embed and interact with it.
+While you are running the frame with `yarn dev` you can use the frames.js debugger to test the frame by entering the NEXT_PUBLIC_URL (eg. http://localhost:3000) and see the frame embed and interact with it.
 Just open a new terminal tab and run:
 ```bash
 yarn frames
 ```
 
-### Using localtunnel
-If you have set the .env.local variable as provided in .env.example, with USE_TUNNEL set to true and NEXT_PUBLIC_URL set to `https://localhost:3000`, the `yarn dev` command will automatically start a localtunnel tunnel and you can access the frame from Farcaster using the localtunnel URL.
-Then you can:
-1. Go to the [warpcast frames dev dashboard](https://warpcast.com/~/developers/frames)
-2. Scroll down to the "Preview Frame" tool
-3. Enter this URL: `https://localhost:3000`
-4. Click "Preview" to test your frame
-
 ### Using ngrok
 Go to [Ngrok Dashboard](https://dashboard.ngrok.com/), download and install ngrok, then obtain a custom static domain for your ngrok tunnel, so you will be able to access the frame from Farcaster using this custom domain name.
 ```bash
-ngrok http --url=your-custom-domain.ngrok-free.app 3000
-```
-or if you want to use ngrok with USE_TUNNEL set to true, you can use the following command:
-```bash
-ngrok http https://localhost:3000 --host-header="localhost:3000"
+ngrok http --url=<your-custom-domain>.ngrok-free.app 3000
 ```
 
 Now update the `NEXT_PUBLIC_URL` environment variable on `.env.local` with the ngrok static URL.

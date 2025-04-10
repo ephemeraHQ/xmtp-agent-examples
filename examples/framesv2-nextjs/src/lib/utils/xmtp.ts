@@ -77,7 +77,7 @@ export const createNodeEphemeralSigner = (privateKey: Hex): NodeSigner => {
     }),
     signMessage: async (message: string) => {
       const signature = await user.wallet.signMessage({
-        account: user.account.address,
+        account: user.account,
         message,
       });
       return toBytes(signature);

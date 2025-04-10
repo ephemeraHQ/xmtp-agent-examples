@@ -1,15 +1,34 @@
-import { DecodedMessage, SafeGroupMember } from "@xmtp/browser-sdk";
+import {
+  Conversation,
+  DecodedMessage,
+  SafeGroupMember,
+} from "@xmtp/browser-sdk";
+import {
+  ContentTypeTransactionReference,
+  TransactionReference,
+} from "@xmtp/content-type-transaction-reference";
+import {
+  ContentTypeWalletSendCalls,
+  WalletSendCallsParams,
+} from "@xmtp/content-type-wallet-send-calls";
+import {
+  TextMessage,
+  TxReference,
+  WalletSendCalls,
+} from "@/components/ui/message";
 
 interface MessageListProps {
   messages: DecodedMessage[];
   groupMembers: SafeGroupMember[];
   clientInboxId?: string;
+  conversation: Conversation;
 }
 
 export default function MessageList({
   messages,
   groupMembers,
   clientInboxId,
+  conversation,
 }: MessageListProps) {
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -21,17 +40,36 @@ export default function MessageList({
         const senderDisplayName = member
           ? member.accountIdentifiers[0].identifier
           : message.senderInboxId;
-        return (
-          <div
-            key={message.id}
-            className={`flex flex-row text-sm w-full ${isSender ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`flex flex-col gap-1 items-start rounded-xl px-2 py-1 ${isSender ? "bg-blue-500 rounded-br-none items-end" : "bg-gray-600 text-white items-start rounded-bl-none"}`}>
-              <p>{`${senderDisplayName.slice(0, 6)}...${senderDisplayName.slice(-4)}`}</p>
-              <p>{message.content}</p>
-            </div>
-          </div>
-        );
+
+        if (message.contentType.sameAs(ContentTypeTransactionReference)) {
+          return (
+            <TxReference
+              key={message.id}
+              content={message.content as TransactionReference}
+              isSender={isSender}
+              senderDisplayName={senderDisplayName}
+            />
+          );
+        } else if (message.contentType.sameAs(ContentTypeWalletSendCalls)) {
+          return (
+            <WalletSendCalls
+              key={message.id}
+              content={message.content as WalletSendCallsParams}
+              conversation={conversation}
+              isSender={isSender}
+              senderDisplayName={senderDisplayName}
+            />
+          );
+        } else {
+          return (
+            <TextMessage
+              key={message.id}
+              message={message}
+              isSender={isSender}
+              senderDisplayName={senderDisplayName}
+            />
+          );
+        }
       })}
     </div>
   );

@@ -122,23 +122,27 @@ export default function ConversationsPage({
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>
         </div>
-        {conversations.map(async (conv) => {
-          let convName = "";
-          if (conv.metadata?.conversationType === "dm") {
-            const peerInboxId = await (conv as Dm).peerInboxId();
-            convName = `DM ${peerInboxId.slice(0, 6)}...${peerInboxId.slice(-4)}`;
-          } else {
-            convName = (conv as Group).name ?? "";
-          }
-          return (
-            <button
-              key={conv.id}
-              onClick={() => onSelectConversation(conv)}
-              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200">
-              {convName}
-            </button>
-          );
-        })}
+        {conversations && conversations.length > 0 ? (
+          conversations.map(async (conv) => {
+            let convName = "";
+            if (conv.metadata?.conversationType === "dm") {
+              const peerInboxId = await (conv as Dm).peerInboxId();
+              convName = `DM ${peerInboxId.slice(0, 6)}...${peerInboxId.slice(-4)}`;
+            } else {
+              convName = (conv as Group).name ?? "";
+            }
+            return (
+              <button
+                key={conv.id}
+                onClick={() => onSelectConversation(conv)}
+                className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200">
+                {convName}
+              </button>
+            );
+          })
+        ) : (
+          <div className="text-gray-400">No conversations found</div>
+        )}
       </div>
     </div>
   );

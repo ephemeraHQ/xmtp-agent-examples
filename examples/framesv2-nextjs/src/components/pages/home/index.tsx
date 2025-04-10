@@ -55,7 +55,7 @@ export default function HomePage() {
   useEffect(() => {
     if (walletData?.account) {
       void initialize({
-        encryptionKey: hexToUint8Array(encryptionKey),
+        dbEncryptionKey: hexToUint8Array(encryptionKey),
         env: env.NEXT_PUBLIC_XMTP_ENV,
         loggingLevel,
         signer: createBrowserSigner(walletData.account.address, walletData),
@@ -84,7 +84,7 @@ export default function HomePage() {
     <SafeAreaContainer insets={insets}>
       <div
         className={
-          "flex flex-col gap-0 pb-1 w-full max-w-full h-screen bg-black transition-all duration-300"
+          "flex flex-col gap-0 pb-1 w-full max-w-sm mx-auto h-screen bg-black transition-all duration-300"
         }>
         <Header />
         {initializing ? <FullPageLoader /> : <HomeContent />}
