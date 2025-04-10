@@ -1,0 +1,46 @@
+name: Check agent-examples
+
+on: [pull_request]
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Clone into test directory
+        run: |
+          git clone . test-dir
+          cd test-dir
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "yarn"
+          cache-dependency-path: "test-dir/yarn.lock"
+
+      - name: Install dependencies
+        run: |
+          cd test-dir
+          yarn install
+
+      - name: Generate keys and set env
+        run: |
+          cd test-dir
+          yarn gen:keys
+          echo "XMTP_ENV=dev" >> .env
+
+      - name: Run agent
+        run: |
+          cd test-dir
+          XMTP_ENV=dev timeout 20s yarn dev | tee output.log
+          if grep -q "Waiting for messages..." output.log; then
+            echo "Success: Agent started successfully and is waiting for messages"
+            exit 0
+          else
+            echo "Error: Agent did not reach 'Waiting for messages...' state"
+            exit 1
+          fi
