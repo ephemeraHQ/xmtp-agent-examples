@@ -1,10 +1,10 @@
 "use client";
 
 import farcasterFrame from "@farcaster/frame-wagmi-connector";
-import { ClientOptions, XmtpEnv } from "@xmtp/browser-sdk";
+import { ClientOptions } from "@xmtp/browser-sdk";
 import dynamic from "next/dynamic";
 import { useEffect } from "react";
-import { hexToUint8Array, uint8ArrayToHex } from "uint8array-extras";
+import { hexToUint8Array } from "uint8array-extras";
 import { useLocalStorage } from "usehooks-ts";
 import { injected, useAccount, useConnect, useWalletClient } from "wagmi";
 import { FullPageLoader } from "@/components/ui/fullpage-loader";
@@ -28,10 +28,7 @@ export default function HomePage() {
   const { data: walletData } = useWalletClient();
   const { isConnected, address } = useAccount();
   const { connect } = useConnect();
-  const [encryptionKey] = useLocalStorage(
-    "XMTP_ENCRYPTION_KEY",
-    uint8ArrayToHex(crypto.getRandomValues(new Uint8Array(32))),
-  );
+  const [encryptionKey] = useLocalStorage("XMTP_ENCRYPTION_KEY", "");
   const [loggingLevel] = useLocalStorage<ClientOptions["loggingLevel"]>(
     "XMTP_LOGGING_LEVEL",
     "off",
@@ -55,7 +52,9 @@ export default function HomePage() {
   useEffect(() => {
     if (walletData?.account) {
       void initialize({
-        dbEncryptionKey: hexToUint8Array(encryptionKey),
+        dbEncryptionKey: encryptionKey
+          ? hexToUint8Array(encryptionKey)
+          : undefined,
         env: env.NEXT_PUBLIC_XMTP_ENV,
         loggingLevel,
         signer: createBrowserSigner(walletData.account.address, walletData),
