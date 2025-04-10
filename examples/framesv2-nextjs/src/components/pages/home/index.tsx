@@ -84,7 +84,7 @@ export default function HomePage() {
     <SafeAreaContainer insets={insets}>
       <div
         className={
-          "flex flex-col gap-0 pb-1 w-full max-w-sm mx-auto h-screen bg-black transition-all duration-300"
+          "flex flex-col gap-0 pb-1 w-full max-w-md mx-auto h-screen bg-black transition-all duration-300"
         }>
         <Header />
         {initializing ? <FullPageLoader /> : <HomeContent />}
