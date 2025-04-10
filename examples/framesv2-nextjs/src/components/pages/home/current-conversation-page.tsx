@@ -85,13 +85,6 @@ export default function CurrentConversationPage({
   });
 
   useEffect(() => {
-    if (searchResults) {
-      setHandleSearch(false);
-      setShowInviteUsers(true);
-    }
-  }, [searchResults]);
-
-  useEffect(() => {
     const loadMembers = async () => {
       if (conversation instanceof Group) {
         const members = await conversation.members();
@@ -149,7 +142,7 @@ export default function CurrentConversationPage({
   };
 
   return (
-    <div className="relative h-full flex flex-col justify-between gap-2">
+    <div className="relative h-full flex flex-col justify-between gap-1">
       {/* Page Header */}
       <div className="flex flex-row items-center justify-between gap-2">
         <div className="flex flex-row items-center justify-start gap-2">
@@ -162,7 +155,13 @@ export default function CurrentConversationPage({
         </div>
         <div className="flex flex-row items-center justify-end gap-2">
           <Button
-            variant="link"
+            variant="outline"
+            className="text-xs text-gray-400"
+            onClick={() => setShowInviteUsers((prev) => !prev)}>
+            Invite
+          </Button>
+          <Button
+            variant="outline"
             className="text-xs text-gray-400"
             onClick={handleRefresh}>
             Refresh
@@ -184,19 +183,15 @@ export default function CurrentConversationPage({
       />
 
       {/* Message List */}
-      <div className="flex flex-col gap-2 h-full">
-        <div className="flex flex-col gap-2 h-full">
-          <ScrollArea className="h-[430px]" viewportRef={viewportRef}>
-            <MessageList
-              messages={currentConversationMessages}
-              groupMembers={groupMembers}
-              clientInboxId={client?.inboxId}
-              conversation={conversation}
-              refreshMessages={loadMessages}
-            />
-          </ScrollArea>
-        </div>
-      </div>
+      <ScrollArea className="max-h-[70vh]" viewportRef={viewportRef}>
+        <MessageList
+          messages={currentConversationMessages}
+          groupMembers={groupMembers}
+          clientInboxId={client?.inboxId}
+          conversation={conversation}
+          refreshMessages={loadMessages}
+        />
+      </ScrollArea>
 
       {/* Send Message */}
       <SendMessage

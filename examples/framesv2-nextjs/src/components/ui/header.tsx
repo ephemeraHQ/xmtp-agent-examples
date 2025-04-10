@@ -15,14 +15,14 @@ export const Header = () => {
 
   return (
     <motion.header
-      className="flex justify-between items-center w-full px-5 py-3 bg-black border-b-[1px] border-[#323232] text-white shadow-md z-50"
+      className="flex justify-between items-center w-full px-3 py-2 bg-black border-b-[1px] border-[#323232] text-white shadow-md z-50"
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       id="navbar">
       <div className="flex flex-row gap-2 items-center justify-center tracking-tight my-0 py-1">
-        <Logo className="w-[36px] h-[36px] cursor-pointer" />
-        <h1 className="text-xl font-bold text-white">XMTP Chat</h1>
+        <Logo className="w-[28px] h-[28px] cursor-pointer" />
+        <h1 className="text-lg sm:text-xl font-bold text-white">XMTP Chat</h1>
       </div>
 
       <div className="flex flex-row gap-2 items-center justify-center">
