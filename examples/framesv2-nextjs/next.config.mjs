@@ -19,15 +19,7 @@ const nextConfig = {
       },
     ],
   },
-  transpilePackages: [
-    "@xmtp/wasm-bindings",
-    "@xmtp/content-type-group-updated",
-    "@xmtp/content-type-primitives",
-    "@xmtp/content-type-text",
-    "@xmtp/content-type-reaction",
-    "@xmtp/content-type-remote-attachment",
-    "@xmtp/content-type-reply",
-  ],
+  transpilePackages: ["@xmtp/wasm-bindings"],
   experimental: {
     serverComponentsExternalPackages: ["@xmtp/node-bindings"],
     esmExternals: "loose",

@@ -54,7 +54,10 @@ export const addUserToDefaultGroupChat = async (
   // load members from the group
   const group = conversation as Group;
   const groupMembers = await group.members();
-  console.log("Group members", groupMembers);
+  console.log(
+    "Group members",
+    groupMembers.map((member) => member.inboxId),
+  );
   const isMember = groupMembers.some(
     (member) => member.inboxId === newUserInboxId,
   );
