@@ -192,6 +192,7 @@ export default function CurrentConversationPage({
               groupMembers={groupMembers}
               clientInboxId={client?.inboxId}
               conversation={conversation}
+              refreshMessages={loadMessages}
             />
           </ScrollArea>
         </div>

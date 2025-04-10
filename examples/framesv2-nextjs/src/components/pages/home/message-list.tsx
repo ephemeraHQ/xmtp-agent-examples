@@ -22,6 +22,7 @@ interface MessageListProps {
   groupMembers: SafeGroupMember[];
   clientInboxId?: string;
   conversation: Conversation;
+  refreshMessages: () => void;
 }
 
 export default function MessageList({
@@ -29,6 +30,7 @@ export default function MessageList({
   groupMembers,
   clientInboxId,
   conversation,
+  refreshMessages,
 }: MessageListProps) {
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -58,6 +60,7 @@ export default function MessageList({
               conversation={conversation}
               isSender={isSender}
               senderDisplayName={senderDisplayName}
+              refreshMessages={refreshMessages}
             />
           );
         } else {

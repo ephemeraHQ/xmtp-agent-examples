@@ -65,21 +65,22 @@ export const SendMessage = ({
       amountInDecimals,
     );
     await send(walletSendCalls, ContentTypeWalletSendCalls);
+    void loadMessages();
   };
 
   return (
     <div className="relative w-full">
-      <div className="flex flex-row items-center gap-2 w-full py-2">
+      <div className="flex flex-row items-center gap-2 w-full h-full py-2">
         <Drawer>
-          <DrawerTrigger asChild>
+          <DrawerTrigger asChild className="h-full">
             <Button
               variant="default"
-              className="bg-green-500 hover:bg-green-500/80 text-black border border-green-300 my-0 h-full"
+              className="bg-green-500 hover:bg-green-500/80 text-white border border-green-300 my-0 h-full"
               disabled={sending}>
               <Plus className="size-4" />
             </Button>
           </DrawerTrigger>
-          <DrawerContent className="bg-gray-900">
+          <DrawerContent className="bg-gray-900 max-w-md mx-auto">
             <DrawerHeader>
               <DrawerTitle>Request USDC</DrawerTitle>
               <DrawerDescription>

@@ -13,6 +13,7 @@ interface WalletSendCallsProps {
   conversation: Conversation;
   isSender: boolean;
   senderDisplayName: string;
+  refreshMessages: () => void;
 }
 
 export function WalletSendCalls({
@@ -20,6 +21,7 @@ export function WalletSendCalls({
   conversation,
   isSender,
   senderDisplayName,
+  refreshMessages,
 }: WalletSendCallsProps) {
   const { sendTransactionAsync } = useSendTransaction();
   const { switchChainAsync } = useSwitchChain();
@@ -58,8 +60,9 @@ export function WalletSendCalls({
         transactionReference,
         ContentTypeTransactionReference,
       );
+      void refreshMessages();
     }
-  }, [content, sendTransactionAsync, conversation]);
+  }, [content, sendTransactionAsync, conversation, refreshMessages]);
 
   return (
     <div
