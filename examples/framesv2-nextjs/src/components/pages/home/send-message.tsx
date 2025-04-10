@@ -70,7 +70,7 @@ export const SendMessage = ({
   };
 
   return (
-    <div className="flex flex-row items-center gap-2 w-full h-max pt-0 pb-4">
+    <div className="flex flex-row items-center gap-2 w-full h-fit pt-0 pb-4">
       <Drawer>
         <DrawerTrigger asChild className="h-full">
           <Button

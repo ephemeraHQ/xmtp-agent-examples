@@ -1,5 +1,6 @@
 import type { Signer as BrowserSigner } from "@xmtp/browser-sdk";
 import type { Signer as NodeSigner } from "@xmtp/node-sdk";
+import { fromString, toString } from "uint8arrays";
 import {
   createWalletClient,
   Hex,
@@ -66,7 +67,8 @@ export const createUser = (key: Hex): User => {
  * @param privateKey - The private key of the user
  * @returns The node ephemeral signer
  */
-export const createNodeEphemeralSigner = (privateKey: Hex): NodeSigner => {
+export const createNodeEphemeralSigner = (key: string): NodeSigner => {
+  const privateKey = key.startsWith("0x") ? (key as Hex) : (`0x${key}` as Hex);
   const user = createUser(privateKey);
   console.log("Creating node ephemeral signer for user", user.account.address);
   return {
@@ -83,4 +85,25 @@ export const createNodeEphemeralSigner = (privateKey: Hex): NodeSigner => {
       return toBytes(signature);
     },
   };
+};
+
+/**
+ * Generate a random encryption key
+ * @returns The encryption key
+ */
+export const generateEncryptionKeyHex = () => {
+  /* Generate a random encryption key */
+  const uint8Array = crypto.getRandomValues(new Uint8Array(32));
+  /* Convert the encryption key to a hex string */
+  return toString(uint8Array, "hex");
+};
+
+/**
+ * Get the encryption key from a hex string
+ * @param hex - The hex string
+ * @returns The encryption key
+ */
+export const getEncryptionKeyFromHex = (hex: string) => {
+  /* Convert the hex string to an encryption key */
+  return fromString(hex, "hex");
 };

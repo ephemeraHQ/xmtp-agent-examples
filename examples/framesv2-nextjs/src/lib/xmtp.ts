@@ -1,15 +1,18 @@
 import { Client, Group } from "@xmtp/node-sdk";
-import { hexToUint8Array, uint8ArrayToHex } from "uint8array-extras";
 import { env } from "@/lib/env";
-import { createNodeEphemeralSigner } from "@/lib/utils";
+import {
+  createNodeEphemeralSigner,
+  generateEncryptionKeyHex,
+  getEncryptionKeyFromHex,
+} from "@/lib/utils";
 
 // create ephemeral node signer
-const signer = createNodeEphemeralSigner(env.XMTP_PRIVATE_KEY as `0x${string}`);
+const signer = createNodeEphemeralSigner(env.XMTP_PRIVATE_KEY);
 
 // create random encryption key
 const encryptionKey = env.XMTP_ENCRYPTION_KEY
   ? env.XMTP_ENCRYPTION_KEY
-  : uint8ArrayToHex(crypto.getRandomValues(new Uint8Array(32)));
+  : generateEncryptionKeyHex();
 
 /**
  * Add a user to the default group chat
@@ -19,13 +22,19 @@ const encryptionKey = env.XMTP_ENCRYPTION_KEY
 export const addUserToDefaultGroupChat = async (
   newUserInboxId: string,
 ): Promise<boolean> => {
+  console.log("Adding user to default group chat", newUserInboxId);
   // create XMTP Node client
   console.log("Creating XMTP Node client with encription key", encryptionKey);
-  const client = await Client.create(signer, hexToUint8Array(encryptionKey), {
-    env: env.XMTP_ENV,
-  });
+  const client = await Client.create(
+    signer,
+    getEncryptionKeyFromHex(encryptionKey),
+    {
+      env: env.XMTP_ENV,
+    },
+  );
   // Sync the conversations from the network to update the local db
-  await client.conversations.syncAll();
+  await client.conversations.sync();
+  // await client.conversations.syncAll();
 
   // Get the group chat by id
   const conversation = await client.conversations.getConversationById(

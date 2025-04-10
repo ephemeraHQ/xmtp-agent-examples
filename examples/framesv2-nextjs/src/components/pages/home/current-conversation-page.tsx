@@ -7,7 +7,7 @@ import {
   SafeGroupMember,
 } from "@xmtp/browser-sdk";
 import ky from "ky";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, RefreshCw, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/shadcn/button";
 import { ScrollArea } from "@/components/shadcn/scroll-area";
@@ -144,46 +144,46 @@ export default function CurrentConversationPage({
   return (
     <div className="relative h-full flex flex-col justify-between gap-1">
       {/* Page Header */}
-      <div className="flex flex-row items-center justify-between gap-2">
+      <div className="relative flex flex-row items-center justify-between gap-0">
         <div className="flex flex-row items-center justify-start gap-2">
           <button
             onClick={handleBack}
             className="px-2 py-2 bg-gray-800 rounded-lg">
             <ArrowLeftIcon className="w-4 h-4 text-white" />
           </button>
-          <h2 className="text-2xl font-bold text-white">{conversationName}</h2>
+          <h2 className="text-lg font-bold text-white">{conversationName}</h2>
         </div>
         <div className="flex flex-row items-center justify-end gap-2">
           <Button
             variant="outline"
             className="text-xs text-gray-400"
             onClick={() => setShowInviteUsers((prev) => !prev)}>
-            Invite
+            <Share2 className="w-4 h-4" />
           </Button>
           <Button
             variant="outline"
             className="text-xs text-gray-400"
             onClick={handleRefresh}>
-            Refresh
+            <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
+        {/* User Search */}
+        {showInviteUsers && (
+          <UserSearch
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+            setHandleSearch={setHandleSearch}
+            setShowInviteUsers={setShowInviteUsers}
+            searchResults={searchResults}
+            isSearchLoading={isSearchLoading}
+            onInviteUser={handleInviteUser}
+          />
+        )}
       </div>
 
-      {/* User Search */}
-      <UserSearch
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        handleSearch={handleSearch}
-        setHandleSearch={setHandleSearch}
-        showInviteUsers={showInviteUsers}
-        setShowInviteUsers={setShowInviteUsers}
-        searchResults={searchResults}
-        isSearchLoading={isSearchLoading}
-        onInviteUser={handleInviteUser}
-      />
-
       {/* Message List */}
-      <ScrollArea className="max-h-[70vh]" viewportRef={viewportRef}>
+      <ScrollArea className="max-h-[72vh]" viewportRef={viewportRef}>
         <MessageList
           messages={currentConversationMessages}
           groupMembers={groupMembers}
