@@ -6,75 +6,45 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 - **End-to-end & compliant**: Data is encrypted in transit and at rest, meeting strict security and regulatory standards.
 - **Open-source & trustless**: Built on top of the [MLS](https://messaginglayersecurity.rocks/) protocol, it replaces trust in centralized certificate authorities with cryptographic proofs.
-- **Privacy & metadata protection**: Offers anonymous or pseudonymous usage with no tracking of sender routes, IPs, or device and message timestamps.
-- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure.
-- **Multi-agent**: Allows multi-agent multi-human confidential communication over MLS group chats.
+- **Privacy & metadata protection**: Offers anonymous usage through SDKs and pseudonymous usage with nodes tracking minimum metadata.
+- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure and ensuring continued operation even if some nodes go offline.
+- **Multi-agent**: Allows confidential communication between multiple agents and humans through MLS group chats.
 
 ## Getting started
 
-> [!NOTE]
-> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
 
 ### Environment variables
 
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
-```tsx
+```bash
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV= # local, dev, production
+XMTP_ENV=dev # local, dev, production
 ```
 
 You can generate random xmtp keys with the following command:
 
-```tsx
-yarn gen:keys <name>
+```bash
+# From the root directory (appends to root .env)
+yarn gen:keys
+
+# From within an example directory (creates .env in that directory)
+cd examples/xmtp-number-multiplier
+yarn gen:keys
 ```
 
 > [!WARNING]
-> Running the `gen:keys` or `gen:keys <name>` command will append keys to your existing `.env` file.
-
-### Basic usage
-
-These are the steps to initialize the XMTP listener and send messages.
-
-```tsx
-// import the xmtp sdk
-import { Client, type XmtpEnv, type Signer } from "@xmtp/node-sdk";
-// encryption key, must be consistent across runs
-const encryptionKey: Uint8Array = ...;
-const signer: Signer = ...;
-const env: XmtpEnv = "dev";
-
-async function main() {
-  const client = await Client.create(signer, encryptionKey, { env });
-  await client.conversations.sync();
-  const stream = client.conversations.streamAllMessages();
-  for await (const message of await stream) {
-    // ignore messages from the agent
-   if (message?.senderInboxId === client.inboxId ) {
-      continue;
-    }
-    const conversation = client.conversations.getConversationById(message.conversationId);
-    // send a message from the agent
-    await conversation.send("gm");
-  }
-}
-main().catch(console.error);
-```
-
-## Examples
-
-- [gm](/examples/gm/): A simple agent that replies to all text messages with "gm".
-- [gpt](/examples/gpt/): An example using GPT API's to answer messages.
-- [gated-group](/examples/gated-group/): Add members to a group that hold a certain NFT.
-- [coinbase-langchain](/examples/coinbase-langchain/): Agent that uses a CDP for gassless USDC on base
-
-See all the examples [here](/examples).
-
-## Development
-
-As a starter you can run the `gm` example by following these steps:
+> Running the `gen:keys` command from the root directory will append keys to your existing `.env` file.
+> Running the `gen:keys` command from within an example directory will create a new `.env` file in that directory.
 
 ### Run the agent
 
@@ -91,25 +61,71 @@ yarn gen:keys
 yarn dev
 ```
 
-### Web inbox
-
-Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
-
-![](/media/chat.png)
-
 ### Work in local network
 
-`Dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself, so it's faster for development purposes.
+`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
 
 - 1. Install docker
 - 2. Start the XMTP service and database
 
-```tsx
+```bash
 ./dev/up
 ```
 
 - 3. Change the .env file to use the local network
 
-```tsx
-XMTP_ENV = local;
+```bash
+XMTP_ENV = local
 ```
+
+### Deployment
+
+We have a guide for deploying the agent on [Railway](https://github.com/ephemeraHQ/xmtp-agent-examples/discussions/77).
+
+## Basic usage
+
+These are the steps to initialize the XMTP listener and send messages.
+
+```tsx
+// import the xmtp sdk
+import { Client, type XmtpEnv, type Signer } from "@xmtp/node-sdk";
+// encryption key, must be consistent across runs
+const encryptionKey: Uint8Array = ...;
+const signer: Signer = ...;
+const env: XmtpEnv = "dev";
+
+async function main() {
+  const client = await Client.create(signer, encryptionKey, { env });
+  await client.conversations.sync();
+  const stream = await client.conversations.streamAllMessages();
+  for await (const message of  stream) {
+    // ignore messages from the agent
+   if (message?.senderInboxId === client.inboxId ) {
+      continue;
+    }
+    const conversation = await client.conversations.getConversationById(message.conversationId);
+    // send a message from the agent
+    await conversation.send("gm");
+  }
+}
+main().catch(console.error);
+```
+
+## Examples
+
+- [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
+- [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
+- [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
+- [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
+- [xmtp-transaction-content-type](/examples/xmtp-transaction-content-type/): Use XMTP content types to send transactions
+- [xmtp-group-toss](/examples/xmtp-group-toss/): Agent that uses a group to toss a coin
+- [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
+- [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
+- [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Parallel agents listening and sending messages
+- [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
+
+## Web inbox
+
+Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+
+![](/examples/xmtp-gm/screenshot.png)
