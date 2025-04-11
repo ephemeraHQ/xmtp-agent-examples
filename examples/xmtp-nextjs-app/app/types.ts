@@ -17,9 +17,9 @@ export interface AgentConfig {
  * Message handler function type
  */
 export type MessageHandler = (
-  message: string,
-  senderAddress: string,
-  client: XMTPClient,
+  _message: string,
+  _senderAddress: string,
+  _client: XMTPClient,
 ) => Promise<void>;
 
 /**

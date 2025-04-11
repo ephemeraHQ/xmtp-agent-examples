@@ -1,8 +1,7 @@
 "use client";
 
-import { Client, XmtpEnv } from "@xmtp/browser-sdk";
 import { useEffect, useState } from "react";
-import { createEphemeralSigner, createEphemeralWallet } from "./wallet";
+import { createEphemeralWallet } from "./wallet";
 
 interface Message {
   text: string;
@@ -36,15 +35,12 @@ export default function Home() {
         const data = await response.json();
 
         if (data.error) {
-          console.error("Error fetching server info:", data.error);
           addMessage("Error loading server info: " + data.error, "error");
           return;
         }
 
         setServerInfo(data);
-        console.log("Server info loaded:", data);
       } catch (error) {
-        console.error("Error fetching server info:", error);
         addMessage("Error loading server info", "error");
       }
     };
@@ -63,12 +59,9 @@ export default function Home() {
         address: account.address,
       });
 
-      console.log("Wallet created:", account.address);
-
       // Add a message to the history
       addMessage("Wallet created successfully", "system");
     } catch (error) {
-      console.error("Error creating wallet:", error);
       addMessage(
         "Error creating wallet: " +
           (error instanceof Error ? error.message : String(error)),
@@ -93,13 +86,7 @@ export default function Home() {
     try {
       setIsLoading(true);
 
-      // Create XMTP client
-      const signer = createEphemeralSigner(wallet.privateKey);
-      const client = await Client.create(signer, {
-        env: serverInfo.env as XmtpEnv,
-      });
-
-      // Send the message to the server
+      // Send message to the API
       const response = await fetch("/api/xmtp", {
         method: "POST",
         headers: {
@@ -111,25 +98,17 @@ export default function Home() {
         }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (result.success) {
-        // Add the message to the history
-        addMessage(messageText, "sent");
-
-        // Clear the input
-        setMessage("");
-
-        // Add a note that we're waiting for a response
-        addMessage('Waiting for "gm" response...', "system");
-      } else {
-        addMessage(
-          "Error sending message: " + (result.error || "Unknown error"),
-          "error",
-        );
+      if (data.error) {
+        addMessage("Error sending message: " + data.error, "error");
+        return;
       }
+
+      // Add the sent message to the history
+      addMessage(messageText, "sent");
+      setMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
       addMessage(
         "Error sending message: " +
           (error instanceof Error ? error.message : String(error)),
