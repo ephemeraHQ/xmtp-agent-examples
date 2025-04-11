@@ -1,12 +1,54 @@
 import { existsSync, mkdirSync } from "fs";
 import fs from "fs/promises";
 import path from "path";
-import { Coinbase, type Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import { validateEnvironment } from "@helpers/utils";
+import { type Wallet, type WalletData } from "@coinbase/coinbase-sdk";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import type { MemorySaver } from "@langchain/langgraph";
+import type { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+
+// Global stores for memory and agent instances
+export const memoryStore: Record<string, MemorySaver> = {};
+export const agentStore: Record<
+  string,
+  ReturnType<typeof createReactAgent>
+> = {};
 
 export const WALLET_STORAGE_DIR = ".data/wallet_data";
 export const XMTP_STORAGE_DIR = ".data/xmtp";
 export const TOSS_STORAGE_DIR = ".data/tosses";
+
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+  "WALLET_KEY",
+  "ENCRYPTION_KEY",
+  "XMTP_ENV",
+]);
+
+/**
+ * Initialize the XMTP client
+ */
+export async function initializeXmtpClient() {
+  // Create the signer using viem
+  const signer = createSigner(WALLET_KEY);
+  const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+
+  const identifier = await signer.getIdentifier();
+  const address = identifier.identifier;
+
+  const client = await Client.create(signer, encryptionKey, {
+    env: XMTP_ENV as XmtpEnv,
+    dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
+  });
+
+  logAgentDetails(address, client.inboxId, XMTP_ENV);
+
+  /* Sync the conversations from the network to update the local db */
+  console.log("✓ Syncing conversations...");
+  await client.conversations.sync();
+
+  return client;
+}
 
 // Interface to track participant options
 export interface Participant {
@@ -118,29 +160,8 @@ export function extractJsonFromResponse(
     return null;
   }
 }
-const { CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY, NETWORK_ID } =
-  validateEnvironment([
-    "CDP_API_KEY_NAME",
-    "CDP_API_KEY_PRIVATE_KEY",
-    "NETWORK_ID",
-  ]);
 
-// Initialize Coinbase SDK
-export function initializeCoinbaseSDK(): boolean {
-  try {
-    Coinbase.configure({
-      apiKeyName: CDP_API_KEY_NAME,
-      privateKey: CDP_API_KEY_PRIVATE_KEY,
-    });
-    console.log("Coinbase SDK initialized successfully, network:", NETWORK_ID);
-    return true;
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Failed to initialize Coinbase SDK:", errorMessage);
-    return false;
-  }
-}
-
+const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);
 /**
  * Storage service for coin toss  data and user wallets
  */
