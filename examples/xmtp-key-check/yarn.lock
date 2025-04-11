@@ -187,9 +187,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@examples/xmtp-inbox-status-check@workspace:.":
+"@examples/xmtp-key-check@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-inbox-status-check@workspace:."
+  resolution: "@examples/xmtp-key-check@workspace:."
   dependencies:
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.0"
     "@xmtp/node-sdk": "npm:1.2.0"
