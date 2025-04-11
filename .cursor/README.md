@@ -291,7 +291,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
     ```json
     {
-      "name": "@examples/xmtp-number-multiplier",
+      "name": "@examples/xmtp-gm",
       "version": "0.0.1",
       "private": true,
       "type": "module",
@@ -299,7 +299,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
         "build": "tsc",
         "dev": "tsx --watch index.ts",
         "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-number-multiplier",
+        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
         "start": "tsx index.ts"
       },
       "dependencies": {
