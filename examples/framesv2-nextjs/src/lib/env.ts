@@ -4,7 +4,7 @@ import { z } from "zod";
 // https://env.t3.gg/docs/nextjs
 export const env = createEnv({
   server: {
-    NEYNAR_API_KEY: z.string().min(1),
+    NEYNAR_API_KEY: z.string().default("NEYNAR_API_DOCS"),
     JWT_SECRET: z.string().min(1),
     // xmtp client for the /api/join-chat route
     XMTP_PRIVATE_KEY: z.string().min(1),
