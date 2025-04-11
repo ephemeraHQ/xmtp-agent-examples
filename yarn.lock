@@ -951,9 +951,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-inbox-status-check@workspace:examples/xmtp-key-check":
+"@examples/xmtp-key-check@workspace:examples/xmtp-key-check":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-inbox-status-check@workspace:examples/xmtp-key-check"
+  resolution: "@examples/xmtp-key-check@workspace:examples/xmtp-key-check"
   dependencies:
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.0"
     "@xmtp/node-sdk": "npm:1.2.0"

@@ -1,5 +1,5 @@
 {
-  "name": "@examples/xmtp-inbox-status-check",
+  "name": "@examples/xmtp-key-check",
   "version": "0.0.1",
   "private": true,
   "type": "module",

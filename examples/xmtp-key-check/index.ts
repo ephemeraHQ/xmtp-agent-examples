@@ -117,7 +117,7 @@ async function main() {
         targetInboxId,
       ]);
 
-      if (inboxState.length === 0) {
+      if (!inboxState?.length) {
         await conversation.send(`No inbox state found for ${targetInboxId}`);
         continue;
       }
