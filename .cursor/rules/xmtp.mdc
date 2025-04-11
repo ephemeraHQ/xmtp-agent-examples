@@ -937,7 +937,7 @@ if (!fs.existsSync(dbPath)) {
 
 ### Web inbox
 
-Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+Interact with the XMTP network using [xmtp.chat](mdc:https:/xmtp.chat), the official web inbox for developers.
 
 ### Work in local network
 

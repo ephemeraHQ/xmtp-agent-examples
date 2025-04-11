@@ -36,14 +36,9 @@ You can generate random xmtp keys with the following command:
 ```bash
 # From the root directory (appends to root .env)
 yarn gen:keys
-
-# From within an example directory (creates .env in that directory)
-cd examples/xmtp-number-multiplier
-yarn gen:keys
 ```
 
 > [!WARNING]
-> Running the `gen:keys` command from the root directory will append keys to your existing `.env` file.
 > Running the `gen:keys` command from within an example directory will create a new `.env` file in that directory.
 
 ### Run the agent
