@@ -39,7 +39,7 @@ XMTP_ENV=local # local, dev, production
 
 You can generate random xmtp keys with the following command:
 
-```tsx
+```bash
 yarn gen:keys
 ```
 

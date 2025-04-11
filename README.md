@@ -34,12 +34,11 @@ XMTP_ENV=dev # local, dev, production
 You can generate random xmtp keys with the following command:
 
 ```bash
-# From the root directory (appends to root .env)
 yarn gen:keys
 ```
 
 > [!WARNING]
-> Running the `gen:keys` command from within an example directory will create a new `.env` file in that directory.
+> Running the `gen:keys` command will append keys to your existing `.env` file.
 
 ### Run the agent
 
