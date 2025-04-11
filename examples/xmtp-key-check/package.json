@@ -1,0 +1,28 @@
+{
+  "name": "@examples/xmtp-inbox-status-check",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@xmtp/content-type-wallet-send-calls": "^1.0.0",
+    "@xmtp/node-sdk": "1.2.0",
+    "dotenv": "^16.5.0",
+    "uint8arrays": "^5.1.0",
+    "viem": "^2.26.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "yarn@4.6.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

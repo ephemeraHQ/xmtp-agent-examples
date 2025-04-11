@@ -995,6 +995,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-inbox-status-check@workspace:examples/xmtp-key-check":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-inbox-status-check@workspace:examples/xmtp-key-check"
+  dependencies:
+    "@xmtp/content-type-wallet-send-calls": "npm:^1.0.0"
+    "@xmtp/node-sdk": "npm:1.2.0"
+    dotenv: "npm:^16.5.0"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+    uint8arrays: "npm:^5.1.0"
+    viem: "npm:^2.26.3"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-multiple-clients@workspace:examples/xmtp-multiple-clients":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-multiple-clients@workspace:examples/xmtp-multiple-clients"
@@ -2030,6 +2044,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xmtp/node-sdk@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@xmtp/node-sdk@npm:1.2.0"
+  dependencies:
+    "@xmtp/content-type-group-updated": "npm:^2.0.1"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/content-type-text": "npm:^2.0.1"
+    "@xmtp/node-bindings": "npm:^1.2.0-dev.bed98df"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/c566eb452649ad596c80e6f52da613a90433eef78c3ed086da6654be03885c0658d775e9ec1b72fcdcbe8e77d18fd9c21d07e77ca399eea7baabea7ee302c165
+  languageName: node
+  linkType: hard
+
 "@xmtp/proto@npm:^3.78.0":
   version: 3.78.0
   resolution: "@xmtp/proto@npm:3.78.0"
@@ -2723,6 +2750,13 @@ __metadata:
   version: 16.4.7
   resolution: "dotenv@npm:16.4.7"
   checksum: 10/f13bfe97db88f0df4ec505eeffb8925ec51f2d56a3d0b6d916964d8b4af494e6fb1633ba5d09089b552e77ab2a25de58d70259b2c5ed45ec148221835fc99a0c
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^16.5.0":
+  version: 16.5.0
+  resolution: "dotenv@npm:16.5.0"
+  checksum: 10/e68a16834f1a41cc2dfb01563bc150668ad675e6cd09191211467b5c0806b6ecd6ec438e021aa8e01cd0e72d2b70ef4302bec7cc0fe15b6955f85230b62dc8a9
   languageName: node
   linkType: hard
 
@@ -5444,6 +5478,27 @@ __metadata:
     typescript:
       optional: true
   checksum: 10/548eb9dcd14f63b7746cc053802038dab5e034ce78e67c277de8c0ede5f701e7d12d6c52983be882a2eae43dceb82e29f6c4e88b4c6e67272f1c2782a6a6eeb4
+  languageName: node
+  linkType: hard
+
+"viem@npm:^2.26.3":
+  version: 2.26.3
+  resolution: "viem@npm:2.26.3"
+  dependencies:
+    "@noble/curves": "npm:1.8.1"
+    "@noble/hashes": "npm:1.7.1"
+    "@scure/bip32": "npm:1.6.2"
+    "@scure/bip39": "npm:1.5.4"
+    abitype: "npm:1.0.8"
+    isows: "npm:1.0.6"
+    ox: "npm:0.6.9"
+    ws: "npm:8.18.1"
+  peerDependencies:
+    typescript: ">=5.0.4"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10/20ec6f998c225f5af29930b90ad3a62a6057b522ad834954e4ba687713d643bf5252af74bed1f26ae12a737e7261fb9b5f6a89058c6747a66917991a2b6636d6
   languageName: node
   linkType: hard
 
