@@ -118,6 +118,13 @@ main().catch(console.error);
 - [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Parallel agents listening and sending messages
 - [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
 
+### Standalone examples
+
+This examples are outside of this monorepo and showcase how to use and deploy XMTP in different environments.
+
+- [gm-bot](https://github.com/xmtp/gm-bot): Simple standalone agent that replies to all messages with "gm"
+- [xmtp-nextjs-client](https://github.com/xmtp/xmtp-nextjs-client/): Node-sdk in a Next.js app
+
 ## Web inbox
 
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
