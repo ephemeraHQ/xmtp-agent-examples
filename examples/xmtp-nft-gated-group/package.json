@@ -11,7 +11,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "1.1.1",
+    "@xmtp/node-sdk": "1.2.0",
     "alchemy-sdk": "^3.0.0"
   },
   "devDependencies": {
