@@ -51,6 +51,7 @@ Once the agent is running, you can interact with it using the following commands
 - `/key-check help` - Show the help message with available commands
 
 The agent will respond with information about the key packages, including:
+
 - Total number of installations
 - Number of valid and invalid installations
 - Creation and expiry dates for valid installations
