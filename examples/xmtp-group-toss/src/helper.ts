@@ -40,6 +40,14 @@ export enum TossStatus {
   CANCELLED = "CANCELLED",
 }
 
+export interface TransferResponse {
+  model?: {
+    sponsored_send?: {
+      transaction_link?: string;
+    };
+  };
+}
+
 export interface AgentConfig {
   configurable: {
     thread_id: string;

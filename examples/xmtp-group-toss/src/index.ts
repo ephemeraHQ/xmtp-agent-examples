@@ -19,14 +19,27 @@ import {
 } from "./helper";
 import { storage } from "./storage";
 
-// Constants for default values
+// Constants
 const DEFAULT_OPTIONS = ["yes", "no"];
 const DEFAULT_AMOUNT = "1";
 const USDC_TOKEN_ADDRESS = "0x5dEaC602762362FE5f135FA5904351916053cF70";
 
-/**
- * Agent instruction template for coin toss activities
- */
+// Help message for users
+const HELP_MESSAGE = `Available commands:
+
+@toss <natural language toss> - Create a toss using natural language
+
+for example:
+"Will it rain tomorrow for 5" - Creates a yes/no toss with 5 USDC
+"Lakers vs Celtics for 10" - Creates a toss with Lakers and Celtics as options with 10 USDC
+
+Other commands:
+@toss join <tossId> <option> - Join an existing toss with the specified ID and your chosen option
+@toss close <tossId> <option> - Close the toss and set the winning option (only for toss creator)
+@toss help - Show this help message
+`;
+
+// Agent instructions template
 const AGENT_INSTRUCTIONS = `
   You are a CoinToss Agent that helps users participate in coin toss activities.
   
@@ -68,354 +81,6 @@ const AGENT_INSTRUCTIONS = `
   Keep responses concise and clear, focusing on payment verification and toss status.
 `;
 
-// Constants
-export const HELP_MESSAGE = `Available commands:
-
-@toss <natural language toss> - Create a toss using natural language
-
-for example:
-"Will it rain tomorrow for 5" - Creates a yes/no toss with 5 USDC
-"Lakers vs Celtics for 10" - Creates a toss with Lakers and Celtics as options with 10 USDC
-
-Other commands:
-@toss join <tossId> <option> - Join an existing toss with the specified ID and your chosen option
-@toss close <tossId> <option> - Close the toss and set the winning option (only for toss creator)
-@toss help - Show this help message
-`;
-
-/**
- * Entry point for command processing
- * @param content - The message content from the user
- * @param inboxId - The user's identifier
- * @param tossManager - The toss manager instance
- * @param agent - The CDP agent instance
- * @param agentConfig - The CDP agent configuration
- * @returns Response message to send back to the user
- */
-export async function handleCommand(
-  content: string,
-  inboxId: string,
-  tossManager: TossManager,
-  agent: ReturnType<typeof createReactAgent>,
-  agentConfig: AgentConfig,
-): Promise<string> {
-  try {
-    const commandParts = content.split(" ");
-    const firstWord = commandParts[0].toLowerCase();
-
-    // Check if the first word is a command
-    if (["join", "close", "help"].includes(firstWord)) {
-      // Handle traditional command formatting
-      const [command, ...args] = commandParts;
-      return await handleExplicitCommand(command, args, inboxId, tossManager);
-    } else {
-      // This is likely a natural language prompt
-      return await handleNaturalLanguageCommand(
-        content,
-        inboxId,
-        tossManager,
-        agent,
-        agentConfig,
-      );
-    }
-  } catch (error) {
-    console.error("Error handling natural language command:", error);
-    return error instanceof Error ? error.message : String(error);
-  }
-}
-
-/**
- * Handle explicit commands like create, join, close, etc.
- * @param command - The command type
- * @param args - The command arguments
- * @param inboxId - The user's identifier
- * @param tossManager - The toss manager instance
- * @returns Response message to send back to the user
- */
-async function handleExplicitCommand(
-  command: string,
-  args: string[],
-  inboxId: string,
-  tossManager: TossManager,
-): Promise<string> {
-  switch (command.toLowerCase()) {
-    case "join": {
-      // Check if we have enough arguments
-      if (args.length < 1) {
-        return "Please specify a toss ID and your chosen option: join <tossId> <option>";
-      }
-
-      const tossId = args[0];
-      const chosenOption = args.length >= 2 ? args[1] : null;
-
-      if (!tossId) {
-        return "Please specify a toss ID: join <tossId> <option>";
-      }
-
-      // First check if the toss exists
-      const toss = await tossManager.getToss(tossId);
-      if (!toss) {
-        return `Toss ${tossId} not found.`;
-      }
-
-      // Join the game
-      const joinedToss = await tossManager.joinGame(tossId, inboxId);
-
-      // Check if an option was provided
-      if (!chosenOption) {
-        const availableOptions =
-          joinedToss.tossOptions && joinedToss.tossOptions.length > 0
-            ? joinedToss.tossOptions.join(", ")
-            : "yes, no";
-
-        return `Please specify your option when joining: join ${tossId} <option>\nAvailable options: ${availableOptions}`;
-      }
-
-      // Validate the chosen option before making payment
-      if (
-        joinedToss.tossOptions &&
-        !joinedToss.tossOptions.some(
-          (option) => option.toLowerCase() === chosenOption.toLowerCase(),
-        )
-      ) {
-        return `Invalid option: ${chosenOption}. Available options: ${joinedToss.tossOptions.join(", ")}`;
-      }
-
-      // Make the payment
-      const paymentSuccess = await tossManager.makePayment(
-        inboxId,
-        tossId,
-        toss.tossAmount,
-        chosenOption,
-      );
-
-      if (!paymentSuccess) {
-        return `Payment failed. Please ensure you have enough USDC and try again.`;
-      }
-
-      // Add player to toss after payment is confirmed
-      const updatedToss = await tossManager.addPlayerToGame(
-        tossId,
-        inboxId,
-        chosenOption,
-        true,
-      );
-
-      // Generate player ID (P2, P3, etc. based on position)
-      const playerPosition =
-        updatedToss.participants.findIndex((p) => p === inboxId) + 1;
-      const playerId = `P${playerPosition}`;
-
-      // Include toss topic and options in the response if available
-      let responseMessage = `Successfully joined toss ${tossId}! Payment of ${toss.tossAmount} USDC sent.\nYour Player ID: ${playerId}\nYour Choice: ${chosenOption}\nTotal players: ${updatedToss.participants.length}`;
-
-      if (updatedToss.tossTopic) {
-        responseMessage += `\nToss Topic: "${updatedToss.tossTopic}"`;
-
-        if (updatedToss.tossOptions && updatedToss.tossOptions.length === 2) {
-          responseMessage += `\nOptions: ${updatedToss.tossOptions[0]} or ${updatedToss.tossOptions[1]}`;
-        }
-      }
-
-      if (inboxId === toss.creator) {
-        responseMessage += `\n\nAs the creator, you can close the toss with: close ${tossId} <option>`;
-      } else {
-        responseMessage += `\n\nWaiting for the toss creator to close the toss.`;
-      }
-
-      return responseMessage;
-    }
-
-    case "close": {
-      const tossId = args[0];
-      const winningOption = args[1];
-
-      if (!tossId) {
-        return "Please specify a toss ID: close <tossId> <option>";
-      }
-
-      if (!winningOption) {
-        return "Please specify the winning option: close <tossId> <option>";
-      }
-
-      // Check if the user is the creator
-      const toss = await tossManager.getToss(tossId);
-      if (!toss) {
-        return `Toss ${tossId} not found.`;
-      }
-
-      if (inboxId !== toss.creator) {
-        return "Only the toss creator can close the toss.";
-      }
-
-      if (toss.participants.length < 2) {
-        return "At least 2 players are needed to close the toss.";
-      }
-
-      // Validate winning option
-      if (
-        toss.tossOptions &&
-        !toss.tossOptions.some(
-          (option) => option.toLowerCase() === winningOption.toLowerCase(),
-        )
-      ) {
-        return `Invalid option. Please choose one of: ${toss.tossOptions.join(", ")}`;
-      }
-
-      let result;
-      try {
-        result = await tossManager.executeCoinToss(tossId, winningOption);
-
-        // Check if the toss was successful and a winner was determined
-        if (!result.winner) {
-          return "The toss failed to determine a winner. Please try again.";
-        }
-      } catch (error) {
-        console.error("Error closing toss:", error);
-        return `Error closing toss: ${error instanceof Error ? error.message : "Unknown error"}`;
-      }
-
-      // Generate player IDs for result message
-      const playerMap = await Promise.all(
-        result.participants.map(async (player, index) => {
-          const walletAddress =
-            (await tossManager.getPlayerWalletAddress(player)) || player;
-          return {
-            id: `P${index + 1}${player === result.creator ? " (Creator)" : ""}`,
-            address: player,
-            walletAddress: walletAddress,
-          };
-        }),
-      );
-
-      // Create detailed result message
-      let resultMessage = `🎲 TOSS RESULTS FOR TOSS #${tossId} 🎲\n\n`;
-
-      // Add toss topic if available
-      if (result.tossTopic) {
-        resultMessage += `📝 Toss: "${result.tossTopic}"\n`;
-
-        if (result.tossOptions && result.tossOptions.length === 2) {
-          resultMessage += `🎯 Options: ${result.tossOptions[0]} or ${result.tossOptions[1]}\n\n`;
-        }
-      }
-
-      resultMessage += `Players (${result.participants.length}):\n`;
-
-      // List all players with their chosen options
-      playerMap.forEach((p) => {
-        const displayAddress =
-          p.walletAddress.substring(0, 10) +
-          "..." +
-          p.walletAddress.substring(p.walletAddress.length - 6);
-        const playerOption =
-          result.participantOptions.find((opt) => opt.inboxId === p.address)
-            ?.option || "Unknown";
-        resultMessage += `${p.id}: ${displayAddress} (Chose: ${playerOption})\n`;
-      });
-
-      // Calculate total pot
-      const totalPot =
-        parseFloat(result.tossAmount) * result.participants.length;
-      resultMessage += `\n💰 Total Pot: ${totalPot} USDC\n`;
-
-      // Show the winning option
-      resultMessage += `🎯 Winning Option: ${result.tossResult || "Unknown"}\n\n`;
-
-      // Multiple winners handling - identify all players who chose the winning option
-      const winnerIds = result.winner ? result.winner.split(",") : [];
-      const winningPlayers = playerMap.filter((p) =>
-        winnerIds.includes(p.address),
-      );
-
-      if (winningPlayers.length > 0) {
-        // Calculate prize per winner
-        const prizePerWinner = totalPot / winningPlayers.length;
-
-        resultMessage += `🏆 WINNERS (${winningPlayers.length}):\n`;
-        winningPlayers.forEach((winner) => {
-          const displayAddress =
-            winner.walletAddress.substring(0, 10) +
-            "..." +
-            winner.walletAddress.substring(winner.walletAddress.length - 6);
-          resultMessage += `${winner.id}: ${displayAddress}\n`;
-        });
-
-        resultMessage += `\n💸 Prize per winner: ${prizePerWinner.toFixed(6)} USDC\n\n`;
-      } else {
-        resultMessage += "No winners found.\n\n";
-      }
-
-      if (result.paymentSuccess) {
-        resultMessage += `✅ Winnings have been transferred to the winners' wallets.`;
-
-        // Add transaction link if available
-        if (result.transactionLink) {
-          resultMessage += `\n🔗 Transaction: ${result.transactionLink}`;
-        }
-      } else {
-        resultMessage += `⚠️ Automatic transfer of winnings failed. Please contact support.`;
-      }
-
-      return resultMessage;
-    }
-
-    case "help":
-      return HELP_MESSAGE;
-
-    default:
-      return "Unknown command. Type help to see available commands.";
-  }
-}
-
-/**
- * Handle natural language toss commands
- * @param prompt - The natural language prompt
- * @param inboxId - The user's identifier
- * @param tossManager - The toss manager instance
- * @param agent - The CDP agent instance
- * @param agentConfig - The CDP agent configuration
- * @returns Response message to send back to the user
- */
-async function handleNaturalLanguageCommand(
-  prompt: string,
-  inboxId: string,
-  tossManager: TossManager,
-  agent: ReturnType<typeof createReactAgent>,
-  agentConfig: AgentConfig,
-): Promise<string> {
-  console.log(`🧠 Processing natural language prompt: "${prompt}"`);
-
-  // Check if user has sufficient balance (default check for minimum amount)
-  const { balance, address } = await tossManager.getBalance(inboxId);
-  if (balance < 0.01) {
-    return `Insufficient USDC balance. You need at least 0.01 USDC to create a toss. Your balance: ${balance} USDC\nTransfer USDC to your wallet address: ${address}`;
-  }
-
-  // Create a toss using the natural language prompt
-  const toss = await tossManager.createGameFromPrompt(
-    inboxId,
-    prompt,
-    agent,
-    agentConfig,
-  );
-
-  // Create a detailed response with the parsed information
-  let response = `🎲 Toss Created! 🎲\n\n`;
-  response += `Toss ID: ${toss.id}\n`;
-  response += `Topic: "${toss.tossTopic}"\n`;
-
-  if (toss.tossOptions && toss.tossOptions.length === 2) {
-    response += `Options: ${toss.tossOptions[0]} or ${toss.tossOptions[1]}\n`;
-  }
-
-  response += `Toss Amount: ${toss.tossAmount} USDC\n\n`;
-  response += `Other players can join with: join ${toss.id} <option>\n`;
-  response += `When everyone has joined, you can close the toss with: close ${toss.id} <option>`;
-
-  return response;
-}
-
 // Interface for transfer response
 interface Transfer {
   model?: {
@@ -444,7 +109,6 @@ export class TossManager {
     }
   }
 
-  // Get a player's wallet address from their user ID
   async getPlayerWalletAddress(inboxId: string): Promise<string | undefined> {
     try {
       const walletData = await this.walletService.getWallet(inboxId);
@@ -459,18 +123,15 @@ export class TossManager {
     creator: string,
     tossAmount: string,
   ): Promise<GroupTossName> {
-    console.log(`🎮 CREATING NEW TOSS`);
-    console.log(`👤 Creator: ${creator}`);
-    console.log(`💰 Toss Amount: ${tossAmount} USDC`);
+    console.log(
+      `🎮 CREATING NEW TOSS (Creator: ${creator}, Amount: ${tossAmount} USDC)`,
+    );
 
-    // Create a new wallet for this toss
-    console.log(`🔑 Creating wallet for the toss...`);
-
-    // Get the total count of tosses (including completed/cancelled) for debugging
+    // Get the next toss ID
     const lastIdToss = await this.getLastIdToss();
     const tossId = (lastIdToss + 1).toString();
-    console.log(`🆔 Generated Toss ID: ${tossId}`);
 
+    // Create a wallet for this toss
     const tossWallet = await this.walletService.createWallet(tossId);
     console.log(`✅ Toss wallet created: ${tossWallet.agent_address}`);
 
@@ -479,29 +140,20 @@ export class TossManager {
       creator,
       tossAmount,
       status: TossStatus.CREATED,
-      participants: [], // Creator will join separately
-      participantOptions: [], // Track participant options
+      participants: [],
+      participantOptions: [],
       walletAddress: tossWallet.agent_address,
       createdAt: Date.now(),
       tossResult: "",
       paymentSuccess: false,
     };
 
-    console.log(`💾 Saving toss to storage...`);
     await storage.saveToss(toss);
-    console.log(`🎮 Toss created successfully!`);
-    console.log(`---------------------------------------------`);
-    console.log(`TOSS ID: ${tossId}`);
-    console.log(`TOSS WALLET: ${tossWallet.agent_address}`);
-    console.log(`TOSS AMOUNT: ${tossAmount} USDC`);
-    console.log(`STATUS: ${toss.status}`);
-    console.log(`---------------------------------------------`);
+    console.log(
+      `🎮 Toss ${tossId} created successfully with wallet ${tossWallet.agent_address}`,
+    );
 
-    // No longer automatically adding creator as first participant
-
-    // Reload the toss to get updated state
-    const updatedToss = await storage.getToss(tossId);
-    return updatedToss || toss;
+    return toss;
   }
 
   async addPlayerToGame(
@@ -530,8 +182,8 @@ export class TossManager {
       throw new Error(`Please pay ${toss.tossAmount} USDC to join the toss`);
     }
 
-    // Validate the chosen option against available options
-    if (toss.tossOptions && toss.tossOptions.length > 0) {
+    // Validate the chosen option
+    if (toss.tossOptions?.length) {
       const normalizedOption = chosenOption.toLowerCase();
       const normalizedAvailableOptions = toss.tossOptions.map((opt: string) =>
         opt.toLowerCase(),
@@ -544,21 +196,12 @@ export class TossManager {
       }
     }
 
-    // Add player to participants list
+    // Add player to participants
     toss.participants.push(player);
+    toss.participantOptions.push({ inboxId: player, option: chosenOption });
 
-    // Add player with their chosen option
-    toss.participantOptions.push({
-      inboxId: player,
-      option: chosenOption,
-    });
-
-    // Update toss status based on number of participants
-    if (toss.participants.length === 1) {
-      toss.status = TossStatus.WAITING_FOR_PLAYER;
-    } else if (toss.participants.length >= 2) {
-      toss.status = TossStatus.WAITING_FOR_PLAYER;
-    }
+    // Update toss status
+    toss.status = TossStatus.WAITING_FOR_PLAYER;
 
     await storage.updateToss(toss);
     return toss;
@@ -581,7 +224,7 @@ export class TossManager {
       throw new Error("You are already in this toss");
     }
 
-    // Don't add the player yet, just return the toss info with available options
+    // Return toss info without adding player yet
     return toss;
   }
 
@@ -591,41 +234,27 @@ export class TossManager {
     amount: string,
     chosenOption: string,
   ): Promise<boolean> {
-    console.log(`💸 PROCESSING PAYMENT`);
-    console.log(`👤 User: ${inboxId}`);
-    console.log(`🎮 Toss ID: ${tossId}`);
-    console.log(`💰 Amount: ${amount} USDC`);
-    console.log(`🎯 Chosen Option: ${chosenOption}`);
+    console.log(
+      `💸 Processing payment: User ${inboxId}, Toss ${tossId}, Amount ${amount}, Option ${chosenOption}`,
+    );
 
     try {
       // Get toss wallet
-      console.log(`🔑 Getting toss information...`);
       const toss = await storage.getToss(tossId);
       if (!toss) {
-        console.error(`❌ Toss not found: ${tossId}`);
         throw new Error("Toss not found");
       }
-      console.log(`✅ Toss found, toss wallet address: ${toss.walletAddress}`);
 
-      // Transfer funds from user to toss wallet
-      console.log(
-        `💸 Transferring ${amount} USDC from ${inboxId} to toss wallet ${toss.walletAddress}...`,
-      );
+      // Transfer funds
       const transfer = await this.walletService.transfer(
         inboxId,
         toss.walletAddress,
         parseFloat(amount),
       );
 
-      if (transfer) {
-        console.log(`✅ Payment successful!`);
-        return true;
-      } else {
-        console.error(`❌ Payment failed.`);
-        return false;
-      }
+      return !!transfer;
     } catch (error) {
-      console.error(`❌ Error making payment:`, error);
+      console.error(`❌ Payment error:`, error);
       return false;
     }
   }
@@ -634,7 +263,9 @@ export class TossManager {
     tossId: string,
     winningOption: string,
   ): Promise<GroupTossName> {
-    console.log(`🎲 EXECUTING TOSS for Toss: ${tossId}`);
+    console.log(
+      `🎲 Executing toss: ${tossId}, winning option: ${winningOption}`,
+    );
 
     const toss = await storage.getToss(tossId);
     if (!toss) {
@@ -643,9 +274,7 @@ export class TossManager {
 
     // Validate toss state
     if (toss.status !== TossStatus.WAITING_FOR_PLAYER) {
-      throw new Error(
-        `Toss is not ready for execution. Current status: ${toss.status}`,
-      );
+      throw new Error(`Toss is not ready (status: ${toss.status})`);
     }
 
     if (toss.participants.length < 2) {
@@ -653,22 +282,21 @@ export class TossManager {
     }
 
     if (!toss.participantOptions.length) {
-      throw new Error("No participant options found in the toss");
+      throw new Error("No participant options found");
     }
 
-    // Get options from the toss or participant choices
+    // Get options from toss or participant choices
     const options = toss.tossOptions?.length
       ? toss.tossOptions
       : [...new Set(toss.participantOptions.map((p) => p.option))];
 
     if (options.length < 2) {
-      throw new Error("Not enough unique options to choose from");
+      throw new Error("Not enough unique options");
     }
 
     // Set toss in progress
     toss.status = TossStatus.IN_PROGRESS;
     await storage.updateToss(toss);
-    console.log(`🏁 Toss status updated to IN_PROGRESS`);
 
     // Validate winning option
     const matchingOption = options.find(
@@ -679,7 +307,7 @@ export class TossManager {
       toss.status = TossStatus.CANCELLED;
       toss.paymentSuccess = false;
       await storage.updateToss(toss);
-      throw new Error(`Invalid winning option provided: ${winningOption}`);
+      throw new Error(`Invalid winning option: ${winningOption}`);
     }
 
     // Set the result
@@ -697,10 +325,6 @@ export class TossManager {
       throw new Error(`No winners found for option: ${matchingOption}`);
     }
 
-    // Calculate prize per winner
-    const totalPot = parseFloat(toss.tossAmount) * toss.participants.length;
-    const prizePerWinner = totalPot / winners.length;
-
     // Distribute prizes
     const tossWallet = await this.walletService.getWallet(tossId);
     if (!tossWallet) {
@@ -710,6 +334,8 @@ export class TossManager {
       throw new Error("Toss wallet not found");
     }
 
+    const totalPot = parseFloat(toss.tossAmount) * toss.participants.length;
+    const prizePerWinner = totalPot / winners.length;
     const successfulTransfers: string[] = [];
 
     for (const winner of winners) {
@@ -738,10 +364,7 @@ export class TossManager {
           }
         }
       } catch (error) {
-        console.error(
-          `Error processing transfer for ${winner.inboxId}:`,
-          error,
-        );
+        console.error(`Transfer error for ${winner.inboxId}:`, error);
       }
     }
 
@@ -751,7 +374,6 @@ export class TossManager {
     toss.paymentSuccess = successfulTransfers.length === winners.length;
 
     await storage.updateToss(toss);
-
     return toss;
   }
 
@@ -764,59 +386,48 @@ export class TossManager {
       const tossesDir = storage.getTossStorageDir();
       const files = await fs.readdir(tossesDir);
 
-      // Extract numeric IDs from filenames (handling pattern like "1-base-sepolia.json")
+      // Extract numeric IDs from filenames (like "1-base-sepolia.json")
       const tossIds = files
         .filter((file) => file.endsWith(".json"))
         .map((file) => {
-          // Match the numeric ID at the beginning of the filename
           const match = file.match(/^(\d+)-/);
           return match ? parseInt(match[1], 10) : 0;
         });
 
-      // Find the maximum ID (or return 0 if no files exist)
-      const maxId = tossIds.length > 0 ? Math.max(...tossIds) : 0;
-      console.log(`Highest toss ID found: ${maxId}`);
-      return maxId;
+      return tossIds.length > 0 ? Math.max(...tossIds) : 0;
     } catch (error) {
-      console.error("Error counting total tosses:", error);
+      console.error("Error counting tosses:", error);
       return 0;
     }
   }
 
   async createGameFromPrompt(
     creator: string,
-    naturalLanguagePrompt: string,
+    prompt: string,
     agent: ReturnType<typeof createReactAgent>,
     agentConfig: AgentConfig,
   ): Promise<GroupTossName> {
-    console.log(`🎲 CREATING TOSS FROM NATURAL LANGUAGE PROMPT`);
-    console.log(`👤 Creator: ${creator}`);
-    console.log(`💬 Prompt: "${naturalLanguagePrompt}"`);
+    console.log(
+      `🎲 Creating toss from prompt: "${prompt}" (Creator: ${creator})`,
+    );
 
-    // Parse the natural language prompt using the CDP agent
+    // Parse the natural language prompt
     const parsedToss = await parseNaturalLanguageToss(
       agent,
       agentConfig,
-      naturalLanguagePrompt,
+      prompt,
     );
 
     if (typeof parsedToss === "string") {
       throw new Error(parsedToss);
     }
 
-    // Store the toss details
-    console.log(`📝 Parsed toss topic: "${parsedToss.topic}"`);
-    console.log(`🎯 Parsed options: [${parsedToss.options.join(", ")}]`);
-    console.log(`💰 Parsed amount: ${parsedToss.amount} USDC`);
-
-    // Create the toss using the parsed values (don't auto-join creator)
+    // Create the toss
     const toss = await this.createGame(creator, parsedToss.amount);
 
-    // Add additional toss information
+    // Add parsed information
     toss.tossTopic = parsedToss.topic;
     toss.tossOptions = parsedToss.options;
-
-    // Update the toss with the additional information
     await storage.updateToss(toss);
 
     return toss;
@@ -824,73 +435,375 @@ export class TossManager {
 }
 
 /**
- * Start listening for messages and handle them with the provided handler
+ * Entry point for command processing
  */
-export async function startMessageListener(
-  client: Client,
-  handleMessage: MessageHandler,
-) {
-  console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
+export async function handleCommand(
+  content: string,
+  inboxId: string,
+  tossManager: TossManager,
+  agent: ReturnType<typeof createReactAgent>,
+  agentConfig: AgentConfig,
+): Promise<string> {
+  try {
+    const commandParts = content.split(" ");
+    const firstWord = commandParts[0].toLowerCase();
 
-  for await (const message of stream) {
-    // Ignore messages from the same agent or non-text messages
-    if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
-    ) {
-      continue;
+    if (["join", "close", "help"].includes(firstWord)) {
+      const [command, ...args] = commandParts;
+      return await handleExplicitCommand(command, args, inboxId, tossManager);
+    } else {
+      return await handleNaturalLanguageCommand(
+        content,
+        inboxId,
+        tossManager,
+        agent,
+        agentConfig,
+      );
     }
-    // Extract command from the message content
-    const command = extractCommand(message.content as string);
-    if (!command) {
-      console.log(`Not a command, skipping`);
-      continue; // No command found, skip
-    }
-
-    console.log(
-      `Received message: ${message.content as string} by ${message.senderInboxId}`,
-    );
-
-    // Get the conversation
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    // Handle the message
-    await handleMessage(message, conversation, command);
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
   }
 }
 
 /**
- * Extract command from message content
- * @param content Message content
- * @returns Command extracted from the message content or null if no command is found
+ * Handle explicit commands (join, close, help)
  */
-export function extractCommand(content: string): string | null {
-  // Check for @toss mentions
-  const botMentionRegex = /@toss\s+(.*)/i;
-  const botMentionMatch = content.match(botMentionRegex);
+async function handleExplicitCommand(
+  command: string,
+  args: string[],
+  inboxId: string,
+  tossManager: TossManager,
+): Promise<string> {
+  switch (command.toLowerCase()) {
+    case "join": {
+      // Validate arguments
+      if (args.length < 1) {
+        return "Please specify: join <tossId> <option>";
+      }
 
-  if (botMentionMatch) {
-    // We found an @toss mention, extract everything after it
-    return botMentionMatch[1].trim();
+      const tossId = args[0];
+      const chosenOption = args.length >= 2 ? args[1] : null;
+
+      if (!tossId) {
+        return "Please specify a toss ID: join <tossId> <option>";
+      }
+
+      // Check if toss exists
+      const toss = await tossManager.getToss(tossId);
+      if (!toss) {
+        return `Toss ${tossId} not found.`;
+      }
+
+      // Join the game
+      const joinedToss = await tossManager.joinGame(tossId, inboxId);
+
+      // Check if option was provided
+      if (!chosenOption) {
+        const availableOptions = joinedToss.tossOptions?.length
+          ? joinedToss.tossOptions.join(", ")
+          : "yes, no";
+
+        return `Please specify your option: join ${tossId} <option>\nAvailable options: ${availableOptions}`;
+      }
+
+      // Validate option
+      if (
+        joinedToss.tossOptions &&
+        !joinedToss.tossOptions.some(
+          (option) => option.toLowerCase() === chosenOption.toLowerCase(),
+        )
+      ) {
+        return `Invalid option: ${chosenOption}. Available options: ${joinedToss.tossOptions.join(", ")}`;
+      }
+
+      // Make payment
+      const paymentSuccess = await tossManager.makePayment(
+        inboxId,
+        tossId,
+        toss.tossAmount,
+        chosenOption,
+      );
+
+      if (!paymentSuccess) {
+        return `Payment failed. Please ensure you have enough USDC and try again.`;
+      }
+
+      // Add player after payment confirmed
+      const updatedToss = await tossManager.addPlayerToGame(
+        tossId,
+        inboxId,
+        chosenOption,
+        true,
+      );
+
+      // Generate player ID
+      const playerPosition =
+        updatedToss.participants.findIndex((p) => p === inboxId) + 1;
+      const playerId = `P${playerPosition}`;
+
+      // Create response
+      let response = `Successfully joined toss ${tossId}! Payment of ${toss.tossAmount} USDC sent.
+Your Player ID: ${playerId}
+Your Choice: ${chosenOption}
+Total players: ${updatedToss.participants.length}`;
+
+      if (updatedToss.tossTopic) {
+        response += `\nToss Topic: "${updatedToss.tossTopic}"`;
+
+        if (updatedToss.tossOptions?.length === 2) {
+          response += `\nOptions: ${updatedToss.tossOptions[0]} or ${updatedToss.tossOptions[1]}`;
+        }
+      }
+
+      response +=
+        inboxId === toss.creator
+          ? `\n\nAs the creator, you can close the toss with: close ${tossId} <option>`
+          : `\n\nWaiting for the toss creator to close the toss.`;
+
+      return response;
+    }
+
+    case "close": {
+      const tossId = args[0];
+      const winningOption = args[1];
+
+      if (!tossId) {
+        return "Please specify a toss ID: close <tossId> <option>";
+      }
+
+      if (!winningOption) {
+        return "Please specify the winning option: close <tossId> <option>";
+      }
+
+      // Validate toss and permissions
+      const toss = await tossManager.getToss(tossId);
+      if (!toss) {
+        return `Toss ${tossId} not found.`;
+      }
+
+      if (inboxId !== toss.creator) {
+        return "Only the toss creator can close the toss.";
+      }
+
+      if (toss.participants.length < 2) {
+        return "At least 2 players are needed to close the toss.";
+      }
+
+      // Validate winning option
+      if (
+        toss.tossOptions &&
+        !toss.tossOptions.some(
+          (option) => option.toLowerCase() === winningOption.toLowerCase(),
+        )
+      ) {
+        return `Invalid option. Please choose one of: ${toss.tossOptions.join(", ")}`;
+      }
+
+      // Execute toss
+      let result;
+      try {
+        result = await tossManager.executeCoinToss(tossId, winningOption);
+        if (!result.winner) {
+          return "The toss failed to determine a winner. Please try again.";
+        }
+      } catch (error) {
+        return `Error closing toss: ${error instanceof Error ? error.message : "Unknown error"}`;
+      }
+
+      // Generate player IDs
+      const playerMap = await Promise.all(
+        result.participants.map(async (player, index) => {
+          const walletAddress =
+            (await tossManager.getPlayerWalletAddress(player)) || player;
+          return {
+            id: `P${index + 1}${player === result.creator ? " (Creator)" : ""}`,
+            address: player,
+            walletAddress,
+          };
+        }),
+      );
+
+      // Create result message
+      let resultMessage = `🎲 TOSS RESULTS FOR TOSS #${tossId} 🎲\n\n`;
+
+      if (result.tossTopic) {
+        resultMessage += `📝 Toss: "${result.tossTopic}"\n`;
+        if (result.tossOptions?.length === 2) {
+          resultMessage += `🎯 Options: ${result.tossOptions[0]} or ${result.tossOptions[1]}\n\n`;
+        }
+      }
+
+      resultMessage += `Players (${result.participants.length}):\n`;
+
+      // List players
+      playerMap.forEach((p) => {
+        const displayAddress = `${p.walletAddress.substring(0, 10)}...${p.walletAddress.substring(p.walletAddress.length - 6)}`;
+        const playerOption =
+          result.participantOptions.find((opt) => opt.inboxId === p.address)
+            ?.option || "Unknown";
+        resultMessage += `${p.id}: ${displayAddress} (Chose: ${playerOption})\n`;
+      });
+
+      // Total pot
+      const totalPot =
+        parseFloat(result.tossAmount) * result.participants.length;
+      resultMessage += `\n💰 Total Pot: ${totalPot} USDC\n`;
+      resultMessage += `🎯 Winning Option: ${result.tossResult || "Unknown"}\n\n`;
+
+      // Winners
+      const winnerIds = result.winner ? result.winner.split(",") : [];
+      const winningPlayers = playerMap.filter((p) =>
+        winnerIds.includes(p.address),
+      );
+
+      if (winningPlayers.length > 0) {
+        const prizePerWinner = totalPot / winningPlayers.length;
+
+        resultMessage += `🏆 WINNERS (${winningPlayers.length}):\n`;
+        winningPlayers.forEach((winner) => {
+          const displayAddress = `${winner.walletAddress.substring(0, 10)}...${winner.walletAddress.substring(winner.walletAddress.length - 6)}`;
+          resultMessage += `${winner.id}: ${displayAddress}\n`;
+        });
+
+        resultMessage += `\n💸 Prize per winner: ${prizePerWinner.toFixed(6)} USDC\n\n`;
+      } else {
+        resultMessage += "No winners found.\n\n";
+      }
+
+      if (result.paymentSuccess) {
+        resultMessage += `✅ Winnings have been transferred to the winners' wallets.`;
+        if (result.transactionLink) {
+          resultMessage += `\n🔗 Transaction: ${result.transactionLink}`;
+        }
+      } else {
+        resultMessage += `⚠️ Automatic transfer of winnings failed. Please contact support.`;
+      }
+
+      return resultMessage;
+    }
+
+    case "help":
+      return HELP_MESSAGE;
+
+    default:
+      return "Unknown command. Type help to see available commands.";
+  }
+}
+
+/**
+ * Handle natural language toss commands
+ */
+async function handleNaturalLanguageCommand(
+  prompt: string,
+  inboxId: string,
+  tossManager: TossManager,
+  agent: ReturnType<typeof createReactAgent>,
+  agentConfig: AgentConfig,
+): Promise<string> {
+  console.log(`🧠 Processing prompt: "${prompt}"`);
+
+  // Check balance
+  const { balance, address } = await tossManager.getBalance(inboxId);
+  if (balance < 0.01) {
+    return `Insufficient USDC balance. You need at least 0.01 USDC to create a toss. Your balance: ${balance} USDC\nTransfer USDC to your wallet address: ${address}`;
   }
 
-  return null;
+  // Create toss
+  const toss = await tossManager.createGameFromPrompt(
+    inboxId,
+    prompt,
+    agent,
+    agentConfig,
+  );
+
+  // Create response
+  let response = `🎲 Toss Created! 🎲\n\n`;
+  response += `Toss ID: ${toss.id}\n`;
+  response += `Topic: "${toss.tossTopic}"\n`;
+
+  if (toss.tossOptions?.length === 2) {
+    response += `Options: ${toss.tossOptions[0]} or ${toss.tossOptions[1]}\n`;
+  }
+
+  response += `Toss Amount: ${toss.tossAmount} USDC\n\n`;
+  response += `Other players can join with: join ${toss.id} <option>\n`;
+  response += `When everyone has joined, you can close the toss with: close ${toss.id} <option>`;
+
+  return response;
+}
+
+/**
+ * Parse a natural language toss prompt
+ */
+export async function parseNaturalLanguageToss(
+  agent: ReturnType<typeof createReactAgent>,
+  config: AgentConfig,
+  prompt: string,
+): Promise<ParsedToss> {
+  // Default values
+  const defaultResult: ParsedToss = {
+    topic: prompt,
+    options: DEFAULT_OPTIONS,
+    amount: DEFAULT_AMOUNT,
+  };
+
+  if (!prompt || prompt.length < 3) {
+    return defaultResult;
+  }
+
+  // Direct amount extraction via regex (as fallback)
+  const amountMatch = prompt.match(/for\s+(\d+(\.\d+)?)\s*$/i);
+  const extractedAmount = amountMatch?.[1];
+
+  // Format parsing request
+  const parsingRequest = `
+      Parse this toss request into structured format: "${prompt}"
+      
+      First, do a vibe check:
+      1. Is this a genuine toss topic like "Will it rain tomorrow" or "Lakers vs Celtics"?
+      2. Is it NOT a join attempt or command?
+      3. Is it NOT inappropriate content?
+      
+      If it fails the vibe check, return:
+      {
+        "valid": false,
+        "reason": "brief explanation why"
+      }
+      
+      If it passes the vibe check, return only a valid JSON object with these fields:
+      {
+        "valid": true,
+        "topic": "the tossing topic",
+        "options": ["option1", "option2"],
+        "amount": "toss amount"
+      }
+    `;
+
+  // Process with agent
+  const response = await processMessage(agent, config, parsingRequest);
+  const parsedJson = extractJsonFromResponse(response);
+
+  if (!parsedJson) {
+    throw new Error("Invalid toss request: No JSON found in response");
+  }
+
+  if (parsedJson.valid === false) {
+    throw new Error(`Invalid toss request: ${parsedJson.reason}`);
+  }
+
+  // Combine parsed data with defaults
+  return {
+    topic: parsedJson.topic ?? prompt,
+    options:
+      Array.isArray(parsedJson.options) && parsedJson.options.length >= 2
+        ? [parsedJson.options[0], parsedJson.options[1]]
+        : DEFAULT_OPTIONS,
+    amount: extractedAmount || parsedJson.amount || DEFAULT_AMOUNT,
+  };
 }
 
 /**
  * Process a message with the agent
- * @param agent - The agent executor
- * @param config - Agent configuration
- * @param message - The user message
- * @returns The agent's response
  */
 export async function processMessage(
   agent: ReturnType<typeof createReactAgent>,
@@ -926,92 +839,61 @@ export async function processMessage(
 }
 
 /**
- * Parse a natural language toss prompt to extract structured information
- * @param agent - The agent
- * @param config - Agent configuration
- * @param prompt - The natural language prompt
- * @returns Parsed toss information
+ * Start listening for messages
  */
-export async function parseNaturalLanguageToss(
-  agent: ReturnType<typeof createReactAgent>,
-  config: AgentConfig,
-  prompt: string,
-): Promise<ParsedToss> {
-  // Default values in case parsing fails
-  const defaultResult: ParsedToss = {
-    topic: prompt,
-    options: DEFAULT_OPTIONS,
-    amount: DEFAULT_AMOUNT,
-  };
+export async function startMessageListener(
+  client: Client,
+  handleMessage: MessageHandler,
+) {
+  console.log("Waiting for messages...");
+  const stream = await client.conversations.streamAllMessages();
 
-  if (!prompt || prompt.length < 3) {
-    return defaultResult;
+  for await (const message of stream) {
+    // Skip messages from the same agent or non-text messages
+    if (
+      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
+      message?.contentType?.typeId !== "text"
+    ) {
+      continue;
+    }
+
+    // Extract command
+    const command = extractCommand(message.content as string);
+    if (!command) {
+      continue; // No command found
+    }
+
+    console.log(
+      `Received: ${message.content as string} from ${message.senderInboxId}`,
+    );
+
+    // Get conversation
+    const conversation = await client.conversations.getConversationById(
+      message.conversationId,
+    );
+
+    if (!conversation) {
+      console.log("Conversation not found, skipping");
+      continue;
+    }
+
+    // Handle message
+    await handleMessage(message, conversation, command);
   }
-
-  console.log(`🔄 Parsing natural language toss: "${prompt}"`);
-
-  // Check for amount directly in the prompt with regex
-  // This is a fallback in case the agent fails
-  const amountMatch = prompt.match(/for\s+(\d+(\.\d+)?)\s*$/i);
-  let extractedAmount = null;
-  if (amountMatch && amountMatch[1]) {
-    extractedAmount = amountMatch[1];
-    console.log(`💰 Directly extracted amount: ${extractedAmount}`);
-  }
-
-  // Format specific request for parsing
-  const parsingRequest = `
-      Parse this toss request into structured format: "${prompt}"
-      
-      First, do a vibe check:
-      1. Is this a genuine toss topic like "Will it rain tomorrow" or "Lakers vs Celtics"?
-      2. Is it NOT a join attempt or command?
-      3. Is it NOT inappropriate content?
-      
-      If it fails the vibe check, return:
-      {
-        "valid": false,
-        "reason": "brief explanation why"
-      }
-      
-      If it passes the vibe check, return only a valid JSON object with these fields:
-      {
-        "valid": true,
-        "topic": "the tossing topic",
-        "options": ["option1", "option2"],
-        "amount": "toss amount"
-      }
-    `;
-
-  // Process with the agent
-  const response = await processMessage(agent, config, parsingRequest);
-  const parsedJson = extractJsonFromResponse(response);
-
-  if (!parsedJson) {
-    throw new Error("Invalid toss request: No JSON found in response");
-  }
-
-  if (parsedJson.valid === false) {
-    throw new Error(`Invalid toss request: ${parsedJson.reason}`);
-  }
-
-  // Validate and provide defaults if needed
-  const result: ParsedToss = {
-    topic: parsedJson.topic ?? prompt,
-    options:
-      Array.isArray(parsedJson.options) && parsedJson.options.length >= 2
-        ? [parsedJson.options[0], parsedJson.options[1]]
-        : DEFAULT_OPTIONS,
-    // Prioritize directly extracted amount if available
-    amount: extractedAmount || parsedJson.amount || DEFAULT_AMOUNT,
-  };
-
-  console.log(
-    `✅ Parsed toss: "${result.topic}" with options [${result.options.join(", ")}] for ${result.amount} USDC`,
-  );
-  return result;
 }
 
+/**
+ * Extract command from message content
+ */
+export function extractCommand(content: string): string | null {
+  const botMentionRegex = /@toss\s+(.*)/i;
+  const botMentionMatch = content.match(botMentionRegex);
+  return botMentionMatch ? botMentionMatch[1].trim() : null;
+}
+
+/**
+ * Message handler function
+ */
 async function handleMessage(
   message: DecodedMessage,
   conversation: Conversation,
@@ -1020,14 +902,15 @@ async function handleMessage(
   try {
     const tossManager = new TossManager();
     const commandContent = command.replace(/^@toss\s+/i, "").trim();
-    // Use the sender's address as the user ID
     const inboxId = message.senderInboxId;
-    // Initialize or get the agent for this user
+
+    // Initialize agent
     const { agent, config } = await initializeAgent(
       inboxId,
       AGENT_INSTRUCTIONS,
     );
 
+    // Process command
     const response = await handleCommand(
       commandContent,
       inboxId,
@@ -1042,8 +925,12 @@ async function handleMessage(
     console.error("Error:", error);
   }
 }
+
+/**
+ * Main entry point
+ */
 async function main(): Promise<void> {
-  console.log("Starting agent...");
+  console.log("Starting CoinToss agent...");
 
   // Initialize XMTP client
   const xmtpClient = await initializeXmtpClient();
