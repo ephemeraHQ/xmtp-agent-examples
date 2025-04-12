@@ -922,7 +922,7 @@ When working with these classes:
 ```jsx
 // Railway deployment support
 let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-const dbPath = `${volumePath}/${signer.getAddress()}-${XMTP_ENV}`;
+const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
 
 // Create database directory if it doesn't exist
 if (!fs.existsSync(dbPath)) {
