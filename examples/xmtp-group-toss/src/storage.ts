@@ -2,8 +2,8 @@ import { existsSync, mkdirSync } from "fs";
 import * as fs from "fs/promises";
 import path from "path";
 import { validateEnvironment } from "@helpers/utils";
-import { TossStatus, type GroupTossName } from ".";
 import type { AgentWalletData } from "./cdp";
+import { TossStatus, type GroupTossName } from "./helper";
 
 const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);
 export const WALLET_STORAGE_DIR = ".data/wallet_data";
