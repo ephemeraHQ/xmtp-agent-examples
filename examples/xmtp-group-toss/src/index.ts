@@ -1,43 +1,66 @@
-import { existsSync, mkdirSync } from "fs";
 import * as fs from "fs/promises";
-import * as path from "path";
-import {
-  AgentKit,
-  cdpApiActionProvider,
-  cdpWalletActionProvider,
-  erc20ActionProvider,
-  walletActionProvider,
-} from "@coinbase/agentkit";
-import { getLangChainTools } from "@coinbase/agentkit-langchain";
-import {
-  Coinbase,
-  TimeoutError,
-  Wallet,
-  type Transfer as CoinbaseTransfer,
-  type Trade,
-  type WalletData,
-} from "@coinbase/coinbase-sdk";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { HumanMessage } from "@langchain/core/messages";
-import { MemorySaver } from "@langchain/langgraph";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { ChatOpenAI } from "@langchain/openai";
+import type { createReactAgent } from "@langchain/langgraph/prebuilt";
 import {
   Client,
   type Conversation,
   type DecodedMessage,
   type XmtpEnv,
 } from "@xmtp/node-sdk";
-import { isAddress } from "viem";
-import "dotenv/config";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import { initializeAgent, WalletService } from "./cdp";
+import { extractJsonFromResponse } from "./helper";
+import { storage, XMTP_STORAGE_DIR } from "./storage";
 
-const { CDP_API_KEY_NAME, CDP_API_KEY_PRIVATE_KEY, NETWORK_ID } =
-  validateEnvironment([
-    "CDP_API_KEY_NAME",
-    "CDP_API_KEY_PRIVATE_KEY",
-    "NETWORK_ID",
-  ]);
+// Constants for default values
+const DEFAULT_OPTIONS = ["yes", "no"];
+const DEFAULT_AMOUNT = "1";
+const USDC_TOKEN_ADDRESS = "0x5dEaC602762362FE5f135FA5904351916053cF70";
+
+/**
+ * Agent instruction template for coin toss activities
+ */
+const AGENT_INSTRUCTIONS = `
+  You are a CoinToss Agent that helps users participate in coin toss activities.
+  
+  You have two main functions:
+  1. Process natural language toss requests and structure them
+  2. Handle coin toss management commands
+  
+  When parsing natural language tosses:
+  - Extract the toss topic (what people are tossing on)
+  - Identify options (default to "yes" and "no" if not provided)
+  - Determine toss amount (default to 1 USDC if not specified)
+  - Enforce a maximum toss amount of 10 USDC
+  
+  For example:
+  - "Will it rain tomorrow for 5" should be interpreted as a toss on "Will it rain tomorrow" with options ["yes", "no"] and amount "5"
+  - "Lakers vs Celtics for 10" should be interpreted as a toss on "Lakers vs Celtics game" with options ["Lakers", "Celtics"] and amount "10"
+  
+  When checking payments or balances:
+  1. Use the USDC token at ${USDC_TOKEN_ADDRESS} on Base.
+  2. When asked to check if a payment was sent, verify:
+     - The exact amount was transferred
+     - The transaction is confirmed
+     - The correct addresses were used
+  3. For balance checks, show the exact USDC amount available.
+  4. When transferring winnings, ensure:
+     - The toss wallet has sufficient balance
+     - The transfer is completed successfully
+     - Provide transaction details
+  
+  Available commands:
+  @toss <topic> <options> <amount> - Create a new toss
+  /join <tossId> <option> - Join an existing toss with the specified ID
+  /close <tossId> <option> - Close the toss and set the winning option (creator only)
+  /status <tossId> - Check toss status and participants
+  /list - List all active tosses
+  /balance - Check your wallet balance
+  /help - Show available commands
+  
+  Keep responses concise and clear, focusing on payment verification and toss status.
+`;
 
 // Constants
 export const HELP_MESSAGE = `Available commands:
@@ -53,334 +76,6 @@ Other commands:
 @toss close <tossId> <option> - Close the toss and set the winning option (only for toss creator)
 @toss help - Show this help message
 `;
-
-// Initialize Coinbase SDK
-function initializeCoinbaseSDK(): boolean {
-  try {
-    Coinbase.configure({
-      apiKeyName: CDP_API_KEY_NAME,
-      privateKey: CDP_API_KEY_PRIVATE_KEY,
-    });
-    console.log("Coinbase SDK initialized successfully, network:", NETWORK_ID);
-    return true;
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Failed to initialize Coinbase SDK:", errorMessage);
-    return false;
-  }
-}
-
-// Initialize the SDK when the module is loaded
-let sdkInitialized = false;
-
-export class WalletService {
-  constructor() {
-    if (!sdkInitialized) {
-      sdkInitialized = initializeCoinbaseSDK();
-    }
-  }
-
-  async createWallet(inboxId: string): Promise<AgentWalletData> {
-    try {
-      console.log(`Creating new wallet for key ${inboxId}...`);
-
-      // Initialize SDK if not already done
-      if (!sdkInitialized) {
-        sdkInitialized = initializeCoinbaseSDK();
-      }
-
-      // Log the network we're using
-      console.log(`Creating wallet on network: ${NETWORK_ID}`);
-
-      // Create wallet
-      const wallet = await Wallet.create({
-        networkId: NETWORK_ID,
-      }).catch((err: unknown) => {
-        const errorDetails =
-          typeof err === "object" ? JSON.stringify(err, null, 2) : err;
-        console.error("Detailed wallet creation error:", errorDetails);
-        throw err;
-      });
-
-      console.log("Wallet created successfully, exporting data...");
-      const data = wallet.export();
-
-      console.log("Getting default address...");
-      const address = await wallet.getDefaultAddress();
-      const walletAddress = address.getId();
-
-      const walletInfo: AgentWalletData = {
-        id: walletAddress,
-        wallet: wallet,
-        walletData: data,
-        agent_address: walletAddress,
-        inboxId: inboxId,
-      };
-
-      await storage.saveWallet(
-        inboxId,
-        JSON.stringify({
-          id: walletInfo.id,
-          // no wallet
-          walletData: walletInfo.walletData,
-          agent_address: walletInfo.agent_address,
-          inboxId: walletInfo.inboxId,
-        }),
-      );
-      console.log("Wallet created and saved successfully");
-      return walletInfo;
-    } catch (error: unknown) {
-      console.error("Failed to create wallet:", error);
-
-      // Provide more detailed error information
-      if (error instanceof Error) {
-        throw new Error(`Wallet creation failed: ${error.message}`);
-      }
-
-      throw new Error(`Failed to create wallet: ${String(error)}`);
-    }
-  }
-
-  async getWallet(inboxId: string): Promise<AgentWalletData | undefined> {
-    // Try to retrieve existing wallet data
-    const walletData = await storage.getWallet(inboxId);
-    if (walletData === null) {
-      console.log(`No wallet found for ${inboxId}, creating new one`);
-      return this.createWallet(inboxId);
-    }
-
-    const importedWallet = await Wallet.import(walletData.walletData);
-
-    return {
-      id: importedWallet.getId() ?? "",
-      wallet: importedWallet,
-      walletData: walletData.walletData,
-      agent_address: walletData.agent_address,
-      inboxId: walletData.inboxId,
-    };
-  }
-
-  /**
-   * Check if an address belongs to a toss wallet and return the corresponding toss ID
-   */
-  private async getTossIdFromAddress(address: string): Promise<string | null> {
-    if (!isAddress(address)) return null;
-
-    try {
-      // Look for toss games with this wallet address
-      const tosses = await storage.listActiveTosses();
-      const matchingToss = tosses.find(
-        (toss) => toss.walletAddress.toLowerCase() === address.toLowerCase(),
-      );
-
-      if (matchingToss) {
-        console.log(`📌 Address ${address} belongs to toss:${matchingToss.id}`);
-        return matchingToss.id;
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.log(`ℹ️ Error checking for toss wallet: ${errorMessage}`);
-    }
-
-    return null;
-  }
-
-  async transfer(
-    inboxId: string,
-    toAddress: string,
-    amount: number,
-  ): Promise<CoinbaseTransfer | undefined> {
-    toAddress = toAddress.toLowerCase();
-
-    console.log("📤 TRANSFER INITIATED");
-    console.log(`💸 Amount: ${amount} USDC`);
-    console.log(`🔍 From user: ${inboxId}`);
-    console.log(`🔍 To: ${toAddress}`);
-
-    // Get the source wallet
-    console.log(`🔑 Retrieving source wallet for user: ${inboxId}...`);
-    const from = await this.getWallet(inboxId);
-    if (!from) {
-      console.error(`❌ No wallet found for sender: ${inboxId}`);
-      return undefined;
-    }
-    console.log(`✅ Source wallet found: ${from.agent_address}`);
-
-    if (!Number(amount)) {
-      console.error(`❌ Invalid amount: ${amount}`);
-      return undefined;
-    }
-
-    // Check balance
-    console.log(
-      `💰 Checking balance for source wallet: ${from.agent_address}...`,
-    );
-    const balance = await from.wallet?.getBalance(Coinbase.assets.Usdc);
-    console.log(`💵 Available balance: ${Number(balance)} USDC`);
-
-    if (Number(balance) < amount) {
-      console.error(
-        `❌ Insufficient balance. Required: ${amount} USDC, Available: ${Number(balance)} USDC`,
-      );
-      return undefined;
-    }
-
-    if (!isAddress(toAddress) && !toAddress.includes(":")) {
-      // If this is not an address, and not a user ID, we can't transfer
-      console.error(`❌ Invalid destination address: ${toAddress}`);
-      return undefined;
-    }
-
-    // Get or validate destination wallet
-    let destinationAddress = toAddress;
-    console.log(`🔑 Validating destination: ${toAddress}...`);
-
-    // First check if this address belongs to a toss wallet
-    const tossId = await this.getTossIdFromAddress(toAddress);
-    if (tossId) {
-      // Use the toss ID instead of the address
-      console.log(`🎮 Found toss ID: ${tossId} for address: ${toAddress}`);
-      const tossWallet = await this.getWallet(tossId);
-      if (tossWallet) {
-        destinationAddress = tossWallet.agent_address;
-        console.log(`✅ Using toss wallet: ${destinationAddress}`);
-        // Continue with the existing wallet, don't create a new one
-      }
-    } else {
-      console.log(`ℹ️ Using raw address as destination: ${destinationAddress}`);
-    }
-
-    try {
-      console.log(
-        `🚀 Executing transfer of ${amount} USDC from ${from.agent_address} to ${destinationAddress}...`,
-      );
-      const transfer = await from.wallet?.createTransfer({
-        amount,
-        assetId: Coinbase.assets.Usdc,
-        destination: destinationAddress,
-        gasless: true,
-      });
-
-      console.log(`⏳ Waiting for transfer to complete...`);
-      try {
-        await transfer?.wait();
-        console.log(`✅ Transfer completed successfully!`);
-      } catch (err) {
-        if (err instanceof TimeoutError) {
-          console.log(
-            `⚠️ Waiting for transfer timed out, but transaction may still complete`,
-          );
-        } else {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          console.error(
-            `❌ Error while waiting for transfer to complete:`,
-            errorMessage,
-          );
-        }
-      }
-
-      return transfer;
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error(`❌ Transfer failed:`, errorMessage);
-      throw error;
-    }
-  }
-
-  async checkBalance(
-    inboxId: string,
-  ): Promise<{ address: string | undefined; balance: number }> {
-    // First check if this is an address that belongs to a toss wallet
-    const tossId = await this.getTossIdFromAddress(inboxId);
-    if (tossId) {
-      // Use the toss ID instead of the address
-      console.log(`🎮 Using toss ID: ${tossId} instead of address: ${inboxId}`);
-      const tossWallet = await this.getWallet(tossId);
-      if (tossWallet) {
-        const balance = await tossWallet.wallet?.getBalance(
-          Coinbase.assets.Usdc,
-        );
-        return {
-          address: tossWallet.agent_address,
-          balance: Number(balance),
-        };
-      }
-    }
-
-    // Normal wallet lookup
-    const walletData = await this.getWallet(inboxId);
-
-    if (!walletData) {
-      return { address: undefined, balance: 0 };
-    }
-
-    const balance = await walletData.wallet?.getBalance(Coinbase.assets.Usdc);
-    return {
-      address: walletData.agent_address,
-      balance: Number(balance),
-    };
-  }
-
-  async swap(
-    address: string,
-    fromAssetId: string,
-    toAssetId: string,
-    amount: number,
-  ): Promise<Trade | undefined> {
-    address = address.toLowerCase();
-
-    // First check if this is an address that belongs to a toss wallet
-    const tossId = await this.getTossIdFromAddress(address);
-    if (tossId) {
-      // Use the toss ID instead of the address
-      console.log(`🎮 Using toss ID: ${tossId} instead of address: ${address}`);
-      const tossWallet = await this.getWallet(tossId);
-      if (tossWallet) {
-        const trade = await tossWallet.wallet?.createTrade({
-          amount,
-          fromAssetId,
-          toAssetId,
-        });
-
-        if (!trade) return undefined;
-
-        try {
-          await trade.wait();
-        } catch (err) {
-          if (!(err instanceof TimeoutError)) {
-            console.error("Error while waiting for trade to complete: ", err);
-          }
-        }
-
-        return trade;
-      }
-    }
-
-    // Normal wallet lookup
-    const walletData = await this.getWallet(address);
-    if (!walletData) return undefined;
-
-    const trade = await walletData.wallet?.createTrade({
-      amount,
-      fromAssetId,
-      toAssetId,
-    });
-
-    if (!trade) return undefined;
-
-    try {
-      await trade.wait();
-    } catch (err) {
-      if (!(err instanceof TimeoutError)) {
-        console.error("Error while waiting for trade to complete: ", err);
-      }
-    }
-
-    return trade;
-  }
-}
 
 /**
  * Entry point for command processing
@@ -714,193 +409,6 @@ async function handleNaturalLanguageCommand(
 
   return response;
 }
-
-export const WALLET_STORAGE_DIR = ".data/wallet_data";
-export const XMTP_STORAGE_DIR = ".data/xmtp";
-export const TOSS_STORAGE_DIR = ".data/tosses";
-
-/**
- * Storage service for coin toss  data and user wallets
- */
-class StorageService {
-  private initialized = false;
-
-  constructor() {
-    // Initialize directories on creation
-    this.initialize();
-  }
-
-  /**
-   * Initialize storage directories
-   */
-  public initialize(): void {
-    if (this.initialized) return;
-
-    // Ensure storage directories exist
-    [WALLET_STORAGE_DIR, TOSS_STORAGE_DIR, XMTP_STORAGE_DIR].forEach((dir) => {
-      if (!existsSync(dir)) {
-        mkdirSync(dir, { recursive: true });
-      }
-    });
-
-    this.initialized = true;
-    console.log("Local file storage initialized");
-  }
-
-  /**
-   * Save data to a JSON file
-   */
-  private async saveToFile(
-    directory: string,
-    identifier: string,
-    data: string,
-  ): Promise<boolean> {
-    const toRead = `${identifier}-${NETWORK_ID}`;
-    try {
-      const filePath = path.join(directory, `${toRead}.json`);
-      await fs.writeFile(filePath, data);
-      return true;
-    } catch (error) {
-      console.error(`Error writing to file ${toRead}:`, error);
-      return false;
-    }
-  }
-
-  /**
-   * Read data from a JSON file
-   */
-  private async readFromFile<T>(
-    directory: string,
-    identifier: string,
-  ): Promise<T | null> {
-    try {
-      const key = `${identifier}-${NETWORK_ID}`;
-      const filePath = path.join(directory, `${key}.json`);
-      const data = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(data) as T;
-    } catch (error) {
-      // If file doesn't exist, return null
-      if (
-        error instanceof Error &&
-        (error.message.includes("ENOENT") ||
-          error.message.includes("no such file or directory"))
-      ) {
-        return null;
-      }
-      // For other errors, rethrow
-      throw error;
-    }
-  }
-
-  /**
-   * Save a coin toss game
-   */
-  public async saveToss(toss: GroupTossName): Promise<void> {
-    if (!this.initialized) this.initialize();
-    await this.saveToFile(TOSS_STORAGE_DIR, toss.id, JSON.stringify(toss));
-  }
-
-  /**
-   * Get a coin toss game by ID
-   */
-  public async getToss(tossId: string): Promise<GroupTossName | null> {
-    if (!this.initialized) this.initialize();
-    return this.readFromFile<GroupTossName>(TOSS_STORAGE_DIR, tossId);
-  }
-
-  /**
-   * List all active games
-   */
-  public async listActiveTosses(): Promise<GroupTossName[]> {
-    if (!this.initialized) this.initialize();
-
-    const tosses: GroupTossName[] = [];
-    try {
-      const files = await fs.readdir(TOSS_STORAGE_DIR);
-
-      for (const file of files) {
-        if (file.endsWith(".json")) {
-          const tossId = file.replace(`-${NETWORK_ID}.json`, "");
-          const toss = await this.getToss(tossId);
-          if (
-            toss &&
-            toss.status !== TossStatus.COMPLETED &&
-            toss.status !== TossStatus.CANCELLED
-          ) {
-            tosses.push(toss);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error listing active games:", error);
-    }
-
-    return tosses;
-  }
-
-  /**
-   * Update an existing game (alias for saveToss)
-   */
-  public async updateToss(toss: GroupTossName): Promise<void> {
-    await this.saveToss(toss);
-  }
-
-  /**
-   * Save user wallet data
-   */
-  public async saveWallet(inboxId: string, walletData: string): Promise<void> {
-    if (!this.initialized) this.initialize();
-    await this.saveToFile(WALLET_STORAGE_DIR, inboxId, walletData);
-  }
-
-  /**
-   * Get user wallet data by user ID
-   */
-  public async getWallet(inboxId: string): Promise<AgentWalletData | null> {
-    if (!this.initialized) this.initialize();
-    return this.readFromFile<AgentWalletData>(WALLET_STORAGE_DIR, inboxId);
-  }
-
-  /**
-   * Delete a file
-   */
-  public async deleteFile(directory: string, key: string): Promise<boolean> {
-    try {
-      const filePath = path.join(directory, `${key}.json`);
-      await fs.unlink(filePath);
-      return true;
-    } catch (error) {
-      console.error(`Error deleting file ${key}:`, error);
-      return false;
-    }
-  }
-
-  /**
-   * Get wallet count
-   */
-  public async getWalletCount(): Promise<number> {
-    try {
-      const files = await fs.readdir(WALLET_STORAGE_DIR);
-      return files.filter((file) => file.endsWith(".json")).length;
-    } catch (error) {
-      console.error("Error getting wallet count:", error);
-      return 0;
-    }
-  }
-
-  /**
-   * Get the toss storage directory
-   */
-  public getTossStorageDir(): string {
-    return TOSS_STORAGE_DIR;
-  }
-}
-
-// Create a single global instance
-const storage = new StorageService();
-
-// Export the storage instance
-export { storage };
 
 // Interface for transfer response
 interface Transfer {
@@ -1341,15 +849,6 @@ export enum TossStatus {
   CANCELLED = "CANCELLED",
 }
 
-// Agent wallet data
-export type AgentWalletData = {
-  id: string;
-  walletData: WalletData;
-  agent_address: string;
-  inboxId: string;
-  wallet?: Wallet;
-};
-
 export interface AgentConfig {
   configurable: {
     thread_id: string;
@@ -1381,15 +880,6 @@ export interface ToolsChunk {
 }
 
 export type StreamChunk = AgentChunk | ToolsChunk;
-
-// Interface for parsed JSON response
-export interface TossJsonResponse {
-  topic?: string;
-  options?: string[];
-  amount?: string;
-  valid?: boolean;
-  reason?: string;
-}
 
 const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "WALLET_KEY",
@@ -1490,127 +980,6 @@ export function extractCommand(content: string): string | null {
   return null;
 }
 
-// Constants for default values
-const DEFAULT_OPTIONS = ["yes", "no"];
-const DEFAULT_AMOUNT = "1";
-const USDC_TOKEN_ADDRESS = "0x5dEaC602762362FE5f135FA5904351916053cF70";
-
-/**
- * Agent instruction template for coin toss activities
- */
-const AGENT_INSTRUCTIONS = `
-  You are a CoinToss Agent that helps users participate in coin toss activities.
-  
-  You have two main functions:
-  1. Process natural language toss requests and structure them
-  2. Handle coin toss management commands
-  
-  When parsing natural language tosses:
-  - Extract the toss topic (what people are tossing on)
-  - Identify options (default to "yes" and "no" if not provided)
-  - Determine toss amount (default to 1 USDC if not specified)
-  - Enforce a maximum toss amount of 10 USDC
-  
-  For example:
-  - "Will it rain tomorrow for 5" should be interpreted as a toss on "Will it rain tomorrow" with options ["yes", "no"] and amount "5"
-  - "Lakers vs Celtics for 10" should be interpreted as a toss on "Lakers vs Celtics game" with options ["Lakers", "Celtics"] and amount "10"
-  
-  When checking payments or balances:
-  1. Use the USDC token at ${USDC_TOKEN_ADDRESS} on Base.
-  2. When asked to check if a payment was sent, verify:
-     - The exact amount was transferred
-     - The transaction is confirmed
-     - The correct addresses were used
-  3. For balance checks, show the exact USDC amount available.
-  4. When transferring winnings, ensure:
-     - The toss wallet has sufficient balance
-     - The transfer is completed successfully
-     - Provide transaction details
-  
-  Available commands:
-  @toss <topic> <options> <amount> - Create a new toss
-  /join <tossId> <option> - Join an existing toss with the specified ID
-  /close <tossId> <option> - Close the toss and set the winning option (creator only)
-  /status <tossId> - Check toss status and participants
-  /list - List all active tosses
-  /balance - Check your wallet balance
-  /help - Show available commands
-  
-  Keep responses concise and clear, focusing on payment verification and toss status.
-`;
-
-// Global stores for memory and agent instances
-const memoryStore: Record<string, MemorySaver> = {};
-const agentStore: Record<string, ReturnType<typeof createReactAgent>> = {};
-
-export async function initializeAgent(inboxId: string) {
-  try {
-    // Check if we already have an agent for this user
-    if (agentStore[inboxId]) {
-      console.log(`Using existing agent for user: ${inboxId}`);
-      const agentConfig = {
-        configurable: { thread_id: `CoinToss Agent for ${inboxId}` },
-      };
-      return { agent: agentStore[inboxId], config: agentConfig };
-    }
-
-    console.log(`Initializing agent for inbox: ${inboxId}`);
-
-    const llm = new ChatOpenAI({
-      modelName: "gpt-4o",
-    });
-
-    const agentkit = await AgentKit.from({
-      cdpApiKeyName: CDP_API_KEY_NAME,
-      cdpApiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY,
-      actionProviders: [
-        walletActionProvider(),
-        erc20ActionProvider(),
-        cdpApiActionProvider({
-          apiKeyName: CDP_API_KEY_NAME,
-          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
-        }),
-        cdpWalletActionProvider({
-          apiKeyName: CDP_API_KEY_NAME,
-          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
-        }),
-      ],
-    });
-
-    console.log("AgentKit initialized successfully");
-
-    const tools = await getLangChainTools(agentkit);
-
-    // Get or create memory saver for this user
-    if (!memoryStore[inboxId] ) {
-      console.log(`Creating new memory store for user: ${inboxId}`);
-      memoryStore[inboxId] = new MemorySaver();
-    } else {
-      console.log(`Using existing memory store for user: ${inboxId}`);
-    }
-
-    const agentConfig = {
-      configurable: { thread_id: `CoinToss Agent for ${inboxId}` },
-    };
-
-    const agent = createReactAgent({
-      llm,
-      tools,
-      checkpointSaver: memoryStore[inboxId],
-      messageModifier: AGENT_INSTRUCTIONS,
-    });
-
-    // Store the agent for future use
-    agentStore[inboxId] = agent;
-
-    console.log("Agent created successfully");
-    return { agent, config: agentConfig };
-  } catch (error) {
-    console.error("Failed to initialize agent:", error);
-    throw error;
-  }
-}
-
 /**
  * Process a message with the agent
  * @param agent - The agent executor
@@ -1648,24 +1017,6 @@ export async function processMessage(
   } catch (error) {
     console.error("Error processing message:", error);
     return "Sorry, I encountered an error while processing your request. Please try again.";
-  }
-}
-
-/**
- * Extract JSON from agent response text
- * @param response The text response from agent
- * @returns Parsed JSON object or null if not found
- */
-function extractJsonFromResponse(response: string): TossJsonResponse | null {
-  try {
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as TossJsonResponse;
-    }
-    return null;
-  } catch (error) {
-    console.error("Error parsing JSON from agent response:", error);
-    return null;
   }
 }
 
@@ -1729,7 +1080,11 @@ export async function parseNaturalLanguageToss(
 
   // Process with the agent
   const response = await processMessage(agent, config, parsingRequest);
-  const parsedJson = extractJsonFromResponse(response) as TossJsonResponse;
+  const parsedJson = extractJsonFromResponse(response);
+
+  if (!parsedJson) {
+    throw new Error("Invalid toss request: No JSON found in response");
+  }
 
   if (parsedJson.valid === false) {
     throw new Error(`Invalid toss request: ${parsedJson.reason}`);
@@ -1763,7 +1118,10 @@ async function handleMessage(
     // Use the sender's address as the user ID
     const inboxId = message.senderInboxId;
     // Initialize or get the agent for this user
-    const { agent, config } = await initializeAgent(inboxId);
+    const { agent, config } = await initializeAgent(
+      inboxId,
+      AGENT_INSTRUCTIONS,
+    );
 
     const response = await handleCommand(
       commandContent,
