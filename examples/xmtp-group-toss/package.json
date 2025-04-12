@@ -12,9 +12,9 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "@coinbase/agentkit": "^0.2.0",
-    "@coinbase/agentkit-langchain": "^0.2.0",
-    "@coinbase/coinbase-sdk": "0.11.2",
+    "@coinbase/agentkit": "^0.6.2",
+    "@coinbase/agentkit-langchain": "^0.3.0",
+    "@coinbase/coinbase-sdk": "^0.22.0",
     "@langchain/core": "^0.3.20",
     "@langchain/langgraph": "^0.2.24",
     "@langchain/openai": "^0.3.14",
