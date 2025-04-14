@@ -239,10 +239,10 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     {
       "scripts": {
         "build": "tsc",
-        "clean": "cd ../../ && rm -rf examples/xmtp-group-toss/.data",
+        "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
         "dev": "tsx --watch src/index.ts",
         "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-group-toss",
+        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
         "start": "tsx src/index.ts"
       }
     }
@@ -256,7 +256,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     ```json
     {
       "dependencies": {
-        "@xmtp/node-sdk": "1.2.0"
+        "@xmtp/node-sdk": "1.2.1"
         /* other dependencies */
       }
     }
@@ -303,7 +303,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
         "start": "tsx index.ts"
       },
       "dependencies": {
-        "@xmtp/node-sdk": "1.2.0"
+        "@xmtp/node-sdk": "1.2.1"
       },
       "devDependencies": {
         "tsx": "^4.19.2",

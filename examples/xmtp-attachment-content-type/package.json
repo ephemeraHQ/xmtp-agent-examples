@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@xmtp/content-type-remote-attachment": "^2.0.1",
-    "@xmtp/node-sdk": "1.2.0",
+    "@xmtp/node-sdk": "1.2.1",
     "axios": "^1.8.4",
     "form-data": "^4.0.2"
   },

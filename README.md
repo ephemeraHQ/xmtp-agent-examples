@@ -112,7 +112,6 @@ main().catch(console.error);
 - [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-transaction-content-type](/examples/xmtp-transaction-content-type/): Use XMTP content types to send transactions
-- [xmtp-group-toss](/examples/xmtp-group-toss/): Agent that uses a group to toss a coin
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 - [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Parallel agents listening and sending messages
@@ -125,6 +124,7 @@ This examples are outside of this monorepo and showcase how to use and deploy XM
 - [gm-bot](https://github.com/xmtp/gm-bot): Simple standalone agent that replies to all messages with "gm"
 - [xmtp-nextjs-client](https://github.com/xmtp/xmtp-nextjs-client/): Node-sdk in a Next.js app
 - [xmtp-mini-app](https://github.com/ephemeraHQ/xmtp-mini-app): A simple mini app that interacts with a group
+- [xmtp-group-toss](https://github.com/ephemeraHQ/xmtp-group-toss/): Agent that uses a group to toss a coin
 
 ## Web inbox
 
