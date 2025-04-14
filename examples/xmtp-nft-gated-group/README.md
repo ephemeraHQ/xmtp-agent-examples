@@ -51,7 +51,7 @@ yarn gen:keys
 yarn dev
 ```
 
-## Basic usage
+## Usage
 
 1. Start the bot with your environment variables configured
 2. Message the bot at its address to create a new group using `/create`

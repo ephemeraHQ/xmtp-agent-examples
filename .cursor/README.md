@@ -6,7 +6,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 1.  Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
-2.  Use the XMTP node-sdk v1.1.1 or newer, which offers enhanced functionality including group conversations.
+2.  Use the XMTP node-sdk v1.2.0 or newer, which offers enhanced functionality including group conversations.
 
 3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
 
@@ -239,10 +239,10 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     {
       "scripts": {
         "build": "tsc",
-        "clean": "cd ../../ && rm -rf examples/xmtp-group-toss/.data",
+        "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
         "dev": "tsx --watch src/index.ts",
         "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-group-toss",
+        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
         "start": "tsx src/index.ts"
       }
     }
@@ -251,12 +251,12 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     Dependencies:
 
     - Use exact version of @xmtp/node-sdk (not ^)
-    - Current version should be 1.1.1
+    - Current version should be 1.2.0
 
     ```json
     {
       "dependencies": {
-        "@xmtp/node-sdk": "1.1.1"
+        "@xmtp/node-sdk": "1.2.1"
         /* other dependencies */
       }
     }
@@ -291,7 +291,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
     ```json
     {
-      "name": "@examples/xmtp-number-multiplier",
+      "name": "@examples/xmtp-gm",
       "version": "0.0.1",
       "private": true,
       "type": "module",
@@ -299,11 +299,11 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
         "build": "tsc",
         "dev": "tsx --watch index.ts",
         "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-number-multiplier",
+        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
         "start": "tsx index.ts"
       },
       "dependencies": {
-        "@xmtp/node-sdk": "1.1.1"
+        "@xmtp/node-sdk": "1.2.1"
       },
       "devDependencies": {
         "tsx": "^4.19.2",
@@ -362,9 +362,9 @@ async function main() {
 
   // Start listening for messages
   console.log("Waiting for messages...");
-  const stream = client.conversations.streamAllMessages();
+  const stream = await client.conversations.streamAllMessages();
 
-  for await (const message of await stream) {
+  for await (const message of stream) {
     /* Ignore messages from the same agent or non-text messages */
     if (
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
@@ -732,8 +732,8 @@ There are two ways to retrieve messages from conversations:
 Stream all messages to process them in real-time:
 
 ```typescript
-const stream = client.conversations.streamAllMessages();
-for await (const message of await stream) {
+const stream = await client.conversations.streamAllMessages();
+for await (const message of stream) {
   // Process each message as it arrives
   console.log(`Received message: ${message.content as string}`);
 }
@@ -922,7 +922,7 @@ When working with these classes:
 ```jsx
 // Railway deployment support
 let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-const dbPath = `${volumePath}/${signer.getAddress()}-${XMTP_ENV}`;
+const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
 
 // Create database directory if it doesn't exist
 if (!fs.existsSync(dbPath)) {

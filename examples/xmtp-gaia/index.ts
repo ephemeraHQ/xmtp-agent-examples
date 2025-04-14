@@ -51,9 +51,9 @@ async function main() {
 
   console.log("Waiting for messages...");
   /* Stream all messages from the network */
-  const stream = client.conversations.streamAllMessages();
+  const stream = await client.conversations.streamAllMessages();
 
-  for await (const message of await stream) {
+  for await (const message of stream) {
     /* Ignore messages from the same agent or non-text messages */
     if (
       message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||

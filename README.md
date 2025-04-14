@@ -34,17 +34,11 @@ XMTP_ENV=dev # local, dev, production
 You can generate random xmtp keys with the following command:
 
 ```bash
-# From the root directory (appends to root .env)
-yarn gen:keys
-
-# From within an example directory (creates .env in that directory)
-cd examples/xmtp-number-multiplier
 yarn gen:keys
 ```
 
 > [!WARNING]
-> Running the `gen:keys` command from the root directory will append keys to your existing `.env` file.
-> Running the `gen:keys` command from within an example directory will create a new `.env` file in that directory.
+> Running the `gen:keys` command will append keys to your existing `.env` file.
 
 ### Run the agent
 
@@ -97,8 +91,8 @@ const env: XmtpEnv = "dev";
 async function main() {
   const client = await Client.create(signer, encryptionKey, { env });
   await client.conversations.sync();
-  const stream = client.conversations.streamAllMessages();
-  for await (const message of await stream) {
+  const stream = await client.conversations.streamAllMessages();
+  for await (const message of  stream) {
     // ignore messages from the agent
    if (message?.senderInboxId === client.inboxId ) {
       continue;
@@ -118,11 +112,20 @@ main().catch(console.error);
 - [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-transaction-content-type](/examples/xmtp-transaction-content-type/): Use XMTP content types to send transactions
-- [xmtp-group-toss](/examples/xmtp-group-toss/): Agent that uses a group to toss a coin
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-stream-restart](/examples/xmtp-stream-restart/): Agent that restarts the stream when it errors
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
-- [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Agent that uses multiple clients to send messages
+- [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Parallel agents listening and sending messages
+- [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
+
+#### Standalone examples
+
+This examples are outside of this monorepo and showcase how to use and deploy XMTP in different environments.
+
+- [gm-bot](https://github.com/xmtp/gm-bot): Simple standalone agent that replies to all messages with "gm"
+- [xmtp-nextjs-client](https://github.com/xmtp/xmtp-nextjs-client/): Node-sdk in a Next.js app
+- [xmtp-mini-app](https://github.com/ephemeraHQ/xmtp-mini-app): A simple mini app that interacts with a group
+- [xmtp-group-toss](https://github.com/ephemeraHQ/xmtp-group-toss/): Agent that uses a group to toss a coin
 
 ## Web inbox
 
