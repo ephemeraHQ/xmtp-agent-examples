@@ -16,7 +16,7 @@
     "@langchain/core": "^0.3.19",
     "@langchain/langgraph": "^0.2.21",
     "@langchain/openai": "^0.3.14",
-    "@xmtp/node-sdk": "1.2.1"
+    "@xmtp/node-sdk": "2.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

@@ -256,7 +256,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     ```json
     {
       "dependencies": {
-        "@xmtp/node-sdk": "1.2.1"
+        "@xmtp/node-sdk": "2.0.0"
         /* other dependencies */
       }
     }
@@ -303,7 +303,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
         "start": "tsx index.ts"
       },
       "dependencies": {
-        "@xmtp/node-sdk": "1.2.1"
+        "@xmtp/node-sdk": "2.0.0"
       },
       "devDependencies": {
         "tsx": "^4.19.2",

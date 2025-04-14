@@ -1996,6 +1996,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xmtp/node-sdk@npm:2.0.0":
+  version: 2.0.0
+  resolution: "@xmtp/node-sdk@npm:2.0.0"
+  dependencies:
+    "@xmtp/content-type-group-updated": "npm:^2.0.1"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/content-type-text": "npm:^2.0.1"
+    "@xmtp/node-bindings": "npm:^1.2.0-dev.bed98df"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/c220be1ee441a255896754ebd0030ba528935f82fb7b59cf9ba3de32acc4312354d2a2258a34b2730decbac3ea05bbd0a257799bddb80cbf2b03d5c74934db9d
+  languageName: node
+  linkType: hard
+
 "@xmtp/proto@npm:^3.78.0":
   version: 3.78.0
   resolution: "@xmtp/proto@npm:3.78.0"
@@ -5587,7 +5600,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"

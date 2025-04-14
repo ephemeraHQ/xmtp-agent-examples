@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@coinbase/coinbase-sdk": "latest",
-    "@xmtp/node-sdk": "1.2.1"
+    "@xmtp/node-sdk": "2.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

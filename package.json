@@ -20,7 +20,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "1.2.1",
+    "@xmtp/node-sdk": "2.0.0",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"
   },
