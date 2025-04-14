@@ -1,4 +1,4 @@
-# Stream restart
+# Stream restart example
 
 This agent restarts the stream when it errors.
 
