@@ -27,49 +27,44 @@ async function main() {
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
-  console.log("Waiting for messages...");
-  const streamPromise = client.conversations.streamAllMessages();
-
-  // Get the actual stream from the promise
-  const stream = await streamPromise;
-
-  // Set up error and return handlers on the actual stream
-  stream.onError = (error: unknown) => {
-    console.error("Stream error:", error);
-  };
-
-  stream.onReturn = () => {
-    console.log("Stream returned, restarting...");
-  };
-  try {
-    for await (const message of stream) {
-      if (
-        message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-        message?.contentType?.typeId !== "text"
-      ) {
-        continue;
-      }
-
-      const conversation = await client.conversations.getConversationById(
-        message.conversationId,
-      );
-
-      if (!conversation) {
-        console.log("Unable to find conversation, skipping");
-        continue;
-      }
-
-      const inboxState = await client.preferences.inboxStateFromInboxIds([
-        message.senderInboxId,
-      ]);
-      const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-      console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-      await conversation.send("gm");
+  // Start stream in an infinite loop to handle restarts
+  for (;;) {
+    try {
+      console.log("Starting message stream...");
+      const streamPromise = client.conversations.streamAllMessages();
+      const stream = await streamPromise;
 
       console.log("Waiting for messages...");
+      for await (const message of stream) {
+        if (
+          message?.senderInboxId.toLowerCase() ===
+            client.inboxId.toLowerCase() ||
+          message?.contentType?.typeId !== "text"
+        ) {
+          continue;
+        }
+
+        const conversation = await client.conversations.getConversationById(
+          message.conversationId,
+        );
+
+        if (!conversation) {
+          console.log("Unable to find conversation, skipping");
+          continue;
+        }
+
+        const inboxState = await client.preferences.inboxStateFromInboxIds([
+          message.senderInboxId,
+        ]);
+        const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+        console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+        await conversation.send("gm");
+
+        console.log("Waiting for more messages...");
+      }
+    } catch (error) {
+      console.error("Stream processing error:", error);
     }
-  } catch (error) {
-    console.error("Stream error:", error);
   }
 }
 
