@@ -120,6 +120,7 @@ main().catch(console.error);
 - [xmtp-transaction-content-type](/examples/xmtp-transaction-content-type/): Use XMTP content types to send transactions
 - [xmtp-group-toss](/examples/xmtp-group-toss/): Agent that uses a group to toss a coin
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
+- [xmtp-stream-restart](/examples/xmtp-stream-restart/): Agent that restarts the stream when it errors
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 - [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Agent that uses multiple clients to send messages
 
