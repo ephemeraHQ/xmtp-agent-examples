@@ -150,7 +150,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/agentkit-langchain@npm:latest":
+"@coinbase/agentkit-langchain@npm:^0.3.0":
   version: 0.3.0
   resolution: "@coinbase/agentkit-langchain@npm:0.3.0"
   dependencies:
@@ -180,7 +180,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/agentkit@npm:latest":
+"@coinbase/agentkit@npm:^0.6.2":
   version: 0.6.2
   resolution: "@coinbase/agentkit@npm:0.6.2"
   dependencies:
@@ -924,8 +924,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-coinbase-agentkit@workspace:examples/xmtp-coinbase-agentkit"
   dependencies:
-    "@coinbase/agentkit": "npm:latest"
-    "@coinbase/agentkit-langchain": "npm:latest"
+    "@coinbase/agentkit": "npm:^0.6.2"
+    "@coinbase/agentkit-langchain": "npm:^0.3.0"
     "@langchain/core": "npm:^0.3.19"
     "@langchain/langgraph": "npm:^0.2.21"
     "@langchain/openai": "npm:^0.3.14"
