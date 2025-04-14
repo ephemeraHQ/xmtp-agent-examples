@@ -1013,6 +1013,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart"
+  dependencies:
+    "@xmtp/node-sdk": "npm:1.2.1"
+    tsx: "npm:^4.19.2"
+    typescript: "npm:^5.7.3"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type"
@@ -1972,6 +1982,19 @@ __metadata:
     "@xmtp/node-bindings": "npm:^1.2.0-dev.bed98df"
     "@xmtp/proto": "npm:^3.78.0"
   checksum: 10/bee8f34281ffa25cc638d83d6eecd66009882d40cfe7be6845a178181bf6545a4e19891bfe01b3cefe76ee320a33f3033dbbcea4cce9ea9172cc2899b1917dfa
+  languageName: node
+  linkType: hard
+
+"@xmtp/node-sdk@npm:1.2.1":
+  version: 1.2.1
+  resolution: "@xmtp/node-sdk@npm:1.2.1"
+  dependencies:
+    "@xmtp/content-type-group-updated": "npm:^2.0.1"
+    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/content-type-text": "npm:^2.0.1"
+    "@xmtp/node-bindings": "npm:^1.2.0-dev.bed98df"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/7c42a7b52bb966432e9c695ed9fa14c96716ef870bf0e9429e7b2a4593748153af170f1152ab7fd37f516783b2f62b83aa1062e411180c8c661baba519ebf81a
   languageName: node
   linkType: hard
 
