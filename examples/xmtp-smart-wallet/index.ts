@@ -23,23 +23,18 @@ const {
   "CDP_API_KEY_PRIVATE_KEY",
 ]);
 
-const walletData = await initializeWallet(WALLET_PATH);
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(walletData.seed || "");
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-
-// Log connection details
-const identifier = await signer.getIdentifier();
-const address = identifier.identifier;
-console.log(`Smart Wallet Address: ${address}`);
 const main = async () => {
-  const client = await Client.create(signer, encryptionKey, {
+  const walletData = await initializeWallet(WALLET_PATH);
+  /* Create the signer using viem and parse the encryption key for the local db */
+  const signer = createSigner(walletData.seed);
+  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
 
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-  logAgentDetails(address, client.inboxId, XMTP_ENV);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

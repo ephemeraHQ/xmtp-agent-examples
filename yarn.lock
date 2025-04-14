@@ -896,7 +896,7 @@ __metadata:
   resolution: "@examples/xmtp-attachment-content-type@workspace:examples/xmtp-attachment-content-type"
   dependencies:
     "@xmtp/content-type-remote-attachment": "npm:^2.0.1"
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     axios: "npm:^1.8.4"
     form-data: "npm:^4.0.2"
     tsx: "npm:^4.19.2"
@@ -913,7 +913,7 @@ __metadata:
     "@langchain/core": "npm:^0.3.19"
     "@langchain/langgraph": "npm:^0.2.21"
     "@langchain/openai": "npm:^0.3.14"
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -923,7 +923,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gaia@workspace:examples/xmtp-gaia"
   dependencies:
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     openai: "npm:latest"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
@@ -934,7 +934,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gm@workspace:examples/xmtp-gm"
   dependencies:
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -944,7 +944,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gpt@workspace:examples/xmtp-gpt"
   dependencies:
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     openai: "npm:latest"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
@@ -955,7 +955,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-multiple-clients@workspace:examples/xmtp-multiple-clients"
   dependencies:
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -965,7 +965,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-nft-gated-group@workspace:examples/xmtp-nft-gated-group"
   dependencies:
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     alchemy-sdk: "npm:^3.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
@@ -977,7 +977,7 @@ __metadata:
   resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
   dependencies:
     "@coinbase/coinbase-sdk": "npm:latest"
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -987,7 +987,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart"
   dependencies:
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -999,7 +999,7 @@ __metadata:
   dependencies:
     "@xmtp/content-type-transaction-reference": "npm:^2.0.1"
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.0"
-    "@xmtp/node-sdk": "npm:1.2.1"
+    "@xmtp/node-sdk": "npm:2.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
   languageName: unknown
@@ -1980,19 +1980,6 @@ __metadata:
   version: 1.2.0-dev.bed98df
   resolution: "@xmtp/node-bindings@npm:1.2.0-dev.bed98df"
   checksum: 10/a7e57fb3a1fa462ba49be33ad4ec05e3f164cfd198b5011a12968e57f477abe822c754a74a6fb7b529789408caee38ed1291e1e0165b4f5f3969e50ce98d1e15
-  languageName: node
-  linkType: hard
-
-"@xmtp/node-sdk@npm:1.2.1":
-  version: 1.2.1
-  resolution: "@xmtp/node-sdk@npm:1.2.1"
-  dependencies:
-    "@xmtp/content-type-group-updated": "npm:^2.0.1"
-    "@xmtp/content-type-primitives": "npm:^2.0.1"
-    "@xmtp/content-type-text": "npm:^2.0.1"
-    "@xmtp/node-bindings": "npm:^1.2.0-dev.bed98df"
-    "@xmtp/proto": "npm:^3.78.0"
-  checksum: 10/7c42a7b52bb966432e9c695ed9fa14c96716ef870bf0e9429e7b2a4593748153af170f1152ab7fd37f516783b2f62b83aa1062e411180c8c661baba519ebf81a
   languageName: node
   linkType: hard
 

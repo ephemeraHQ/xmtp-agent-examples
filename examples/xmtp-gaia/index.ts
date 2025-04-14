@@ -22,10 +22,6 @@ const {
   "GAIA_MODEL_NAME",
 ]);
 
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(WALLET_KEY);
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-
 /* Initialize the OpenAI client */
 const openai = new OpenAI({
   baseURL: GAIA_NODE_URL,
@@ -36,14 +32,16 @@ const openai = new OpenAI({
  * Main function to run the agent
  */
 async function main() {
-  /* Initialize the xmtp client */
-  const client = await Client.create(signer, encryptionKey, {
+  /* Create the signer using viem and parse the encryption key for the local db */
+  const signer = createSigner(WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
 
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-  logAgentDetails(address, client.inboxId, XMTP_ENV);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

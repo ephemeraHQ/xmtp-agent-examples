@@ -19,7 +19,7 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
 ]);
 
 const signer = createSigner(WALLET_KEY);
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 const DEFAULT_IMAGE_PATH = "./logo.png";
 
@@ -62,14 +62,13 @@ async function createRemoteAttachment(
 }
 
 async function main() {
-  const client = await Client.create(signer, encryptionKey, {
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
   });
 
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-  logAgentDetails(address, client.inboxId, XMTP_ENV);
+  logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();

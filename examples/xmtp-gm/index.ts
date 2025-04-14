@@ -13,16 +13,14 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
 
 /* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(WALLET_KEY);
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 async function main() {
-  const client = await Client.create(signer, encryptionKey, {
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
-
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-  logAgentDetails(address, client.inboxId, XMTP_ENV);
+  logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();

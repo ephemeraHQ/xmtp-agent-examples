@@ -6,7 +6,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 1.  Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
-2.  Use the XMTP node-sdk v1.2.0 or newer, which offers enhanced functionality including group conversations.
+2.  Use the XMTP node-sdk version "2.0.0" or newer, which offers enhanced functionality including group conversations.
 
 3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
 
@@ -341,20 +341,16 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
 // Define the address to always add to new groups
 const MEMBER_ADDRESS = "0x7c40611372d354799d138542e77243c284e460b2";
 
-// Initialize client
-const signer = createSigner(WALLET_KEY);
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-
 async function main() {
-  const client = await Client.create(signer, encryptionKey, {
+  // Initialize client
+  const signer = createSigner(WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
 
-  // Log connection details
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-
-  logAgentDetails(address, client.inboxId, XMTP_ENV);
+  logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   /* Sync the conversations from the network to update the local db */

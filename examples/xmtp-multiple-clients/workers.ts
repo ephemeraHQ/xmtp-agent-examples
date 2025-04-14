@@ -53,10 +53,11 @@ export class XmtpWorkerManager {
 
     // Create signer and encryption key
     const signer = createSigner(config.walletKey);
-    const encryptionKey = getEncryptionKeyFromHex(config.encryptionKey);
+    const dbEncryptionKey = getEncryptionKeyFromHex(config.encryptionKey);
 
     // Create XMTP client
-    const client = await Client.create(signer, encryptionKey, {
+    const client = await Client.create(signer, {
+      dbEncryptionKey,
       env: config.xmtpEnv,
     });
 

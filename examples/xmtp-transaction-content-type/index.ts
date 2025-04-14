@@ -17,20 +17,20 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "XMTP_ENV",
 ]);
 
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(WALLET_KEY);
-const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-
 async function main() {
+  /* Create the signer using viem and parse the encryption key for the local db */
+  const signer = createSigner(WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
   /* Initialize the xmtp client */
-  const client = await Client.create(signer, encryptionKey, {
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
   });
 
   const identifier = await signer.getIdentifier();
   const agentAddress = identifier.identifier;
-  logAgentDetails(agentAddress, client.inboxId, XMTP_ENV);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

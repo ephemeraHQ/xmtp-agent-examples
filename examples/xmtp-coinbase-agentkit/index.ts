@@ -107,17 +107,18 @@ function getWalletData(userId: string): string | null {
  */
 async function initializeXmtpClient() {
   const signer = createSigner(WALLET_KEY);
-  const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;
 
-  const client = await Client.create(signer, encryptionKey, {
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
   });
 
-  logAgentDetails(address, client.inboxId, XMTP_ENV);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

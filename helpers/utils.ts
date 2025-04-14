@@ -1,10 +1,10 @@
+import type { Client } from "@xmtp/node-sdk";
 import "dotenv/config";
 
-export const logAgentDetails = (
-  address: string,
-  inboxId: string,
-  env: string,
-) => {
+export const logAgentDetails = (client: Client) => {
+  const address = client.accountIdentifier?.identifier ?? "";
+  const inboxId = client.inboxId;
+  const env = client.options?.env ?? "dev";
   const createLine = (length: number, char = "═"): string =>
     char.repeat(length - 2);
   const centerText = (text: string, width: number): string => {
