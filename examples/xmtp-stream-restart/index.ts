@@ -28,7 +28,7 @@ async function main() {
   await client.conversations.sync();
 
   // Start stream in an infinite loop to handle restarts
-  for (;;) {
+  while (true) {
     try {
       console.log("Starting message stream...");
       const streamPromise = client.conversations.streamAllMessages();

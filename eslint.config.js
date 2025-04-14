@@ -69,9 +69,9 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.test.ts"],
+    files: ["**/xmtp-stream-restart/**"],
     rules: {
-      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
     },
   },
   eslintPluginPrettierRecommended,
