@@ -1,8 +1,6 @@
-# GM agent
+# Stream restart
 
-This agent replies `gm`
-
-![](./screenshot.png)
+This agent restarts the stream when it errors.
 
 ## Getting started
 
@@ -41,7 +39,7 @@ yarn gen:keys
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-gm
+cd examples/xmtp-stream-restart
 # install packages
 yarn
 # generate random xmtp keys (optional)
