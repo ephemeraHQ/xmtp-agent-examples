@@ -79,7 +79,7 @@ With XMTP, a transaction request is represented using wallet_sendCalls RPC speci
 const walletSendCalls: WalletSendCallsParams = {
   version: "1.0",
   from: address as `0x${string}`,
-  chainId: "0x2105",
+  chainId: toHex(84532), // Base Sepolia
   calls: [
     {
       to: "0x789...cba",
@@ -90,14 +90,12 @@ const walletSendCalls: WalletSendCallsParams = {
         currency: "USDC",
         amount: 10000000,
         decimals: 6,
-        platform: "base-sepolia",
+        networkId: "base-sepolia",
       },
     },
   ],
 };
 ```
-
-### Send a transaction request
 
 Once you have a transaction reference, you can send it as part of your conversation:
 
