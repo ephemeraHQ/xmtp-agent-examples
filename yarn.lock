@@ -895,7 +895,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-attachment-content-type@workspace:examples/xmtp-attachment-content-type"
   dependencies:
-    "@xmtp/content-type-remote-attachment": "npm:^2.0.1"
+    "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/node-sdk": "npm:2.0.0"
     axios: "npm:^1.8.4"
     form-data: "npm:^4.0.2"
@@ -997,8 +997,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type"
   dependencies:
-    "@xmtp/content-type-transaction-reference": "npm:^2.0.1"
-    "@xmtp/content-type-wallet-send-calls": "npm:^1.0.0"
+    "@xmtp/content-type-transaction-reference": "npm:^2.0.2"
+    "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"
     "@xmtp/node-sdk": "npm:2.0.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
@@ -1945,14 +1945,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-remote-attachment@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@xmtp/content-type-remote-attachment@npm:2.0.1"
+"@xmtp/content-type-primitives@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@xmtp/content-type-primitives@npm:2.0.2"
+  dependencies:
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/9c115c1e792bca5e5e7180ba5494786bd3554265bc0ccdcb26d645689634ae239cefb3996bbbe493a487a2c8c7bf4e85954f4063811f784021afe16e58b1b03b
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-remote-attachment@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@xmtp/content-type-remote-attachment@npm:2.0.2"
   dependencies:
     "@noble/secp256k1": "npm:^2.2.3"
-    "@xmtp/content-type-primitives": "npm:^2.0.1"
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/proto": "npm:^3.78.0"
-  checksum: 10/c0e3710f585a1a81cc0fbd7e8d1d71c2ae40a820b01c52bd36b59fed1159cef17ec689ba3cd8e4e83870db23ca119ba9d094656431033b1c8413e5af1bfa44e9
+  checksum: 10/7d4f89b595c42dbd3687edba41efd11cf225267419115f5cf05fa9ef4c02aadf29c9b5605681407063721e0ef421789f6a16d0d2f379416dfb726be83151571e
   languageName: node
   linkType: hard
 
@@ -1965,21 +1974,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-transaction-reference@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@xmtp/content-type-transaction-reference@npm:2.0.1"
+"@xmtp/content-type-transaction-reference@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@xmtp/content-type-transaction-reference@npm:2.0.2"
   dependencies:
-    "@xmtp/content-type-primitives": "npm:^2.0.1"
-  checksum: 10/809fa9e24241e358fe86030b52ba0005555ffc2bfb0520decbbe9057b54b784c92c5bb2ddaffe27ef0b21cec5d8809c74ded2a0ac297f5f6c747af95be6c133d
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
+  checksum: 10/37437069fe47812647f856f871d83d95e62a35dd297f30578a3857dc90575284dad56ad3d734eeb1fe3599aa43512c2ae9e492b41404c492bdd70f9e7d03f734
   languageName: node
   linkType: hard
 
-"@xmtp/content-type-wallet-send-calls@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@xmtp/content-type-wallet-send-calls@npm:1.0.0"
+"@xmtp/content-type-wallet-send-calls@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@xmtp/content-type-wallet-send-calls@npm:1.0.1"
   dependencies:
-    "@xmtp/content-type-primitives": "npm:^2.0.1"
-  checksum: 10/8157fe51b8917c12c924cb011faedd0391b6881915a1401de34909379f03559f5b4507c7bd9759671f744ebdea7d43d54ade957b77a6fad95cd99cbb96902a7e
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
+  checksum: 10/96ae24f14f6ff86f72ad2b09ed81ec3398947ddce1e6b5c0fe83324b66a83f797ee75976f66a8937cff025e0cc7bfab444547371011c43687f6ba6eae51c3ba2
   languageName: node
   linkType: hard
 

@@ -97,7 +97,7 @@ async function main() {
           agentAddress,
           amountInDecimals,
         );
-
+        console.log("Replied with wallet sendcall");
         await conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
       } else {
         await conversation.send(

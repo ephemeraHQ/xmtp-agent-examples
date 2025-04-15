@@ -11,8 +11,8 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/content-type-transaction-reference": "^2.0.1",
-    "@xmtp/content-type-wallet-send-calls": "^1.0.0",
+    "@xmtp/content-type-transaction-reference": "^2.0.2",
+    "@xmtp/content-type-wallet-send-calls": "^1.0.1",
     "@xmtp/node-sdk": "2.0.0"
   },
   "devDependencies": {
