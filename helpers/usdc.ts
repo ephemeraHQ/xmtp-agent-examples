@@ -6,22 +6,22 @@ import { validateEnvironment } from "./utils";
 const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);
 
 // Configuration constants
-export const USDC_CONFIG = {
-  tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  chainId: toHex(84532), // Base Sepolia network ID (84532 in hex)
-  decimals: 6,
-  networkName: "Base Sepolia",
-  networkId: "base-sepolia",
-} as const;
-
-// Configuration constants for Base Mainnet
-export const USDC_MAINNET_CONFIG = {
-  tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  chainId: toHex(8453), // Base Mainnet network ID (8453 in hex)
-  decimals: 6,
-  networkName: "Base Mainnet",
-  networkId: "base-mainnet",
-} as const;
+const networks = [
+  {
+    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    chainId: toHex(84532), // Base Sepolia network ID (84532 in hex)
+    decimals: 6,
+    networkName: "Base Sepolia",
+    networkId: "base-sepolia",
+  },
+  {
+    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    chainId: toHex(8453), // Base Mainnet network ID (8453 in hex)
+    decimals: 6,
+    networkName: "Base Mainnet",
+    networkId: "base-mainnet",
+  },
+];
 
 // Create a public client for reading from the blockchain
 const publicClient = createPublicClient({
@@ -45,13 +45,17 @@ const erc20Abi = [
  */
 export async function getUSDCBalance(address: string): Promise<string> {
   const balance = await publicClient.readContract({
-    address: USDC_CONFIG.tokenAddress as `0x${string}`,
+    address: networks.find((network) => network.networkId === NETWORK_ID)
+      ?.tokenAddress as `0x${string}`,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: [address as `0x${string}`],
   });
 
-  return formatUnits(balance, USDC_CONFIG.decimals);
+  return formatUnits(
+    balance,
+    networks.find((network) => network.networkId === NETWORK_ID)?.decimals ?? 6,
+  );
 }
 
 /**
@@ -69,9 +73,10 @@ export function createUSDCTransferCalls(
     .slice(2)
     .padStart(64, "0")}${BigInt(amount).toString(16).padStart(64, "0")}`;
 
-  const config =
-    NETWORK_ID === "base-mainnet" ? USDC_MAINNET_CONFIG : USDC_CONFIG;
-
+  const config = networks.find((network) => network.networkId === NETWORK_ID);
+  if (!config) {
+    throw new Error("Network not found");
+  }
   return {
     version: "1.0",
     from: fromAddress as `0x${string}`,

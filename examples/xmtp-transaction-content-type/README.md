@@ -102,3 +102,27 @@ Once you have a transaction reference, you can send it as part of your conversat
 ```tsx
 await conversation.messages.send(walletSendCalls, ContentTypeWalletSendCalls);
 ```
+
+### Supported networks
+
+All eth networks are supported.This example covers Base Sepolia and Base Mainnet.
+
+```tsx
+// Configuration constants
+const networks = [
+  {
+    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    chainId: toHex(84532), // Base Sepolia network ID (84532 in hex)
+    decimals: 6,
+    networkName: "Base Sepolia",
+    networkId: "base-sepolia",
+  },
+  {
+    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    chainId: toHex(8453), // Base Mainnet network ID (8453 in hex)
+    decimals: 6,
+    networkName: "Base Mainnet",
+    networkId: "base-mainnet",
+  },
+];
+```
