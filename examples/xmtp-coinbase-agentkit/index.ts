@@ -269,7 +269,9 @@ async function handleMessage(message: DecodedMessage, client: Client) {
       return;
     }
 
-    console.log(`Received message from ${senderAddress}: ${message.content}`);
+    console.log(
+      `Received message from ${senderAddress}: ${message.content as string}`,
+    );
 
     const { agent, config } = await initializeAgent(senderAddress);
     const response = await processMessage(

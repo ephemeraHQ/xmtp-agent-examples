@@ -100,12 +100,12 @@ async function main() {
     if (message.contentType.sameAs(ContentTypeRemoteAttachment)) {
       console.log("Received an attachment!");
 
-      const attachment = (await RemoteAttachmentCodec.load(
+      const attachment = await RemoteAttachmentCodec.load(
         message.content as RemoteAttachment,
         client,
-      )) as Attachment;
+      );
 
-      const filename = attachment.filename || "unnamed";
+      const filename = (attachment as Attachment).filename || "unnamed";
       await conversation.send(`I received your attachment "${filename}"!`);
 
       continue;

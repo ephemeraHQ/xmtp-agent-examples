@@ -55,7 +55,7 @@ async function gmMessageHandler(
     console.log(
       `[${worker.name}] Received message from ${addressFromInboxId}:`,
     );
-    console.log(`  Content: ${message.content}`);
+    console.log(`Content: ${message.content as string}`);
 
     // Send "gm" response
     console.log(
