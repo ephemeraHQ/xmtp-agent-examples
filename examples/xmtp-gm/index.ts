@@ -1,6 +1,6 @@
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { logAgentDetails, validateEnvironment } from "@helpers/utils";
-import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -51,15 +51,6 @@ async function main() {
     const addressFromInboxId = inboxState[0].identifiers[0].identifier;
     console.log(`Sending "gm" response to ${addressFromInboxId}...`);
     await conversation.send("gm");
-
-    const canMessage = await client.canMessage([
-      {
-        identifier: addressFromInboxId,
-        identifierKind: IdentifierKind.Ethereum,
-      },
-    ]);
-
-    console.log(canMessage);
 
     console.log("Waiting for messages...");
   }
