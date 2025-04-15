@@ -1,18 +1,31 @@
 import type { WalletSendCallsParams } from "@xmtp/content-type-wallet-send-calls";
-import { createPublicClient, formatUnits, http } from "viem";
-import { baseSepolia } from "viem/chains";
+import { createPublicClient, formatUnits, http, toHex } from "viem";
+import { base, baseSepolia } from "viem/chains";
+import { validateEnvironment } from "./utils";
+
+const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);
 
 // Configuration constants
 export const USDC_CONFIG = {
   tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  chainId: "0x14A34", // Base Sepolia network ID (84532 in hex)
+  chainId: toHex(84532), // Base Sepolia network ID (84532 in hex)
   decimals: 6,
-  platform: "base",
+  networkName: "Base Sepolia",
+  networkId: "base-sepolia",
+} as const;
+
+// Configuration constants for Base Mainnet
+export const USDC_MAINNET_CONFIG = {
+  tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  chainId: toHex(8453), // Base Mainnet network ID (8453 in hex)
+  decimals: 6,
+  networkName: "Base Mainnet",
+  networkId: "base-mainnet",
 } as const;
 
 // Create a public client for reading from the blockchain
 const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: NETWORK_ID === "base-mainnet" ? base : baseSepolia,
   transport: http(),
 });
 
@@ -56,21 +69,24 @@ export function createUSDCTransferCalls(
     .slice(2)
     .padStart(64, "0")}${BigInt(amount).toString(16).padStart(64, "0")}`;
 
+  const config =
+    NETWORK_ID === "base-mainnet" ? USDC_MAINNET_CONFIG : USDC_CONFIG;
+
   return {
     version: "1.0",
     from: fromAddress as `0x${string}`,
-    chainId: USDC_CONFIG.chainId as `0x${string}`,
+    chainId: config.chainId,
     calls: [
       {
-        to: USDC_CONFIG.tokenAddress as `0x${string}`,
+        to: config.tokenAddress as `0x${string}`,
         data: transactionData as `0x${string}`,
         metadata: {
-          description: `Transfer ${amount / Math.pow(10, USDC_CONFIG.decimals)} USDC on Base Sepolia`,
+          description: `Transfer ${amount / Math.pow(10, config.decimals)} USDC on ${config.networkName}`,
           transactionType: "transfer",
           currency: "USDC",
           amount: amount,
-          decimals: USDC_CONFIG.decimals,
-          platform: USDC_CONFIG.platform,
+          decimals: config.decimals,
+          networkId: config.networkId,
         },
       },
       /* add more calls here */
