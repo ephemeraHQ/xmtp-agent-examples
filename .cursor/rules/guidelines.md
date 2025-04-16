@@ -14,11 +14,78 @@ This guide provides comprehensive instructions for developing, testing, and debu
 
 When creating new agent examples in this monorepo, follow these guidelines for consistent package.json configuration:
 
-1. **Do not** create separate tsconfig.json files - the root configuration will be used
-2. **Always** follow the standard package naming convention
-3. **Use** the prescribed script structure
+Use proper package naming convention:
 
-Here is the required package.json template:
+```json
+{
+  "name": "@examples/xmtp-agent-name"
+}
+```
+
+Always include these standard fields:
+
+```json
+{
+  "version": "0.0.1",
+  "private": true,
+  "type": "module"
+}
+```
+
+Standard scripts configuration:
+
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "test-cli": "tsx ../../scripts/test-cli.ts",
+    "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
+    "dev": "tsx --watch src/index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
+    "start": "tsx src/index.ts"
+  }
+}
+```
+
+Dependencies:
+
+- Use exact version of @xmtp/node-sdk (not ^)
+
+```json
+{
+  "dependencies": {
+    "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
+    /* other dependencies */
+  }
+}
+```
+
+DevDependencies:
+
+- Use tsx instead of ts-node
+- Include specific versions
+
+```json
+{
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
+```
+
+Package manager and engine specifications:
+
+```json
+{
+  "engines": {
+    "node": ">=20"
+  }
+}
+```
+
+Here's how the correct package.json should look for a simple agent:
 
 ```json
 {
@@ -35,13 +102,13 @@ Here is the required package.json template:
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "2.0.2"
+    "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
+    /* other dependencies */
   },
   "devDependencies": {
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },
-  "packageManager": "yarn@4.6.0",
   "engines": {
     "node": ">=20"
   }
@@ -52,7 +119,7 @@ Here is the required package.json template:
 
 Your agent will typically require these environment variables in a `.env` file:
 
-```
+```bash
 # Network: local, dev, or production
 XMTP_ENV=dev
 
