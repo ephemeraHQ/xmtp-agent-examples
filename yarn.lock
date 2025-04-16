@@ -899,8 +899,8 @@ __metadata:
     "@xmtp/node-sdk": "npm:*"
     axios: "npm:^1.8.4"
     form-data: "npm:^4.0.2"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -914,8 +914,8 @@ __metadata:
     "@langchain/langgraph": "npm:^0.2.21"
     "@langchain/openai": "npm:^0.3.14"
     "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -925,8 +925,8 @@ __metadata:
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     openai: "npm:latest"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -935,8 +935,8 @@ __metadata:
   resolution: "@examples/xmtp-gm@workspace:examples/xmtp-gm"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -946,8 +946,8 @@ __metadata:
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     openai: "npm:latest"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -956,8 +956,8 @@ __metadata:
   resolution: "@examples/xmtp-multiple-clients@workspace:examples/xmtp-multiple-clients"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -967,8 +967,8 @@ __metadata:
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     alchemy-sdk: "npm:^3.0.0"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -978,8 +978,8 @@ __metadata:
   dependencies:
     "@coinbase/coinbase-sdk": "npm:latest"
     "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -988,8 +988,8 @@ __metadata:
   resolution: "@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -1000,8 +1000,8 @@ __metadata:
     "@xmtp/content-type-transaction-reference": "npm:^2.0.2"
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"
     "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:^4.19.2"
-    typescript: "npm:^5.7.3"
+    tsx: "npm:*"
+    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -5176,7 +5176,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.19.2":
+"tsx@npm:*, tsx@npm:^4.19.2":
   version: 4.19.3
   resolution: "tsx@npm:4.19.3"
   dependencies:
@@ -5259,7 +5259,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.7.2, typescript@npm:^5.7.3":
+"typescript@npm:*, typescript@npm:^5.7.2, typescript@npm:^5.7.3":
   version: 5.8.3
   resolution: "typescript@npm:5.8.3"
   bin:
@@ -5269,7 +5269,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.7.2#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.7.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A*#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.7.2#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.7.3#optional!builtin<compat/typescript>":
   version: 5.8.3
   resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5786d5"
   bin:
