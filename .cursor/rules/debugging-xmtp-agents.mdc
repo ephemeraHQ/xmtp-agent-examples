@@ -167,8 +167,8 @@ cd examples/your-agent-name
 # Install dependencies if needed
 yarn install
 
-# Start the agent
-yarn start
+# Start the agent with hotreload
+yarn dev
 ```
 
 You should see output similar to:
@@ -310,7 +310,7 @@ yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "1.5e3"  # scientific notation (1
 ```bash
 # Terminal 1: Start the agent
 cd examples/xmtp-number-multiplier
-yarn start
+yarn dev
 
 # Terminal 2: Send test messages
 cd /path/to/project/root
