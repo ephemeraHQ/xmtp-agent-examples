@@ -29,10 +29,7 @@ When creating new agent examples in this monorepo, follow these guidelines for c
     "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
     /* other dependencies */
   },
-  "devDependencies": {
-    "tsx": "*",
-    "typescript": "*"
-  },
+
   "engines": {
     "node": ">=20"
   }

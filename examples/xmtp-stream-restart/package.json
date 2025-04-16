@@ -13,10 +13,6 @@
   "dependencies": {
     "@xmtp/node-sdk": "*"
   },
-  "devDependencies": {
-    "tsx": "*",
-    "typescript": "*"
-  },
   "engines": {
     "node": ">=20"
   }

@@ -18,10 +18,6 @@
     "@langchain/openai": "^0.3.14",
     "@xmtp/node-sdk": "*"
   },
-  "devDependencies": {
-    "tsx": "*",
-    "typescript": "*"
-  },
   "engines": {
     "node": ">=20"
   }

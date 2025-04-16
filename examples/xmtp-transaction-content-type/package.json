@@ -15,10 +15,6 @@
     "@xmtp/content-type-wallet-send-calls": "^1.0.1",
     "@xmtp/node-sdk": "*"
   },
-  "devDependencies": {
-    "tsx": "*",
-    "typescript": "*"
-  },
   "engines": {
     "node": ">=20"
   }

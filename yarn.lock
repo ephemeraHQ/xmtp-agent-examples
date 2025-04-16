@@ -935,8 +935,6 @@ __metadata:
   resolution: "@examples/xmtp-gm@workspace:examples/xmtp-gm"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
   languageName: unknown
   linkType: soft
 

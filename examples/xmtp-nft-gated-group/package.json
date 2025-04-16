@@ -14,10 +14,6 @@
     "@xmtp/node-sdk": "*",
     "alchemy-sdk": "^3.0.0"
   },
-  "devDependencies": {
-    "tsx": "*",
-    "typescript": "*"
-  },
   "engines": {
     "node": ">=20"
   }
