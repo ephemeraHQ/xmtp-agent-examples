@@ -1,0 +1,232 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Debugging XMTP agents
+
+This rule provides guidance on testing and debugging XMTP agents using the bot-cli tool and running agents successfully.
+
+## Testing XMTP agents with bot-cli
+
+When developing XMTP agents, it's essential to test them properly. This guide shows the process of setting up and testing an XMTP agent using the bot-cli tool.
+
+### Setup process
+
+1. Create your agent in a directory under `examples/`:
+
+   ```bash
+   mkdir -p examples/your-agent-name
+   ```
+
+2. Create the necessary files for your agent:
+
+   - `package.json`
+   - `index.ts` (main agent code)
+   - `.env.example`
+   - `README.md`
+
+3. Generate keys for your agent:
+
+   ```bash
+   # From the project root:
+   yarn gen:keys
+   ```
+
+4. Copy the environment variables to your agent's `.env` file:
+
+   ```bash
+   # Create .env file in your agent directory
+   cd examples/your-agent-name
+
+   # Example .env content:
+   XMTP_ENV=dev
+   WALLET_KEY=0x0d8445a55b9cdf8b423e5eb90f2e0b3a045a8f40b1cade05fcd0d939b0ad62ef
+   ENCRYPTION_KEY=e18d283046c79e24a7acd9cd58d6931d5ca6798c99020ea397a3e22b45ab8859
+   # public key is 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f
+   ```
+
+### Running the agent
+
+Start your agent in a terminal window:
+
+```bash
+# Navigate to your agent directory
+cd examples/your-agent-name
+
+# Install dependencies if needed
+yarn install
+
+# Start the agent
+yarn start
+```
+
+You should see output similar to:
+
+```
+    ██╗  ██╗███╗   ███╗████████╗██████╗
+    ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
+     ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
+     ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝
+    ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║
+    ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                         Agent Details                                        ║
+╟──────────────────────────────────────────────────────────────────────────────────────────────╢
+║ 📍 Address: 0x41592a3a39ef582fa38c4062e8a3a23102f7f05f                                       ║
+║ 📍 inboxId: a0974e5184a37d293b9825bbc7138897ffe457768b9b6ae6fe1f70ead1455da7                 ║
+║ 📂 DB Path: ../your-agent-name/xmtp-dev-0x41592a3a39ef582fa38c4062e8a3a23102f7f05f.db3       ║
+║ 🛜  Network: dev                                                                              ║
+║ 🔗 URL: http://xmtp.chat/dm/0x41592a3a39ef582fa38c4062e8a3a23102f7f05f?env=dev               ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+✓ Syncing conversations...
+Waiting for messages...
+```
+
+### Testing with bot-cli
+
+In a separate terminal window, use the bot-cli to send test messages to your agent:
+
+```bash
+# From the project root, send a message to your agent
+# Make sure to use the public key from your agent's .env file
+yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Test message"
+```
+
+Expected output:
+
+```
+Sending message to 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f: "Test message"
+Connected as: 0x94dafa657d01247ff6094567eb54bdd2baf16c10
+Inbox ID: f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751
+Creating conversation with 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f...
+Sending message...
+Message sent successfully!
+```
+
+### Observing agent behavior
+
+In the terminal where your agent is running, you should see logs showing:
+
+1. Message reception
+2. Processing logic
+3. Response actions
+
+Example output from a number multiplier agent:
+
+```
+Received message: 42
+Multiplied 42 by 2: 84
+Creating group "Multiplier result for 42" with sender f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751...
+Group "Multiplier result for 42" created successfully and result sent
+```
+
+## Common issues and solutions
+
+### Problem: Agent can't start due to missing environment variables
+
+Error:
+
+```
+Missing env vars: WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV
+```
+
+Solution:
+
+1. Make sure you've created a `.env` file in your agent directory
+2. Verify it contains all required variables:
+   ```
+   XMTP_ENV=dev
+   WALLET_KEY=0x...
+   ENCRYPTION_KEY=...
+   ```
+
+### Problem: Package not found errors
+
+Error:
+
+```
+Internal Error: Package for @examples/your-agent-name@workspace:examples/your-agent-name not found in the project
+```
+
+Solution:
+
+1. Make sure your `package.json` has the correct name field:
+   ```json
+   {
+     "name": "@examples/your-agent-name",
+     ...
+   }
+   ```
+2. Run `yarn install` from the project root
+
+### Problem: Bot-cli can't send messages to the agent
+
+Error:
+
+```
+Error sending message: storage error: inbox id for address 0x... not found
+```
+
+Solution:
+
+1. Make sure your agent is running
+2. Verify you're using the correct public key from the agent's `.env` file
+3. Check that you're using the same XMTP environment in both your agent and bot-cli
+
+## Testing different input types
+
+To thoroughly test your agent, send various types of input:
+
+```bash
+# Test with different data types
+yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "42"  # integer
+yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "3.14"  # decimal
+yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "-10"  # negative number
+yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "Hello"  # text
+yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "1.5e3"  # scientific notation (1500)
+```
+
+## Debugging tips
+
+1. Add detailed logging to your agent code to track message processing
+2. Use two terminal windows: one for the agent and one for sending test messages
+3. Examine the agent's database file (`.db3`) for persistent data
+4. If you update your agent code, restart the agent to apply changes
+
+## Example: testing a number multiplier agent
+
+```bash
+# Terminal 1: Start the agent
+cd examples/xmtp-number-multiplier
+yarn start
+
+# Terminal 2: Send test messages
+cd /path/to/project/root
+yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "99.5"
+yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello agent"
+yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
+yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
+```
+
+Terminal 1 output:
+
+```
+Received message: 99.5
+Multiplied 99.5 by 2: 199
+Creating group "Multiplier result for 99.5" with sender f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751...
+Group "Multiplier result for 99.5" created successfully and result sent
+
+Received message: Hello agent
+
+Received message: -25
+Multiplied -25 by 2: -50
+Creating group "Multiplier result for -25" with sender f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751...
+Group "Multiplier result for -25" created successfully and result sent
+
+Received message: 1.5e3
+Multiplied 1500 by 2: 3000
+Creating group "Multiplier result for 1500" with sender f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751...
+Group "Multiplier result for 1500" created successfully and result sent
+```
