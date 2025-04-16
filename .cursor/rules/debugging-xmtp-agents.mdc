@@ -3,9 +3,117 @@ description:
 globs: 
 alwaysApply: true
 ---
+---
+description: 
+globs: 
+alwaysApply: true
+---
 # Debugging XMTP agents
 
 This rule provides guidance on testing and debugging XMTP agents using the bot-cli tool and running agents successfully.
+
+## Setting up packages and scripts in examples from this monorepo
+
+  Use proper package naming convention:
+
+  ```json
+  {
+    "name": "@examples/xmtp-agent-name"
+  }
+  ```
+
+  Always include these standard fields:
+
+  ```json
+  {
+    "version": "0.0.1",
+    "private": true,
+    "type": "module"
+  }
+  ```
+
+  Standard scripts configuration:
+
+  ```json
+  {
+    "scripts": {
+      "build": "tsc",
+      "bot-cli": "tsx ../../scripts/bot-cli.ts",
+      "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
+      "dev": "tsx --watch src/index.ts",
+      "gen:keys": "tsx ../../scripts/generateKeys.ts",
+      "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
+      "start": "tsx src/index.ts"
+    }
+  }
+  ```
+
+  Dependencies:
+
+  - Use exact version of @xmtp/node-sdk (not ^)
+
+  ```json
+  {
+    "dependencies": {
+      "@xmtp/node-sdk": "2.0.2"
+      /* other dependencies */
+    }
+  }
+  ```
+
+  DevDependencies:
+
+  - Use tsx instead of ts-node
+  - Include specific versions
+
+  ```json
+  {
+    "devDependencies": {
+      "tsx": "^4.19.2",
+      "typescript": "^5.7.3"
+    }
+  }
+  ```
+
+  Package manager and engine specifications:
+
+  ```json
+  {
+    "engines": {
+      "node": ">=20"
+    }
+  }
+  ```
+
+  Here's how the correct package.json should look for a simple agent:
+
+  ```json
+  {
+    "name": "@examples/xmtp-agent-name",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+      "build": "tsc",
+      "bot-cli": "tsx ../../scripts/bot-cli.ts",
+      "dev": "tsx --watch index.ts",
+      "gen:keys": "tsx ../../scripts/generateKeys.ts",
+      "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
+      "start": "tsx index.ts"
+    },
+    "dependencies": {
+      "@xmtp/node-sdk": "2.0.2"
+    },
+    "devDependencies": {
+      "tsx": "^4.19.2",
+      "typescript": "^5.7.3"
+    },
+    "packageManager": "yarn@4.6.0",
+    "engines": {
+      "node": ">=20"
+    }
+  }
+  ```
 
 ## Testing XMTP agents with bot-cli
 
@@ -29,6 +137,8 @@ When developing XMTP agents, it's essential to test them properly. This guide sh
 3. Generate keys for your agent:
 
    ```bash
+   # remember to install
+   yarn install
    # From the project root:
    yarn gen:keys
    ```
@@ -230,3 +340,4 @@ Multiplied 1500 by 2: 3000
 Creating group "Multiplier result for 1500" with sender f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751...
 Group "Multiplier result for 1500" created successfully and result sent
 ```
+
