@@ -31,7 +31,6 @@ This rule provides guidance on testing and debugging XMTP agents using the test-
   "scripts": {
     "build": "tsc",
     "test-cli": "tsx ../../scripts/test-cli.ts",
-    "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
     "dev": "tsx --watch src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
@@ -189,6 +188,18 @@ You should see output similar to:
 Waiting for messages...
 ```
 
+**Confirming the agent is running and stopping the terminal**
+
+Once you see the "Waiting for messages..." message, the agent is fully initialized and ready to receive messages. At this point:
+
+1. Verify all agent details are correct and the agent is connected to the expected network (dev/production)
+2. If you need to stop the agent, you can:
+   - Press `Ctrl+C` to terminate the process in the terminal
+   - Click the "Cancel" button in the terminal window
+   - Use the "Pop out terminal" button to move the terminal to a separate window if you need it to continue running while working on other files
+
+Keep the agent running if you plan to send test messages to it. Only stop it when you need to make code changes that require a restart or when you're done testing.
+
 ### Testing with test-cli
 
 In a separate terminal window, use the test-cli to send test messages to your agent:
@@ -203,6 +214,8 @@ yarn test-cli 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Test message"
 ```
 
 > Note: test-cli uses default keys for testing, so it doesn't require an .env file to run. It has built-in defaults for WALLET_KEY and ENCRYPTION_KEY.
+>
+> IMPORTANT: Always run the test-cli command directly from the agent directory. Do NOT use `cd ..` before the command, as the script already contains the correct relative path `../../scripts/test-cli.ts`.
 
 Expected output:
 
