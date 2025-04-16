@@ -232,7 +232,7 @@ If you're experiencing issues with logs not being collected or displayed when us
 2. **Check log directories**: Verify that the logs directory exists:
 
    ```bash
-   ls -la .tmp/your-agent-name/parallel-logs/
+   yarn test-manager logs agent-1
    ```
 
 3. **Agent starting but not logging**: If agents start but don't log output, try modifying a console.log statement in your agent's code to verify logging is working.
@@ -254,10 +254,9 @@ If you're experiencing issues with logs not being collected or displayed when us
    ```
 
 5. **Restart after code changes**: After any changes to your agent code or the test-manager script, completely restart your testing workflow:
+
    ```bash
-   # Kill any running processes
-   pkill -f tsx
-   # Start fresh
+   yarn test-manager stop
    yarn test-manager start
    ```
 

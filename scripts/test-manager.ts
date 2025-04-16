@@ -37,7 +37,7 @@ const PROJECT_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const TMP_DIR = join(PROJECT_ROOT, ".tmp");
 const AGENT_NAME = AGENT_DIR.split("/").pop() || "default-agent";
 const TMP_AGENT_DIR = join(TMP_DIR, AGENT_NAME);
-const PARALLEL_LOGS_DIR = join(TMP_AGENT_DIR, "parallel-logs");
+const PARALLEL_LOGS_DIR = join(TMP_AGENT_DIR, "");
 const PARALLEL_PIDS_FILE = join(TMP_AGENT_DIR, "agents.json");
 
 // Create tmp directories if they don't exist
