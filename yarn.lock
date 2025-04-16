@@ -199,7 +199,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/coinbase-sdk@npm:latest":
+"@coinbase/coinbase-sdk@npm:^0.22.0":
   version: 0.22.0
   resolution: "@coinbase/coinbase-sdk@npm:0.22.0"
   dependencies:
@@ -976,7 +976,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
   dependencies:
-    "@coinbase/coinbase-sdk": "npm:latest"
+    "@coinbase/coinbase-sdk": "npm:^0.22.0"
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
     typescript: "npm:*"

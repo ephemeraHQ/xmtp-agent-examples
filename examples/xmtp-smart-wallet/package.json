@@ -11,14 +11,13 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@coinbase/coinbase-sdk": "latest",
+    "@coinbase/coinbase-sdk": "^0.22.0",
     "@xmtp/node-sdk": "*"
   },
   "devDependencies": {
     "tsx": "*",
     "typescript": "*"
   },
-  "packageManager": "yarn@4.6.0",
   "engines": {
     "node": ">=20"
   }
