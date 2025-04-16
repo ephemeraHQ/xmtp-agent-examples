@@ -3,93 +3,21 @@ description:
 globs: 
 alwaysApply: true
 ---
-# Working with XMTP Agents in this Monorepo
+# Working with XMTP agents in this monorepo
 
 This guide provides comprehensive instructions for developing, testing, and debugging XMTP agents using the test-manager tool and running agents successfully in the monorepo environment.
 
-## Environment Setup
+## Environment setup
 
-### Required Tools
+### Required tools
 
 - Node.js v20 or later
 - Yarn v4.6.0 (package manager)
 - Docker (for local network testing)
 
-### Package Configuration
+### Package configuration
 
 When creating new agent examples in this monorepo, follow these guidelines for consistent package.json configuration:
-
-Use proper package naming convention:
-
-```json
-{
-  "name": "@examples/xmtp-agent-name"
-}
-```
-
-Always include these standard fields:
-
-```json
-{
-  "version": "0.0.1",
-  "private": true,
-  "type": "module"
-}
-```
-
-Standard scripts configuration with agent management:
-
-```json
-{
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsx --watch src/index.ts",
-    "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
-    "start": "tsx src/index.ts",
-    "test-manager": "tsx ../../scripts/test-manager.ts"
-  }
-}
-```
-
-Dependencies:
-
-- Use exact version of @xmtp/node-sdk (not ^)
-
-```json
-{
-  "dependencies": {
-    "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
-    /* other dependencies */
-  }
-}
-```
-
-DevDependencies:
-
-- Use tsx instead of ts-node
-- Include specific versions
-
-```json
-{
-  "devDependencies": {
-    "tsx": "*",
-    "typescript": "*"
-  }
-}
-```
-
-Package manager and engine specifications:
-
-```json
-{
-  "engines": {
-    "node": ">=20"
-  }
-}
-```
-
-Here's how the correct package.json should look for a simple agent with agent management:
 
 ```json
 {
@@ -99,11 +27,11 @@ Here's how the correct package.json should look for a simple agent with agent ma
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx --watch src/index.ts",
+    "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
-    "test-manager": "tsx ../../scripts/test-manager.ts",
-    "start": "tsx src/index.ts"
+    "start": "tsx index.ts",
+    "test-manager": "tsx ../../scripts/test-manager.ts"
   },
   "dependencies": {
     "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
@@ -119,7 +47,9 @@ Here's how the correct package.json should look for a simple agent with agent ma
 }
 ```
 
-### Environment Variables
+> **Note:** Ensure the script paths match your actual file structure. Some agents use `index.ts` in the root folder while others might use `src/index.ts`.
+
+### Environment variables
 
 Your agent will typically require these environment variables in a `.env` file:
 
@@ -132,9 +62,9 @@ WALLET_KEY=your_private_key_here
 ENCRYPTION_KEY=your_encryption_key_here
 ```
 
-## Running an Agent
+## Running an agent
 
-Always use the development script during active development for hot-reloading:
+### Direct execution (recommended for development)
 
 ```bash
 # Navigate to your agent directory
@@ -148,6 +78,9 @@ yarn gen:keys
 
 # Start the agent with hot-reloading
 yarn dev
+
+# Or start without hot-reloading
+yarn start
 ```
 
 When successfully started, you should see output similar to:
@@ -173,9 +106,9 @@ When successfully started, you should see output similar to:
 Waiting for messages...
 ```
 
-## Testing an Agent
+## Testing an agent
 
-### Running with Logging (Recommended)
+### Important test-manager commands
 
 ```bash
 # Start the agent with logging
@@ -187,94 +120,166 @@ yarn test-manager send dev <address> 'Your message'
 # Check agent status
 yarn test-manager status
 
-# View live logs
-yarn test-manager logs
+# View logs for a specific agent instance
+yarn test-manager logs agent-1
 
-# Stop the agent
+# Stop all agent instances
 yarn test-manager stop
 ```
 
-These commands will handle absolute paths, proper logging, and process management automatically.
+### Testing workflow
 
-### Using test-manager to Send Messages
-
-In a separate terminal window, use the test-manager to send test messages to your agent:
+1. **Start the agent and check for successful launch**
 
 ```bash
-# Navigate to your agent directory
+# Start the agent with test-manager
 cd examples/your-agent-name
-
-# Send a message to your agent
-# Usage: yarn test-manager send <network> <target_address> 'message'
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f 'message'
+yarn test-manager start
 ```
 
-> **Note:** `test-manager` uses default keys for testing, so it doesn't require an .env file to run. It has built-in defaults for WALLET_KEY and ENCRYPTION_KEY.
-
-Expected output:
+This will start multiple instances of your agent. Check the status to ensure they're running:
 
 ```
-Network: dev
-Sending message to 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f: "Test message"
-Address: 0x94dafa657d01247ff6094567eb54bdd2baf16c10
-Inbox ID: f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751
-Creating conversation with 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f...
-Sending message...
-Message sent successfully!
+Found 2 agent instances:
+- agent-1: Running (PID 12345)
+- agent-2: Running (PID 12346)
 ```
 
-## Complete Testing Example
-
-Here's a complete example for testing a number multiplier agent using the test-manager script and yarn commands:
+2. **Send test messages**
 
 ```bash
-# Terminal 1: Start the agent with logging using yarn commands
-cd examples/xmtp-number-multiplier
+# Make sure to use single quotes around messages
+yarn test-manager send dev <your-agent-address> 'Test message'
+```
+
+The agent address can be found in:
+
+- Your `.env` file (the public key corresponding to your WALLET_KEY)
+- The agent details display when running the agent directly
+- The logs from the test-manager
+
+3. **Check agent logs for responses**
+
+```bash
+# View logs for a specific instance
+yarn test-manager logs agent-1
+```
+
+4. **When done, stop all agent instances**
+
+```bash
+yarn test-manager stop
+```
+
+### Troubleshooting tips
+
+1. **Agents not starting or immediately stopping**
+
+   - Check the status: `yarn test-manager status`
+   - Clean up any zombie processes: `pkill -f tsx`
+   - Verify your .env file has correct values
+
+2. **Can't see agent responses**
+
+   - Run the agent directly with `yarn start` or `yarn dev` to see output in the console
+   - Check logs with `yarn test-manager logs agent-1`
+   - Ensure the agent is properly receiving messages
+
+3. **Test-manager command errors**
+   - Make sure you're in the agent's directory
+   - For logs command, specify the instance ID: `yarn test-manager logs agent-1`
+   - Ensure single quotes are used for messages
+
+## Complete testing example
+
+Here's a complete example for testing the GM agent:
+
+```bash
+# Terminal 1: Start the GM agent directly for visibility
+cd examples/xmtp-gm
+yarn dev
+
+# Terminal 2: Send test messages to the agent
+cd examples/xmtp-gm
+yarn test-manager send dev 0x4aDb8e00B5daC9EBda50c2b339290366DaE14EE0 'Hello XMTP world!'
+
+# Expected terminal 1 output
+Sending "gm" response to 0x94dafa657d01247ff6094567eb54bdd2baf16c10...
+Waiting for messages...
+```
+
+For parallel testing with multiple instances:
+
+```bash
+# Terminal 1: Start multiple agent instances
+cd examples/xmtp-gm
 yarn test-manager start
 
-# Terminal 2: Send test messages
-cd examples/xmtp-number-multiplier
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f '99.5'
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f 'Hello agent'
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f '-25'
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f '1.5e3'
+# Terminal 2: Send messages and check status
+cd examples/xmtp-gm
+yarn test-manager status
+yarn test-manager send dev 0x4aDb8e00B5daC9EBda50c2b339290366DaE14EE0 'Testing message'
+yarn test-manager logs agent-1
 
-# Terminal 3: Check the logs
-yarn test-manager logs
-
-# When done, stop the agent
+# Terminal 3: Stop instances when done
+cd examples/xmtp-gm
 yarn test-manager stop
 ```
 
-Example `agent.log` content:
+## Known issues and advanced troubleshooting
 
-```bash
-    ██╗  ██╗███╗   ███╗████████╗██████╗
-    ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
-     ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
-     ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝
-    ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║
-    ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝
+### Test-manager log collection issues
 
-╔══════════════════════════════════════════════════════════════════════════════════════════════╗
-║                                         Agent Details                                        ║
-╟──────────────────────────────────────────────────────────────────────────────────────────────╢
-║ 📍 Address: 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f                                       ║
-║ 📍 inboxId: a0974e5184a37d293b9825bbc7138897ffe457768b9b6ae6fe1f70ead1455da7                 ║
-║ 📂 DB Path: ../xmtp-number-multiplier/xmtp-dev-0x41592a3a39ef582fa38c4062e8a3a23102f7f05f.db3║
-║ 🛜  Network: dev                                                                              ║
-║ 🔗 URL: http://xmtp.chat/dm/0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f?env=dev               ║
-╚══════════════════════════════════════════════════════════════════════════════════════════════╝
-✓ Syncing conversations...
-Waiting for messages...
-Received number: 99.5, multiplied result: 199
-Creating group with sender 0x94dafa657d01247ff6094567eb54bdd2baf16c10
-Group created and message sent successfully
-Received non-number message: Hello agent
-Received number: -25, multiplied result: -50
-Creating group with sender 0x94dafa657d01247ff6094567eb54bdd2baf16c10
-Group created and message sent successfully
-Received number: 1500, multiplied result: 3000
-Creating group with sender 0x94dafa657d01247ff6094567eb54bdd2baf16c10
-Group created and message sent successfully
-```
+If you're experiencing issues with logs not being collected or displayed when using `yarn test-manager logs agent-1`:
+
+1. **Direct agent execution**: For immediate troubleshooting, run the agent directly with `yarn start` or `yarn dev` to see live console output.
+
+2. **Check log directories**: Verify that the logs directory exists:
+
+   ```bash
+   ls -la .tmp/your-agent-name/parallel-logs/
+   ```
+
+3. **Agent starting but not logging**: If agents start but don't log output, try modifying a console.log statement in your agent's code to verify logging is working.
+
+4. **Alternative logging setup**: You can set up your own logging in your agent:
+
+   ```typescript
+   // Add to top of your agent's index.ts file
+   import { createWriteStream } from "fs";
+
+   const logStream = createWriteStream("./agent.log", { flags: "a" });
+
+   // Redirect console output to file
+   const originalConsoleLog = console.log;
+   console.log = function (...args) {
+     originalConsoleLog.apply(console, args);
+     logStream.write(args.join(" ") + "\n");
+   };
+   ```
+
+5. **Restart after code changes**: After any changes to your agent code or the test-manager script, completely restart your testing workflow:
+   ```bash
+   # Kill any running processes
+   pkill -f tsx
+   # Start fresh
+   yarn test-manager start
+   ```
+
+### Multiple agent instances with unique addresses
+
+When running multiple agent instances with test-manager, note that by default all instances will use the same wallet keys from your .env file. If you need each instance to have unique addresses:
+
+1. Create multiple .env files (e.g., .env.agent1, .env.agent2)
+2. Generate unique keys for each
+3. Modify your agent code to look for the AGENT_INSTANCE_ID environment variable and load the appropriate keys
+
+### Test-manager command reference
+
+| Command                                          | Description                                 |
+| ------------------------------------------------ | ------------------------------------------- |
+| `yarn test-manager start [count]`                | Start multiple agent instances (default: 2) |
+| `yarn test-manager stop`                         | Stop all agent instances                    |
+| `yarn test-manager status`                       | Show status of all running instances        |
+| `yarn test-manager logs agent-1`                 | Show logs for a specific instance           |
+| `yarn test-manager send dev <address> 'message'` | Send a test message                         |

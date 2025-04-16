@@ -192,7 +192,7 @@ Here's a complete example for testing the GM agent:
 ```bash
 # Terminal 1: Start the GM agent directly for visibility
 cd examples/xmtp-gm
-yarn start
+yarn dev
 
 # Terminal 2: Send test messages to the agent
 cd examples/xmtp-gm
