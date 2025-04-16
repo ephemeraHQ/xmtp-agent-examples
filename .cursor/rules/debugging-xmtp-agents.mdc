@@ -10,7 +10,7 @@ alwaysApply: true
 ---
 # Debugging XMTP agents
 
-This rule provides guidance on testing and debugging XMTP agents using the bot-cli tool and running agents successfully.
+This rule provides guidance on testing and debugging XMTP agents using the test-cli tool and running agents successfully.
 
 ## Setting up packages and scripts in examples from this monorepo
 
@@ -38,7 +38,7 @@ This rule provides guidance on testing and debugging XMTP agents using the bot-c
   {
     "scripts": {
       "build": "tsc",
-      "bot-cli": "tsx ../../scripts/bot-cli.ts",
+      "test-cli": "tsx ../../scripts/test-cli.ts",
       "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
       "dev": "tsx --watch src/index.ts",
       "gen:keys": "tsx ../../scripts/generateKeys.ts",
@@ -95,7 +95,7 @@ This rule provides guidance on testing and debugging XMTP agents using the bot-c
     "type": "module",
     "scripts": {
       "build": "tsc",
-      "bot-cli": "tsx ../../scripts/bot-cli.ts",
+      "test-cli": "tsx ../../scripts/test-cli.ts",
       "dev": "tsx --watch index.ts",
       "gen:keys": "tsx ../../scripts/generateKeys.ts",
       "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
@@ -115,9 +115,9 @@ This rule provides guidance on testing and debugging XMTP agents using the bot-c
   }
   ```
 
-## Testing XMTP agents with bot-cli
+## Testing XMTP agents with test-cli
 
-When developing XMTP agents, it's essential to test them properly. This guide shows the process of setting up and testing an XMTP agent using the bot-cli tool.
+When developing XMTP agents, it's essential to test them properly. This guide shows the process of setting up and testing an XMTP agent using the test-cli tool.
 
 ### Setup process
 
@@ -194,14 +194,14 @@ You should see output similar to:
 Waiting for messages...
 ```
 
-### Testing with bot-cli
+### Testing with test-cli
 
-In a separate terminal window, use the bot-cli to send test messages to your agent:
+In a separate terminal window, use the test-cli to send test messages to your agent:
 
 ```bash
 # From the project root, send a message to your agent
 # Make sure to use the public key from your agent's .env file
-yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Test message"
+yarn test-cli 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Test message"
 ```
 
 Expected output:
@@ -271,7 +271,7 @@ Solution:
    ```
 2. Run `yarn install` from the project root
 
-### Problem: Bot-cli can't send messages to the agent
+### Problem: test-cli can't send messages to the agent
 
 Error:
 
@@ -283,7 +283,7 @@ Solution:
 
 1. Make sure your agent is running
 2. Verify you're using the correct public key from the agent's `.env` file
-3. Check that you're using the same XMTP environment in both your agent and bot-cli
+3. Check that you're using the same XMTP environment in both your agent and test-cli
 
 ## Testing different input types
 
@@ -291,11 +291,11 @@ To thoroughly test your agent, send various types of input:
 
 ```bash
 # Test with different data types
-yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "42"  # integer
-yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "3.14"  # decimal
-yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "-10"  # negative number
-yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "Hello"  # text
-yarn tsx scripts/bot-cli.ts YOUR_AGENT_ADDRESS "1.5e3"  # scientific notation (1500)
+yarn test-cli  YOUR_AGENT_ADDRESS "42"  # integer
+yarn test-cli  YOUR_AGENT_ADDRESS "3.14"  # decimal
+yarn test-cli  YOUR_AGENT_ADDRESS "-10"  # negative number
+yarn test-cli  YOUR_AGENT_ADDRESS "Hello"  # text
+yarn test-cli  YOUR_AGENT_ADDRESS "1.5e3"  # scientific notation (1500)
 ```
 
 ## Debugging tips
@@ -314,10 +314,10 @@ yarn dev
 
 # Terminal 2: Send test messages
 cd /path/to/project/root
-yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "99.5"
-yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello agent"
-yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
-yarn tsx scripts/bot-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
+yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "99.5"
+yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello agent"
+yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
+yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
 ```
 
 Terminal 1 output:

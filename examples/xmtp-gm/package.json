@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "bot-cli": "tsx ../../scripts/bot-cli.ts",
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
-    "start": "tsx index.ts"
+    "start": "tsx index.ts",
+    "test-cli": "tsx ../../scripts/test-cli.ts"
   },
   "dependencies": {
     "@xmtp/node-sdk": "*"
