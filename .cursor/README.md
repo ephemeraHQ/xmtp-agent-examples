@@ -946,3 +946,12 @@ Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the officia
 ```tsx
 XMTP_ENV = local;
 ```
+
+### Running an agent
+
+```tsx
+cd examples/<current-agent>
+yarn gen:keys
+yarn install
+yarn dev
+```
