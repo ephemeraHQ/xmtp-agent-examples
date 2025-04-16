@@ -32,18 +32,22 @@ Always include these standard fields:
 }
 ```
 
-Standard scripts configuration:
+Standard scripts configuration with agent management:
 
 ```json
 {
   "scripts": {
     "build": "tsc",
     "test-cli": "tsx ../../scripts/test-cli.ts",
-    "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
+    "clean": "cd ../../ && rm -rf examples/xmtp-agent-name/.data",
     "dev": "tsx --watch src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
-    "start": "tsx src/index.ts"
+    "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
+    "start": "tsx src/index.ts",
+    "agent:start": "./agent-manager.sh start",
+    "agent:stop": "./agent-manager.sh stop",
+    "agent:status": "./agent-manager.sh status",
+    "agent:logs": "./agent-manager.sh logs"
   }
 }
 ```
@@ -85,7 +89,7 @@ Package manager and engine specifications:
 }
 ```
 
-Here's how the correct package.json should look for a simple agent:
+Here's how the correct package.json should look for a simple agent with agent management:
 
 ```json
 {
@@ -96,10 +100,15 @@ Here's how the correct package.json should look for a simple agent:
   "scripts": {
     "build": "tsc",
     "test-cli": "tsx ../../scripts/test-cli.ts",
-    "dev": "tsx --watch index.ts",
+    "clean": "cd ../../ && rm -rf examples/xmtp-agent-name/.data",
+    "dev": "tsx --watch src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
-    "start": "tsx index.ts"
+    "start": "tsx src/index.ts",
+    "agent:start": "./agent-manager.sh start",
+    "agent:stop": "./agent-manager.sh stop",
+    "agent:status": "./agent-manager.sh status",
+    "agent:logs": "./agent-manager.sh logs"
   },
   "dependencies": {
     "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
@@ -180,23 +189,31 @@ Waiting for messages...
 
 ### Running with Logging (Recommended)
 
-For proper debugging, always run agents with output redirected to a logfile:
+For proper debugging and management of your agent processes, download the agent-manager.sh script and use it through yarn commands:
+
+1. **Download the agent-manager.sh script** to your agent directory
+
+2. **Use yarn commands to manage your agent**:
 
 ```bash
-# Navigate to your agent directory
-cd examples/your-agent-name
+# Start the agent with logging
+yarn agent:start
 
-# Run the agent with output redirected to a logfile
-yarn dev > agent.log 2>&1 &
-echo $! > agent.pid
+# Check agent status
+yarn agent:status
 
-# To stop the agent later
-kill $(cat agent.pid)
+# View live logs
+yarn agent:logs
+
+# Stop the agent
+yarn agent:stop
 ```
+
+These commands will handle absolute paths, proper logging, and process management automatically.
 
 ## Testing XMTP Agents
 
-The test-cli tool provides a simple way to test your agents without additional setup.
+XMTP provides tools for testing agents without additional setup.
 
 ### Using test-cli to Send Messages
 
@@ -216,8 +233,9 @@ yarn test-cli dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Test message"
 Expected output:
 
 ```
+Network: dev
 Sending message to 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f: "Test message"
-Connected as: 0x94dafa657d01247ff6094567eb54bdd2baf16c10
+Address: 0x94dafa657d01247ff6094567eb54bdd2baf16c10
 Inbox ID: f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751
 Creating conversation with 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f...
 Sending message...
@@ -236,15 +254,14 @@ cat agent.log
 tail -f agent.log
 ```
 
-### Complete Testing Example
+## Complete Testing Example
 
-Here's a complete example for testing a number multiplier agent:
+Here's a complete example for testing a number multiplier agent using the agent-manager script and yarn commands:
 
 ```bash
-# Terminal 1: Start the agent with logging
+# Terminal 1: Start the agent with logging using yarn commands
 cd examples/xmtp-number-multiplier
-yarn dev > agent.log 2>&1 &
-echo $! > agent.pid
+yarn agent:start
 
 # Terminal 2: Send test messages
 cd examples/xmtp-number-multiplier
@@ -253,11 +270,11 @@ yarn test-cli dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello agent"
 yarn test-cli dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
 yarn test-cli dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
 
-# Terminal 3: Check the logs to verify agent behavior
-tail -f agent.log
+# Terminal 3: Check the logs
+yarn agent:logs
 
 # When done, stop the agent
-kill $(cat agent.pid)
+yarn agent:stop
 ```
 
 Example `agent.log` content:
@@ -325,10 +342,26 @@ If your agent doesn't respond as expected, check the following:
 
 ### Agent Running Issues
 
-- **Check if the agent is running:**
+- **Check if the agent is running using the PID file:**
+
   ```bash
+  # Verify the process is running
+  ps -p $(cat agent.pid)
+
+  # Alternative if PID file is missing
   ps -ef | grep tsx
   ```
+
+- **Find the log file if it's not in the expected location:**
+
+  ```bash
+  # Move up one directory and search
+  cd .. && find . -name "agent.log" -type f
+
+  # Search from root directory if necessary
+  find / -name "agent.log" -type f 2>/dev/null
+  ```
+
 - **Look for errors in the logfile:**
   ```bash
   grep -i error agent.log
@@ -347,10 +380,38 @@ If your agent doesn't respond as expected, check the following:
 
 ### Common Errors and Solutions
 
-| Error                            | Possible Solution                               |
-| -------------------------------- | ----------------------------------------------- |
-| "Cannot connect to XMTP network" | Check network connectivity and XMTP_ENV setting |
-| "Failed to create conversation"  | Verify target address is correct and valid      |
-| "Error: SQLITE_CANTOPEN"         | Check database file permissions                 |
-| "Invalid private key"            | Regenerate keys with `yarn gen:keys`            |
-| Agent not responding             | Restart agent and check logs for errors         |
+| Error                                     | Possible Solution                                 |
+| ----------------------------------------- | ------------------------------------------------- | ---------------------------------------- |
+| "Cannot connect to XMTP network"          | Check network connectivity and XMTP_ENV setting   |
+| "Failed to create conversation"           | Verify target address is correct and valid        |
+| "Error: SQLITE_CANTOPEN"                  | Check database file permissions                   |
+| "Invalid private key"                     | Regenerate keys with `yarn gen:keys`              |
+| "No such file or directory" for log files | Use absolute paths when redirecting output        |
+| Agent log in unexpected location          | Start from agent directory and use absolute paths |
+| Agent not responding                      | Restart agent and check logs for errors           |
+| Multiple agent processes running          | Use `ps -ef                                       | grep tsx` to find and kill old processes |
+
+### Process and File Management Best Practices
+
+To avoid common issues with file paths and process management:
+
+1. **Always use absolute paths** for log files and PID files:
+
+   ```bash
+   # Get current directory
+   AGENT_DIR=$(pwd)
+
+   # Use absolute paths for all files
+   yarn dev > "$AGENT_DIR/agent.log" 2>&1 &
+   ```
+
+2. **Always verify** that your agent is running and logging properly:
+
+   ```bash
+   # Check if process is running
+   ps -p $(cat agent.pid)
+
+   # Check if log file exists and has content
+   ls -la agent.log
+   tail -10 agent.log
+   ```
