@@ -177,7 +177,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coinbase/coinbase-sdk@npm:^0.20.0":
+"@coinbase/coinbase-sdk@npm:0.20.0, @coinbase/coinbase-sdk@npm:^0.20.0":
   version: 0.20.0
   resolution: "@coinbase/coinbase-sdk@npm:0.20.0"
   dependencies:
@@ -196,28 +196,6 @@ __metadata:
     secp256k1: "npm:^5.0.0"
     viem: "npm:^2.21.26"
   checksum: 10/c6a4b220508c84dfc40b0ae6f1549ef8ed1afc50a596ba39c96815f9baf98802b7868d9d6d815e3e95a8ef78e5e280e77bc89345334a6e7fd6a8ee4f8593dde2
-  languageName: node
-  linkType: hard
-
-"@coinbase/coinbase-sdk@npm:latest":
-  version: 0.22.0
-  resolution: "@coinbase/coinbase-sdk@npm:0.22.0"
-  dependencies:
-    "@scure/bip32": "npm:^1.4.0"
-    abitype: "npm:^1.0.6"
-    axios: "npm:^1.6.8"
-    axios-mock-adapter: "npm:^1.22.0"
-    axios-retry: "npm:^4.4.1"
-    bip32: "npm:^4.0.0"
-    bip39: "npm:^3.1.0"
-    decimal.js: "npm:^10.4.3"
-    dotenv: "npm:^16.4.5"
-    ed2curve: "npm:^0.3.0"
-    ethers: "npm:^6.12.1"
-    jose: "npm:^5.10.0"
-    secp256k1: "npm:^5.0.0"
-    viem: "npm:^2.21.26"
-  checksum: 10/47f2f24d83421f95ee16eb6d6132e7082ff4b1e87be148065a6a97057b06c1f3d67fe0e0cf6839e2d6673f28e2ce6ccab249673c4f3aa0b8fe3aeb9240a1c3d8
   languageName: node
   linkType: hard
 
@@ -976,7 +954,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
   dependencies:
-    "@coinbase/coinbase-sdk": "npm:latest"
+    "@coinbase/coinbase-sdk": "npm:0.20.0"
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
     typescript: "npm:*"

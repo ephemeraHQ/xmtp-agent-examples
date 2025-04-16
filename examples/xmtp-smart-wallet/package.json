@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "bot-cli": "tsx ../../scripts/bot-cli.ts",
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
@@ -11,7 +12,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@coinbase/coinbase-sdk": "latest",
+    "@coinbase/coinbase-sdk": "0.20.0",
     "@xmtp/node-sdk": "*"
   },
   "devDependencies": {

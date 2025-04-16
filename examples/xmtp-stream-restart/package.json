@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "bot-cli": "tsx ../../scripts/bot-cli.ts",
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
