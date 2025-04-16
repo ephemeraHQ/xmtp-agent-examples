@@ -6,11 +6,12 @@
 show_usage() {
   echo "XMTP Agent Manager"
   echo "Usage:"
-  echo "  $0 start    # Start the agent with logging"
-  echo "  $0 stop     # Stop the running agent"
-  echo "  $0 status   # Check agent status"
-  echo "  $0 logs     # Show agent logs"
-  echo "  $0 help     # Show this help message"
+  echo "  $0 start                                        # Start the agent with logging"
+  echo "  $0 stop                                         # Stop the running agent"
+  echo "  $0 status                                       # Check agent status"
+  echo "  $0 logs                                         # Show agent logs"
+  echo "  $0 send <network> <target_address> \"<message>\"  # Send a test message to an agent"
+  echo "  $0 help                                         # Show this help message"
 }
 
 # Set working directory to the current directory
@@ -135,6 +136,28 @@ show_logs() {
   tail -f "$LOG_FILE"
 }
 
+# Send test message function
+send_test_message() {
+  if [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
+    echo "Error: Missing required parameters"
+    echo "Usage: $0 send <network> <target_address> \"<message>\""
+    return 1
+  fi
+
+  NETWORK=$2
+  TARGET_ADDRESS=$3
+  MESSAGE=$4
+
+  echo "Sending test message using test-cli..."
+  echo "Network: $NETWORK"
+  echo "Target Address: $TARGET_ADDRESS"
+  echo "Message: $MESSAGE"
+  
+  # Call the test-cli.ts script with the provided arguments
+  tsx ../../scripts/test-cli.ts "$NETWORK" "$TARGET_ADDRESS" "$MESSAGE"
+  return $?
+}
+
 # Main command handling
 case "$1" in
   start)
@@ -148,6 +171,9 @@ case "$1" in
     ;;
   logs)
     show_logs
+    ;;
+  send)
+    send_test_message "$@"
     ;;
   help|--help|-h)
     show_usage

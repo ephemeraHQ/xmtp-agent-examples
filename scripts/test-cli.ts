@@ -1,6 +1,3 @@
-// CLI script to send a message to a target XMTP address
-// Usage: yarn script test-cli <network> <target_address> <message>
-
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
 
@@ -23,7 +20,7 @@ async function main(): Promise<void> {
 
   if (!network || !targetAddress || !message) {
     console.error(
-      "Usage: yarn script test-cli <network> <target_address> <message>",
+      'Usage: yarn test-manager send <network> <target_address> "<message>"',
     );
     process.exit(1);
   }
