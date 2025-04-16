@@ -38,12 +38,11 @@ Standard scripts configuration with agent management:
 {
   "scripts": {
     "build": "tsc",
-    "clean": "cd ../../ && rm -rf examples/xmtp-agent-name/.data",
     "dev": "tsx --watch src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
     "start": "tsx src/index.ts",
-    "test-manager": "tsx ../../scripts/test-manager.sh"
+    "test-manager": "tsx ../../scripts/test-manager.ts"
   }
 }
 ```
@@ -69,8 +68,8 @@ DevDependencies:
 ```json
 {
   "devDependencies": {
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "tsx": "*",
+    "typescript": "*"
   }
 }
 ```
@@ -95,23 +94,19 @@ Here's how the correct package.json should look for a simple agent with agent ma
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "clean": "cd ../../ && rm -rf examples/xmtp-agent-name/.data",
     "dev": "tsx --watch src/index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
-    "start": "tsx src/index.ts",
-    "agent:start": "./test-manager.sh start",
-    "agent:stop": "./test-manager.sh stop",
-    "agent:status": "./test-manager.sh status",
-    "agent:logs": "./test-manager.sh logs"
+    "test-manager": "tsx ../../scripts/test-manager.ts",
+    "start": "tsx src/index.ts"
   },
   "dependencies": {
     "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
     /* other dependencies */
   },
   "devDependencies": {
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "tsx": "*",
+    "typescript": "*"
   },
   "engines": {
     "node": ">=20"
@@ -202,8 +197,8 @@ In a separate terminal window, use the test-manager to send test messages to you
 cd examples/your-agent-name
 
 # Send a message to your agent
-# Usage: yarn test-manager send <network> <target_address> <message>
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Test message"
+# Usage: yarn test-manager send <network> <target_address> 'message'
+yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f 'message'
 ```
 
 > **Note:** `test-manager` uses default keys for testing, so it doesn't require an .env file to run. It has built-in defaults for WALLET_KEY and ENCRYPTION_KEY.
@@ -231,10 +226,10 @@ yarn test-manager start
 
 # Terminal 2: Send test messages
 cd examples/xmtp-number-multiplier
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "99.5"
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello agent"
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
-yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
+yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f '99.5'
+yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f 'Hello agent'
+yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f '-25'
+yarn test-manager send dev 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f '1.5e3'
 
 # Terminal 3: Check the logs
 yarn test-manager logs

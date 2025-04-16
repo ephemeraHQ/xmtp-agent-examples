@@ -9,7 +9,7 @@
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
     "start": "tsx index.ts",
-    "test-manager": "chmod +x ../../scripts/test-manager.sh && ../../scripts/test-manager.sh"
+    "test-manager": "tsx ../../scripts/test-manager.ts"
   },
   "dependencies": {
     "@xmtp/node-sdk": "*"
