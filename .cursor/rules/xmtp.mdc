@@ -218,109 +218,6 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     > [!IMPORTANT]
     > Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies
 
-20. Package.json Guidelines
-
-    Use proper package naming convention:
-
-    ```json
-    {
-      "name": "@examples/xmtp-your-agent-name"
-    }
-    ```
-
-    Always include these standard fields:
-
-    ```json
-    {
-      "version": "0.0.1",
-      "private": true,
-      "type": "module"
-    }
-    ```
-
-    Standard scripts configuration:
-
-    ```json
-    {
-      "scripts": {
-        "build": "tsc",
-        "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
-        "dev": "tsx --watch src/index.ts",
-        "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
-        "start": "tsx src/index.ts"
-      }
-    }
-    ```
-
-    Dependencies:
-
-    - Use exact version of @xmtp/node-sdk (not ^)
-    - Current version should be 1.2.0
-
-    ```json
-    {
-      "dependencies": {
-        "@xmtp/node-sdk": "2.0.2"
-        /* other dependencies */
-      }
-    }
-    ```
-
-    DevDependencies:
-
-    - Use tsx instead of ts-node
-    - Include specific versions
-
-    ```json
-    {
-      "devDependencies": {
-        "tsx": "^4.19.2",
-        "typescript": "^5.7.3"
-      }
-    }
-    ```
-
-    Package manager and engine specifications:
-
-    ```json
-    {
-      "packageManager": "yarn@4.6.0",
-      "engines": {
-        "node": ">=20"
-      }
-    }
-    ```
-
-    Here's how the correct package.json should look for a simple agent:
-
-    ```json
-    {
-      "name": "@examples/xmtp-gm",
-      "version": "0.0.1",
-      "private": true,
-      "type": "module",
-      "scripts": {
-        "build": "tsc",
-        "dev": "tsx --watch index.ts",
-        "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
-        "start": "tsx index.ts"
-      },
-      "dependencies": {
-        "@xmtp/node-sdk": "2.0.2"
-      },
-      "devDependencies": {
-        "tsx": "^4.19.2",
-        "typescript": "^5.7.3"
-      },
-      "packageManager": "yarn@4.6.0",
-      "engines": {
-        "node": ">=20"
-      }
-    }
-    ```
-
 ## Example: XMTP Group Creator Agent
 
 ### Prompt:
@@ -933,7 +830,7 @@ if (!fs.existsSync(dbPath)) {
 
 ### Web inbox
 
-Interact with the XMTP network using ](https://xmtp.chat), the official web inbox for developers.
+Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
 ### Work in local network
 
@@ -950,13 +847,4 @@ Interact with the XMTP network using ](https://xmtp.chat), the official web inbo
 
 ```tsx
 XMTP_ENV = local;
-```
-
-### Running an agent
-
-```tsx
-cd examples/<current-agent>
-yarn gen:keys
-yarn install
-yarn dev
 ```
