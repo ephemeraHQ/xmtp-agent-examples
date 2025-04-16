@@ -11,6 +11,11 @@ const DEFAULT_ENCRYPTION_KEY =
   "11973168e34839f9d31749ad77204359c5c39c404e1154eacb7f35a867ee47de";
 
 async function main(): Promise<void> {
+  // Function to wait for specified milliseconds
+  function wait(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+  await wait(2000);
   // Get command line arguments
   const targetAddress = process.argv[2];
   const message = process.argv[3];
@@ -38,7 +43,7 @@ async function main(): Promise<void> {
     });
 
     const identifier = await signer.getIdentifier();
-    console.log(`Connected as: ${identifier.identifier}`);
+    console.log(`Address: ${identifier.identifier}`);
     console.log(`Inbox ID: ${client.inboxId}`);
 
     // Create conversation with the target

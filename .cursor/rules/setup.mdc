@@ -3,4 +3,4 @@ description:
 globs: 
 alwaysApply: true
 ---
-[xmtp.md](mdc:.cursor/rules/xmtp.md)
+[setup.md](mdc:.cursor/rules/setup.md)

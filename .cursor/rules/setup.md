@@ -1,119 +1,111 @@
----
-description: 
-globs: 
-alwaysApply: true
----
----
-description: 
-globs: 
-alwaysApply: true
----
 # Debugging XMTP agents
 
 This rule provides guidance on testing and debugging XMTP agents using the test-cli tool and running agents successfully.
 
 ## Setting up packages and scripts in examples from this monorepo
 
-  Use proper package naming convention:
+Use proper package naming convention:
 
-  ```json
-  {
-    "name": "@examples/xmtp-agent-name"
+```json
+{
+  "name": "@examples/xmtp-agent-name"
+}
+```
+
+Always include these standard fields:
+
+```json
+{
+  "version": "0.0.1",
+  "private": true,
+  "type": "module"
+}
+```
+
+Standard scripts configuration:
+
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "test-cli": "tsx ../../scripts/test-cli.ts",
+    "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
+    "dev": "tsx --watch src/index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
+    "start": "tsx src/index.ts"
   }
-  ```
+}
+```
 
-  Always include these standard fields:
+> **Important**: Always use `yarn dev` during development as it enables hot-reloading. The `yarn start` script is primarily intended for production use cases.
 
-  ```json
-  {
-    "version": "0.0.1",
-    "private": true,
-    "type": "module"
+Dependencies:
+
+- Use exact version of @xmtp/node-sdk (not ^)
+
+```json
+{
+  "dependencies": {
+    "@xmtp/node-sdk": "2.0.2"
+    /* other dependencies */
   }
-  ```
+}
+```
 
-  Standard scripts configuration:
+DevDependencies:
 
-  ```json
-  {
-    "scripts": {
-      "build": "tsc",
-      "test-cli": "tsx ../../scripts/test-cli.ts",
-      "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
-      "dev": "tsx --watch src/index.ts",
-      "gen:keys": "tsx ../../scripts/generateKeys.ts",
-      "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
-      "start": "tsx src/index.ts"
-    }
+- Use tsx instead of ts-node
+- Include specific versions
+
+```json
+{
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
-  ```
+}
+```
 
-  Dependencies:
+Package manager and engine specifications:
 
-  - Use exact version of @xmtp/node-sdk (not ^)
-
-  ```json
-  {
-    "dependencies": {
-      "@xmtp/node-sdk": "2.0.2"
-      /* other dependencies */
-    }
+```json
+{
+  "engines": {
+    "node": ">=20"
   }
-  ```
+}
+```
 
-  DevDependencies:
+Here's how the correct package.json should look for a simple agent:
 
-  - Use tsx instead of ts-node
-  - Include specific versions
-
-  ```json
-  {
-    "devDependencies": {
-      "tsx": "^4.19.2",
-      "typescript": "^5.7.3"
-    }
+```json
+{
+  "name": "@examples/xmtp-agent-name",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test-cli": "tsx ../../scripts/test-cli.ts",
+    "dev": "tsx --watch index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@xmtp/node-sdk": "2.0.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "yarn@4.6.0",
+  "engines": {
+    "node": ">=20"
   }
-  ```
-
-  Package manager and engine specifications:
-
-  ```json
-  {
-    "engines": {
-      "node": ">=20"
-    }
-  }
-  ```
-
-  Here's how the correct package.json should look for a simple agent:
-
-  ```json
-  {
-    "name": "@examples/xmtp-agent-name",
-    "version": "0.0.1",
-    "private": true,
-    "type": "module",
-    "scripts": {
-      "build": "tsc",
-      "test-cli": "tsx ../../scripts/test-cli.ts",
-      "dev": "tsx --watch index.ts",
-      "gen:keys": "tsx ../../scripts/generateKeys.ts",
-      "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
-      "start": "tsx index.ts"
-    },
-    "dependencies": {
-      "@xmtp/node-sdk": "2.0.2"
-    },
-    "devDependencies": {
-      "tsx": "^4.19.2",
-      "typescript": "^5.7.3"
-    },
-    "packageManager": "yarn@4.6.0",
-    "engines": {
-      "node": ">=20"
-    }
-  }
-  ```
+}
+```
 
 ## Testing XMTP agents with test-cli
 
@@ -167,8 +159,11 @@ cd examples/your-agent-name
 # Install dependencies if needed
 yarn install
 
-# Start the agent with hotreload
+# Start the agent with hot-reloading (ALWAYS use this for development)
 yarn dev
+
+# DO NOT use the following for development
+# yarn start  # No hot-reloading, only for production
 ```
 
 You should see output similar to:
@@ -199,10 +194,15 @@ Waiting for messages...
 In a separate terminal window, use the test-cli to send test messages to your agent:
 
 ```bash
-# From the project root, send a message to your agent
+# Navigate to your agent directory
+cd examples/your-agent-name
+
+# Send a message to your agent
 # Make sure to use the public key from your agent's .env file
 yarn test-cli 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Test message"
 ```
+
+> Note: test-cli uses default keys for testing, so it doesn't require an .env file to run. It has built-in defaults for WALLET_KEY and ENCRYPTION_KEY.
 
 Expected output:
 
@@ -265,7 +265,7 @@ Solution:
 1. Make sure your `package.json` has the correct name field:
    ```json
    {
-     "name": "@examples/your-agent-name",
+     "name": "@examples/your-agent-name"
    }
    ```
 2. Run `yarn install` from the project root
@@ -289,12 +289,15 @@ Solution:
 To thoroughly test your agent, send various types of input:
 
 ```bash
+# Navigate to your agent directory
+cd examples/your-agent-name
+
 # Test with different data types
-yarn test-cli  YOUR_AGENT_ADDRESS "42"  # integer
-yarn test-cli  YOUR_AGENT_ADDRESS "3.14"  # decimal
-yarn test-cli  YOUR_AGENT_ADDRESS "-10"  # negative number
-yarn test-cli  YOUR_AGENT_ADDRESS "Hello"  # text
-yarn test-cli  YOUR_AGENT_ADDRESS "1.5e3"  # scientific notation (1500)
+yarn test-cli YOUR_AGENT_ADDRESS "42"  # integer
+yarn test-cli YOUR_AGENT_ADDRESS "3.14"  # decimal
+yarn test-cli YOUR_AGENT_ADDRESS "-10"  # negative number
+yarn test-cli YOUR_AGENT_ADDRESS "Hello"  # text
+yarn test-cli YOUR_AGENT_ADDRESS "1.5e3"  # scientific notation (1500)
 ```
 
 ## Debugging tips
@@ -303,6 +306,7 @@ yarn test-cli  YOUR_AGENT_ADDRESS "1.5e3"  # scientific notation (1500)
 2. Use two terminal windows: one for the agent and one for sending test messages
 3. Examine the agent's database file (`.db3`) for persistent data
 4. If you update your agent code, restart the agent to apply changes
+5. Always use `yarn dev` for development, never use `yarn start` directly
 
 ## Example: testing a number multiplier agent
 
@@ -312,14 +316,16 @@ cd examples/xmtp-number-multiplier
 yarn dev
 
 # Terminal 2: Send test messages
-cd /path/to/project/root
-yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "99.5"
-yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello agent"
-yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
-yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
+cd examples/xmtp-number-multiplier
+yarn test-cli 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "99.5"
+yarn test-cli 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello agent"
+yarn test-cli 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
+yarn test-cli 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
 ```
 
-* Never use npx, always yarn directly to the scripts
+- Never use npx or direct tsx commands, always use yarn scripts
+- Always run test-cli from the agent directory, not from the project root
+- Always use `yarn dev` for development to enable hot-reloading, never use `yarn start`
 
 Terminal 1 output:
 
@@ -341,4 +347,3 @@ Multiplied 1500 by 2: 3000
 Creating group "Multiplier result for 1500" with sender f9f50f49317a4262666a80e582bf3737c91b59ebd3338c0feb128b7cc434d751...
 Group "Multiplier result for 1500" created successfully and result sent
 ```
-
