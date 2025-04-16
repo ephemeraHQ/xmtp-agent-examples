@@ -266,7 +266,6 @@ Solution:
    ```json
    {
      "name": "@examples/your-agent-name",
-     ...
    }
    ```
 2. Run `yarn install` from the project root
@@ -319,6 +318,8 @@ yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "Hello a
 yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "-25"
 yarn tsx scripts/test-cli.ts 0x41592A3A39Ef582Fa38C4062e8A3A23102f7F05f "1.5e3"
 ```
+
+* Never use npx, always yarn directly to the scripts
 
 Terminal 1 output:
 
