@@ -6,7 +6,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 1.  Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
-2.  Use the XMTP node-sdk version "2.0.1" or newer, which offers enhanced functionality including group conversations.
+2.  Use the XMTP node-sdk version "2.0.2" or newer, which offers enhanced functionality including group conversations.
 
 3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
 
@@ -212,109 +212,6 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
     > [!IMPORTANT]
     > Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies
-
-20. Package.json Guidelines
-
-    Use proper package naming convention:
-
-    ```json
-    {
-      "name": "@examples/xmtp-your-agent-name"
-    }
-    ```
-
-    Always include these standard fields:
-
-    ```json
-    {
-      "version": "0.0.1",
-      "private": true,
-      "type": "module"
-    }
-    ```
-
-    Standard scripts configuration:
-
-    ```json
-    {
-      "scripts": {
-        "build": "tsc",
-        "clean": "cd ../../ && rm -rf examples/xmtp-gm/.data",
-        "dev": "tsx --watch src/index.ts",
-        "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
-        "start": "tsx src/index.ts"
-      }
-    }
-    ```
-
-    Dependencies:
-
-    - Use exact version of @xmtp/node-sdk (not ^)
-    - Current version should be 1.2.0
-
-    ```json
-    {
-      "dependencies": {
-        "@xmtp/node-sdk": "2.0.1"
-        /* other dependencies */
-      }
-    }
-    ```
-
-    DevDependencies:
-
-    - Use tsx instead of ts-node
-    - Include specific versions
-
-    ```json
-    {
-      "devDependencies": {
-        "tsx": "^4.19.2",
-        "typescript": "^5.7.3"
-      }
-    }
-    ```
-
-    Package manager and engine specifications:
-
-    ```json
-    {
-      "packageManager": "yarn@4.6.0",
-      "engines": {
-        "node": ">=20"
-      }
-    }
-    ```
-
-    Here's how the correct package.json should look for a simple agent:
-
-    ```json
-    {
-      "name": "@examples/xmtp-gm",
-      "version": "0.0.1",
-      "private": true,
-      "type": "module",
-      "scripts": {
-        "build": "tsc",
-        "dev": "tsx --watch index.ts",
-        "gen:keys": "tsx ../../scripts/generateKeys.ts",
-        "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
-        "start": "tsx index.ts"
-      },
-      "dependencies": {
-        "@xmtp/node-sdk": "2.0.1"
-      },
-      "devDependencies": {
-        "tsx": "^4.19.2",
-        "typescript": "^5.7.3"
-      },
-      "packageManager": "yarn@4.6.0",
-      "engines": {
-        "node": ">=20"
-      }
-    }
-    ```
 
 ## Example: XMTP Group Creator Agent
 
@@ -913,7 +810,7 @@ When working with these classes:
 
 ## Other Notes
 
-### Handling local database
+### Handling local database paths
 
 ```jsx
 // Railway deployment support
@@ -924,25 +821,4 @@ const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
 if (!fs.existsSync(dbPath)) {
   fs.mkdirSync(dbPath, { recursive: true });
 }
-```
-
-### Web inbox
-
-Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
-
-### Work in local network
-
-`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
-
-- 1. Install docker
-- 2. Start the XMTP service and database
-
-```tsx
-./dev/up
-```
-
-- 3. Change the .env file to use the local network
-
-```tsx
-XMTP_ENV = local;
 ```
