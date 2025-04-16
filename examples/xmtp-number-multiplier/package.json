@@ -1,0 +1,26 @@
+{
+  "name": "@examples/xmtp-number-multiplier",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "clean": "cd ../../ && rm -rf examples/xmtp-number-multiplier/.data",
+    "dev": "tsx --watch src/index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-number-multiplier",
+    "start": "tsx src/index.ts",
+    "test-cli": "tsx ../../scripts/test-cli.ts"
+  },
+  "dependencies": {
+    "@xmtp/node-sdk": "2.0.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "yarn@4.6.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
