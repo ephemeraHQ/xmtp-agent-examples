@@ -5,9 +5,7 @@ alwaysApply: true
 ---
 # Working with XMTP agents in this monorepo
 
-This guide provides comprehensive instructions for developing, testing, and debugging XMTP agents using the test-manager tool and running agents successfully in the monorepo environment.
-
-## Environment setup
+This is the monorepo for XMTP agents. It contains many examples of agents on XMTP.
 
 ### Required tools
 
@@ -30,8 +28,7 @@ When creating new agent examples in this monorepo, follow these guidelines for c
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
-    "start": "tsx index.ts",
-    "test-manager": "tsx ../../scripts/test-manager.ts"
+    "start": "tsx index.ts"
   },
   "dependencies": {
     "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
@@ -78,171 +75,4 @@ yarn gen:keys
 
 # Start the agent with hot-reloading
 yarn dev
-
-# Or start without hot-reloading
-yarn start
 ```
-
-When successfully started, you should see output similar to:
-
-```
-    ██╗  ██╗███╗   ███╗████████╗██████╗
-    ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
-     ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
-     ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝
-    ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║
-    ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝
-
-╔══════════════════════════════════════════════════════════════════════════════════════════════╗
-║                                         Agent Details                                        ║
-╟──────────────────────────────────────────────────────────────────────────────────────────────╢
-║ 📍 Address: 0x41592a3a39ef582fa38c4062e8a3a23102f7f05f                                       ║
-║ 📍 inboxId: a0974e5184a37d293b9825bbc7138897ffe457768b9b6ae6fe1f70ead1455da7                 ║
-║ 📂 DB Path: ../your-agent-name/xmtp-dev-0x41592a3a39ef582fa38c4062e8a3a23102f7f05f.db3       ║
-║ 🛜  Network: dev                                                                              ║
-║ 🔗 URL: http://xmtp.chat/dm/0x41592a3a39ef582fa38c4062e8a3a23102f7f05f?env=dev               ║
-╚══════════════════════════════════════════════════════════════════════════════════════════════╝
-✓ Syncing conversations...
-Waiting for messages...
-```
-
-## Testing an agent
-
-### Important test-manager commands
-
-```bash
-# Start the agent with logging
-yarn dev
-
-# Send messages to the agent. IMPORTANT: use single quotes for messages
-yarn test-manager send dev <address> 'Your message'
-
-# Check agent status
-yarn test-manager status
-
-# View logs for a specific agent instance
-yarn test-manager logs
-```
-
-### Testing workflow
-
-1. **Start the agent and check for successful launch**
-
-```bash
-# Start the agent with test-manager
-cd examples/your-agent-name
-yarn dev
-```
-
-This will start multiple instances of your agent. Check the status to ensure they're running:
-
-```
-Found 2 agent instances:
-- agent-1: Running (PID 12345)
-- agent-2: Running (PID 12346)
-```
-
-2. **Send test messages**
-
-```bash
-# Make sure to use single quotes around messages
-yarn test-manager send dev <your-agent-address> 'Test message'
-```
-
-The agent address can be found in:
-
-- Your `.env` file (the public key corresponding to your WALLET_KEY)
-- The agent details display when running the agent directly
-- The logs from the test-manager
-
-3. **Check agent logs for responses**
-
-```bash
-# View logs for a specific instance
-yarn test-manager logs agent-1
-```
-
-4. **When done, stop all agent instances**
-
-```bash
-yarn test-manager stop
-```
-
-### Troubleshooting tips
-
-1. **Agents not starting or immediately stopping**
-
-   - Check the status: `yarn test-manager status`
-   - Clean up any zombie processes: `pkill -f tsx`
-   - Verify your .env file has correct values
-
-2. **Can't see agent responses**
-
-   - Run the agent directly with `yarn start` or `yarn dev` to see output in the console
-   - Check logs with `yarn test-manager logs agent-1`
-   - Ensure the agent is properly receiving messages
-
-3. **Test-manager command errors**
-   - Make sure you're in the agent's directory
-   - For logs command, specify the instance ID: `yarn test-manager logs agent-1`
-   - Ensure single quotes are used for messages
-
-## Complete testing example
-
-Here's a complete example for testing the GM agent:
-
-```bash
-# Terminal 1: Start multiple agent instances
-cd examples/xmtp-gm
-yarn dev
-
-# Terminal 2: Send messages and check status
-cd examples/xmtp-gm
-yarn test-manager status
-yarn test-manager send dev 0x4aDb8e00B5daC9EBda50c2b339290366DaE14EE0 'Testing message'
-yarn test-manager logs
-
-# Terminal 3: Stop instances when done
-cd examples/xmtp-gm
-yarn test-manager stop
-```
-
-## Known issues and advanced troubleshooting
-
-### Test-manager log collection issues
-
-If you're experiencing issues with logs not being collected or displayed when using `yarn test-manager logs agent-1`:
-
-1. **Direct agent execution**: For immediate troubleshooting, run the agent directly with `yarn start` or `yarn dev` to see live console output.
-
-2. **Check log directories**: Verify that the logs directory exists:
-
-   ```bash
-   yarn test-manager logs agent-1
-   ```
-
-3. **Agent starting but not logging**: If agents start but don't log output, try modifying a console.log statement in your agent's code to verify logging is working.
-
-4. **Alternative logging setup**: You can set up your own logging in your agent:
-
-   ```typescript
-   // Add to top of your agent's index.ts file
-   import { createWriteStream } from "fs";
-
-   const logStream = createWriteStream("./agent.log", { flags: "a" });
-
-   // Redirect console output to file
-   const originalConsoleLog = console.log;
-   console.log = function (...args) {
-     originalConsoleLog.apply(console, args);
-     logStream.write(args.join(" ") + "\n");
-   };
-   ```
-
-### Multiple agent instances with unique addresses
-
-When running multiple agent instances with test-manager, note that by default all instances will use the same wallet keys from your .env file. If you need each instance to have unique addresses:
-
-1. Create multiple .env files (e.g., .env.agent1, .env.agent2)
-2. Generate unique keys for each
-3. Modify your agent code to look for the AGENT_INSTANCE_ID environment variable and load the appropriate keys

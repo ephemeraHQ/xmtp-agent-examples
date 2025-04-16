@@ -1,8 +1,6 @@
 # Working with XMTP agents in this monorepo
 
-This guide provides comprehensive instructions for developing, testing, and debugging XMTP agents using the test-manager tool and running agents successfully in the monorepo environment.
-
-## Environment setup
+This is the monorepo for XMTP agents. It contains many examples of agents on XMTP.
 
 ### Required tools
 
@@ -25,8 +23,7 @@ When creating new agent examples in this monorepo, follow these guidelines for c
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
-    "start": "tsx index.ts",
-    "test-manager": "tsx ../../scripts/test-manager.ts"
+    "start": "tsx index.ts"
   },
   "dependencies": {
     "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
