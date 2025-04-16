@@ -3,9 +3,17 @@
  * XMTP Agent Manager Script
  * This TypeScript script handles running, logging, and managing XMTP agents
  */
-import { exec, spawn } from "child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { exec, execSync, spawn } from "child_process";
+import {
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "fs";
 import { join } from "path";
+import { fileURLToPath } from "url";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
 
@@ -18,7 +26,7 @@ const DEFAULT_ENCRYPTION_KEY =
 // Set working directory to the current directory
 const AGENT_DIR = process.cwd();
 // Get project root directory (2 levels up from scripts folder)
-const PROJECT_ROOT = join(__dirname, "..");
+const PROJECT_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const TMP_DIR = join(PROJECT_ROOT, ".tmp");
 const AGENT_NAME = AGENT_DIR.split("/").pop() || "default-agent";
 const TMP_AGENT_DIR = join(TMP_DIR, AGENT_NAME);
@@ -63,6 +71,22 @@ function showUsage(): void {
   );
 }
 
+// Show logs
+function showLogs(): boolean {
+  if (!existsSync(LOG_FILE)) {
+    console.log(`No log file found at ${LOG_FILE}`);
+    return false;
+  }
+
+  console.log(`Showing log file: ${LOG_FILE}`);
+  console.log("Press Ctrl+C to exit");
+
+  // Use execSync to display logs but not trap the process
+  execSync(`tail -n 20 "${LOG_FILE}"`, { stdio: "inherit" });
+
+  return true;
+}
+
 // Start agent function
 async function startAgent(): Promise<boolean> {
   // Check if agent is already running
@@ -72,7 +96,7 @@ async function startAgent(): Promise<boolean> {
       process.kill(pid, 0); // This will throw an error if the process doesn't exist
       console.log(`Agent is already running with PID ${pid}`);
       return false;
-    } catch (error) {
+    } catch {
       // PID file exists but process is not running
     }
   }
@@ -85,6 +109,7 @@ async function startAgent(): Promise<boolean> {
     cwd: AGENT_DIR,
     detached: true,
     stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env },
   });
 
   // Save PID
@@ -92,7 +117,7 @@ async function startAgent(): Promise<boolean> {
 
   // Verify it started
   if (agent.pid) {
-    const logStream = require("fs").createWriteStream(LOG_FILE, { flags: "a" });
+    const logStream = createWriteStream(LOG_FILE, { flags: "a" });
     agent.stdout.pipe(logStream);
     agent.stderr.pipe(logStream);
 
@@ -124,7 +149,7 @@ async function startAgent(): Promise<boolean> {
           initialized = true;
           break;
         }
-      } catch (error) {
+      } catch {
         // Continue waiting
       }
     }
@@ -161,10 +186,10 @@ async function stopAgent(): Promise<boolean> {
       await wait(1000);
       try {
         process.kill(pid, 0); // This will throw an error if the process doesn't exist
-      } catch (error) {
+      } catch {
         console.log("Agent stopped");
         // Remove PID file
-        require("fs").unlinkSync(PID_FILE);
+        unlinkSync(PID_FILE);
         return true;
       }
       console.log("Waiting for agent to terminate...");
@@ -175,19 +200,19 @@ async function stopAgent(): Promise<boolean> {
     process.kill(pid, "SIGKILL");
 
     // Remove PID file
-    require("fs").unlinkSync(PID_FILE);
+    unlinkSync(PID_FILE);
     console.log("Agent stopped");
     return true;
-  } catch (error) {
+  } catch {
     console.log(`No running agent found with PID ${pid}`);
     // Remove PID file
-    require("fs").unlinkSync(PID_FILE);
+    unlinkSync(PID_FILE);
     return false;
   }
 }
 
 // Check agent status
-async function checkStatus(): Promise<boolean> {
+function checkStatus(): boolean {
   if (!existsSync(PID_FILE)) {
     console.log("No PID file found, agent is not running");
     return false;
@@ -201,7 +226,6 @@ async function checkStatus(): Promise<boolean> {
     console.log(`Agent is running with PID ${pid}`);
 
     // Get log file size
-    const { execSync } = require("child_process");
     const logSize = execSync(`du -h "${LOG_FILE}" | cut -f1`, {
       encoding: "utf-8",
     }).trim();
@@ -227,11 +251,10 @@ async function checkStatus(): Promise<boolean> {
     });
 
     return true;
-  } catch (error) {
+  } catch {
     console.log(`PID file exists but agent is not running (PID ${pid})`);
 
     if (existsSync(LOG_FILE)) {
-      const { execSync } = require("child_process");
       const logSize = execSync(`du -h "${LOG_FILE}" | cut -f1`, {
         encoding: "utf-8",
       }).trim();
@@ -240,27 +263,6 @@ async function checkStatus(): Promise<boolean> {
 
     return false;
   }
-}
-
-// Show logs
-function showLogs(): boolean {
-  if (!existsSync(LOG_FILE)) {
-    console.log(`No log file found at ${LOG_FILE}`);
-    return false;
-  }
-
-  console.log(`Showing log file: ${LOG_FILE}`);
-  console.log("Press Ctrl+C to exit");
-
-  const tail = spawn("tail", ["-f", LOG_FILE], { stdio: "inherit" });
-
-  // Handle process exit
-  process.on("SIGINT", () => {
-    tail.kill();
-    process.exit();
-  });
-
-  return true;
 }
 
 // Send test message function
@@ -324,14 +326,17 @@ async function main(): Promise<void> {
   const command = process.argv[2] || "help";
 
   switch (command) {
-    case "start":
-      await startAgent();
+    case "start": {
+      const started = await startAgent();
+      // Exit immediately after starting the agent
+      process.exit(started ? 0 : 1);
       break;
+    }
     case "stop":
       await stopAgent();
       break;
     case "status":
-      await checkStatus();
+      checkStatus();
       break;
     case "logs":
       showLogs();

@@ -176,6 +176,9 @@ Waiting for messages...
 # Start the agent with logging
 yarn test-manager start
 
+# Send messages to the agent
+yarn test-manager send dev <address> 'Your message'
+
 # Check agent status
 yarn test-manager status
 
@@ -184,6 +187,9 @@ yarn test-manager logs
 
 # Stop the agent
 yarn test-manager stop
+
+
+
 ```
 
 These commands will handle absolute paths, proper logging, and process management automatically.
