@@ -181,6 +181,9 @@ Waiting for messages...
 # Start the agent with logging
 yarn test-manager start
 
+# Send messages to the agent. IMPORTANT: use single quotes for messages
+yarn test-manager send dev <address> 'Your message'
+
 # Check agent status
 yarn test-manager status
 
@@ -245,7 +248,7 @@ yarn test-manager stop
 
 Example `agent.log` content:
 
-```
+```bash
     ██╗  ██╗███╗   ███╗████████╗██████╗
     ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
      ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝

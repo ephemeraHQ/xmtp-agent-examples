@@ -1,9 +1,9 @@
 #!/usr/bin/env tsx
 /**
- * XMTP Agent Manager Script
- * This TypeScript script handles running, logging, and managing XMTP agents
+ * XMTP Parallel Agent Manager Script
+ * This TypeScript script handles running, logging, and managing multiple XMTP agents in parallel
  */
-import { exec, execSync, spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 import {
   createWriteStream,
   existsSync,
@@ -23,6 +23,13 @@ const DEFAULT_WALLET_KEY =
 const DEFAULT_ENCRYPTION_KEY =
   "11973168e34839f9d31749ad77204359c5c39c404e1154eacb7f35a867ee47de";
 
+// Type definitions for parallel agent records
+interface AgentRecord {
+  pid: number;
+  logFile: string;
+  startTime: string;
+}
+
 // Set working directory to the current directory
 const AGENT_DIR = process.cwd();
 // Get project root directory (2 levels up from scripts folder)
@@ -30,6 +37,8 @@ const PROJECT_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const TMP_DIR = join(PROJECT_ROOT, ".tmp");
 const AGENT_NAME = AGENT_DIR.split("/").pop() || "default-agent";
 const TMP_AGENT_DIR = join(TMP_DIR, AGENT_NAME);
+const PARALLEL_LOGS_DIR = join(TMP_AGENT_DIR, "parallel-logs");
+const PARALLEL_PIDS_FILE = join(TMP_AGENT_DIR, "agents.json");
 
 // Create tmp directories if they don't exist
 if (!existsSync(TMP_DIR)) {
@@ -38,9 +47,9 @@ if (!existsSync(TMP_DIR)) {
 if (!existsSync(TMP_AGENT_DIR)) {
   mkdirSync(TMP_AGENT_DIR, { recursive: true });
 }
-
-const LOG_FILE = join(TMP_AGENT_DIR, "agent.log");
-const PID_FILE = join(TMP_AGENT_DIR, "agent.pid");
+if (!existsSync(PARALLEL_LOGS_DIR)) {
+  mkdirSync(PARALLEL_LOGS_DIR, { recursive: true });
+}
 
 // Function to wait for specified milliseconds
 function wait(ms: number): Promise<void> {
@@ -49,218 +58,337 @@ function wait(ms: number): Promise<void> {
 
 // Show usage function
 function showUsage(): void {
-  console.log("XMTP Agent Manager");
+  console.log("XMTP Parallel Agent Manager");
   console.log("Usage:");
   console.log(
-    `  ${process.argv[1]} start                                        # Start the agent with logging`,
+    `  ${process.argv[1]} start <count>        # Start multiple agent instances (default: 2)`,
   );
   console.log(
-    `  ${process.argv[1]} stop                                         # Stop the running agent`,
+    `  ${process.argv[1]} stop                 # Stop all agent instances`,
   );
   console.log(
-    `  ${process.argv[1]} status                                       # Check agent status`,
+    `  ${process.argv[1]} status               # Check status of all agents`,
   );
   console.log(
-    `  ${process.argv[1]} logs                                         # Show agent logs`,
+    `  ${process.argv[1]} logs <instanceId>    # Show logs for a specific agent`,
   );
   console.log(
-    `  ${process.argv[1]} send <network> <target_address> "<message>"  # Send a test message to an agent`,
+    `  ${process.argv[1]} send <network> <target_address> "<message>"  # Send a test message`,
   );
   console.log(
-    `  ${process.argv[1]} help                                         # Show this help message`,
+    `  ${process.argv[1]} help                 # Show this help message`,
   );
 }
 
-// Show logs
-function showLogs(): boolean {
-  if (!existsSync(LOG_FILE)) {
-    console.log(`No log file found at ${LOG_FILE}`);
+// Show logs for a specific agent
+function showLogs(instanceId: string): boolean {
+  if (!existsSync(PARALLEL_PIDS_FILE)) {
+    console.log("No agents found");
     return false;
   }
 
-  console.log(`Showing log file: ${LOG_FILE}`);
-  console.log("Press Ctrl+C to exit");
+  try {
+    const agentRecords = JSON.parse(
+      readFileSync(PARALLEL_PIDS_FILE, "utf-8"),
+    ) as Record<string, AgentRecord>;
 
-  // Use execSync to display logs but not trap the process
-  execSync(`tail -n 20 "${LOG_FILE}"`, { stdio: "inherit" });
-
-  return true;
-}
-
-// Start agent function
-async function startAgent(): Promise<boolean> {
-  // Check if agent is already running
-  if (existsSync(PID_FILE)) {
-    try {
-      const pid = parseInt(readFileSync(PID_FILE, "utf-8").trim());
-      process.kill(pid, 0); // This will throw an error if the process doesn't exist
-      console.log(`Agent is already running with PID ${pid}`);
+    if (!Object.prototype.hasOwnProperty.call(agentRecords, instanceId)) {
+      console.log(`No agent found with ID: ${instanceId}`);
+      console.log(`Available agents: ${Object.keys(agentRecords).join(", ")}`);
       return false;
-    } catch {
-      // PID file exists but process is not running
-    }
-  }
-
-  console.log(`Starting agent in ${AGENT_DIR}`);
-  console.log(`Logs will be saved to ${LOG_FILE}`);
-
-  // Start the agent with output redirected to log file
-  const agent = spawn("yarn", ["dev"], {
-    cwd: AGENT_DIR,
-    detached: true,
-    stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env },
-  });
-
-  // Save PID
-  writeFileSync(PID_FILE, agent.pid?.toString() || "");
-
-  // Verify it started
-  if (agent.pid) {
-    const logStream = createWriteStream(LOG_FILE, { flags: "a" });
-    agent.stdout.pipe(logStream);
-    agent.stderr.pipe(logStream);
-
-    console.log(`Agent started successfully with PID ${agent.pid}`);
-    console.log("Waiting for agent initialization...");
-
-    // Unref child to make parent process exit independently
-    agent.unref();
-
-    // Wait for initialization or timeout after 15 seconds
-    let initialized = false;
-    for (let i = 0; i < 15; i++) {
-      await wait(1000);
-      try {
-        const logContent = readFileSync(LOG_FILE, "utf-8");
-        if (
-          logContent.includes("Waiting for messages") ||
-          logContent.includes("Agent Details")
-        ) {
-          console.log("Agent initialized successfully!");
-          console.log("Agent address and details:");
-          // Extract agent details from log
-          const detailsMatch = logContent.match(
-            /Agent Details([\s\S]*?)(?=\n\n|\n$|$)/,
-          );
-          if (detailsMatch && detailsMatch[1]) {
-            console.log(detailsMatch[1]);
-          }
-          initialized = true;
-          break;
-        }
-      } catch {
-        // Continue waiting
-      }
     }
 
-    if (!initialized) {
-      console.log(
-        "Agent started but initialization not confirmed. Check logs for details.",
-      );
+    const logFile = agentRecords[instanceId].logFile;
+    if (!existsSync(logFile)) {
+      console.log(`No log file found at ${logFile}`);
+      return false;
     }
+
+    console.log(`Showing log file for ${instanceId}: ${logFile}`);
+    console.log("Press Ctrl+C to exit");
+
+    // Use execSync to display logs but not trap the process
+    execSync(`tail -n 20 "${logFile}"`, { stdio: "inherit" });
 
     return true;
-  } else {
-    console.log("Failed to start agent. Check for errors.");
+  } catch (error) {
+    console.error("Error displaying logs:", error);
     return false;
   }
 }
 
-// Stop agent function
-async function stopAgent(): Promise<boolean> {
-  if (!existsSync(PID_FILE)) {
-    console.log("No PID file found, agent may not be running");
+// Start multiple agents in parallel
+async function startAgents(count: number): Promise<boolean> {
+  // Validate count
+  if (isNaN(count) || count < 1 || count > 10) {
+    console.error("Error: Invalid instance count. Must be between 1 and 10.");
     return false;
   }
 
-  const pid = parseInt(readFileSync(PID_FILE, "utf-8").trim());
+  console.log(`Starting ${count} agent instances in ${AGENT_DIR}`);
 
-  try {
-    process.kill(pid, 0); // Check if process exists
-    console.log(`Stopping agent with PID ${pid}`);
-    process.kill(pid);
+  // Load existing agents if any
+  let existingAgents: Record<string, AgentRecord> = {};
+  if (existsSync(PARALLEL_PIDS_FILE)) {
+    try {
+      const parsedAgents = JSON.parse(
+        readFileSync(PARALLEL_PIDS_FILE, "utf-8"),
+      ) as Record<string, AgentRecord>;
+      existingAgents = parsedAgents;
 
-    // Wait for process to terminate
-    for (let i = 0; i < 5; i++) {
-      await wait(1000);
-      try {
-        process.kill(pid, 0); // This will throw an error if the process doesn't exist
-      } catch {
-        console.log("Agent stopped");
-        // Remove PID file
-        unlinkSync(PID_FILE);
-        return true;
-      }
-      console.log("Waiting for agent to terminate...");
-    }
-
-    // Force termination
-    console.log("Agent did not terminate gracefully, forcing termination");
-    process.kill(pid, "SIGKILL");
-
-    // Remove PID file
-    unlinkSync(PID_FILE);
-    console.log("Agent stopped");
-    return true;
-  } catch {
-    console.log(`No running agent found with PID ${pid}`);
-    // Remove PID file
-    unlinkSync(PID_FILE);
-    return false;
-  }
-}
-
-// Check agent status
-function checkStatus(): boolean {
-  if (!existsSync(PID_FILE)) {
-    console.log("No PID file found, agent is not running");
-    return false;
-  }
-
-  const pid = parseInt(readFileSync(PID_FILE, "utf-8").trim());
-
-  try {
-    process.kill(pid, 0); // Check if process exists
-
-    console.log(`Agent is running with PID ${pid}`);
-
-    // Get log file size
-    const logSize = execSync(`du -h "${LOG_FILE}" | cut -f1`, {
-      encoding: "utf-8",
-    }).trim();
-    console.log(`Log file: ${LOG_FILE} (${logSize} used)`);
-
-    // Show process details
-    console.log("Process details:");
-    exec(
-      `ps -p ${pid} -o pid,ppid,user,%cpu,%mem,vsz,rss,tty,stat,start,time,command`,
-      (error, stdout) => {
-        if (!error) {
-          console.log(stdout);
+      // Check if any agents are already running
+      let runningCount = 0;
+      for (const [id, record] of Object.entries(existingAgents)) {
+        try {
+          process.kill(record.pid, 0); // Check if process exists
+          runningCount++;
+        } catch {
+          // Process not running
+          // Use Reflect.deleteProperty instead of delete
+          Reflect.deleteProperty(existingAgents, id);
         }
-      },
+      }
+
+      if (runningCount > 0) {
+        console.log(`${runningCount} agents are already running`);
+      }
+    } catch (error) {
+      console.log("No valid existing agents found", error);
+      existingAgents = {};
+    }
+  }
+
+  // Create a record to store all agent PIDs and details
+  const agentRecords = { ...existingAgents };
+  const existingCount = Object.keys(agentRecords).length;
+  const newCount = count - existingCount;
+
+  if (newCount <= 0) {
+    console.log(
+      `Already running ${existingCount} agents, which is >= ${count}`,
     );
+    return true;
+  }
 
-    // Show recent log entries
-    console.log("Recent log entries:");
-    exec(`tail -5 "${LOG_FILE}"`, (error, stdout) => {
-      if (!error) {
-        console.log(stdout);
+  console.log(`Starting ${newCount} new agent instances...`);
+
+  // Start new agents in parallel
+  const startPromises = Array.from({ length: newCount }, (_, index) => {
+    const instanceNumber = existingCount + index + 1;
+    const instanceId = `agent-${instanceNumber}`;
+    const logFile = join(PARALLEL_LOGS_DIR, `${instanceId}.log`);
+
+    console.log(`Starting ${instanceId}...`);
+    console.log(`Logs will be saved to ${logFile}`);
+
+    // Add a unique environment for each instance
+    const uniqueEnv = {
+      ...process.env,
+      // Generate unique keys for each instance to avoid conflicts
+      WALLET_KEY: undefined, // Force to use generated keys
+      ENCRYPTION_KEY: undefined,
+      AGENT_INSTANCE_ID: instanceId,
+    };
+
+    // Start the agent process
+    const agent = spawn("yarn", ["dev"], {
+      cwd: AGENT_DIR,
+      detached: true,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: uniqueEnv,
+    });
+
+    if (!agent.pid) {
+      console.error(`Failed to start ${instanceId}`);
+      return false;
+    }
+
+    // Setup logging
+    const logStream = createWriteStream(logFile, { flags: "a" });
+
+    // Write header to log file
+    const logHeader = `\n========== ${instanceId} started at ${new Date().toISOString()} ==========\n`;
+    logStream.write(logHeader);
+
+    // Force output encoding to utf8 before piping
+    agent.stdout.setEncoding("utf8");
+    agent.stdout.pipe(logStream);
+
+    // Also log to console for debugging
+    agent.stdout.on("data", (data: Buffer | string) => {
+      const message =
+        typeof data === "string" ? data.trim() : data.toString("utf8").trim();
+      if (message) {
+        console.log(`[${instanceId}] ${message}`);
       }
     });
 
-    return true;
-  } catch {
-    console.log(`PID file exists but agent is not running (PID ${pid})`);
+    agent.stderr.setEncoding("utf8");
+    agent.stderr.pipe(logStream);
 
-    if (existsSync(LOG_FILE)) {
-      const logSize = execSync(`du -h "${LOG_FILE}" | cut -f1`, {
-        encoding: "utf-8",
-      }).trim();
-      console.log(`Log file: ${LOG_FILE} (${logSize} used)`);
+    // Also log to console for debugging
+    agent.stderr.on("data", (data: Buffer | string) => {
+      const message =
+        typeof data === "string" ? data.trim() : data.toString("utf8").trim();
+      if (message) {
+        console.error(`[${instanceId}] ERROR: ${message}`);
+      }
+    });
+
+    // Handle process exit
+    agent.on("exit", (code) => {
+      const exitMessage = `\n========== ${instanceId} exited with code ${code} at ${new Date().toISOString()} ==========\n`;
+      logStream.write(exitMessage);
+      logStream.end();
+      console.log(`[${instanceId}] Process exited with code ${code}`);
+    });
+
+    // Unref to let parent process exit independently
+    agent.unref();
+
+    // Add to the agents record
+    agentRecords[instanceId] = {
+      pid: agent.pid,
+      logFile,
+      startTime: new Date().toISOString(),
+    };
+
+    console.log(`${instanceId} started with PID ${agent.pid}`);
+    return true;
+  });
+
+  // Wait for all agents to start
+  const results = await Promise.all(startPromises);
+  const allSucceeded = results.every(Boolean);
+
+  // Save the agent records
+  writeFileSync(PARALLEL_PIDS_FILE, JSON.stringify(agentRecords, null, 2));
+
+  if (allSucceeded) {
+    console.log(`Successfully started ${newCount} new agent instances`);
+    console.log(`Total running agents: ${Object.keys(agentRecords).length}`);
+    console.log(`Agent details saved to ${PARALLEL_PIDS_FILE}`);
+  } else {
+    console.error("Failed to start some agent instances");
+  }
+
+  return allSucceeded;
+}
+
+// Stop all agents
+async function stopAgents(): Promise<boolean> {
+  if (!existsSync(PARALLEL_PIDS_FILE)) {
+    console.log("No agents found");
+    return false;
+  }
+
+  try {
+    const agentRecords = JSON.parse(
+      readFileSync(PARALLEL_PIDS_FILE, "utf-8"),
+    ) as Record<string, AgentRecord>;
+    const instanceIds = Object.keys(agentRecords);
+
+    if (instanceIds.length === 0) {
+      console.log("No agents found in records");
+      return false;
     }
 
+    console.log(`Stopping ${instanceIds.length} agent instances...`);
+
+    let successCount = 0;
+    for (const instanceId of instanceIds) {
+      const record = agentRecords[instanceId];
+
+      try {
+        // Ensure we have a valid pid
+        if (typeof record.pid !== "number") {
+          console.log(`Invalid PID for ${instanceId}`);
+          continue;
+        }
+
+        process.kill(record.pid, 0); // Check if process exists
+        console.log(`Stopping ${instanceId} with PID ${record.pid}`);
+        process.kill(record.pid);
+
+        // Wait briefly for process to terminate
+        await wait(500);
+        successCount++;
+      } catch {
+        console.log(`Process for ${instanceId} (PID ${record.pid}) not found`);
+      }
+    }
+
+    // Remove the agents file
+    unlinkSync(PARALLEL_PIDS_FILE);
+    console.log(
+      `Stopped ${successCount} of ${instanceIds.length} agent instances`,
+    );
+
+    return successCount > 0;
+  } catch (error) {
+    console.error("Error stopping agents:", error);
+    return false;
+  }
+}
+
+// Check status of all agents
+function checkStatus(): boolean {
+  if (!existsSync(PARALLEL_PIDS_FILE)) {
+    console.log("No agents found");
+    return false;
+  }
+
+  try {
+    const agentRecords = JSON.parse(
+      readFileSync(PARALLEL_PIDS_FILE, "utf-8"),
+    ) as Record<string, AgentRecord>;
+    const instanceIds = Object.keys(agentRecords);
+
+    if (instanceIds.length === 0) {
+      console.log("No agents found in records");
+      return false;
+    }
+
+    console.log(`Found ${instanceIds.length} agent instances:`);
+
+    let runningCount = 0;
+    for (const instanceId of instanceIds) {
+      const record = agentRecords[instanceId];
+
+      try {
+        process.kill(record.pid, 0); // Check if process exists
+        console.log(
+          `- ${instanceId}: Running with PID ${record.pid}, started at ${record.startTime}`,
+        );
+
+        // Get log file size
+        const logSize = execSync(`du -h "${record.logFile}" | cut -f1`, {
+          encoding: "utf-8",
+        }).trim();
+        console.log(`  Log: ${record.logFile} (${logSize} used)`);
+
+        // Show recent log entries
+        console.log(`  Recent log entries:`);
+        const logs = execSync(`tail -3 "${record.logFile}"`, {
+          encoding: "utf-8",
+        }).trim();
+        logs.split("\n").forEach((line) => {
+          console.log(`    ${line}`);
+        });
+
+        runningCount++;
+      } catch {
+        console.log(`- ${instanceId}: Not running (PID ${record.pid})`);
+      }
+      console.log();
+    }
+
+    console.log(
+      `${runningCount} of ${instanceIds.length} agents are currently running`,
+    );
+    return runningCount > 0;
+  } catch (error) {
+    console.error("Error checking agents status:", error);
     return false;
   }
 }
@@ -327,20 +455,27 @@ async function main(): Promise<void> {
 
   switch (command) {
     case "start": {
-      const started = await startAgent();
-      // Exit immediately after starting the agent
+      const count = parseInt(process.argv[3] || "2");
+      const started = await startAgents(count);
       process.exit(started ? 0 : 1);
       break;
     }
     case "stop":
-      await stopAgent();
+      await stopAgents();
       break;
     case "status":
       checkStatus();
       break;
-    case "logs":
-      showLogs();
+    case "logs": {
+      const instanceId = process.argv[3];
+      if (!instanceId) {
+        console.error("Error: Instance ID required");
+        console.error(`Usage: ${process.argv[1]} logs <instanceId>`);
+        process.exit(1);
+      }
+      showLogs(instanceId);
       break;
+    }
     case "send":
       await sendTestMessage(process.argv);
       break;
