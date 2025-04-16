@@ -810,7 +810,7 @@ When working with these classes:
 
 ## Other Notes
 
-### Handling local database
+### Handling local database paths
 
 ```jsx
 // Railway deployment support
@@ -821,25 +821,4 @@ const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
 if (!fs.existsSync(dbPath)) {
   fs.mkdirSync(dbPath, { recursive: true });
 }
-```
-
-### Web inbox
-
-Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
-
-### Work in local network
-
-`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
-
-- 1. Install docker
-- 2. Start the XMTP service and database
-
-```tsx
-./dev/up
-```
-
-- 3. Change the .env file to use the local network
-
-```tsx
-XMTP_ENV = local;
 ```

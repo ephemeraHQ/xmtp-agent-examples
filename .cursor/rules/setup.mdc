@@ -1,6 +1,0 @@
----
-description: Creating a new agent example
-globs: 
-alwaysApply: false
----
-[setup.md](mdc:.cursor/rules/setup.md)
