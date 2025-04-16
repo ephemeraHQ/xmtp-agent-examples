@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "build:examples": "yarn workspaces foreach --all --include \"examples/*\" run build",
-    "clean": "rimraf node_modules && yarn clean:dbs",
+    "clean": "scripts/clean.sh",
     "clean:dbs": "rimraf *.db3* ||:",
     "dev": "cd examples/xmtp-gm && tsx --env-file ../../.env --watch index.ts",
     "format": "prettier -w .",
