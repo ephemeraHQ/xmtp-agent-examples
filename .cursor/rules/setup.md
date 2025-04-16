@@ -4,7 +4,9 @@ This rule provides guidance on testing and debugging XMTP agents using the test-
 
 ## Setting up packages and scripts in examples from this monorepo
 
-Use proper package naming convention:
+1. These guidelines are specifically for configuring package.json files in this monorepo's examples.
+2. Do not create separate tsconfig.json files as the root configuration will be used.
+3. Use proper package naming convention:
 
 ```json
 {
@@ -12,7 +14,7 @@ Use proper package naming convention:
 }
 ```
 
-Always include these standard fields:
+4. Always include these standard fields:
 
 ```json
 {
@@ -22,7 +24,7 @@ Always include these standard fields:
 }
 ```
 
-Standard scripts configuration:
+5. Standard scripts configuration:
 
 ```json
 {
@@ -40,7 +42,7 @@ Standard scripts configuration:
 
 > **Important**: Always use `yarn dev` during development as it enables hot-reloading. The `yarn start` script is primarily intended for production use cases.
 
-Dependencies:
+6. Dependencies:
 
 - Use exact version of @xmtp/node-sdk (not ^)
 
@@ -53,7 +55,7 @@ Dependencies:
 }
 ```
 
-DevDependencies:
+7. DevDependencies:
 
 - Use tsx instead of ts-node
 - Include specific versions
@@ -67,7 +69,7 @@ DevDependencies:
 }
 ```
 
-Package manager and engine specifications:
+8. Package manager and engine specifications:
 
 ```json
 {
@@ -77,7 +79,7 @@ Package manager and engine specifications:
 }
 ```
 
-Here's how the correct package.json should look for a simple agent:
+9. Here's how the correct package.json should look for a simple agent:
 
 ```json
 {
@@ -123,8 +125,6 @@ When developing XMTP agents, it's essential to test them properly. This guide sh
 
    - `package.json`
    - `index.ts` (main agent code)
-   - `.env.example`
-   - `README.md`
 
 3. Generate keys for your agent:
 

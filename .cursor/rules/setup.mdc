@@ -1,6 +1,6 @@
 ---
-description: 
+description: Testing and debugging
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 [setup.md](mdc:.cursor/rules/setup.md)
