@@ -1,5 +1,5 @@
 // CLI script to send a message to a target XMTP address
-// Usage: yarn script cli-send <target_address> <message>
+// Usage: yarn script test-cli <network> <target_address> <message>
 
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
@@ -17,14 +17,18 @@ async function main(): Promise<void> {
   }
   await wait(2000);
   // Get command line arguments
-  const targetAddress = process.argv[2];
-  const message = process.argv[3];
+  const network = process.argv[2];
+  const targetAddress = process.argv[3];
+  const message = process.argv[4];
 
-  if (!targetAddress || !message) {
-    console.error("Usage: yarn script cli-send <target_address> <message>");
+  if (!network || !targetAddress || !message) {
+    console.error(
+      "Usage: yarn script test-cli <network> <target_address> <message>",
+    );
     process.exit(1);
   }
 
+  console.log(`Network: ${network}`);
   console.log(`Sending message to ${targetAddress}: "${message}"`);
 
   try {
@@ -39,7 +43,7 @@ async function main(): Promise<void> {
     // Create XMTP client
     const client = await Client.create(signer, {
       dbEncryptionKey: encryptionKey,
-      env: (process.env.XMTP_ENV || "dev") as XmtpEnv,
+      env: network as XmtpEnv,
     });
 
     const identifier = await signer.getIdentifier();

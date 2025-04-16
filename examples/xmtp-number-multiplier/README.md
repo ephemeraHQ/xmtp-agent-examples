@@ -1,63 +1,53 @@
-# XMTP Number Multiplier Agent
+# Number multiplier XMTP agent
 
-This is a simple XMTP agent that:
+A simple XMTP agent that:
 
-1. Listens for incoming messages containing numbers
-2. Multiplies each number by 2
-3. Creates a new group with the sender and a specified address
-4. Sends the result to the new group
+1. Listens for incoming numeric messages
+2. Multiplies the number by 2
+3. Creates a new group with the sender and a predefined address
+4. Sends the result and member information to the group
 
 ## Setup
 
-### Clone the repository
-
-```bash
-git clone https://github.com/xmtp/xmtp-agent-examples.git
-cd xmtp-agent-examples
-```
-
-### Install dependencies
-
-```bash
-yarn install
-```
-
-### Generate keys
+1. Clone the repository and navigate to this example:
 
 ```bash
 cd examples/xmtp-number-multiplier
+```
+
+2. Generate keys for the agent:
+
+```bash
 yarn gen:keys
 ```
 
-This will generate a `.env` file with:
-
-- A wallet private key
-- An encryption key
-- The public key associated with your agent
-
-## Running the agent
+3. Run the agent:
 
 ```bash
-# Start the agent
 yarn dev
 ```
 
-## Testing the agent
+## Testing
 
-Send a message to your agent with a number:
+Use the test-cli tool to interact with your agent:
 
 ```bash
-# From the project root directory
-yarn test-cli YOUR_AGENT_PUBLIC_KEY "42"
+yarn test-cli
 ```
 
-Replace `YOUR_AGENT_PUBLIC_KEY` with the public key that was generated in your `.env` file.
+The test CLI will prompt you to:
 
-The agent will:
+1. Enter the agent's address (displayed in the console when running the agent)
+2. Send a message to the agent
 
-1. Receive your message
-2. Parse the number (42)
-3. Multiply it by 2 (84)
-4. Create a new group with you and `0x93E2fc3e99dFb1238eB9e0eF2580EFC5809C7204`
-5. Send the result in that group
-6. Send a confirmation message back to you directly
+## Expected behavior
+
+1. When you send a numeric message (e.g., "42"), the agent will:
+
+   - Parse the number from your message
+   - Multiply it by 2
+   - Create a new group with you and the address 0x93E2fc3e99dFb1238eB9e0eF2580EFC5809C7204
+   - Send the calculation result to the group
+   - Send member details (inbox ID, address, installation ID) to the group
+
+2. If you send a non-numeric message, the agent will ignore it.
