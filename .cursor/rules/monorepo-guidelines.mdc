@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+[monorepo-guidelines.md](mdc:.cursor/rules/monorepo-guidelines.md)
