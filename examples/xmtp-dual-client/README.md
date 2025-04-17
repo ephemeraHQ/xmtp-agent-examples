@@ -47,33 +47,14 @@ yarn gen:keys
 yarn dev
 ```
 
-### Explanation
+## Concepts
 
-1. **Epochs in XMTP**:
+1. **Epochs in XMTP**: Represent group membership versions. Advance only with structural changes, not regular messaging.
 
-   - Epochs represent versions of a group's membership and structure
-   - Epochs only advance when structural changes occur (adding/removing members, changing permissions)
-   - Regular message sending does not create new epochs
-   - You can send hundreds of messages in the same epoch if no membership changes occur
+2. **Sync requirements**: No need to sync before every message. XMTP decrypts messages from up to 3 epochs back.
 
-2. **Sync Requirements**:
+3. **Failure conditions**: Messages fail only when more than 3 epochs behind due to unsynced membership changes.
 
-   - You don't need to run sync() before every message send
-   - Messages will be sent directly without requiring sync first
-   - XMTP allows decryption of messages from up to 3 epochs in the past
+4. **Optimal approach**: Use periodic conversations.sync(), implement retry logic, and combine with message streams.
 
-3. **Failure Conditions**:
-
-   - Message sends will only fail if your installation is more than 3 epochs behind
-   - This happens if there have been multiple membership/permission changes you haven't synced
-
-4. **Optimal Approach**:
-
-   - Periodic conversations.sync() is sufficient (rather than syncAll() every time)
-   - Implement retry logic for sends that fail due to epoch mismatches
-   - Use message streams for real-time updates with periodic sync as a safety net
-
-5. **Efficient Implementation**:
-   - Only sync when necessary rather than before every operation
-   - Let retry mechanisms handle the occasional epoch-related failure
-   - This balances reliability with performance
+5. **Efficient implementation**: Sync only when necessary, use retry mechanisms for occasional failures.
