@@ -68,7 +68,7 @@ async function main() {
       /* Get the AI response */
       const completion = await openai.chat.completions.create({
         messages: [{ role: "user", content: message.content as string }],
-        model: "gpt-3.5-turbo",
+        model: "gpt-4.1-mini",
       });
 
       /* Get the AI response */
