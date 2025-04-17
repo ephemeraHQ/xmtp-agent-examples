@@ -27,7 +27,8 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     ```typescript
     const signer = createSigner(WALLET_KEY);
     const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
-    const client = await Client.create(signer, encryptionKey, {
+    const client = await Client.create(signer, {
+      dbEncryptionKey: encryptionKey,
       env: XMTP_ENV as XmtpEnv,
     });
     ```
@@ -776,7 +777,6 @@ When working with these classes:
 
 1. **Client**
 
-   - Created with `Client.create(signer, encryptionKey, options)`
    - Gateway to all XMTP functionality
    - Contains the conversations, contacts, and content types registries
 
