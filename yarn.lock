@@ -924,7 +924,7 @@ __metadata:
   resolution: "@examples/xmtp-gaia@workspace:examples/xmtp-gaia"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
-    openai: "npm:latest"
+    openai: "npm:4.94.0"
     tsx: "npm:*"
     typescript: "npm:*"
   languageName: unknown
@@ -945,7 +945,7 @@ __metadata:
   resolution: "@examples/xmtp-gpt@workspace:examples/xmtp-gpt"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
-    openai: "npm:latest"
+    openai: "npm:4.94.0"
     tsx: "npm:*"
     typescript: "npm:*"
   languageName: unknown
@@ -4367,7 +4367,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.77.0, openai@npm:latest":
+"openai@npm:4.94.0, openai@npm:^4.77.0":
   version: 4.94.0
   resolution: "openai@npm:4.94.0"
   dependencies:

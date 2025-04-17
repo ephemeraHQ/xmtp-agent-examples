@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@xmtp/node-sdk": "*",
-    "openai": "latest"
+    "openai": "4.94.0"
   },
   "devDependencies": {
     "tsx": "*",
