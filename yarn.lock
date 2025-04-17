@@ -919,9 +919,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-device-sync@workspace:examples/xmtp-device-sync":
+"@examples/xmtp-dual-client@workspace:examples/xmtp-dual-client":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-device-sync@workspace:examples/xmtp-device-sync"
+  resolution: "@examples/xmtp-dual-client@workspace:examples/xmtp-dual-client"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
