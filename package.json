@@ -19,6 +19,9 @@
     "start": "cd examples/xmtp-gm && tsx index.ts",
     "typecheck": "tsc"
   },
+  "resolutions": {
+    "@xmtp/node-sdk": "2.0.2"
+  },
   "dependencies": {
     "@xmtp/node-sdk": "^2.0.2",
     "uint8arrays": "^5.1.0",

@@ -1,6 +1,6 @@
 {
   "name": "@examples/xmtp-coinbase-agentkit",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,7 +16,7 @@
     "@langchain/core": "^0.3.19",
     "@langchain/langgraph": "^0.2.21",
     "@langchain/openai": "^0.3.14",
-    "@xmtp/node-sdk": "^2.0.2"
+    "@xmtp/node-sdk": "*"
   },
   "devDependencies": {
     "tsx": "*",
