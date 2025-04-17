@@ -812,6 +812,8 @@ When working with these classes:
 
 ### Handling local database paths
 
+If no `dbPath` is provided, the client will use the current working directory. You can also specify a custom path for the database.
+
 ```jsx
 // Railway deployment support
 let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
@@ -821,4 +823,12 @@ const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
 if (!fs.existsSync(dbPath)) {
   fs.mkdirSync(dbPath, { recursive: true });
 }
+
+// Create a client with db path
+const client = await Client.create(signer, {
+  dbEncryptionKey,
+  env: XMTP_ENV as XmtpEnv,
+  // Use a unique DB directory
+  dbPath,
+});
 ```

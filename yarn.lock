@@ -919,6 +919,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-device-sync@workspace:examples/xmtp-device-sync":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-device-sync@workspace:examples/xmtp-device-sync"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-gaia@workspace:examples/xmtp-gaia":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gaia@workspace:examples/xmtp-gaia"

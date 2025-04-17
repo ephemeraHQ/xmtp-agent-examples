@@ -7,7 +7,7 @@ https://github.com/user-attachments/assets/efb8006d-9758-483d-ad1b-9287ea4d426d
 ## Getting started
 
 > [!NOTE]
-> See our [Cursor Rules](/.cursor/README.md) for XMTP Agent development standards and best practices.
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
 ### Requirements
 
