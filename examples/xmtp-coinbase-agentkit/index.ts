@@ -138,7 +138,7 @@ async function initializeAgent(
 ): Promise<{ agent: Agent; config: AgentConfig }> {
   try {
     const llm = new ChatOpenAI({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini",
     });
 
     const storedWalletData = getWalletData(userId);
