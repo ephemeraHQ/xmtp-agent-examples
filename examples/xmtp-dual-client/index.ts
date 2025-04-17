@@ -41,7 +41,7 @@ async function main() {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     // Use a unique DB directory for the receiver client
-    dbPath: "xmtp-receiver",
+    dbPath: "xmtp-receiver.db3",
   });
   logAgentDetails(receiverClient);
 
@@ -51,7 +51,7 @@ async function main() {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     // Use a unique DB directory for the sender client
-    dbPath: "xmtp-sender",
+    dbPath: "xmtp-sender.db3",
   });
 
   console.log(
