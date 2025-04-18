@@ -124,7 +124,6 @@ main().catch(console.error);
 This examples are outside of this monorepo and showcase how to use and deploy XMTP in different environments.
 
 - [gm-bot](https://github.com/xmtp/gm-bot): Simple standalone agent that replies to all messages with "gm"
-- [xmtp-nextjs-client](https://github.com/xmtp/xmtp-nextjs-client/): Node-sdk in a Next.js app
 - [xmtp-mini-app](https://github.com/ephemeraHQ/xmtp-mini-app): A simple mini app that interacts with a group
 - [xmtp-group-toss](https://github.com/ephemeraHQ/xmtp-group-toss/): Agent that uses a group to toss a coin
 
