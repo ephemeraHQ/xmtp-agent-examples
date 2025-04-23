@@ -47,3 +47,41 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
+
+## Usage
+
+Cancelling a stream will restart it.
+
+```tsx
+const streamPromise = client.conversations.streamAllMessages();
+const stream = await streamPromise;
+
+stream.onError = (error) => {
+  console.error("Stream error:", error);
+};
+stream.onReturn = () => {
+  console.log("Stream returned");
+};
+console.log("Waiting for messages...");
+const result = await stream.return(undefined);
+console.log("Stream returned", result);
+```
+
+Wrap the stream in a promise and return it to restart the stream.
+
+```tsx
+while (true) {
+  try {
+    console.log("Starting message stream...");
+    const streamPromise = client.conversations.streamAllMessages();
+    const stream = await streamPromise;
+
+    console.log("Waiting for messages...");
+    for await (const message of stream) {
+      // handle message
+    }
+  } catch (error) {
+    console.error("Stream error:", error);
+  }
+}
+```
