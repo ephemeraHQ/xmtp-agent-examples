@@ -15,7 +15,7 @@ const networks = [
     networkId: "base-sepolia",
   },
   {
-    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    tokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     chainId: toHex(8453), // Base Mainnet network ID (8453 in hex)
     decimals: 6,
     networkName: "Base Mainnet",
