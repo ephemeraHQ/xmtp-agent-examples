@@ -8,14 +8,14 @@ const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);
 // Configuration constants
 const networks = [
   {
-    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on Base Sepolia
     chainId: toHex(84532), // Base Sepolia network ID (84532 in hex)
     decimals: 6,
     networkName: "Base Sepolia",
     networkId: "base-sepolia",
   },
   {
-    tokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    tokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base Mainnet
     chainId: toHex(8453), // Base Mainnet network ID (8453 in hex)
     decimals: 6,
     networkName: "Base Mainnet",
