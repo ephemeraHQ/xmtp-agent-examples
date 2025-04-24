@@ -3,11 +3,13 @@ import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
+  validateEnvironment([
+    "WALLET_KEY",
+    "ENCRYPTION_KEY",
+    "XMTP_ENV",
+    "LOGGING_LEVEL",
+  ]);
 
 // Message queue interface
 interface QueuedMessage {
@@ -35,7 +37,7 @@ async function main(): Promise<void> {
   const signer = createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
   // Railway deployment support
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? "./.data";
   const identifier = await signer.getIdentifier();
   const dbPath = `${volumePath}/${identifier.identifier}-${XMTP_ENV}`;
 
@@ -48,8 +50,8 @@ async function main(): Promise<void> {
   const receiverClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    loggingLevel: "debug" as LogLevel,
-    dbPath,
+    loggingLevel: LOGGING_LEVEL as LogLevel,
+    dbPath: `${dbPath}/xmtp-receiver-${XMTP_ENV}.db3`,
   });
   logAgentDetails(receiverClient);
   console.log("Installation A (receiver) client created");
@@ -58,8 +60,8 @@ async function main(): Promise<void> {
   const senderClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    loggingLevel: "debug" as LogLevel,
-    dbPath: `xmtp-installation-b-${XMTP_ENV}.db3`,
+    loggingLevel: LOGGING_LEVEL as LogLevel,
+    dbPath: `${dbPath}/xmtp-sender-${XMTP_ENV}.db3`,
   });
   console.log("Installation B (sender) client created");
 
@@ -216,7 +218,7 @@ function startSenderInstallation(client: Client): void {
   // Process message queue every 5 seconds
   setInterval(() => {
     void processMessageQueue(client);
-  }, 5000);
+  }, 1000);
 }
 
 async function syncConversations(
@@ -252,7 +254,7 @@ async function processMessageQueue(client: Client): Promise<void> {
     console.log(
       `Installation B sending message for conversation ${message.conversationId}`,
     );
-
+    await client.conversations.sync();
     // Get conversation
     const conversation = await client.conversations.getConversationById(
       message.conversationId,
@@ -260,7 +262,7 @@ async function processMessageQueue(client: Client): Promise<void> {
 
     if (!conversation) {
       console.log("Conversation not found, discarding message");
-      return;
+      throw new Error("Conversation not found");
     }
 
     // Send message with actual content from queue
