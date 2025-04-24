@@ -1,3 +1,4 @@
+import fs from "fs";
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
@@ -33,13 +34,22 @@ async function main(): Promise<void> {
   // Create wallet signer and encryption key
   const signer = createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  // Railway deployment support
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  const identifier = await signer.getIdentifier();
+  const dbPath = `${volumePath}/${identifier.identifier}-${XMTP_ENV}`;
 
+  // Create database directory if it doesn't exist
+  if (!fs.existsSync(dbPath)) {
+    fs.mkdirSync(dbPath, { recursive: true });
+  }
+  // Set the database path for both installations
   // Create installation A (receiver) client
   const receiverClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     loggingLevel: "debug" as LogLevel,
-    dbPath: `xmtp-installation-a-${XMTP_ENV}.db3`,
+    dbPath,
   });
   logAgentDetails(receiverClient);
   console.log("Installation A (receiver) client created");
