@@ -7,6 +7,7 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "ENCRYPTION_KEY",
   "XMTP_ENV",
 ]);
+
 // Message queue interface
 interface QueuedMessage {
   conversationId: string;
@@ -18,11 +19,11 @@ interface QueuedMessage {
 // Message queue
 const messageQueue: QueuedMessage[] = [];
 
-// Sync interval in milliseconds
-const SYNC_INTERVAL = 500; // 0.5 seconds
+// Sync interval in milliseconds (60 seconds)
+const SYNC_INTERVAL = 60000;
 
 async function main(): Promise<void> {
-  console.log("Starting XMTP Agent...");
+  console.log("Starting XMTP Dual Installation Agent...");
 
   if (!WALLET_KEY || !ENCRYPTION_KEY || !XMTP_ENV) {
     console.error("Missing required environment variables");
@@ -33,104 +34,190 @@ async function main(): Promise<void> {
   const signer = createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-  // Create receiver client (handles syncing and message streaming)
+  // Create installation A (receiver) client
   const receiverClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    dbPath: `xmtp-receiver-${XMTP_ENV}.db3`,
+    dbPath: `xmtp-installation-a-${XMTP_ENV}.db3`,
   });
   logAgentDetails(receiverClient);
+  console.log("Installation A (receiver) client created");
 
-  // Create sender client (only for sending messages)
+  // Create installation B (sender) client
   const senderClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    dbPath: `xmtp-sender-${XMTP_ENV}.db3`,
+    dbPath: `xmtp-installation-b-${XMTP_ENV}.db3`,
   });
+  console.log("Installation B (sender) client created");
 
-  // Initial sync for both clients
-  console.log("Performing initial sync...");
+  // Initial sync for both installations
+  console.log("Performing initial sync for both installations...");
   await receiverClient.conversations.sync();
   await senderClient.conversations.sync();
 
-  // Start receiver - syncs and listens for new messages
-  void startReceiver(receiverClient);
+  // Start installation A (receiver) - handles message streams and periodic processing
+  void startReceiverInstallation(receiverClient);
 
-  // Start sender - only sends queued messages (no sync, no stream)
-  startSender(senderClient);
+  // Start installation B (sender) - only syncs and sends queued messages
+  startSenderInstallation(senderClient);
 
   process.stdin.resume(); // Keep process running
 }
 
-async function startReceiver(receiverClient: Client): Promise<void> {
-  console.log("Starting receiver...");
+async function startReceiverInstallation(client: Client): Promise<void> {
+  console.log("Starting Installation A (receiver)...");
 
-  // Set up periodic sync
-  const syncIntervalId = setInterval(() => {
-    void sync(receiverClient);
+  // Set up periodic sync every 60 seconds
+  setInterval(() => {
+    void syncConversations(client, "Installation A");
+  }, SYNC_INTERVAL);
+
+  // Set up periodic processing of missed messages every 60 seconds
+  setInterval(() => {
+    void processMissedMessages(client);
   }, SYNC_INTERVAL);
 
   try {
-    // Start message stream
-    const stream = await receiverClient.conversations.streamAllMessages();
-    console.log("Message stream started successfully");
-
-    // Process incoming messages
-    for await (const message of stream) {
-      /* Ignore messages from the same agent or non-text messages */
-      if (
-        message?.senderInboxId.toLowerCase() ===
-          receiverClient.inboxId.toLowerCase() ||
-        message?.contentType?.typeId !== "text"
-      ) {
-        continue;
-      }
-
-      console.log(`Received: ${message.content as string}`);
-
-      // Queue response
-      const response = `Reply to: "${message.content as string}" at ${new Date().toISOString()}`;
-
-      messageQueue.push({
-        conversationId: message.conversationId,
-        content: response,
-        priority: 1,
-        timestamp: Date.now(),
-      });
-
-      console.log(`Queued response for conversation ${message.conversationId}`);
-    }
+    // Start DM and Group message streams
+    await setupMessageStreams(client);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error in receiver stream:", errorMessage);
-
-    // Clear the interval before restarting
-    clearInterval(syncIntervalId);
+    console.error("Error in Installation A:", errorMessage);
 
     // Restart receiver after delay on error
     setTimeout(() => {
-      void startReceiver(receiverClient);
-    }, SYNC_INTERVAL);
+      void startReceiverInstallation(client);
+    }, 5000);
   }
 }
 
-function startSender(client: Client): void {
-  console.log("Starting sender (send-only mode)...");
+async function setupMessageStreams(client: Client): Promise<void> {
+  console.log("Setting up message streams...");
 
-  // Process queue every 5 seconds and sync the sender client
-  setInterval(() => {
-    void sync(client);
-    void processMessageQueue(client);
-  }, SYNC_INTERVAL);
+  // Start message stream for all conversations (both DMs and Groups)
+  const stream = await client.conversations.streamAllMessages();
+  console.log("Message stream started successfully");
+
+  // Process incoming messages
+  for await (const message of stream) {
+    /* Ignore messages from the same agent or non-text messages */
+    if (
+      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
+      message?.contentType?.typeId !== "text"
+    ) {
+      continue;
+    }
+
+    const content = message.content as string;
+    console.log(
+      `Received: "${content}" in conversation ${message.conversationId}`,
+    );
+
+    // Queue response
+    const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
+
+    messageQueue.push({
+      conversationId: message.conversationId,
+      content: response,
+      priority: 1,
+      timestamp: Date.now(),
+    });
+
+    console.log(`Queued response for conversation ${message.conversationId}`);
+  }
 }
 
-async function sync(client: Client): Promise<void> {
+async function processMissedMessages(client: Client): Promise<void> {
+  console.log("Processing missed messages in Installation A...");
+
   try {
+    // First sync conversations to get the latest state
     await client.conversations.sync();
-    console.log("sync completed");
+
+    // Get all conversations
+    const conversations = await client.conversations.list();
+
+    // Check each conversation for recent messages
+    for (const conversation of conversations) {
+      try {
+        // Get latest messages (limit to 10 recent messages)
+        const messages = await conversation.messages({ limit: 10 });
+
+        // Filter out messages not from our agent and that are text messages
+        const missedMessages = messages.filter(
+          (message) =>
+            message.senderInboxId.toLowerCase() !==
+              client.inboxId.toLowerCase() &&
+            message.contentType?.typeId === "text",
+        );
+
+        // Process any messages received in the last minute that might have been missed by the stream
+        const oneMinuteAgo = new Date(Date.now() - 60000);
+        const recentMissedMessages = missedMessages.filter(
+          (message) => message.sentAt > oneMinuteAgo,
+        );
+
+        for (const message of recentMissedMessages) {
+          const content = message.content as string;
+          console.log(
+            `Found missed message: "${content}" in conversation ${message.conversationId}`,
+          );
+
+          // Queue response for missed message
+          const response = `Reply to missed message: "${content}" at ${new Date().toISOString()}`;
+
+          messageQueue.push({
+            conversationId: message.conversationId,
+            content: response,
+            priority: 2, // Higher priority for missed messages
+            timestamp: Date.now(),
+          });
+
+          console.log(
+            `Queued response for missed message in conversation ${message.conversationId}`,
+          );
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        console.error(
+          `Error processing conversation ${conversation.id}:`,
+          errorMessage,
+        );
+      }
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Sender sync error:", errorMessage);
+    console.error("Error processing missed messages:", errorMessage);
+  }
+}
+
+function startSenderInstallation(client: Client): void {
+  console.log("Starting Installation B (sender)...");
+
+  // Periodic sync every 60 seconds
+  setInterval(() => {
+    void syncConversations(client, "Installation B");
+  }, SYNC_INTERVAL);
+
+  // Process message queue every 5 seconds
+  setInterval(() => {
+    void processMessageQueue(client);
+  }, 5000);
+}
+
+async function syncConversations(
+  client: Client,
+  installation: string,
+): Promise<void> {
+  try {
+    console.log(`Syncing conversations for ${installation}...`);
+    await client.conversations.sync();
+    console.log(`${installation} sync completed`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`${installation} sync error:`, errorMessage);
   }
 }
 
@@ -150,7 +237,9 @@ async function processMessageQueue(client: Client): Promise<void> {
   if (!message) return;
 
   try {
-    console.log(`Sending message for conversation ${message.conversationId}`);
+    console.log(
+      `Installation B sending message for conversation ${message.conversationId}`,
+    );
 
     // Get conversation
     const conversation = await client.conversations.getConversationById(
@@ -167,7 +256,7 @@ async function processMessageQueue(client: Client): Promise<void> {
     console.log(`Message sent successfully: "${message.content}"`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error processing message:", errorMessage);
+    console.error("Error sending message:", errorMessage);
 
     // Put the message back in the queue to try again later
     messageQueue.push(message);
