@@ -1,5 +1,7 @@
 import type { Client } from "@xmtp/node-sdk";
 import "dotenv/config";
+import * as fs from "fs";
+import * as path from "path";
 
 export const logAgentDetails = (client: Client) => {
   const address = client.accountIdentifier?.identifier ?? "";
@@ -49,8 +51,52 @@ export function validateEnvironment(vars: string[]): Record<string, string> {
   const requiredVars = vars;
   const missing = requiredVars.filter((v) => !process.env[v]);
 
+  // If there are missing vars, try to load them from the root .env file
   if (missing.length) {
-    console.error("Missing env vars:", missing.join(", "));
+    console.log(
+      `Missing env vars: ${missing.join(", ")}. Trying root .env file...`,
+    );
+
+    // Find the root directory by going up from the current example directory
+    const currentDir = process.cwd();
+    const rootDir = path.resolve(currentDir, "../..");
+    const rootEnvPath = path.join(rootDir, ".env");
+
+    if (fs.existsSync(rootEnvPath)) {
+      // Load the root .env file content
+      const envContent = fs.readFileSync(rootEnvPath, "utf-8");
+
+      // Parse the .env file content
+      const envVars = envContent
+        .split("\n")
+        .filter((line) => line.trim() && !line.startsWith("#"))
+        .reduce<Record<string, string>>((acc, line) => {
+          const [key, ...valueParts] = line.split("=");
+          if (key && valueParts.length) {
+            acc[key.trim()] = valueParts.join("=").trim();
+          }
+          return acc;
+        }, {});
+
+      // Set the missing environment variables
+      for (const varName of missing) {
+        if (envVars[varName]) {
+          process.env[varName] = envVars[varName];
+          console.log(`Loaded ${varName} from root .env file`);
+        }
+      }
+    } else {
+      console.log("Root .env file not found.");
+    }
+  }
+
+  // Check again if there are still missing variables
+  const stillMissing = requiredVars.filter((v) => !process.env[v]);
+  if (stillMissing.length) {
+    console.error(
+      "Missing env vars after checking root .env:",
+      stillMissing.join(", "),
+    );
     process.exit(1);
   }
 
