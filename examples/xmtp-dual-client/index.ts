@@ -66,7 +66,7 @@ async function startReceiver(receiverClient: Client): Promise<void> {
   console.log("Starting receiver...");
 
   // Set up periodic sync
-  setInterval(() => {
+  const syncIntervalId = setInterval(() => {
     void sync(receiverClient);
   }, SYNC_INTERVAL);
 
@@ -103,6 +103,9 @@ async function startReceiver(receiverClient: Client): Promise<void> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error in receiver stream:", errorMessage);
+
+    // Clear the interval before restarting
+    clearInterval(syncIntervalId);
 
     // Restart receiver after delay on error
     setTimeout(() => {
