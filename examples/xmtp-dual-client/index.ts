@@ -1,6 +1,6 @@
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
 import { logAgentDetails, validateEnvironment } from "@helpers/utils";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
 const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "WALLET_KEY",
@@ -38,6 +38,7 @@ async function main(): Promise<void> {
   const receiverClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
+    loggingLevel: "debug" as LogLevel,
     dbPath: `xmtp-installation-a-${XMTP_ENV}.db3`,
   });
   logAgentDetails(receiverClient);
@@ -47,6 +48,7 @@ async function main(): Promise<void> {
   const senderClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
+    loggingLevel: "debug" as LogLevel,
     dbPath: `xmtp-installation-b-${XMTP_ENV}.db3`,
   });
   console.log("Installation B (sender) client created");
