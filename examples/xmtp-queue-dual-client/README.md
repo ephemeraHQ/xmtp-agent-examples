@@ -1,4 +1,4 @@
-# XMTP Dual Client Agent
+# XMTP Queue Dual Client Agent
 
 This agent demonstrates the use of dual clients in XMTP.
 
@@ -37,8 +37,8 @@ yarn gen:keys
 ```bash
 # Clone the repository
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# Navigate to the dual client example directory
-cd xmtp-agent-examples/examples/xmtp-dual-client
+# Navigate to the queue dual client example directory
+cd xmtp-agent-examples/examples/xmtp-queue-dual-client
 # Install dependencies
 yarn
 # Generate random XMTP keys (optional)

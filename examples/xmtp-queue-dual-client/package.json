@@ -1,5 +1,5 @@
 {
-  "name": "@examples/xmtp-dual-client",
+  "name": "@examples/xmtp-queue-dual-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-dual-client",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-queue-dual-client",
     "start": "tsx index.ts"
   },
   "dependencies": {
