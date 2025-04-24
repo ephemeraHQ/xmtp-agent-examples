@@ -117,7 +117,7 @@ main().catch(console.error);
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 - [xmtp-multiple-clients](/examples/xmtp-multiple-clients/): Parallel agents listening and sending messages
 - [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
-- [xmtp-dual-client](/examples/xmtp-dual-client/): Agent that uses two clients to send and receive messages
+- [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 
 #### Standalone examples
 
