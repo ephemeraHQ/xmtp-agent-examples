@@ -20,10 +20,10 @@
     "typecheck": "tsc"
   },
   "resolutions": {
-    "@xmtp/node-sdk": "2.0.5"
+    "@xmtp/node-sdk": "2.0.6"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "^2.0.5",
+    "@xmtp/node-sdk": "^2.0.6",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"
   },
