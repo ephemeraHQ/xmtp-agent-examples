@@ -1,4 +1,5 @@
 import { getRandomValues } from "node:crypto";
+import fs from "node:fs";
 import { IdentifierKind, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
 import { createWalletClient, http, toBytes } from "viem";
@@ -62,4 +63,16 @@ export const generateEncryptionKeyHex = () => {
 export const getEncryptionKeyFromHex = (hex: string) => {
   /* Convert the hex string to an encryption key */
   return fromString(hex, "hex");
+};
+
+export const getDbPath = (env: string, suffix: string = "xmtp") => {
+  //Checks if the environment is a Railway deployment
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  // Create database directory if it doesn't exist
+  if (!fs.existsSync(volumePath)) {
+    fs.mkdirSync(volumePath, { recursive: true });
+  }
+  const dbPath = `${volumePath}/${env}-${suffix}.db3`;
+
+  return dbPath;
 };
