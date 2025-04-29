@@ -57,13 +57,6 @@ Cancelling a stream will restart it.
 ```tsx
 const streamPromise = client.conversations.streamAllMessages();
 const stream = await streamPromise;
-
-stream.onError = (error) => {
-  console.error("Stream error:", error);
-};
-stream.onReturn = () => {
-  console.log("Stream returned");
-};
 console.log("Waiting for messages...");
 const result = await stream.return(undefined);
 console.log("Stream returned", result);
@@ -74,8 +67,8 @@ console.log("Stream returned", result);
 This example implements a robust retry mechanism with configurable parameters:
 
 ```tsx
-const MAX_RETRIES = 6;
-const RETRY_DELAY_MS = 10000;
+const MAX_RETRIES = 6; // 6 times
+const RETRY_DELAY_MS = 10000; // 10 seconds
 
 // Helper function to pause execution
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -120,24 +113,3 @@ Key features of the retry logic:
 - Customizable delay between retries (`RETRY_DELAY_MS`)
 - Reset of retry counter when stream processes successfully
 - Graceful error handling with detailed logging
-
-### Simple continuous restart
-
-For simpler use cases, you can wrap the stream in a promise and return it to restart the stream:
-
-```tsx
-while (true) {
-  try {
-    console.log("Starting message stream...");
-    const streamPromise = client.conversations.streamAllMessages();
-    const stream = await streamPromise;
-
-    console.log("Waiting for messages...");
-    for await (const message of stream) {
-      // handle message
-    }
-  } catch (error) {
-    console.error("Stream error:", error);
-  }
-}
-```

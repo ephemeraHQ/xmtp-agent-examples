@@ -14,7 +14,7 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
   ]);
 
 const MAX_RETRIES = 6; // 6 times
-const RETRY_DELAY_MS = 10000; // 5 seconds
+const RETRY_DELAY_MS = 10000; // 10 seconds
 
 // Helper function to pause execution
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
