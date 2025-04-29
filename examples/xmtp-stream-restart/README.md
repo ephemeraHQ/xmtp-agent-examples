@@ -91,7 +91,7 @@ while (retryCount < MAX_RETRIES) {
 }
 ```
 
-### External stream restart (optional)
+#### External stream restart (optional)
 
 Cancelling a stream will restart it.
 
@@ -102,10 +102,3 @@ console.log("Waiting for messages...");
 const result = await stream.return(undefined);
 console.log("Stream returned", result);
 ```
-
-Key features of the retry logic:
-
-- Configurable maximum retry attempts (`MAX_RETRIES`)
-- Customizable delay between retries (`RETRY_DELAY_MS`)
-- Reset of retry counter when stream processes successfully
-- Graceful error handling with detailed logging
