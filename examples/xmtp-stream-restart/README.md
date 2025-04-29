@@ -50,18 +50,6 @@ yarn dev
 
 ## Usage
 
-### Basic stream restart
-
-Cancelling a stream will restart it.
-
-```tsx
-const streamPromise = client.conversations.streamAllMessages();
-const stream = await streamPromise;
-console.log("Waiting for messages...");
-const result = await stream.return(undefined);
-console.log("Stream returned", result);
-```
-
 ### Automatic retry logic
 
 This example implements a robust retry mechanism with configurable parameters:
@@ -92,11 +80,7 @@ while (retryCount < MAX_RETRIES) {
     retryCount = 0;
   } catch (error) {
     retryCount++;
-    console.error(
-      `Stream processing error (attempt ${retryCount}/${MAX_RETRIES}):`,
-      error,
-    );
-
+    console.debug(error);
     if (retryCount < MAX_RETRIES) {
       console.log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
       await sleep(RETRY_DELAY_MS);
@@ -105,6 +89,18 @@ while (retryCount < MAX_RETRIES) {
     }
   }
 }
+```
+
+### External stream restart (optional)
+
+Cancelling a stream will restart it.
+
+```tsx
+const streamPromise = client.conversations.streamAllMessages();
+const stream = await streamPromise;
+console.log("Waiting for messages...");
+const result = await stream.return(undefined);
+console.log("Stream returned", result);
 ```
 
 Key features of the retry logic:
