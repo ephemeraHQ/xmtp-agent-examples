@@ -6,7 +6,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 1.  Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
-2.  Use the XMTP node-sdk version "2.0.2" or newer, which offers enhanced functionality including group conversations.
+2.  Use the @xmtp/node-sdk and default to the latest version.
 
 3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
 
@@ -630,6 +630,45 @@ const stream = await client.conversations.streamAllMessages();
 for await (const message of stream) {
   // Process each message as it arrives
   console.log(`Received message: ${message.content as string}`);
+}
+```
+
+This example implements a retry mechanism with configurable parameters:
+
+```tsx
+const MAX_RETRIES = 6; // 6 times
+const RETRY_DELAY_MS = 10000; // 10 seconds
+
+// Helper function to pause execution
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+let retryCount = 0;
+
+while (retryCount < MAX_RETRIES) {
+  try {
+    console.log(
+      `Starting message stream... (attempt ${retryCount + 1}/${MAX_RETRIES})`,
+    );
+    const streamPromise = client.conversations.streamAllMessages();
+    const stream = await streamPromise;
+
+    console.log("Waiting for messages...");
+    for await (const message of stream) {
+      // Process messages here
+    }
+
+    // If we get here without an error, reset the retry count
+    retryCount = 0;
+  } catch (error) {
+    retryCount++;
+    console.debug(error);
+    if (retryCount < MAX_RETRIES) {
+      console.log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
+      await sleep(RETRY_DELAY_MS);
+    } else {
+      console.log("Maximum retry attempts reached. Exiting.");
+    }
+  }
 }
 ```
 
