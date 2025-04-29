@@ -74,8 +74,8 @@ console.log("Stream returned", result);
 This example implements a robust retry mechanism with configurable parameters:
 
 ```tsx
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+const MAX_RETRIES = 6;
+const RETRY_DELAY_MS = 10000;
 
 // Helper function to pause execution
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

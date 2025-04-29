@@ -5,14 +5,16 @@ import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
+  validateEnvironment([
+    "WALLET_KEY",
+    "LOGGING_LEVEL",
+    "ENCRYPTION_KEY",
+    "XMTP_ENV",
+  ]);
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+const MAX_RETRIES = 6; // 6 times
+const RETRY_DELAY_MS = 10000; // 5 seconds
 
 // Helper function to pause execution
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -26,7 +28,7 @@ async function main() {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     //This will provide more logs for XMTP to help debug, but can be noisy
-    loggingLevel: "debug" as LogLevel,
+    loggingLevel: LOGGING_LEVEL as LogLevel,
   });
 
   logAgentDetails(client);
@@ -78,11 +80,7 @@ async function main() {
       retryCount = 0;
     } catch (error) {
       retryCount++;
-      console.error(
-        `Stream processing error (attempt ${retryCount}/${MAX_RETRIES}):`,
-        error,
-      );
-
+      console.debug(error);
       if (retryCount < MAX_RETRIES) {
         console.log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
         await sleep(RETRY_DELAY_MS);
