@@ -11,7 +11,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
 1.  Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
 
-2.  Use the XMTP node-sdk version "2.0.2" or newer, which offers enhanced functionality including group conversations.
+2.  Use the @xmtp/node-sdk and default to the latest version.
 
 3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
 
@@ -638,6 +638,45 @@ for await (const message of stream) {
 }
 ```
 
+This example implements a retry mechanism with configurable parameters:
+
+```tsx
+const MAX_RETRIES = 6; // 6 times
+const RETRY_DELAY_MS = 10000; // 10 seconds
+
+// Helper function to pause execution
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+let retryCount = 0;
+
+while (retryCount < MAX_RETRIES) {
+  try {
+    console.log(
+      `Starting message stream... (attempt ${retryCount + 1}/${MAX_RETRIES})`,
+    );
+    const streamPromise = client.conversations.streamAllMessages();
+    const stream = await streamPromise;
+
+    console.log("Waiting for messages...");
+    for await (const message of stream) {
+      // Process messages here
+    }
+
+    // If we get here without an error, reset the retry count
+    retryCount = 0;
+  } catch (error) {
+    retryCount++;
+    console.debug(error);
+    if (retryCount < MAX_RETRIES) {
+      console.log(`Waiting ${RETRY_DELAY_MS / 1000} seconds before retry...`);
+      await sleep(RETRY_DELAY_MS);
+    } else {
+      console.log("Maximum retry attempts reached. Exiting.");
+    }
+  }
+}
+```
+
 ### 2. Polling Messages
 
 Retrieve all messages at once from the local database:
@@ -820,20 +859,23 @@ When working with these classes:
 If no `dbPath` is provided, the client will use the current working directory. You can also specify a custom path for the database.
 
 ```jsx
-// Railway deployment support
-let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
+export const getDbPath = (env: string, suffix: string = "xmtp") => {
+  //Checks if the environment is a Railway deployment
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  // Create database directory if it doesn't exist
+  if (!fs.existsSync(volumePath)) {
+    fs.mkdirSync(volumePath, { recursive: true });
+  }
+  const dbPath = `${volumePath}/${env}-${suffix}.db3`;
 
-// Create database directory if it doesn't exist
-if (!fs.existsSync(dbPath)) {
-  fs.mkdirSync(dbPath, { recursive: true });
-}
+  return dbPath;
+};
 
 // Create a client with db path
 const client = await Client.create(signer, {
   dbEncryptionKey,
   env: XMTP_ENV as XmtpEnv,
   // Use a unique DB directory
-  dbPath,
+  dbPath:getDbPath(XMTP_ENV),
 });
 ```
