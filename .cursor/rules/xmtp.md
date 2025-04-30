@@ -854,23 +854,21 @@ When working with these classes:
 If no `dbPath` is provided, the client will use the current working directory. You can also specify a custom path for the database.
 
 ```jsx
-export const getDbPath = (env: string, suffix: string = "xmtp") => {
+export const getDbPath = (description: string = "xmtp") => {
   //Checks if the environment is a Railway deployment
   const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
   // Create database directory if it doesn't exist
   if (!fs.existsSync(volumePath)) {
     fs.mkdirSync(volumePath, { recursive: true });
   }
-  const dbPath = `${volumePath}/${env}-${suffix}.db3`;
-
-  return dbPath;
+  return `${volumePath}/${description}.db3`;
 };
 
 // Create a client with db path
+const signerIdentifier = (await signer.getIdentifier()).identifier;
 const client = await Client.create(signer, {
   dbEncryptionKey,
   env: XMTP_ENV as XmtpEnv,
-  // Use a unique DB directory
-  dbPath:getDbPath(XMTP_ENV),
+  dbPath:getDbPath(XMTP_ENV+"-"+signerIdentifier),
 });
 ```

@@ -45,7 +45,7 @@ async function main(): Promise<void> {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     loggingLevel: LOGGING_LEVEL as LogLevel,
-    dbPath: getDbPath(XMTP_ENV, "receiver"),
+    dbPath: getDbPath(XMTP_ENV + "-receiver"),
   });
   logAgentDetails(receiverClient);
   console.log("Installation A (receiver) client created");
@@ -55,7 +55,7 @@ async function main(): Promise<void> {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     loggingLevel: LOGGING_LEVEL as LogLevel,
-    dbPath: getDbPath(XMTP_ENV, "sender"),
+    dbPath: getDbPath(XMTP_ENV + "-sender"),
   });
   console.log("Installation B (sender) client created");
 
