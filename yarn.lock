@@ -2058,16 +2058,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:2.0.6":
-  version: 2.0.6
-  resolution: "@xmtp/node-sdk@npm:2.0.6"
+"@xmtp/node-sdk@npm:2.0.7":
+  version: 2.0.7
+  resolution: "@xmtp/node-sdk@npm:2.0.7"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
     "@xmtp/node-bindings": "npm:1.1.6"
     "@xmtp/proto": "npm:^3.78.0"
-  checksum: 10/734ff15f764a356f2e06b7b44849bf53b45032c6207d73d1005ca05dbd9df8d5008935b65f6f9ea64fcd7c137ecb4c5dc8eaec9e0afd36936a54e60140612edb
+  checksum: 10/7ace1b97165ddc42edf8e4ba24404912391c692f55bfbcaa4d367e83a8d78d1e4056c5cda4fc5d376b3c7da4cd6a169d47713e5c70dee4fe6ea2346c74663193
   languageName: node
   linkType: hard
 
@@ -5685,7 +5685,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:^2.0.6"
+    "@xmtp/node-sdk": "npm:^2.0.7"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"
