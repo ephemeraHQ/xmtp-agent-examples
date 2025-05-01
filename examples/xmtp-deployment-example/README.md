@@ -14,6 +14,7 @@ By providing this standardized implementation, we can:
 - Reduce repetitive questions from developers
 - Establish a consistent baseline for all implementations
 - Simplify debugging by ensuring everyone follows the same approach
+- Prevent collaterals from developers who don't fully understand these concepts
 
 Not included:
 
