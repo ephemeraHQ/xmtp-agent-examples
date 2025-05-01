@@ -21,7 +21,8 @@
     "paths": {
       "@helpers/client": ["./helpers/client.ts"],
       "@helpers/utils": ["./helpers/utils.ts"],
-      "@helpers/usdc": ["./helpers/usdc.ts"]
+      "@helpers/usdc": ["./helpers/usdc.ts"],
+      "@helpers/handler": ["./helpers/handler.ts"]
     }
   },
   "include": ["**/*.ts"]
