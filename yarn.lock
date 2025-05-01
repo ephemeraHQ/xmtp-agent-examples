@@ -910,6 +910,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-deployment-example@workspace:examples/xmtp-deployment-example":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-deployment-example@workspace:examples/xmtp-deployment-example"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-gaia@workspace:examples/xmtp-gaia":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gaia@workspace:examples/xmtp-gaia"
@@ -942,26 +952,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-handler@workspace:examples/xmtp-handler":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-handler@workspace:examples/xmtp-handler"
-  dependencies:
-    "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@examples/xmtp-multiple-clients@workspace:examples/xmtp-multiple-clients":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-multiple-clients@workspace:examples/xmtp-multiple-clients"
-  dependencies:
-    "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-nft-gated-group@workspace:examples/xmtp-nft-gated-group":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-nft-gated-group@workspace:examples/xmtp-nft-gated-group"
@@ -988,16 +978,6 @@ __metadata:
   resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
   dependencies:
     "@coinbase/coinbase-sdk": "npm:^0.22.0"
-    "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart"
-  dependencies:
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
     typescript: "npm:*"
