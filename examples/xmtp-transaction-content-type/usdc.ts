@@ -1,7 +1,7 @@
+import { validateEnvironment } from "@helpers/utils";
 import type { WalletSendCallsParams } from "@xmtp/content-type-wallet-send-calls";
 import { createPublicClient, formatUnits, http, toHex } from "viem";
 import { base, baseSepolia } from "viem/chains";
-import { validateEnvironment } from "./utils";
 
 const { NETWORK_ID } = validateEnvironment(["NETWORK_ID"]);
 

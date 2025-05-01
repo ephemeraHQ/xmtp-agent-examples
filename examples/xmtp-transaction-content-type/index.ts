@@ -1,5 +1,4 @@
 import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { createUSDCTransferCalls, getUSDCBalance } from "@helpers/usdc";
 import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import {
@@ -7,6 +6,7 @@ import {
   WalletSendCallsCodec,
 } from "@xmtp/content-type-wallet-send-calls";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { createUSDCTransferCalls, getUSDCBalance } from "./usdc";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -30,7 +30,7 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const agentAddress = identifier.identifier;
-  logAgentDetails(client);
+  logAgentDetails([client]);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

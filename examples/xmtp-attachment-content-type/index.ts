@@ -68,7 +68,7 @@ async function main() {
     codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
   });
 
-  logAgentDetails(client);
+  logAgentDetails([client]);
 
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();

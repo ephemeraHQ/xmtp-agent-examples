@@ -15,6 +15,7 @@ import {
 
 const MAX_RETRIES = 6; // 6 times
 const RETRY_DELAY_MS = 2000; // 2 seconds
+
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -23,6 +24,17 @@ const { WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment([
   "ENCRYPTION_KEY",
 ]);
 
+type AgentOptionsType = {
+  acceptGroups: boolean;
+  networks?: string[];
+  acceptTypes?: string[];
+};
+
+const agentOptions: AgentOptionsType = {
+  acceptGroups: false,
+  acceptTypes: ["text"],
+  networks: ["dev", "production"],
+};
 /**
  * Stream messages continuously with retry logic
  */
@@ -34,10 +46,12 @@ export const streamMessages = async (
     message: DecodedMessage,
     isDm: boolean,
   ) => Promise<void>,
-  options = { acceptGroups: false },
+  options: AgentOptionsType = agentOptions,
 ): Promise<void> => {
   const env = client.options?.env ?? "undefined";
   let retryCount = 0;
+  const acceptTypes = options.acceptTypes || ["text"];
+
   while (retryCount < MAX_RETRIES) {
     try {
       console.log(
@@ -50,9 +64,10 @@ export const streamMessages = async (
       for await (const message of stream) {
         try {
           if (
-            message?.senderInboxId.toLowerCase() ===
+            !message ||
+            message.senderInboxId.toLowerCase() ===
               client.inboxId.toLowerCase() ||
-            message?.contentType?.typeId !== "text"
+            !acceptTypes.includes(message.contentType?.typeId ?? "text")
           ) {
             continue;
           }
@@ -102,12 +117,15 @@ export const initializeClient = async (
     message: DecodedMessage,
     isDm: boolean,
   ) => Promise<void>,
-  options = { acceptGroups: false },
+  options: AgentOptionsType = agentOptions,
 ): Promise<Client[]> => {
-  const envs = ["dev", "production"];
   const clients: Client[] = [];
   const promises: Promise<void>[] = [];
-  for (const env of envs) {
+
+  // Extract options with defaults
+  const { acceptGroups } = options;
+  const networks = options.networks || ["dev", "production"];
+  for (const env of networks) {
     try {
       const signer = createSigner(WALLET_KEY);
       const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
@@ -122,7 +140,6 @@ export const initializeClient = async (
 
       console.log(`[${env}] ✓ Syncing conversations...`);
       await client.conversations.sync();
-      logAgentDetails(client);
 
       console.log("Waiting for messages...");
       promises.push(
@@ -142,7 +159,7 @@ export const initializeClient = async (
               console.error(`[${env}] Error in callback:`, errorMessage);
             }
           },
-          { acceptGroups: options.acceptGroups },
+          { acceptGroups },
         ),
       );
 
@@ -151,6 +168,8 @@ export const initializeClient = async (
       console.error(`[${env}] Error:`, error);
     }
   }
+  logAgentDetails(clients);
+
   await Promise.all(promises);
   return clients;
 };

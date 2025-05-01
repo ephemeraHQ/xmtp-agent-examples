@@ -1,5 +1,5 @@
-import { initializeClient } from "@helpers/handler";
 import type { Client, Conversation, DecodedMessage } from "@xmtp/node-sdk";
+import { initializeClient } from "./xmtp-handler";
 
 const processMessage = async (
   client: Client,
@@ -16,6 +16,8 @@ const processMessage = async (
   await conversation.send("gm");
 };
 const main = async () => {
-  await initializeClient(processMessage, { acceptGroups: true });
+  await initializeClient(processMessage, {
+    acceptGroups: true,
+  });
 };
 main().catch(console.error);
