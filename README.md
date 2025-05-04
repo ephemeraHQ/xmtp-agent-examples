@@ -118,6 +118,7 @@ main().catch(console.error);
 - [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
+- [xmtp-stream-restart](/examples/xmtp-stream-restart/): Agent that restarts the stream when it fails
 
 #### Standalone examples
 
