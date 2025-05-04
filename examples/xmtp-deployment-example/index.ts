@@ -1,6 +1,11 @@
+import { validateEnvironment } from "@helpers/client";
 import type { Client, Conversation, DecodedMessage } from "@xmtp/node-sdk";
 import { initializeClient } from "./xmtp-handler";
 
+const { WALLET_KEY, ENCRYPTION_KEY } = validateEnvironment([
+  "WALLET_KEY",
+  "ENCRYPTION_KEY",
+]);
 const processMessage = async (
   client: Client,
   conversation: Conversation,
@@ -15,9 +20,11 @@ const processMessage = async (
   console.log("Dm/Group ID: ", conversation.id);
   await conversation.send("gm");
 };
-const main = async () => {
-  await initializeClient(processMessage, {
+
+await initializeClient(processMessage, [
+  {
     acceptGroups: true,
-  });
-};
-main().catch(console.error);
+    walletKey: WALLET_KEY,
+    encryptionKey: ENCRYPTION_KEY,
+  },
+]);
