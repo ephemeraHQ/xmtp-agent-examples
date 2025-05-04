@@ -145,8 +145,8 @@ export const initializeClient = async (
                 options.welcomeMessage,
               );
               if (sent) {
-                console.log(`[${env}] Welcome message sent`);
-                return;
+                console.log(`[${env}] Welcome message sent, skipping`);
+                continue;
               }
             }
 
@@ -380,6 +380,7 @@ export const sendWelcomeMessage = async (
   welcomeMessage: string,
 ) => {
   // Get all messages from this conversation
+  await conversation.sync();
   const messages = await conversation.messages();
   // Check if we have sent any messages in this conversation before
   const sentMessagesBefore = messages.filter(
