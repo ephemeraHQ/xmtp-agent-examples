@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/efb8006d-9758-483d-ad1b-9287ea4d426d
 - You'll need some `ETH` in your wallet to pay for the transaction
 - Connect with a wallet extension like [MetaMask](https://metamask.io/) or Coinbase Wallet
 - Docker (optional, for `local` network)
-- [USDC Faucet](https://portal.cdp.coinbase.com/products/faucet)
+- Faucets for [USDC (ETH)](https://faucet.base.org/) and [USDC (Base)](https://portal.cdp.coinbase.com/products/faucet)
 - [@xmtp/content-type-transaction-reference](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-transaction-reference)
 - [@xmtp/content-type-wallet-send-calls](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-wallet-send-calls)
 

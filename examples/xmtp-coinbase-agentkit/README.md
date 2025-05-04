@@ -16,7 +16,7 @@ This example demonstrates an agent setup on XMTP Network with access to the full
 - Docker (optional, for local network)
 - [OpenAI](https://platform.openai.com/api-keys) API key
 - [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
-- [USDC Faucet](https://faucet.circle.com/)
+- Faucets for [USDC (ETH)](https://faucet.base.org/) and [USDC (Base)](https://portal.cdp.coinbase.com/products/faucet)
 
 ### Environment variables
 
