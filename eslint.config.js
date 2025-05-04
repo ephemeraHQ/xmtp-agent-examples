@@ -54,6 +54,13 @@ export default tseslint.config(
           allowNumber: true,
         },
       ],
+      "@typescript-eslint/ban-ts-comment": [
+        "warn",
+        {
+          "ts-expect-error": "allow-with-description",
+          minimumDescriptionLength: 3,
+        },
+      ],
     },
   },
   {
@@ -70,6 +77,12 @@ export default tseslint.config(
   },
   {
     files: ["**/xmtp-stream-restart/**"],
+    rules: {
+      "@typescript-eslint/no-unnecessary-condition": "off",
+    },
+  },
+  {
+    files: ["**/xmtp-deployment-example/**"],
     rules: {
       "@typescript-eslint/no-unnecessary-condition": "off",
     },

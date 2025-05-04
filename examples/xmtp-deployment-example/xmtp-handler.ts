@@ -138,7 +138,6 @@ export const initializeClient = async (
     const acceptTypes = options.acceptTypes || ["text"];
     let backoffTime = RETRY_DELAY_MS;
 
-    // Main stream loop - never exits
     while (true) {
       try {
         // Reset backoff time if we've been running successfully
