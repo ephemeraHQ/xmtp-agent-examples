@@ -2,12 +2,13 @@
 
 This PR introduces a self-served deployment-ready solution that handles common challenges developers face when implementing WebSocket applications:
 
-- Stream restarts with automatic reconnection
-- Conversation synchronization across instances
-- Group messaging functionality (optional)
-- Railway deployment configuration
-- Support for multiple clients
-- Cross-network compatibility
+- [x] Stream restarts with automatic reconnection
+- [x] Welcome messages
+- [x] Conversation synchronization across instances
+- [x] Group messaging functionality (optional)
+- [x] Railway deployment configuration
+- [x] Support for multiple clients
+- [x] Optional content type handling
 
 By providing this standardized implementation, we can:
 

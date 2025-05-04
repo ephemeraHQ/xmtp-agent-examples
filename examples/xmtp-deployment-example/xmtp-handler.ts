@@ -32,6 +32,10 @@ interface AgentOptions {
   connectionTimeout?: number;
   /** Whether to auto-reconnect on fatal errors (default: true) */
   autoReconnect?: boolean;
+  /** Welcome message to send to the conversation */
+  welcomeMessage?: string;
+  /** Codecs to use */
+  codecs?: any[];
 }
 
 /**
@@ -86,6 +90,7 @@ export const initializeClient = async (
     const acceptTypes = options.acceptTypes || ["text"];
     let backoffTime = RETRY_DELAY_MS;
 
+    // Main stream loop - never exits
     while (true) {
       try {
         // Reset backoff time if we've been running successfully
@@ -109,7 +114,6 @@ export const initializeClient = async (
           try {
             // Notify activity monitor on each message
             if (onActivity) onActivity();
-
             // Skip messages from self or with unsupported content types
             if (
               !message ||
@@ -134,27 +138,21 @@ export const initializeClient = async (
             );
 
             const isDm = conversation instanceof Dm;
+            if (options.welcomeMessage && isDm) {
+              const sent = await sendWelcomeMessage(
+                client,
+                conversation,
+                options.welcomeMessage,
+              );
+              if (sent) {
+                console.log(`[${env}] Welcome message sent`);
+                return;
+              }
+            }
 
             if (isDm || options.acceptGroups) {
               try {
-                // Call the message handler and handle the returned value
-                const result = messageHandler(
-                  client,
-                  conversation,
-                  message,
-                  isDm,
-                );
-                // Check if result is a Promise before calling catch
-                if (result && typeof result.catch === "function") {
-                  result.catch((error: unknown) => {
-                    const errorMessage =
-                      error instanceof Error ? error.message : String(error);
-                    console.error(
-                      `[${env}] Message handler error:`,
-                      errorMessage,
-                    );
-                  });
-                }
+                messageHandler(client, conversation, message, isDm);
               } catch (handlerError) {
                 console.error(
                   `[${env}] Error in message handler:`,
@@ -212,9 +210,7 @@ export const initializeClient = async (
 
         // Try to re-sync conversations before retrying
         try {
-          console.log(`[${env}] Attempting to re-sync conversations...`);
           await client.conversations.sync();
-          console.log(`[${env}] Conversations re-synced successfully`);
         } catch (syncError) {
           console.error(`[${env}] Sync error:`, syncError);
         }
@@ -302,6 +298,7 @@ export const initializeClient = async (
           env: env as XmtpEnv,
           loggingLevel,
           dbPath: getDbPath(`${env}-${signerIdentifier}`),
+          codecs: option.codecs,
         });
 
         await client.conversations.sync();
@@ -337,16 +334,9 @@ export const initializeClient = async (
 
   logAgentDetails(clients);
 
-  // Handle graceful shutdowns
-  process.on("SIGINT", () => {
-    console.log("\nShutting down clients...");
-    process.exit(0);
-  });
-
   await Promise.all(streamPromises);
   return clients;
 };
-
 export const logAgentDetails = (clients: Client[]): void => {
   const clientsByAddress = clients.reduce<Record<string, Client[]>>(
     (acc, client) => {
@@ -376,10 +366,30 @@ export const logAgentDetails = (clients: Client[]): void => {
     ];
 
     console.log(`
-✓ XMTP Client Ready:
-• Address: ${address}
-• InboxId: ${inboxId}
-• Networks: ${environments}
-${urls.map((url) => `• URL: ${url}`).join("\n")}`);
+    ✓ XMTP Client:
+    • Address: ${address}
+    • InboxId: ${inboxId}
+    • Networks: ${environments}
+    ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
   }
+};
+
+export const sendWelcomeMessage = async (
+  client: Client,
+  conversation: Conversation,
+  welcomeMessage: string,
+) => {
+  // Get all messages from this conversation
+  const messages = await conversation.messages();
+  // Check if we have sent any messages in this conversation before
+  const sentMessagesBefore = messages.filter(
+    (msg) => msg.senderInboxId.toLowerCase() === client.inboxId.toLowerCase(),
+  );
+  // If we haven't sent any messages before, send a welcome message and skip validation for this message
+  if (sentMessagesBefore.length === 0) {
+    console.log(`Sending welcome message`);
+    await conversation.send(welcomeMessage);
+    return true;
+  }
+  return false;
 };
