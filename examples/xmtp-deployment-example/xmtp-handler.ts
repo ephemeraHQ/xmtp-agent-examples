@@ -1,53 +1,17 @@
-import { getRandomValues } from "node:crypto";
+import {
+  createSigner,
+  getDbPath,
+  getEncryptionKeyFromHex,
+} from "@helpers/client";
 import {
   Client,
   Dm,
-  IdentifierKind,
   type Conversation,
   type DecodedMessage,
   type LogLevel,
-  type Signer,
   type XmtpEnv,
 } from "@xmtp/node-sdk";
-import { fromString, toString } from "uint8arrays";
-import { createWalletClient, http, toBytes } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { sepolia } from "viem/chains";
 import "dotenv/config";
-import * as fs from "fs";
-
-export const getEncryptionKeyFromHex = (hex: string): Uint8Array => {
-  return fromString(hex, "hex");
-};
-
-/**
- * Create a Signer instance from a private key
- * @param key - The private key to create the Signer from
- * @returns A Signer instance
- */
-export const createSigner = (key: string): Signer => {
-  const sanitizedKey = key.startsWith("0x") ? key : `0x${key}`;
-  const account = privateKeyToAccount(sanitizedKey as `0x${string}`);
-
-  return {
-    type: "EOA",
-    getIdentifier: () => ({
-      identifierKind: IdentifierKind.Ethereum,
-      identifier: account.address.toLowerCase(),
-    }),
-    signMessage: async (message: string) => {
-      const signature = await createWalletClient({
-        account,
-        chain: sepolia,
-        transport: http(),
-      }).signMessage({
-        message,
-        account,
-      });
-      return toBytes(signature);
-    },
-  };
-};
 
 /**
  * Configuration options for the XMTP agent
@@ -96,22 +60,6 @@ const DEFAULT_AGENT_OPTIONS: AgentOptions[] = [
     autoReconnect: true,
   },
 ];
-
-/**
- * Generate a new encryption key (utility function)
- */
-export const generateEncryptionKeyHex = (): string => {
-  const uint8Array = getRandomValues(new Uint8Array(32));
-  return toString(uint8Array, "hex");
-};
-
-export const getDbPath = (description: string = "xmtp"): string => {
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
-  return `${volumePath}/${description}.db3`;
-};
 
 // Helper functions
 export const sleep = (ms: number): Promise<void> =>
@@ -398,6 +346,7 @@ export const initializeClient = async (
   await Promise.all(streamPromises);
   return clients;
 };
+
 export const logAgentDetails = (clients: Client[]): void => {
   const clientsByAddress = clients.reduce<Record<string, Client[]>>(
     (acc, client) => {
