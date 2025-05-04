@@ -152,7 +152,7 @@ export const initializeClient = async (
 
             if (isDm || options.acceptGroups) {
               try {
-                messageHandler(client, conversation, message, isDm);
+                await messageHandler(client, conversation, message, isDm);
               } catch (handlerError) {
                 console.error(
                   `[${env}] Error in message handler:`,
