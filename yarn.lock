@@ -952,6 +952,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-multiple-workers@workspace:examples/xmtp-multiple-workers":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-multiple-workers@workspace:examples/xmtp-multiple-workers"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-nft-gated-group@workspace:examples/xmtp-nft-gated-group":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-nft-gated-group@workspace:examples/xmtp-nft-gated-group"
