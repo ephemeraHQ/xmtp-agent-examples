@@ -1,6 +1,6 @@
 import { getRandomValues } from "node:crypto";
 import fs from "node:fs";
-import { IdentifierKind, type Signer } from "@xmtp/node-sdk";
+import { IdentifierKind, type Client, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
 import { createWalletClient, http, toBytes } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -74,3 +74,38 @@ export const getDbPath = (description: string = "xmtp") => {
   }
   return `${volumePath}/${description}.db3`;
 };
+
+export const logAgentDetails = (client: Client): void => {
+  console.log(`\x1b[38;2;252;76;52m
+    ██╗  ██╗███╗   ███╗████████╗██████╗ 
+    ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
+     ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
+     ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ 
+    ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     
+    ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
+  \x1b[0m`);
+
+  const address = client.accountIdentifier?.identifier ?? "";
+  const inboxId = client.inboxId;
+  const env = client.options?.env ?? "dev";
+  console.log(`
+✓ XMTP Client Ready:
+• Address: ${address}
+• InboxId: ${inboxId}
+• Network: ${env}
+• URL: http://xmtp.chat/dm/${address}?env=${env}
+    `);
+};
+
+export function validateEnvironment(vars: string[]): Record<string, string> {
+  const missing = vars.filter((v) => !process.env[v]);
+  if (missing.length) {
+    console.error("Missing env vars:", missing.join(", "));
+    process.exit(1);
+  }
+
+  return vars.reduce<Record<string, string>>((acc, key) => {
+    acc[key] = process.env[key] as string;
+    return acc;
+  }, {});
+}

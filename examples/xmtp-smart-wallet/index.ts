@@ -1,7 +1,11 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 const WALLET_PATH = "wallet.json";
@@ -34,7 +38,7 @@ const main = async () => {
     env: XMTP_ENV as XmtpEnv,
   });
 
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

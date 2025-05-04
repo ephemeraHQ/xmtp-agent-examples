@@ -1,4 +1,4 @@
-import { validateEnvironment } from "@helpers/utils";
+import { validateEnvironment } from "@helpers/client";
 import type { DecodedMessage, XmtpEnv } from "@xmtp/node-sdk";
 import {
   createXmtpWorkers,

@@ -1,5 +1,9 @@
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
@@ -20,7 +24,7 @@ async function main() {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();

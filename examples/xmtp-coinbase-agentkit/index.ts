@@ -8,8 +8,12 @@ import {
   walletActionProvider,
 } from "@coinbase/agentkit";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
@@ -118,7 +122,7 @@ async function initializeXmtpClient() {
     dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
   });
 
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

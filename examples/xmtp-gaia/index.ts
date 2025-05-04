@@ -1,5 +1,9 @@
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
 
@@ -41,7 +45,7 @@ async function main() {
     env: XMTP_ENV as XmtpEnv,
   });
 
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

@@ -1,4 +1,4 @@
-import { validateEnvironment } from "@helpers/utils";
+import { validateEnvironment } from "@helpers/client";
 import type { WalletSendCallsParams } from "@xmtp/content-type-wallet-send-calls";
 import { createPublicClient, formatUnits, http, toHex } from "viem";
 import { base, baseSepolia } from "viem/chains";

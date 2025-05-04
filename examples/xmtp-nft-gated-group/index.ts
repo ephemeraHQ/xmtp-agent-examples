@@ -1,5 +1,9 @@
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import {
   Client,
   IdentifierKind,
@@ -38,7 +42,7 @@ async function main() {
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   console.log("Waiting for messages...");
   const stream = await client.conversations.streamAllMessages();

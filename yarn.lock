@@ -994,6 +994,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type"

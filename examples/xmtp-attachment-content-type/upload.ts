@@ -1,4 +1,4 @@
-import { validateEnvironment } from "@helpers/utils";
+import { validateEnvironment } from "@helpers/client";
 import axios from "axios";
 import FormData from "form-data";
 

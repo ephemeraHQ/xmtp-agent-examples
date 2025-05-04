@@ -1,7 +1,11 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,
@@ -68,7 +72,7 @@ async function main() {
     codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
   });
 
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();

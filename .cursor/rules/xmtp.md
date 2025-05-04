@@ -223,8 +223,12 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 ### Solution:
 
 ```typescript
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import { Client, IdentifierKind } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
@@ -248,7 +252,7 @@ async function main() {
     env: XMTP_ENV as XmtpEnv,
   });
 
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   /* Sync the conversations from the network to update the local db */

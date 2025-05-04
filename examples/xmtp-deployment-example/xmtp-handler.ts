@@ -2,8 +2,9 @@ import {
   createSigner,
   getDbPath,
   getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
 } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import {
   Client,
   Dm,
@@ -163,12 +164,12 @@ export const initializeClient = async (
         ),
       );
 
+      logAgentDetails(client);
       clients.push(client);
     } catch (error) {
       console.error(`[${env}] Error:`, error);
     }
   }
-  logAgentDetails(clients);
 
   await Promise.all(promises);
   return clients;

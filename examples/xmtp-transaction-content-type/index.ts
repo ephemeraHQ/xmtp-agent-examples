@@ -1,5 +1,9 @@
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
+import {
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import {
   ContentTypeWalletSendCalls,
@@ -30,7 +34,7 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const agentAddress = identifier.identifier;
-  logAgentDetails([client]);
+  logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

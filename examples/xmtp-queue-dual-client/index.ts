@@ -2,8 +2,9 @@ import {
   createSigner,
   getDbPath,
   getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
 } from "@helpers/client";
-import { logAgentDetails, validateEnvironment } from "@helpers/utils";
 import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
 const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
@@ -47,7 +48,7 @@ async function main(): Promise<void> {
     loggingLevel: LOGGING_LEVEL as LogLevel,
     dbPath: getDbPath(XMTP_ENV + "-receiver"),
   });
-  logAgentDetails([receiverClient]);
+  logAgentDetails(receiverClient);
   console.log("Installation A (receiver) client created");
 
   // Create installation B (sender) client
@@ -57,6 +58,7 @@ async function main(): Promise<void> {
     loggingLevel: LOGGING_LEVEL as LogLevel,
     dbPath: getDbPath(XMTP_ENV + "-sender"),
   });
+  logAgentDetails(senderClient);
   console.log("Installation B (sender) client created");
 
   // Initial sync for both installations
