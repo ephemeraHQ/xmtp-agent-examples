@@ -62,7 +62,7 @@ const DEFAULT_AGENT_OPTIONS: AgentOptions[] = [
     publicKey: "",
     acceptGroups: false,
     acceptTypes: ["text"],
-    networks: [XMTP_ENV],
+    networks: [XMTP_ENV as XmtpEnv],
     connectionTimeout: 30000,
     autoReconnect: true,
   },
@@ -88,7 +88,7 @@ export const initializeClient = async (
     options: AgentOptions,
     onActivity?: () => void,
   ): Promise<void> => {
-    const env = client.options?.env ?? XMTP_ENV;
+    const env = client.options?.env ?? (XMTP_ENV as XmtpEnv);
     let retryCount = 0;
     const acceptTypes = options.acceptTypes || ["text"];
     let backoffTime = RETRY_DELAY_MS;
@@ -344,11 +344,12 @@ export const initializeClient = async (
   await Promise.all(streamPromises);
   return clients;
 };
+
 export const logAgentDetails = (clients: Client[]): void => {
   const clientsByAddress = clients.reduce<Record<string, Client[]>>(
     (acc, client) => {
       const address = client.accountIdentifier?.identifier ?? "";
-      if (!acc[address]) acc[address] = [];
+      acc[address] = acc[address] ?? [];
       acc[address].push(client);
       return acc;
     },
