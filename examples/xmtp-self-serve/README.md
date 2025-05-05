@@ -7,6 +7,7 @@ This example introduces a self-served deployment-ready solution that handles com
 - [x] Idle reconnect
 - [x] Syncing conversations
 - [x] Explicit group handling
+- [x] DB path folder
 - [x] Railway volume mount
 - [x] Multiple clients
 - [x] Content types
