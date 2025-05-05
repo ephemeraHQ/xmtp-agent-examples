@@ -1,5 +1,5 @@
 {
-  "name": "@examples/xmtp-deployment-example",
+  "name": "@examples/xmtp-self-serve",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-deployment-example",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-self-serve",
     "start": "tsx index.ts"
   },
   "dependencies": {

@@ -910,16 +910,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve"
-  dependencies:
-    "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-gaia@workspace:examples/xmtp-gaia":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gaia@workspace:examples/xmtp-gaia"
@@ -976,6 +966,16 @@ __metadata:
 "@examples/xmtp-queue-dual-client@workspace:examples/xmtp-queue-dual-client":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-queue-dual-client@workspace:examples/xmtp-queue-dual-client"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@examples/xmtp-self-serve@workspace:examples/xmtp-self-serve":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-self-serve@workspace:examples/xmtp-self-serve"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"

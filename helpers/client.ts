@@ -76,28 +76,42 @@ export const getDbPath = (description: string = "xmtp") => {
   return `${volumePath}/${description}.db3`;
 };
 
-export const logAgentDetails = (client: Client): void => {
-  console.log(`\x1b[38;2;252;76;52m
-    ██╗  ██╗███╗   ███╗████████╗██████╗ 
-    ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
-     ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
-     ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ 
-    ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     
-    ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
-  \x1b[0m`);
+export const logAgentDetails = (clients: Client[]): void => {
+  const clientsByAddress = clients.reduce<Record<string, Client[]>>(
+    (acc, client) => {
+      const address = client.accountIdentifier?.identifier ?? "";
+      acc[address] = acc[address] ?? [];
+      acc[address].push(client);
+      return acc;
+    },
+    {},
+  );
 
-  const address = client.accountIdentifier?.identifier ?? "";
-  const inboxId = client.inboxId;
-  const env = client.options?.env ?? "dev";
-  console.log(`
-✓ XMTP Client Ready:
-• Address: ${address}
-• InboxId: ${inboxId}
-• Network: ${env}
-• URL: http://xmtp.chat/dm/${address}?env=${env}
-    `);
+  for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
+    const firstClient = clientGroup[0];
+    const inboxId = firstClient.inboxId;
+    const environments = clientGroup
+      .map((c) => c.options?.env ?? "dev")
+      .join(", ");
+    console.log(`\x1b[38;2;252;76;52m
+        ██╗  ██╗███╗   ███╗████████╗██████╗ 
+        ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
+         ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
+         ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ 
+        ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     
+        ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
+      \x1b[0m`);
+
+    const urls = [`http://xmtp.chat/dm/${address}`];
+
+    console.log(`
+    ✓ XMTP Client:
+    • Address: ${address}
+    • InboxId: ${inboxId}
+    • Networks: ${environments}
+    ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
+  }
 };
-
 export function validateEnvironment(vars: string[]): Record<string, string> {
   const missing = vars.filter((v) => !process.env[v]);
 
