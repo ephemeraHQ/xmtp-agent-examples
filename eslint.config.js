@@ -82,7 +82,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/xmtp-deployment-example/**"],
+    files: ["**/xmtp-self-serve/**"],
     rules: {
       "@typescript-eslint/no-unnecessary-condition": "off",
     },

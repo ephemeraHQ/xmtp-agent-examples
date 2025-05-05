@@ -82,8 +82,9 @@ const processMessage = async (
    *
    * Your logic here
    * Reply to the message for example
+   *
+   * await conversation.send("gm");
    */
-  await conversation.send("gm");
 };
 
 await initializeClient(processMessage, [

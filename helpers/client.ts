@@ -120,6 +120,7 @@ export function validateEnvironment(vars: string[]): Record<string, string> {
         });
       }
     } catch (e) {
+      console.error(e);
       /* ignore errors */
     }
 
