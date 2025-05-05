@@ -190,9 +190,7 @@ export const initializeClient = async (
           );
 
           try {
-            await initializeClient(messageHandler, [
-              { ...options, networks: [env] },
-            ]);
+            await initializeClient(messageHandler, [{ ...options }]);
             retryCount = 0; // Reset retry counter after recovery
             continue;
           } catch (fatalError) {
@@ -282,7 +280,7 @@ export const initializeClient = async (
   const streamPromises: Promise<void>[] = [];
 
   for (const option of options) {
-    for (const env of option.networks ?? ["dev", "production"]) {
+    for (const env of option.networks ?? []) {
       try {
         console.log(`[${env}] Initializing client...`);
 
@@ -300,7 +298,7 @@ export const initializeClient = async (
           env: env as XmtpEnv,
           loggingLevel,
           dbPath: getDbPath(`${env}-${signerIdentifier}`),
-          codecs: option.codecs,
+          codecs: option.codecs ?? [],
         });
 
         await client.conversations.sync();
@@ -323,7 +321,7 @@ export const initializeClient = async (
         const streamPromise = streamMessages(
           client,
           messageHandler,
-          { ...option, networks: [env] },
+          { ...option },
           activityTracker,
         );
 

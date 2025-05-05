@@ -28,5 +28,6 @@ await initializeClient(processMessage, [
     acceptGroups: true,
     walletKey: WALLET_KEY,
     networks: ["dev", "production"],
+    welcomeMessage: "Hi, nice to meet you!",
   },
 ]);
