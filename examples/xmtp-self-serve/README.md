@@ -8,7 +8,6 @@ This example introduces a self-served deployment-ready solution that handles com
 - [x] Syncing conversations
 - [x] Explicit group handling
 - [x] Database path folder
-- [x] Node workers
 - [x] Railway volume mount
 - [x] Multiple clients
 - [x] Content types
