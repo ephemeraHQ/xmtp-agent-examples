@@ -910,9 +910,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-deployment-example@workspace:examples/xmtp-deployment-example":
+"@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve-example":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-deployment-example@workspace:examples/xmtp-deployment-example"
+  resolution: "@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve-example"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
