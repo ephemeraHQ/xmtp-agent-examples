@@ -31,14 +31,4 @@ await initializeClient(processMessage, [
     walletKey: WALLET_KEY,
     networks: ["dev", "production"],
   },
-  {
-    acceptGroups: true,
-    walletKey: WALLET_KEY,
-    networks: ["dev", "production"],
-  },
-  {
-    acceptGroups: true,
-    walletKey: WALLET_KEY,
-    networks: ["dev", "production"],
-  },
 ]);
