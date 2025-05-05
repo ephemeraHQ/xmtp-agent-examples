@@ -52,6 +52,7 @@ interface WorkerInstance {
   client: Client;
   options: AgentOptions;
   isActive: boolean;
+  cleanupHandler?: () => void;
 }
 
 /**
@@ -80,6 +81,9 @@ const DEFAULT_AGENT_OPTIONS: AgentOptions[] = [
     autoReconnect: true,
   },
 ];
+
+// Increase max listeners to avoid memory leak warnings
+process.setMaxListeners(100);
 
 // Helper functions
 export const sleep = (ms: number): Promise<void> =>
@@ -189,6 +193,12 @@ class WorkerManager {
     const worker = this.workers.get(name);
     if (worker) {
       worker.isActive = false;
+
+      // Clean up the event listener if it exists
+      if (worker.cleanupHandler) {
+        process.removeListener("beforeExit", worker.cleanupHandler);
+      }
+
       this.workers.delete(name);
       return true;
     }
@@ -246,9 +256,16 @@ class WorkerManager {
       Math.min(WATCHDOG_RESTART_INTERVAL_MS), // Check every WATCHDOG_RESTART_INTERVAL_MS
     );
 
-    process.on("beforeExit", () => {
+    // Use a named cleanup handler so we can remove it later
+    const cleanupHandler = () => {
       clearInterval(watchdogInterval);
-    });
+    };
+
+    // Add the cleanup handler with a unique name
+    process.on("beforeExit", cleanupHandler);
+
+    // Store the cleanup handler in the worker for later removal
+    worker.cleanupHandler = cleanupHandler;
 
     return updateActivity;
   }
