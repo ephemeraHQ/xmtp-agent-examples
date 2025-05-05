@@ -910,9 +910,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve-example":
+"@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve-example"
+  resolution: "@examples/xmtp-deployment-example@workspace:examples/xmtp-self-serve"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
@@ -1004,9 +1004,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type":
+"@examples/xmtp-transactions@workspace:examples/xmtp-transactions":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-transaction-content-type@workspace:examples/xmtp-transaction-content-type"
+  resolution: "@examples/xmtp-transactions@workspace:examples/xmtp-transactions"
   dependencies:
     "@xmtp/content-type-transaction-reference": "npm:^2.0.2"
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"
@@ -2068,16 +2068,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:2.0.8":
-  version: 2.0.8
-  resolution: "@xmtp/node-sdk@npm:2.0.8"
+"@xmtp/node-sdk@npm:2.0.9":
+  version: 2.0.9
+  resolution: "@xmtp/node-sdk@npm:2.0.9"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
     "@xmtp/node-bindings": "npm:1.1.8"
     "@xmtp/proto": "npm:^3.78.0"
-  checksum: 10/cc76d8eab8094ba9f67d08244b2f2ee2a9b790631d696f7c688c830193ff4a51a177290dd23a2e483711d1933a1fe97f14c194cc1b65726a6935790ed05c3956
+  checksum: 10/419015c51bc6f6ec42ee5587cc15fd69a69a31d842febb314915fcc09e1e1ebc760a3c5053c419dc8f5d8e3433747a0ddfaa1250555c05428490921f9b0b5552
   languageName: node
   linkType: hard
 
@@ -5695,7 +5695,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:2.0.8"
+    "@xmtp/node-sdk": "npm:2.0.9"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"

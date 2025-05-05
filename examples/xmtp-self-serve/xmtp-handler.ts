@@ -88,7 +88,7 @@ export const initializeClient = async (
     options: AgentOptions,
     onActivity?: () => void,
   ): Promise<void> => {
-    const env = client.options?.env ?? "undefined";
+    const env = client.options?.env ?? XMTP_ENV;
     let retryCount = 0;
     const acceptTypes = options.acceptTypes || ["text"];
     let backoffTime = RETRY_DELAY_MS;
@@ -302,9 +302,9 @@ export const initializeClient = async (
 
         const client = await Client.create(signer, {
           dbEncryptionKey,
-          env: env as XmtpEnv,
+          env: XMTP_ENV as XmtpEnv,
           loggingLevel,
-          dbPath: getDbPath(`${env}-${signerIdentifier}`),
+          dbPath: getDbPath(`${XMTP_ENV}-${signerIdentifier}`),
           codecs: option.codecs,
         });
 
@@ -361,16 +361,16 @@ export const logAgentDetails = (clients: Client[]): void => {
     const environments = clientGroup
       .map((c) => c.options?.env ?? "dev")
       .join(", ");
+    console.log(`\x1b[38;2;252;76;52m
+        ██╗  ██╗███╗   ███╗████████╗██████╗ 
+        ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
+         ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
+         ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ 
+        ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     
+        ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
+      \x1b[0m`);
 
-    const urls = [
-      `http://xmtp.chat/dm/${address}`,
-      ...(environments.includes("dev")
-        ? [`https://preview.convos.org/dm/${inboxId}`]
-        : []),
-      ...(environments.includes("production")
-        ? [`https://convos.org/dm/${inboxId}`]
-        : []),
-    ];
+    const urls = [`http://xmtp.chat/dm/${address}`];
 
     console.log(`
     ✓ XMTP Client:

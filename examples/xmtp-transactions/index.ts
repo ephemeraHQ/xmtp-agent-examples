@@ -10,18 +10,21 @@ import {
   WalletSendCallsCodec,
 } from "@xmtp/content-type-wallet-send-calls";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { createUSDCTransferCalls, getUSDCBalance } from "./usdc";
+import { USDCHandler } from "./usdc";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
+  validateEnvironment([
+    "WALLET_KEY",
+    "ENCRYPTION_KEY",
+    "XMTP_ENV",
+    "NETWORK_ID",
+  ]);
 
 async function main() {
+  const usdcHandler = new USDCHandler(NETWORK_ID);
   /* Create the signer using viem and parse the encryption key for the local db */
   const signer = createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
@@ -81,7 +84,7 @@ async function main() {
 
     try {
       if (command === "/balance") {
-        const result = await getUSDCBalance(agentAddress);
+        const result = await usdcHandler.getUSDCBalance(agentAddress);
 
         await conversation.send(`Your USDC balance is: ${result} USDC`);
       } else if (command.startsWith("/tx ")) {
@@ -96,7 +99,7 @@ async function main() {
         // Convert amount to USDC decimals (6 decimal places)
         const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
 
-        const walletSendCalls = createUSDCTransferCalls(
+        const walletSendCalls = usdcHandler.createUSDCTransferCalls(
           memberAddress,
           agentAddress,
           amountInDecimals,

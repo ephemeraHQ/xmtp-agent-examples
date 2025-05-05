@@ -111,9 +111,9 @@ main().catch(console.error);
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
 - [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
-- [xmtp-transaction-content-type](/examples/xmtp-transaction-content-type/): Use XMTP content types to send transactions
+- [xmtp-transactions](/examples/xmtp-transactions/): Use XMTP content types to send transactions
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
-- [xmtp-self-serve-example](/examples/xmtp-self-serve-example/): Error handling, stream restarts and deployment encapsulation
+- [xmtp-self-serve](/examples/xmtp-self-serve/): Error handling, stream restarts and deployment encapsulation
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 - [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages

@@ -1,5 +1,6 @@
 import { getRandomValues } from "node:crypto";
 import fs from "node:fs";
+import path from "node:path";
 import { IdentifierKind, type Client, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
 import { createWalletClient, http, toBytes } from "viem";
@@ -99,9 +100,34 @@ export const logAgentDetails = (client: Client): void => {
 
 export function validateEnvironment(vars: string[]): Record<string, string> {
   const missing = vars.filter((v) => !process.env[v]);
+
   if (missing.length) {
-    console.error("Missing env vars:", missing.join(", "));
-    process.exit(1);
+    try {
+      const envPath = path.resolve(process.cwd(), ".env");
+      if (fs.existsSync(envPath)) {
+        const envVars = fs
+          .readFileSync(envPath, "utf-8")
+          .split("\n")
+          .filter((line) => line.trim() && !line.startsWith("#"))
+          .reduce<Record<string, string>>((acc, line) => {
+            const [key, ...val] = line.split("=");
+            if (key && val.length) acc[key.trim()] = val.join("=").trim();
+            return acc;
+          }, {});
+
+        missing.forEach((v) => {
+          if (envVars[v]) process.env[v] = envVars[v];
+        });
+      }
+    } catch (e) {
+      /* ignore errors */
+    }
+
+    const stillMissing = vars.filter((v) => !process.env[v]);
+    if (stillMissing.length) {
+      console.error("Missing env vars:", stillMissing.join(", "));
+      process.exit(1);
+    }
   }
 
   return vars.reduce<Record<string, string>>((acc, key) => {

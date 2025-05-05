@@ -78,6 +78,11 @@ const processMessage = async (
   console.log("Message content: ", message.content);
   console.log("Is DM: ", isDm);
   console.log("Conversation ID: ", conversation.id);
+  /**
+   *
+   * Your logic here
+   * Reply to the message for example
+   */
   await conversation.send("gm");
 };
 
