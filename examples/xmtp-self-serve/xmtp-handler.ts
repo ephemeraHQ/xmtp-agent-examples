@@ -346,13 +346,6 @@ class WorkerManager {
         console.error(`[${env}] Stream error:`, error);
         retryCount++;
 
-        // Try to re-sync conversations
-        try {
-          await client.conversations.sync();
-        } catch (syncError) {
-          console.error(`[${env}] Sync error:`, syncError);
-        }
-
         // If error seems fatal (connection, auth issues), try to recreate client
         if (retryCount > MAX_RETRIES) {
           console.error(
