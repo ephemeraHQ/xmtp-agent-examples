@@ -63,6 +63,7 @@ type MessageHandler = (
   conversation: Conversation,
   message: DecodedMessage,
   isDm: boolean,
+  workerName: string,
 ) => Promise<void> | void;
 
 // Constants
@@ -323,7 +324,13 @@ class WorkerManager {
 
           if (isDm || options.acceptGroups) {
             try {
-              await this.messageHandler(client, conversation, message, isDm);
+              await this.messageHandler(
+                client,
+                conversation,
+                message,
+                isDm,
+                workerName,
+              );
             } catch (handlerError) {
               console.error(`[${env}] Error in message handler:`, handlerError);
             }

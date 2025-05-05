@@ -8,7 +8,9 @@ const processMessage = async (
   conversation: Conversation,
   message: DecodedMessage,
   isDm: boolean,
+  workerName: string,
 ) => {
+  console.log("Worker name: ", workerName);
   console.log("Environment: ", client.options?.env);
   console.log("Agent address: ", client.accountIdentifier?.identifier);
   console.log("Message received from ", message.senderInboxId);
@@ -24,6 +26,16 @@ const processMessage = async (
 };
 
 await initializeClient(processMessage, [
+  {
+    acceptGroups: true,
+    walletKey: WALLET_KEY,
+    networks: ["dev", "production"],
+  },
+  {
+    acceptGroups: true,
+    walletKey: WALLET_KEY,
+    networks: ["dev", "production"],
+  },
   {
     acceptGroups: true,
     walletKey: WALLET_KEY,
