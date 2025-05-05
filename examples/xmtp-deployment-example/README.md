@@ -2,24 +2,15 @@
 
 This PR introduces a self-served deployment-ready solution that handles common challenges developers face when implementing WebSocket applications:
 
-- [x] Stream restarts with automatic reconnection
+- [x] Stream restarts
 - [x] Welcome messages
-- [x] Conversation synchronization across instances
-- [x] Group messaging functionality (optional)
-- [x] Railway deployment configuration
-- [x] Support for multiple clients
-- [x] Optional content type handling
-
-By providing this standardized implementation, we can:
-
-- Reduce repetitive questions from developers
-- Establish a consistent baseline for all implementations
-- Simplify debugging by ensuring everyone follows the same approach
-- Prevent collateral damage from developers who don't fully understand these concepts
-
-Not included:
-
-- Processing messages in a queue, for that we have a specific example
+- [x] Idle reconnect
+- [x] Syncing conversations
+- [x] Explicit group handling
+- [x] Railway volume mount
+- [x] Multiple clients
+- [x] Content types
+- [x] Default key
 
 ## Getting started
 
@@ -38,8 +29,8 @@ To run your XMTP agent, you must create a `.env` file with the following variabl
 
 ```bash
 WALLET_KEY= # the private key of the wallet
-ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV=dev # local, dev, production
+ENCRYPTION_KEY= # encryption key for the local database (optional)
+XMTP_ENV= # the environment to connect to (dev, production, local)
 ```
 
 You can generate random xmtp keys with the following command:
@@ -65,4 +56,35 @@ yarn
 yarn gen:keys
 # run the example
 yarn dev
+```
+
+## Usage
+
+```tsx
+import { validateEnvironment } from "@helpers/client";
+import type { Client, Conversation, DecodedMessage } from "@xmtp/node-sdk";
+import { initializeClient } from "./xmtp-handler";
+
+const { WALLET_KEY } = validateEnvironment(["WALLET_KEY"]);
+const processMessage = async (
+  client: Client,
+  conversation: Conversation,
+  message: DecodedMessage,
+  isDm: boolean,
+) => {
+  console.log("Environment: ", client.options?.env);
+  console.log("Agent address: ", client.accountIdentifier?.identifier);
+  console.log("Message received from ", message.senderInboxId);
+  console.log("Message content: ", message.content);
+  console.log("Is DM: ", isDm);
+  console.log("Conversation ID: ", conversation.id);
+  await conversation.send("gm");
+};
+
+await initializeClient(processMessage, [
+  {
+    acceptGroups: true,
+    walletKey: WALLET_KEY,
+  },
+]);
 ```

@@ -1,5 +1,6 @@
 import {
   createSigner,
+  generateEncryptionKeyHex,
   getDbPath,
   getEncryptionKeyFromHex,
 } from "@helpers/client";
@@ -21,7 +22,7 @@ interface AgentOptions {
   /** Whether to accept group conversations */
   acceptGroups?: boolean;
   /** Encryption key for the client */
-  encryptionKey: string;
+  encryptionKey?: string;
   /** Networks to connect to (default: ['dev', 'production']) */
   networks?: string[];
   /** Public key of the agent */
@@ -48,6 +49,8 @@ type MessageHandler = (
   isDm: boolean,
 ) => Promise<void> | void;
 
+const XMTP_ENV = process.env.XMTP_ENV ?? "dev";
+
 // Constants
 const MAX_RETRIES = 6;
 const RETRY_DELAY_MS = 2000;
@@ -59,7 +62,7 @@ const DEFAULT_AGENT_OPTIONS: AgentOptions[] = [
     publicKey: "",
     acceptGroups: false,
     acceptTypes: ["text"],
-    networks: ["dev", "production"],
+    networks: [XMTP_ENV],
     connectionTimeout: 30000,
     autoReconnect: true,
   },
@@ -284,12 +287,16 @@ export const initializeClient = async (
   const streamPromises: Promise<void>[] = [];
 
   for (const option of options) {
-    for (const env of option.networks ?? ["dev", "production"]) {
+    for (const env of option.networks ?? [XMTP_ENV]) {
       try {
         console.log(`[${env}] Initializing client...`);
 
         const signer = createSigner(option.walletKey);
-        const dbEncryptionKey = getEncryptionKeyFromHex(option.encryptionKey);
+        const dbEncryptionKey = getEncryptionKeyFromHex(
+          option.encryptionKey ??
+            process.env.ENCRYPTION_KEY ??
+            generateEncryptionKeyHex(),
+        );
         const loggingLevel = (process.env.LOGGING_LEVEL ?? "off") as LogLevel;
         const signerIdentifier = (await signer.getIdentifier()).identifier;
 
