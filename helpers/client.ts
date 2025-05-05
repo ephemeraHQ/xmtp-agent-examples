@@ -76,16 +76,17 @@ export const getDbPath = (description: string = "xmtp") => {
   return `${volumePath}/${description}.db3`;
 };
 
-export const logAgentDetails = (clients: Client[]): void => {
-  const clientsByAddress = clients.reduce<Record<string, Client[]>>(
-    (acc, client) => {
-      const address = client.accountIdentifier?.identifier ?? "";
-      acc[address] = acc[address] ?? [];
-      acc[address].push(client);
-      return acc;
-    },
-    {},
-  );
+export const logAgentDetails = (clients: Client | Client[]): void => {
+  const clientsByAddress = Array.isArray(clients)
+    ? clients.reduce<Record<string, Client[]>>((acc, client) => {
+        const address = client.accountIdentifier?.identifier ?? "";
+        acc[address] = acc[address] ?? [];
+        acc[address].push(client);
+        return acc;
+      }, {})
+    : {
+        [clients.accountIdentifier?.identifier ?? ""]: [clients],
+      };
 
   for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
     const firstClient = clientGroup[0];
