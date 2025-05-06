@@ -83,7 +83,6 @@ export const initializeClient = async (
     ...DEFAULT_AGENT_OPTIONS,
     ...opt,
   }));
-  console.log(mergedOptions);
 
   /**
    * Core message streaming function with robust error handling

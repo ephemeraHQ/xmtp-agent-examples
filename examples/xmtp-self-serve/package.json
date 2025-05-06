@@ -11,7 +11,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "*"
+    "@xmtp/node-sdk": "2.0.9-dev.b8c42b4"
   },
   "devDependencies": {
     "tsx": "*",
