@@ -14,6 +14,7 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 > [!TIP]
 > See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+> See the video [here](https://youtu.be/FsmDlF3OECc?t=215) for a quickstart guide.
 
 ### Requirements
 
