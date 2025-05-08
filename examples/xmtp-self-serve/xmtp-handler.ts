@@ -34,8 +34,6 @@ interface AgentOptions {
   connectionTimeout?: number;
   /** Whether to auto-reconnect on fatal errors (default: true) */
   autoReconnect?: boolean;
-  /** Welcome message to send to the conversation */
-  welcomeMessage?: string;
   /** Codecs to use */
   codecs?: any[];
 }
@@ -63,7 +61,6 @@ const DEFAULT_AGENT_OPTIONS: AgentOptions = {
   networks: process.env.XMTP_ENV ? [process.env.XMTP_ENV] : ["dev"],
   connectionTimeout: 30000,
   autoReconnect: true,
-  welcomeMessage: "",
   codecs: [],
 };
 

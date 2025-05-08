@@ -27,6 +27,5 @@ await initializeClient(processMessage, [
   {
     acceptGroups: true,
     walletKey: WALLET_KEY,
-    welcomeMessage: "Hi, nice to meet you!",
   },
 ]);

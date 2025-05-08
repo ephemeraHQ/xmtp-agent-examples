@@ -3,7 +3,6 @@
 This example introduces a self-served deployment-ready solution that handles common challenges developers face when implementing xmtp agents:
 
 - [x] Stream restarts
-- [x] Welcome messages
 - [x] Idle reconnect
 - [x] Syncing conversations
 - [x] Explicit group handling
@@ -12,6 +11,7 @@ This example introduces a self-served deployment-ready solution that handles com
 - [x] Multiple clients
 - [x] Content types
 - [x] Default key
+- [x] Error handling
 
 ## Getting started
 
