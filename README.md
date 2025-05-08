@@ -14,7 +14,7 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 
 > [!TIP]
 > See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-> See the video [here](https://youtu.be/FsmDlF3OECc?t=215) for a quickstart guide.
+> See the video [here](https://youtu.be/djRLnWUvwIA) for a quickstart guide.
 
 ### Requirements
 
@@ -120,6 +120,7 @@ main().catch(console.error);
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-stream-restart](/examples/xmtp-stream-restart/): Agent that restarts the stream when it fails
+- [xmtp-self-serve](/examples/xmtp-self-serve/): Error handling, stream restarts and deployment encapsulation
 
 #### Standalone examples
 
@@ -127,7 +128,6 @@ This examples are outside of this monorepo and showcase how to use and deploy XM
 
 - [gm-bot](https://github.com/xmtp/gm-bot): Simple standalone agent that replies to all messages with "gm"
 - [xmtp-mini-app](https://github.com/ephemeraHQ/xmtp-mini-app): A simple mini app that interacts with a group
-- [xmtp-group-toss](https://github.com/ephemeraHQ/xmtp-group-toss/): Agent that uses a group to toss a coin
 
 ## Web inbox
 
