@@ -142,17 +142,6 @@ export const initializeClient = async (
             );
 
             const isDm = conversation instanceof Dm;
-            if (options.welcomeMessage && isDm) {
-              const sent = await sendWelcomeMessage(
-                client,
-                conversation,
-                options.welcomeMessage,
-              );
-              if (sent) {
-                console.log(`[${env}] Welcome message sent, skipping`);
-                continue;
-              }
-            }
 
             if (isDm || options.acceptGroups) {
               try {
@@ -342,25 +331,4 @@ export const initializeClient = async (
 
   await Promise.all(streamPromises);
   return clients;
-};
-
-export const sendWelcomeMessage = async (
-  client: Client,
-  conversation: Conversation,
-  welcomeMessage: string,
-) => {
-  // Get all messages from this conversation
-  await conversation.sync();
-  const messages = await conversation.messages();
-  // Check if we have sent any messages in this conversation before
-  const sentMessagesBefore = messages.filter(
-    (msg) => msg.senderInboxId.toLowerCase() === client.inboxId.toLowerCase(),
-  );
-  // If we haven't sent any messages before, send a welcome message and skip validation for this message
-  if (sentMessagesBefore.length === 0) {
-    console.log(`Sending welcome message`);
-    await conversation.send(welcomeMessage);
-    return true;
-  }
-  return false;
 };
