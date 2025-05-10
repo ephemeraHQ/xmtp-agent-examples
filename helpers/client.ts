@@ -108,7 +108,6 @@ export const logAgentDetails = async (
     const urls = [`http://xmtp.chat/dm/${address}`];
 
     const conversations = await firstClient.conversations.list();
-    console.log(`Found ${conversations.length} conversations`);
 
     console.log(`
     ✓ XMTP Client:
