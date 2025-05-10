@@ -122,7 +122,7 @@ async function initializeXmtpClient() {
     dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
   });
 
-  logAgentDetails(client);
+  void logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

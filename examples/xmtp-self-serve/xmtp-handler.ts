@@ -35,7 +35,7 @@ interface AgentOptions {
   /** Whether to auto-reconnect on fatal errors (default: true) */
   autoReconnect?: boolean;
   /** Codecs to use */
-  codecs?: any[];
+  codecs?: [];
 }
 
 /**
@@ -290,7 +290,7 @@ export const initializeClient = async (
           env: env as XmtpEnv,
           loggingLevel,
           dbPath: getDbPath(`${env}-${signerIdentifier}`),
-          codecs: option.codecs ?? [],
+          codecs: option.codecs || [],
         });
 
         await client.conversations.sync();
@@ -324,7 +324,7 @@ export const initializeClient = async (
     }
   }
 
-  logAgentDetails(clients);
+  void logAgentDetails(clients);
 
   await Promise.all(streamPromises);
   return clients;

@@ -24,7 +24,7 @@ async function main() {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
-  logAgentDetails(client);
+  void logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();

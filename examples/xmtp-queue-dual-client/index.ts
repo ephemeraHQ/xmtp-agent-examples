@@ -48,7 +48,7 @@ async function main(): Promise<void> {
     loggingLevel: LOGGING_LEVEL as LogLevel,
     dbPath: getDbPath(XMTP_ENV + "-receiver"),
   });
-  logAgentDetails(receiverClient);
+  await logAgentDetails(receiverClient);
   console.log("Installation A (receiver) client created");
 
   // Create installation B (sender) client
@@ -58,7 +58,7 @@ async function main(): Promise<void> {
     loggingLevel: LOGGING_LEVEL as LogLevel,
     dbPath: getDbPath(XMTP_ENV + "-sender"),
   });
-  logAgentDetails(senderClient);
+  await logAgentDetails(senderClient);
   console.log("Installation B (sender) client created");
 
   // Initial sync for both installations

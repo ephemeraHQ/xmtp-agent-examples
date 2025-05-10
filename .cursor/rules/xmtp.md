@@ -252,7 +252,7 @@ async function main() {
     env: XMTP_ENV as XmtpEnv,
   });
 
-  logAgentDetails(client);
+  void logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   /* Sync the conversations from the network to update the local db */

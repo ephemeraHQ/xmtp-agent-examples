@@ -34,7 +34,7 @@ async function main() {
     env: XMTP_ENV as XmtpEnv,
   });
 
-  logAgentDetails(client);
+  void logAgentDetails(client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

@@ -76,7 +76,9 @@ export const getDbPath = (description: string = "xmtp") => {
   return `${volumePath}/${description}.db3`;
 };
 
-export const logAgentDetails = (clients: Client | Client[]): void => {
+export const logAgentDetails = async (
+  clients: Client | Client[],
+): Promise<void> => {
   const clientsByAddress = Array.isArray(clients)
     ? clients.reduce<Record<string, Client[]>>((acc, client) => {
         const address = client.accountIdentifier?.identifier ?? "";
@@ -105,9 +107,13 @@ export const logAgentDetails = (clients: Client | Client[]): void => {
 
     const urls = [`http://xmtp.chat/dm/${address}`];
 
+    const conversations = await firstClient.conversations.list();
+    console.log(`Found ${conversations.length} conversations`);
+
     console.log(`
     ✓ XMTP Client:
     • Address: ${address}
+    • Conversations: ${conversations.length}
     • InboxId: ${inboxId}
     • Networks: ${environments}
     ${urls.map((url) => `• URL: ${url}`).join("\n")}`);

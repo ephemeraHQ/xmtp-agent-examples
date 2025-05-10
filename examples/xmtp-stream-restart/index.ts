@@ -35,7 +35,7 @@ async function main() {
     loggingLevel: LOGGING_LEVEL as LogLevel,
   });
 
-  logAgentDetails(client);
+  void logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
