@@ -51,7 +51,7 @@ type MessageHandler = (
 // Constants
 const MAX_RETRIES = 6;
 const RETRY_DELAY_MS = 2000;
-const WATCHDOG_RESTART_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const RESTART_IN_MINUTES = 0.5;
 const DEFAULT_AGENT_OPTIONS: AgentOptions = {
   walletKey: "",
   dbEncryptionKey: process.env.ENCRYPTION_KEY ?? generateEncryptionKeyHex(),
@@ -109,7 +109,7 @@ export const initializeClient = async (
         const streamPromise = client.conversations.streamAllMessages();
         const stream = await streamPromise;
 
-        console.log(`[${env}] Waiting for messages...`);
+        console.debug(`[${env}] Waiting for messages...`);
 
         for await (const message of stream) {
           try {
@@ -130,11 +130,11 @@ export const initializeClient = async (
             );
 
             if (!conversation) {
-              console.log(`[${env}] Unable to find conversation, skipping`);
+              console.debug(`[${env}] Unable to find conversation, skipping`);
               continue;
             }
 
-            console.log(
+            console.debug(
               `[${env}] Received message: ${message.content as string} from ${message.senderInboxId}`,
             );
 
@@ -150,19 +150,13 @@ export const initializeClient = async (
                 );
               }
             } else {
-              console.log(
+              console.debug(
                 `[${env}] Conversation is not a DM and acceptGroups=false, skipping`,
               );
             }
-
-            // Notify activity monitor after processing
-            if (onActivity) onActivity();
           } catch (error) {
             // Handle errors within message processing without breaking the stream
             console.error(`[${env}] Error processing message:`, error);
-
-            // Still notify activity monitor even on errors
-            if (onActivity) onActivity();
           }
         }
 
@@ -208,7 +202,7 @@ export const initializeClient = async (
         const jitter = Math.random() * 0.3 * backoffTime; // 0-30% jitter
         const waitTime = backoffTime + jitter;
 
-        console.log(
+        console.debug(
           `[${env}] Retrying in ${Math.round(waitTime / 1000)}s... (${retryCount}/${MAX_RETRIES})`,
         );
         await sleep(waitTime);
@@ -223,10 +217,11 @@ export const initializeClient = async (
     restartFn: () => Promise<void>,
   ) => {
     // If no restart interval is set, don't set up the watchdog
-    if (!WATCHDOG_RESTART_INTERVAL_MS) return;
+    if (!RESTART_IN_MINUTES) return;
+    const restartInterval = RESTART_IN_MINUTES * 60 * 1000;
+    const inactivityThreshold = RESTART_IN_MINUTES * 60 * 1000;
 
     let lastRestartTimestamp = Date.now();
-    // We'll still track activity for logging purposes
     let lastActivityTimestamp = Date.now();
     const updateActivity = () => {
       lastActivityTimestamp = Date.now();
@@ -238,15 +233,15 @@ export const initializeClient = async (
         const timeSinceLastRestart = currentTime - lastRestartTimestamp;
         const inactiveTime = currentTime - lastActivityTimestamp;
 
-        // Force restart every WATCHDOG_RESTART_INTERVAL_MS regardless of activity
-        if (timeSinceLastRestart > WATCHDOG_RESTART_INTERVAL_MS) {
-          console.log(
-            `[${env}] Watchdog: Scheduled restart after ${Math.round(timeSinceLastRestart / 1000)}s (inactive for ${Math.round(inactiveTime / 1000)}s)`,
-          );
-
+        // Only restart if there's been no activity for the threshold period
+        // and enough time has passed since the last restart
+        if (
+          inactiveTime > inactivityThreshold &&
+          timeSinceLastRestart > restartInterval
+        ) {
           restartFn()
             .then(() => {
-              console.log(
+              console.debug(
                 `[${env}] Watchdog: Connection restarted successfully`,
               );
               lastRestartTimestamp = Date.now();
@@ -259,7 +254,7 @@ export const initializeClient = async (
             });
         }
       },
-      Math.min(WATCHDOG_RESTART_INTERVAL_MS), // Check every WATCHDOG_RESTART_INTERVAL_MS
+      Math.min(restartInterval, inactivityThreshold) / 2, // Check more frequently
     );
 
     process.on("beforeExit", () => {
@@ -274,7 +269,7 @@ export const initializeClient = async (
   for (const option of mergedOptions) {
     for (const env of option.networks ?? []) {
       try {
-        console.log(`[${env}] Initializing client...`);
+        console.debug(`[${env}] Initializing client...`);
 
         const signer = createSigner(option.walletKey);
         const dbEncryptionKey = getEncryptionKeyFromHex(
@@ -301,7 +296,7 @@ export const initializeClient = async (
           client.conversations
             .sync()
             .then(() => {
-              console.log(`[${env}] Forced re-sync completed`);
+              console.debug(`[${env}] Forced re-sync completed`);
             })
             .catch((error: unknown) => {
               console.error(`[${env}] Force re-sync failed:`, error);
