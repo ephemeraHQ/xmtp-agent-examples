@@ -973,16 +973,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-self-serve@workspace:examples/xmtp-self-serve":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-self-serve@workspace:examples/xmtp-self-serve"
-  dependencies:
-    "@xmtp/node-sdk": "npm:2.0.9-dev.b8c42b4"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
