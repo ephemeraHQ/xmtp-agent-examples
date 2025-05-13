@@ -81,11 +81,5 @@ export default tseslint.config(
       "@typescript-eslint/no-unnecessary-condition": "off",
     },
   },
-  {
-    files: ["**/xmtp-self-serve/**"],
-    rules: {
-      "@typescript-eslint/no-unnecessary-condition": "off",
-    },
-  },
   eslintPluginPrettierRecommended,
 );

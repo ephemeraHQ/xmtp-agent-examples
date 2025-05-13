@@ -114,7 +114,6 @@ main().catch(console.error);
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-transactions](/examples/xmtp-transactions/): Use XMTP content types to send transactions
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
-- [xmtp-self-serve](/examples/xmtp-self-serve/): Error handling, stream restarts and deployment encapsulation
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 - [xmtp-attachment-content-type](/examples/xmtp-attachment-content-type/): Agent that sends images
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
