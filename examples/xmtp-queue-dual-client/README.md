@@ -46,15 +46,3 @@ yarn gen:keys
 # Run the example
 yarn dev
 ```
-
-## Concepts
-
-1. **Epochs in XMTP**: Represent group membership versions. Advance only with structural changes, not regular messaging.
-
-2. **Sync requirements**: No need to sync before every message. XMTP decrypts messages from up to 3 epochs back.
-
-3. **Failure conditions**: Messages fail only when more than 3 epochs behind due to unsynced membership changes.
-
-4. **Optimal approach**: Use periodic conversations.sync(), implement retry logic, and combine with message streams.
-
-5. **Efficient implementation**: Sync only when necessary, use retry mechanisms for occasional failures.
