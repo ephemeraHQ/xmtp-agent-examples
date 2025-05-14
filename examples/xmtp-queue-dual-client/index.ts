@@ -169,6 +169,7 @@ async function processMessageQueue(client: Client): Promise<void> {
   if (!message) return;
 
   try {
+    await client.conversations.sync();
     // Get conversation
     const conversation = await client.conversations.getConversationById(
       message.conversationId,
