@@ -82,11 +82,6 @@ async function startReceiverInstallation(client: Client): Promise<void> {
     void syncConversations(client, "Installation A");
   }, SYNC_INTERVAL);
 
-  // Set up periodic processing of missed messages every 60 seconds
-  setInterval(() => {
-    void processMissedMessages(client);
-  }, SYNC_INTERVAL);
-
   try {
     // Start DM and Group message streams
     await setupMessageStreams(client);
@@ -134,71 +129,6 @@ async function setupMessageStreams(client: Client): Promise<void> {
     });
 
     console.log(`Queued response for conversation ${message.conversationId}`);
-  }
-}
-
-async function processMissedMessages(client: Client): Promise<void> {
-  console.log("Processing missed messages in Installation A...");
-
-  try {
-    // First sync conversations to get the latest state
-    await client.conversations.sync();
-
-    // Get all conversations
-    const conversations = await client.conversations.list();
-
-    // Check each conversation for recent messages
-    for (const conversation of conversations) {
-      try {
-        // Get latest messages (limit to 10 recent messages)
-        const messages = await conversation.messages({ limit: 10 });
-
-        // Filter out messages not from our agent and that are text messages
-        const missedMessages = messages.filter(
-          (message) =>
-            message.senderInboxId.toLowerCase() !==
-              client.inboxId.toLowerCase() &&
-            message.contentType?.typeId === "text",
-        );
-
-        // Process any messages received in the last minute that might have been missed by the stream
-        const oneMinuteAgo = new Date(Date.now() - 60000);
-        const recentMissedMessages = missedMessages.filter(
-          (message) => message.sentAt > oneMinuteAgo,
-        );
-
-        for (const message of recentMissedMessages) {
-          const content = message.content as string;
-          console.log(
-            `Found missed message: "${content}" in conversation ${message.conversationId}`,
-          );
-
-          // Queue response for missed message
-          const response = `Reply to missed message: "${content}" at ${new Date().toISOString()}`;
-
-          messageQueue.push({
-            conversationId: message.conversationId,
-            content: response,
-            priority: 2, // Higher priority for missed messages
-            timestamp: Date.now(),
-          });
-
-          console.log(
-            `Queued response for missed message in conversation ${message.conversationId}`,
-          );
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        console.error(
-          `Error processing conversation ${conversation.id}:`,
-          errorMessage,
-        );
-      }
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error processing missed messages:", errorMessage);
   }
 }
 
