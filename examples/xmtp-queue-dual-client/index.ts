@@ -28,40 +28,91 @@ const messageQueue: QueuedMessage[] = [];
 // Queue processing interval in milliseconds (1 second)
 const PROCESS_INTERVAL = 1000;
 
+// Sync interval in minutes (5 minutes)
+const SYNC_INTERVAL = 5;
+
 async function main(): Promise<void> {
-  console.log("Starting XMTP Queue Agent...");
+  console.log("Starting XMTP Queue Dual Client Agent...");
 
   // Create wallet signer and encryption key
   const signer = createSigner(WALLET_KEY);
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-  // Create a single client
-  const client = await Client.create(signer, {
+  // Create receiving client
+  const receivingClient = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
     loggingLevel: LOGGING_LEVEL as LogLevel,
-    dbPath: getDbPath(XMTP_ENV),
+    dbPath: getDbPath(XMTP_ENV + "-receiving"),
   });
 
-  console.log("XMTP client created");
-  void logAgentDetails(client);
+  console.log("XMTP receiving client created");
+  void logAgentDetails(receivingClient);
 
-  // Initial sync
-  console.log("Performing initial sync...");
-  await client.conversations.sync();
+  // Create sending client
+  const sendingClient = await Client.create(signer, {
+    dbEncryptionKey,
+    env: XMTP_ENV as XmtpEnv,
+    loggingLevel: LOGGING_LEVEL as LogLevel,
+    dbPath: getDbPath(XMTP_ENV + "-sending"),
+  });
 
-  // Start message processor
-  startMessageProcessor(client);
+  console.log("XMTP sending client created");
+  void logAgentDetails(sendingClient);
 
-  // Start message stream
-  void setupMessageStream(client);
+  // Initial sync for both clients
+  console.log("Performing initial sync for receiving client...");
+  await receivingClient.conversations.sync();
+
+  console.log("Performing initial sync for sending client...");
+  await sendingClient.conversations.sync();
+
+  // Start periodic sync for both clients
+  startPeriodicSync(receivingClient, sendingClient);
+
+  // Start message processor with sending client
+  startMessageProcessor(sendingClient);
+
+  // Start message stream with receiving client
+  void setupMessageStream(receivingClient);
 
   process.stdin.resume(); // Keep process running
 }
 
+/**
+ * Start periodic sync for both clients
+ */
+function startPeriodicSync(
+  receivingClient: Client,
+  sendingClient: Client,
+): void {
+  console.log(`Setting up periodic sync every ${SYNC_INTERVAL} minutes`);
+
+  setInterval(
+    () => {
+      void (async () => {
+        try {
+          console.log("Syncing receiving client...");
+          await receivingClient.conversations.sync();
+          console.log("Receiving client synced successfully");
+
+          console.log("Syncing sending client...");
+          await sendingClient.conversations.sync();
+          console.log("Sending client synced successfully");
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          console.error("Error during periodic sync:", errorMessage);
+        }
+      })();
+    },
+    SYNC_INTERVAL * 60 * 1000, // 5 minutes in milliseconds
+  );
+}
+
 async function setupMessageStream(client: Client): Promise<void> {
   try {
-    console.log("Setting up message stream...");
+    console.log("Setting up message stream on receiving client...");
     const stream = await client.conversations.streamAllMessages();
     console.log("Message stream started successfully");
 
@@ -93,10 +144,17 @@ async function setupMessageStream(client: Client): Promise<void> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error in message stream:", errorMessage);
+
+    // Attempt to reconnect after a delay
+    setTimeout(() => {
+      console.log("Attempting to reconnect message stream...");
+      void setupMessageStream(client);
+    }, 5000);
   }
 }
 
 function startMessageProcessor(client: Client): void {
+  console.log("Starting message processor on sending client...");
   // Process message queue periodically
   setInterval(() => {
     void processMessageQueue(client);
@@ -111,9 +169,6 @@ async function processMessageQueue(client: Client): Promise<void> {
   if (!message) return;
 
   try {
-    // Sync conversations before sending
-    await client.conversations.sync();
-
     // Get conversation
     const conversation = await client.conversations.getConversationById(
       message.conversationId,
