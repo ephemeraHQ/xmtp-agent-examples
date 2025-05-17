@@ -1,19 +1,24 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "rootDir": "../../",
-    "baseUrl": "../../",
+    "rootDir": "../..",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "../..",
     "paths": {
       "@helpers/*": ["helpers/*"]
     },
-    "lib": ["ES2020", "DOM"],
-    "types": ["node"]
+    "noImplicitAny": false,
+    "downlevelIteration": true
   },
-  "include": ["*.ts", "*.d.ts"],
-  "references": [
-    {
-      "path": "../../helpers"
-    }
-  ]
+  "include": [
+    "./**/*.ts",
+    "../../helpers/**/*.ts"
+  ],
+  "references": []
 } 

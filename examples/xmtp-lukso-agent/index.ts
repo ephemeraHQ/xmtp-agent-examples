@@ -1,48 +1,170 @@
-import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-  getDbPath,
-} from "@helpers/client";
+import { Client, type LogLevel, type XmtpEnv, Group, IdentifierKind } from "@xmtp/node-sdk";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import {
   ContentTypeWalletSendCalls,
   WalletSendCallsCodec,
 } from "@xmtp/content-type-wallet-send-calls";
-import { Client, type LogLevel, type XmtpEnv, Group } from "@xmtp/node-sdk";
 import { ethers } from "ethers";
 import OpenAI from "openai";
 import { GraphQLClient, gql } from 'graphql-request';
 import fetch from 'cross-fetch';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
 
-// Get environment variables
-const {
-  WALLET_KEY,
-  ENCRYPTION_KEY,
-  XMTP_ENV,
-  OPENAI_API_KEY,
-  LOGGING_LEVEL = "info",
-  NETWORK_ID = "lukso-testnet",
-} = validateEnvironment([
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
-  "XMTP_ENV",
-  "OPENAI_API_KEY", // Required for AI responses
-]);
+// Ensure environment variables are loaded
+dotenv.config();
+
+// Check critical environment variables and provide feedback
+const WALLET_KEY = process.env.WALLET_KEY;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const XMTP_ENV = process.env.XMTP_ENV || 'dev';
+
+// Validate critical environment variables
+if (!WALLET_KEY) {
+  console.error("❌ ERROR: WALLET_KEY environment variable is not set");
+  console.error("Please create a .env file with WALLET_KEY or set it in your environment");
+  console.error("You can generate keys using: yarn gen:keys");
+  process.exit(1);
+}
+
+if (!ENCRYPTION_KEY) {
+  console.error("❌ ERROR: ENCRYPTION_KEY environment variable is not set");
+  console.error("Please create a .env file with ENCRYPTION_KEY or set it in your environment");
+  console.error("You can generate keys using: yarn gen:keys");
+  process.exit(1);
+}
+
+// Get other environment variables (with defaults)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const LOGGING_LEVEL = process.env.LOGGING_LEVEL || 'info';
+const NETWORK_ID = process.env.NETWORK_ID || 'lukso-testnet';
+const LUKSO_CUSTOM_RPC = process.env.LUKSO_CUSTOM_RPC || '';
+
+// Helper functions (local implementation to avoid import issues)
+function createSigner(key: string): any {
+  try {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid private key: key is undefined or not a string');
+    }
+    
+    // Try to fix common key format issues
+    const normalizedKey = key.trim();
+    // Make sure it has 0x prefix
+    const keyWithPrefix = normalizedKey.startsWith('0x') ? normalizedKey : `0x${normalizedKey}`;
+    
+    // Validate key length
+    if (keyWithPrefix.length !== 66) {  // 0x + 64 hex chars
+      console.warn(`Warning: Private key has unusual length ${keyWithPrefix.length} (expected 66 chars including 0x prefix)`);
+    }
+    
+    console.log(`Creating wallet with key length: ${keyWithPrefix.length}`);
+    
+    // Create the wallet with the normalized key
+    const account = new ethers.Wallet(keyWithPrefix);
+    console.log(`Successfully created wallet with address: ${account.address}`);
+    
+    return {
+      type: "EOA",
+      getIdentifier: () => ({
+        identifierKind: IdentifierKind.Ethereum,
+        identifier: account.address.toLowerCase(),
+      }),
+      signMessage: async (message: string) => {
+        const signature = await account.signMessage(message);
+        return ethers.getBytes(signature);
+      },
+    };
+  } catch (error) {
+    console.error("Error creating signer:", error);
+    throw new Error(`Failed to create signer: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+function getEncryptionKeyFromHex(hex: string): Uint8Array {
+  try {
+    // Normalize the hex string
+    const cleaned = hex.trim().startsWith('0x') ? hex.trim().slice(2) : hex.trim();
+    
+    // Check if the length is valid (should be 64 characters for 32 bytes)
+    if (cleaned.length !== 64) {
+      console.warn(`Warning: Encryption key has unusual length ${cleaned.length} (expected 64 hex chars)`);
+    }
+    
+    // Convert hex to bytes
+    const bytes = new Uint8Array(cleaned.length / 2);
+    for (let i = 0; i < cleaned.length; i += 2) {
+      // Parse each pair of hex chars into a byte
+      const byte = parseInt(cleaned.slice(i, i + 2), 16);
+      if (isNaN(byte)) {
+        throw new Error(`Invalid hex character at position ${i}`);
+      }
+      bytes[i / 2] = byte;
+    }
+    
+    console.log(`Created encryption key with ${bytes.length} bytes`);
+    return bytes;
+  } catch (error) {
+    console.error("Error parsing encryption key:", error);
+    throw new Error(`Failed to parse encryption key: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+function validateEnvironment(required: string[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const key of required) {
+    const value = process.env[key];
+    if (!value) {
+      console.warn(`Missing required env var ${key}`);
+    }
+    result[key] = value || '';
+  }
+  return process.env as Record<string, string>;
+}
+
+function logAgentDetails(client: Client): void {
+  console.log(`
+=======================
+🤖 LUKSO XMTP Agent 🤖
+=======================
+Inbox ID: ${client.inboxId}
+Installation ID: ${client.installationId}
+=======================
+`);
+}
+
+function getDbPath(env: string): string {
+  const timestamp = Date.now().toString();
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? '.data/xmtp';
+  if (!fs.existsSync(volumePath)) {
+    fs.mkdirSync(volumePath, { recursive: true });
+  }
+  const uniquePath = `${volumePath}/${env}-lukso-${timestamp}.db3`;
+  console.log(`Creating new database at: ${uniquePath}`);
+  return uniquePath;
+}
 
 // Initialize OpenAI client if API key is provided
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
 // LUKSO blockchain constants
 const LUKSO_RPC_MAINNET = "https://rpc.lukso.gateway.fm";
 const LUKSO_RPC_TESTNET = "https://rpc.testnet.lukso.gateway.fm";
 
-// For this implementation, we'll use the testnet
-const LUKSO_RPC = LUKSO_RPC_TESTNET;
+// Allow a custom RPC to be provided via env variable
+const LUKSO_RPC = LUKSO_CUSTOM_RPC || 
+  (NETWORK_ID === "lukso-mainnet" ? LUKSO_RPC_MAINNET : LUKSO_RPC_TESTNET);
 
 // Initialize JSON-RPC provider
-const provider = new ethers.JsonRpcProvider(LUKSO_RPC);
+let provider: ethers.JsonRpcProvider;
+try {
+  provider = new ethers.JsonRpcProvider(LUKSO_RPC);
+  console.log(`Connected to LUKSO RPC at ${LUKSO_RPC}`);
+} catch (error) {
+  console.error(`Failed to connect to LUKSO RPC at ${LUKSO_RPC}:`, error);
+  // Create a fallback provider that will retry connections
+  provider = new ethers.JsonRpcProvider(LUKSO_RPC);
+}
 
 // ERC725Y interface for Universal Profiles
 const erc725yAbi = [
@@ -103,8 +225,29 @@ const LSP3_LINKS_KEY = "0xce6282c783586e5d6a0c5c59c20d290ce7d1e33219ebbb603fe18b
 const MAX_RETRIES = 6; // Maximum retry attempts
 const RETRY_DELAY_MS = 10000; // 10 seconds between retries
 
+// Define the groups cache file path
+const DATA_DIR = ".data";
+const GROUPS_CACHE_FILE = path.join(DATA_DIR, "groups-cache.json");
+
+// Type for groups cache data
+interface GroupCacheEntry {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: number;
+  memberCount: number;
+}
+
+// Make sure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
 // Helper function to pause execution
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Track active groups created by the agent
+const activeGroups: Map<string, Group> = new Map();
 
 // Simple USDC handler for Base network (simplified implementation)
 class LYXHandler {
@@ -131,22 +274,29 @@ class LYXHandler {
     amount: number
   ) {
     // Implementation for LYX transfer (native token)
-    const amountInWei = (amount * Math.pow(10, 18)).toString();
+    const amountInWei = ethers.parseEther(amount.toString()).toString();
+    
+    // Convert addresses to proper format with 0x prefix
+    const from = fromAddress.startsWith('0x') ? fromAddress : `0x${fromAddress}`;
+    const to = recipientAddress.startsWith('0x') ? recipientAddress : `0x${recipientAddress}`;
+    
+    // Get chain ID in hex format (0x42 for testnet, 0x2A for mainnet)
+    const chainId = this.networkId === "lukso-mainnet" ? "0x2A" : "0x42";
     
     return {
       version: "1.0",
-      from: fromAddress as `0x${string}`,
-      chainId: this.networkId === "lukso-mainnet" ? "0x2A" as `0x${string}` : "0x42" as `0x${string}`, // 42 for testnet, 2A for mainnet
+      from: from as `0x${string}`,
+      chainId: chainId as `0x${string}`,
       calls: [
         {
-          to: recipientAddress as `0x${string}`,
+          to: to as `0x${string}`,
           value: amountInWei,
           data: "0x" as `0x${string}`, // Empty data for native transfers
           metadata: {
             description: `Transfer ${amount} LYX on LUKSO ${this.networkId === "lukso-mainnet" ? "Mainnet" : "Testnet"}`,
             transactionType: "transfer",
             currency: "LYX",
-            amount: amount * Math.pow(10, 18),
+            amount: amountInWei,
             decimals: 18,
             networkId: this.networkId,
           },
@@ -525,41 +675,123 @@ async function getTokenBalance(address: string): Promise<any> {
 }
 
 /**
- * Get transaction history
+ * Get transaction history using GraphQL
  */
 async function getTransactionHistory(address: string): Promise<any> {
   try {
-    // Get transaction history
-    const history = await provider.getHistory(address);
+    console.log(`Getting transaction history for address: ${address}`);
+    console.log(`Using GraphQL endpoint: ${LUKSO_API_URL}`);
     
-    const transactions = history.slice(0, 5).map((tx: ethers.TransactionResponse) => {
-      const isSender = tx.from.toLowerCase() === address.toLowerCase();
-      const direction = isSender ? "send" : "receive";
-      const value = ethers.formatEther(tx.value || 0n);
-      
-      // Format the timestamp
-      const timestamp = new Date().toISOString().split("T")[0]; // Fallback
+    // Add wildcard for partial address matching
+    const wildcardAddress = `%${address.toLowerCase()}%`;
+    const result = await graphQLClient.request(
+      GET_TRANSACTIONS_QUERY,
+      { address: wildcardAddress }
+    );
+    
+    console.log(`Transaction result:`, JSON.stringify(result, null, 2));
+    
+    const data = result as any;
+    
+    if (data.Transaction && Array.isArray(data.Transaction)) {
+      const transactions = data.Transaction.map((tx: any) => {
+        const isSender = tx.from?.toLowerCase() === address.toLowerCase();
+        const direction = isSender ? "send" : "receive";
+        const value = ethers.formatEther(tx.value || "0");
+        
+        // Format timestamp (timestamp is typically in seconds since epoch)
+        const timestamp = tx.timestamp
+          ? new Date(Number(tx.timestamp) * 1000).toLocaleDateString()
+          : "Unknown date";
+        
+        return {
+          hash: tx.id,
+          type: direction,
+          value: `${value} LYX`,
+          timestamp
+        };
+      });
       
       return {
-        hash: tx.hash,
-        type: direction,
-        value: `${value} LYX`,
-        timestamp
+        address,
+        transactions: transactions.length > 0 ? transactions : [
+          { hash: "No transactions found", type: "-", value: "-", timestamp: "-" }
+        ]
       };
-    });
+    }
     
-    return {
-      address,
-      transactions: transactions.length > 0 ? transactions : [
-        { hash: "No transactions found", type: "-", value: "-", timestamp: "-" }
-      ]
-    };
-  } catch (error) {
-    console.error("Error fetching transactions:", error);
+    // If we couldn't get transactions from the Explorer API, try getting them from the RPC
+    try {
+      // Fallback to on-chain query for recent transactions
+      console.log("Falling back to RPC for transactions...");
+      const latestBlock = await provider.getBlockNumber();
+      
+      // Look back a few blocks for transactions
+      const lookbackBlocks = 5;
+      const startBlock = Math.max(0, latestBlock - lookbackBlocks);
+      
+      const fallbackTxs = [];
+      
+      for (let blockNum = latestBlock; blockNum >= startBlock; blockNum--) {
+        try {
+          const block = await provider.getBlock(blockNum);
+          if (block && block.transactions) {
+            for (const txHash of block.transactions.slice(0, 10)) { // Check first 10 txs in each block
+              const tx = await provider.getTransaction(txHash);
+              if (tx) {
+                if (tx.from.toLowerCase() === address.toLowerCase() || 
+                    (tx.to && tx.to.toLowerCase() === address.toLowerCase())) {
+                  
+                  const isSender = tx.from.toLowerCase() === address.toLowerCase();
+                  const direction = isSender ? "send" : "receive";
+                  const value = ethers.formatEther(tx.value || 0n);
+                  
+                  fallbackTxs.push({
+                    hash: tx.hash,
+                    type: direction,
+                    value: `${value} LYX`,
+                    timestamp: "Recent"
+                  });
+                  
+                  if (fallbackTxs.length >= 5) break; // Limit to 5 transactions
+                }
+              }
+            }
+          }
+          
+          if (fallbackTxs.length >= 5) break; // Limit to 5 transactions
+        } catch (blockError) {
+          console.error(`Error fetching block ${blockNum}:`, blockError);
+        }
+      }
+      
+      return {
+        address,
+        transactions: fallbackTxs.length > 0 ? fallbackTxs : [
+          { hash: "No transactions found", type: "-", value: "-", timestamp: "-" }
+        ]
+      };
+    } catch (rpcError) {
+      console.error("Error fetching transactions from RPC:", rpcError);
+    }
+    
+    // Fallback to placeholder if no data
     return {
       address,
       transactions: [
-        { hash: "Error", type: "error", value: "Error", timestamp: "Error" }
+        { 
+          type: "Note", 
+          hash: "", 
+          description: "Transaction history is temporarily unavailable - please try again later" 
+        }
+      ]
+    };
+  } catch (error) {
+    console.error("Error fetching transaction history:", error);
+    return {
+      address,
+      transactions: [
+        { type: "Error", hash: "", description: "Error fetching transaction history" }
       ]
     };
   }
@@ -778,6 +1010,11 @@ async function queryLuksoData(command: string, params: Record<string, string>): 
  */
 async function getAIResponse(message: string): Promise<string> {
   try {
+    // If OpenAI API key is not provided, return a default response
+    if (!openai) {
+      return "AI responses are currently disabled. Please contact the administrator to enable this feature.";
+    }
+    
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: message }],
       model: "gpt-4.1-mini", // You can change to a different model
@@ -822,15 +1059,15 @@ async function processMessage(
       }
       
       const profilesList = profiles.map((profile, index) => 
-        `${index + 1}. ${profile.name || "Unnamed"} - ${profile.accountAddress}\n   ${profile.description || "No description"}`
+        `${index + 1}. ${profile.name || "Unnamed"} - ${profile.accountAddress || profile.address}\n   ${profile.description || ""}`
       ).join("\n\n");
       
       return { 
-        text: `Found ${profiles.length} Universal Profiles matching "${searchTerm}":\n\n${profilesList}\n\nUse /query <address> to get more details about a profile.` 
+        text: `Found ${profiles.length} accounts matching "${searchTerm}":\n\n${profilesList}\n\nUse /query <address> to get more details.` 
       };
     } catch (error) {
       console.error("Error searching profiles:", error);
-      return { text: "Error searching for Universal Profiles. Please try again." };
+      return { text: `Error searching for profiles: ${error instanceof Error ? error.message : String(error)}` };
     }
   } else if (command === "/query") {
     // Get details about a specific Universal Profile
@@ -844,39 +1081,43 @@ async function processMessage(
     }
     
     try {
-      // Get profile from subgraph
+      // Get profile from blockchain API
       const profile = await getUniversalProfileByAddress(address);
       
       if (!profile) {
         // Fall back to on-chain lookup
         const onChainProfile = await getProfileData(address);
         return { 
-          text: `Universal Profile (on-chain) for ${address}:\nName: ${onChainProfile.name}\nDescription: ${onChainProfile.description}` 
+          text: `Profile (on-chain) for ${address}:\nName: ${onChainProfile.name}\nDescription: ${onChainProfile.description}` 
         };
       }
       
-      // Get additional data
-      const assets = await getProfileAssets(address);
+      // Get transaction data (instead of assets)
+      const txActivity = await getTransactionHistory(address);
       
-      let assetsText = "";
-      if (assets) {
-        const ownedCount = assets.ownedAssets?.length || 0;
-        const issuedCount = assets.issuedAssets?.length || 0;
+      let txText = "";
+      if (txActivity && txActivity.transactions) {
+        const txCount = txActivity.transactions.length;
+        txText = `\nRecent Transactions: ${txCount}`;
         
-        assetsText = `\nOwned Assets: ${ownedCount}\nIssued Assets: ${issuedCount}`;
+        if (txCount > 0) {
+          txText += `\n${txActivity.transactions.slice(0, 3).map((tx: any) => 
+            `- ${tx.type || "TX"}: ${tx.hash?.substring(0, 10)}...`
+          ).join("\n")}`;
+        }
       }
       
       return { 
-        text: `Universal Profile for ${profile.accountAddress}:\nName: ${profile.name || "Unnamed"}\nDescription: ${profile.description || "No description"}\nCreated: ${new Date(parseInt(profile.createdAt) * 1000).toLocaleDateString()}${assetsText}\n\nYou can run regular commands like tokens/nfts/profile with this address.` 
+        text: `Account for ${profile.accountAddress || profile.address}:\nName: ${profile.name || "Unnamed"}\nCreated: ${new Date(profile.createdAt * 1000).toLocaleDateString()}${txText}\n\nYou can run regular commands like tokens/nfts/profile with this address.` 
       };
     } catch (error) {
       console.error("Error querying profile:", error);
-      return { text: "Error retrieving Universal Profile details. Please try again." };
+      return { text: `Error retrieving profile details: ${error instanceof Error ? error.message : String(error)}` };
     }
   } else if (command === "/creategroup") {
     // Create a new group
     if (args.length < 2) {
-      return { text: "Please provide a group name and at least one address. Usage: /creategroup <name> <address1> [address2...]" };
+      return { text: "Please provide a group name and at least one address. Usage: /creategroup <n> <address1> [address2...]" };
     }
     
     const groupName = args[0];
@@ -890,20 +1131,34 @@ async function processMessage(
     
     try {
       // Try to get inbox IDs for the addresses
-      const inboxIds = [];
+      const inboxIds: string[] = [];
       
       for (const address of validAddresses) {
         try {
-          const inboxStates = await client.getUsersFromIdentifiers([{
-            identifierKind: 0, // Ethereum address type
-            identifier: address
-          }]);
+          // Let's try to find XMTP users directly by checking for DM capabilities
+          // This is a workaround since some API methods might not be available
+          let foundUser = false;
           
-          if (inboxStates.length > 0 && inboxStates[0].inboxId) {
-            inboxIds.push(inboxStates[0].inboxId);
+          try {
+            // Try to create a DM conversation with the address (this checks if user exists)
+            const dm = await client.conversations.newDmWithIdentifier({
+              identifierKind: IdentifierKind.Ethereum,
+              identifier: address,
+            });
+            
+            if (dm && dm.peerInboxId) {
+              inboxIds.push(dm.peerInboxId);
+              foundUser = true;
+            }
+          } catch (error) {
+            console.warn(`Couldn't create DM for XMTP user at address ${address}`);
+          }
+          
+          if (!foundUser) {
+            console.warn(`Couldn't find XMTP user for address ${address}`);
           }
         } catch (error) {
-          console.warn(`Couldn't find XMTP user for address ${address}`);
+          console.warn(`Error finding XMTP user for address ${address}:`, error);
         }
       }
       
@@ -911,13 +1166,10 @@ async function processMessage(
         return { text: "None of the provided addresses are registered on XMTP. Group creation requires at least one XMTP user." };
       }
       
-      // Create the group including the sender
-      const senderInboxStates = await client.preferences.inboxStateFromInboxIds([conversation.peerInboxId]);
-      if (senderInboxStates.length > 0) {
-        const senderInboxId = conversation.peerInboxId;
-        if (!inboxIds.includes(senderInboxId)) {
-          inboxIds.push(senderInboxId);
-        }
+      // Include the sender in the group
+      const senderInboxId = conversation.peerInboxId;
+      if (senderInboxId && !inboxIds.includes(senderInboxId)) {
+        inboxIds.push(senderInboxId);
       }
       
       // Create the group
@@ -931,6 +1183,9 @@ async function processMessage(
       if (!group) {
         return { text: "Error creating group. Please try again." };
       }
+      
+      // Save groups to cache
+      saveGroupsToCache();
       
       // Send a welcome message to the group
       await group.send(`Welcome to the "${groupName}" group! This group was created by ${senderAddress} and has ${inboxIds.length} initial members.`);
@@ -962,17 +1217,12 @@ async function processMessage(
     }
     
     try {
-      // Get inbox ID for the address
-      const inboxStates = await client.getUsersFromIdentifiers([{
-        identifierKind: 0, // Ethereum address type
-        identifier: address
-      }]);
+      // Get inbox ID for the address using our helper
+      const inboxId = await getInboxIdFromAddress(client, address);
       
-      if (inboxStates.length === 0 || !inboxStates[0].inboxId) {
+      if (!inboxId) {
         return { text: `Address ${address} is not registered on XMTP.` };
       }
-      
-      const inboxId = inboxStates[0].inboxId;
       
       // Add member to group
       const result = await addMemberToGroup(groupId, inboxId);
@@ -1074,17 +1324,12 @@ async function processMessage(
     }
     
     try {
-      // Get inbox ID for the address
-      const inboxStates = await client.getUsersFromIdentifiers([{
-        identifierKind: 0, // Ethereum address type
-        identifier: address
-      }]);
+      // Get inbox ID for the address using our helper
+      const inboxId = await getInboxIdFromAddress(client, address);
       
-      if (inboxStates.length === 0 || !inboxStates[0].inboxId) {
+      if (!inboxId) {
         return { text: `Address ${address} is not registered on XMTP.` };
       }
-      
-      const inboxId = inboxStates[0].inboxId;
       
       // Remove member from group
       const result = await removeMemberFromGroup(groupId, inboxId);
@@ -1109,25 +1354,59 @@ async function processMessage(
       console.error("Error getting balance:", error);
       return { text: "Error fetching balance. Please try again." };
     }
-  } else if (command.startsWith("/tx ")) {
-    const amount = parseFloat(args[0]);
+  } else if (command === "/tx" || command.startsWith("/tx ")) {
+    // Handle transaction command without requiring OpenAI
+    // Updated to support both amount and address parameters
+    const txParts = content.substring(4).trim().split(" ");
+    
+    // Check if we have at least the amount
+    if (txParts.length === 0 || txParts[0] === "") {
+      return { text: "Please provide a valid amount and optionally a recipient address. Usage: /tx <amount> [address]" };
+    }
+    
+    const amount = parseFloat(txParts[0]);
     if (isNaN(amount) || amount <= 0) {
-      return { text: "Please provide a valid amount. Usage: /tx <amount>" };
+      return { text: "Please provide a valid amount. Usage: /tx <amount> [address]" };
+    }
+    
+    // Get the recipient address (optional)
+    let recipientAddress = agentAddress; // Default to agent address
+    
+    if (txParts.length > 1) {
+      const providedAddress = txParts[1];
+      if (ethers.isAddress(providedAddress)) {
+        recipientAddress = providedAddress;
+      } else {
+        return { text: `Invalid recipient address: ${providedAddress}. Usage: /tx <amount> [address]` };
+      }
     }
 
-    // Convert amount to LYX decimals (18 decimal places)
-    const amountInDecimals = Math.floor(amount * Math.pow(10, 18));
-    
-    const walletSendCalls = lyxHandler.createLYXTransferCalls(
-      senderAddress,
-      agentAddress,
-      amount // Pass the human-readable amount, conversion handled in createLYXTransferCalls
-    );
-    
-    return { 
-      content: walletSendCalls, 
-      contentType: ContentTypeWalletSendCalls 
-    };
+    try {
+      // Get sender balance to check if they have enough
+      const senderBalance = await lyxHandler.getLYXBalance(senderAddress);
+      const senderBalanceEth = parseFloat(senderBalance);
+      
+      if (senderBalanceEth < amount) {
+        return { text: `You don't have enough LYX. Your balance is ${senderBalanceEth} LYX but you're trying to send ${amount} LYX.` };
+      }
+      
+      // Create wallet send calls using the LYXHandler
+      const walletSendCalls = lyxHandler.createLYXTransferCalls(
+        senderAddress,
+        recipientAddress,
+        amount
+      );
+      
+      console.log("Created wallet send calls:", JSON.stringify(walletSendCalls, null, 2));
+      
+      return { 
+        content: walletSendCalls, 
+        contentType: ContentTypeWalletSendCalls 
+      };
+    } catch (error) {
+      console.error("Error processing transaction:", error);
+      return { text: `Error processing transaction: ${error instanceof Error ? error.message : String(error)}` };
+    }
   }
   
   // Help command
@@ -1142,7 +1421,7 @@ Available LUKSO Blockchain Commands:
 
 Transaction Commands:
 - /balance - Check your LYX balance
-- /tx <amount> - Send LYX to the agent
+- /tx <amount> [address] - Send LYX to the specified address (or to the agent if address is omitted)
 
 Search & User Commands:
 - /search <term> - Search for Universal Profiles by name
@@ -1317,8 +1596,8 @@ async function main() {
     const lyxHandler = new LYXHandler(NETWORK_ID);
     
     // Initialize XMTP client
-    const signer = createSigner(WALLET_KEY);
-    const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+    const signer = createSigner(WALLET_KEY as string);
+    const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY as string);
     
     const client = await Client.create(signer, {
       dbEncryptionKey,
@@ -1453,87 +1732,60 @@ main().catch((error) => {
   process.exit(1);
 });
 
-// GraphQL endpoint for LUKSO mainnet
-const LUKSO_SUBGRAPH_URL = "https://api.thegraph.com/subgraphs/name/lukso-network/universal-profiles-mainnet";
+// GraphQL endpoint for LUKSO
+const LUKSO_API_MAINNET = "https://envio.lukso-mainnet.universal.tech/v1/graphql";
+const LUKSO_API_TESTNET = "https://envio.lukso-testnet.universal.tech/v1/graphql";
+
+const LUKSO_API_URL = NETWORK_ID === "lukso-mainnet" ? LUKSO_API_MAINNET : LUKSO_API_TESTNET;
 
 // Initialize GraphQL client
-const graphQLClient = new GraphQLClient(LUKSO_SUBGRAPH_URL, {
-  fetch // Use cross-fetch for Node.js environments
+const graphQLClient = new GraphQLClient(LUKSO_API_URL, {
+  fetch, // Use cross-fetch for Node.js environments
+  headers: {
+    "Content-Type": "application/json",
+  }
 });
 
-// GraphQL query to search Universal Profiles by name
+// Updated GraphQL query to search for profiles using Envio API
 const SEARCH_PROFILES_QUERY = gql`
-  query SearchProfiles($searchTerm: String!, $limit: Int!) {
-    universalProfiles(
-      where: { name_contains_nocase: $searchTerm }
-      orderBy: createdAt
-      orderDirection: desc
-      first: $limit
+  query SearchProfiles($searchTerm: String!) {
+    Profile(
+      where: {
+        _or: [
+          { id: { _ilike: $searchTerm } },
+          { name: { _ilike: $searchTerm } }
+        ]
+      },
+      limit: 5
     ) {
       id
       name
       description
-      accountAddress
-      createdAt
-      lastUpdatedAt
-      isValid
     }
   }
 `;
 
-// GraphQL query to get profile by address
-const GET_PROFILE_BY_ADDRESS_QUERY = gql`
-  query GetProfileByAddress($address: String!) {
-    universalProfiles(
-      where: { accountAddress: $address }
+// Updated GraphQL query to get transactions for an address using Envio API
+const GET_TRANSACTIONS_QUERY = gql`
+  query GetTransactions($address: String!) {
+    Transaction(
+      where: {
+        _or: [
+          { from: { _ilike: $address } },
+          { to: { _ilike: $address } }
+        ]
+      },
+      limit: 10,
+      order_by: { timestamp: desc }
     ) {
       id
-      name
-      description
-      accountAddress
-      createdAt
-      lastUpdatedAt
-      isValid
-    }
-  }
-`;
-
-// GraphQL query to get profile's assets
-const GET_PROFILE_ASSETS_QUERY = gql`
-  query GetProfileAssets($address: String!) {
-    universalProfile(id: $address) {
-      ownedAssets {
-        tokenAddress
-        assetName
-        assetSymbol
-        balance
-        decimals
-        isNFT
-      }
-      issuedAssets {
-        tokenAddress
-        assetName
-        assetSymbol
-        totalSupply
-        decimals
-        isNFT
-      }
-    }
-  }
-`;
-
-// GraphQL query to search for NFT owners
-const SEARCH_NFT_OWNERS_QUERY = gql`
-  query SearchNFTOwners($nftAddress: String!) {
-    digitalAssetOwners(
-      where: { tokenAddress: $nftAddress }
-      orderBy: balance
-      orderDirection: desc
-      first: 10
-    ) {
-      ownerAddress
-      tokenAddress
-      balance
+      from
+      to
+      value
+      blockNumber
+      timestamp
+      gas
+      gasUsed
     }
   }
 `;
@@ -1543,15 +1795,61 @@ const SEARCH_NFT_OWNERS_QUERY = gql`
  */
 async function searchUniversalProfiles(searchTerm: string, limit: number = 5): Promise<any[]> {
   try {
-    const { universalProfiles } = await graphQLClient.request(
+    // Add wildcard for partial matches
+    const wildcardTerm = `%${searchTerm}%`;
+    console.log(`Searching for profiles with term: "${wildcardTerm}"`);
+    console.log(`Using GraphQL endpoint: ${LUKSO_API_URL}`);
+    
+    const result = await graphQLClient.request(
       SEARCH_PROFILES_QUERY,
-      { searchTerm, limit }
+      { searchTerm: wildcardTerm }
     );
     
-    return universalProfiles || [];
+    console.log(`Search result:`, JSON.stringify(result, null, 2));
+    
+    const data = result as any;
+    if (data.Profile && Array.isArray(data.Profile)) {
+      // Map to the format expected by the agent
+      return data.Profile.map((profile: any) => ({
+        accountAddress: profile.id,
+        name: profile.name || `Address ${profile.id.substring(0, 8)}...`,
+        description: "LUKSO Universal Profile",
+        createdAt: Math.floor(Date.now() / 1000)
+      }));
+    }
+    
+    // If no results are found, return a fallback message
+    if (searchTerm.startsWith("0x") && searchTerm.length >= 8) {
+      // Try to get on-chain data if the search term looks like an address
+      try {
+        const onChainProfile = await getProfileData(searchTerm);
+        if (onChainProfile) {
+          return [{
+            accountAddress: onChainProfile.address,
+            name: onChainProfile.name,
+            description: onChainProfile.description,
+            createdAt: Math.floor(Date.now() / 1000)
+          }];
+        }
+      } catch (error) {
+        console.error("Error getting on-chain profile data:", error);
+      }
+    }
+    
+    return [{
+      accountAddress: "0x0000000000000000000000000000000000000000",
+      name: "No results found",
+      description: "Try searching with a different term or use a complete address with /query",
+      createdAt: Math.floor(Date.now() / 1000)
+    }];
   } catch (error) {
     console.error('Error searching Universal Profiles:', error);
-    return [];
+    return [{
+      accountAddress: "0x0000000000000000000000000000000000000000",
+      name: "Search Error",
+      description: `Error: ${error instanceof Error ? error.message : String(error)}`,
+      createdAt: Math.floor(Date.now() / 1000)
+    }];
   }
 }
 
@@ -1560,12 +1858,25 @@ async function searchUniversalProfiles(searchTerm: string, limit: number = 5): P
  */
 async function getUniversalProfileByAddress(address: string): Promise<any> {
   try {
-    const { universalProfiles } = await graphQLClient.request(
-      GET_PROFILE_BY_ADDRESS_QUERY, 
-      { address: address.toLowerCase() }
-    );
+    console.log(`Getting profile for address: ${address} using on-chain data...`);
     
-    return universalProfiles && universalProfiles.length > 0 ? universalProfiles[0] : null;
+    // Fallback to on-chain profile data directly
+    console.log(`Attempting to get on-chain profile data for ${address}`);
+    const onChainProfile = await getProfileData(address);
+    
+    if (onChainProfile) {
+      return {
+        address,
+        accountAddress: address,
+        name: onChainProfile.name,
+        description: onChainProfile.description,
+        profileImage: onChainProfile.profileImage,
+        createdAt: Math.floor(Date.now() / 1000)
+      };
+    }
+    
+    console.log(`No profile found for address ${address}`);
+    return null;
   } catch (error) {
     console.error(`Error getting Universal Profile for address ${address}:`, error);
     return null;
@@ -1577,12 +1888,47 @@ async function getUniversalProfileByAddress(address: string): Promise<any> {
  */
 async function getProfileAssets(address: string): Promise<any> {
   try {
-    const data = await graphQLClient.request(
-      GET_PROFILE_ASSETS_QUERY, 
-      { address: address.toLowerCase() }
+    // Query for profile assets using the Envio API
+    const assetsQuery = gql`
+      query GetProfileAssets($address: String!) {
+        Hold(
+          where: { Profile: { address: { _ilike: $address } } },
+          limit: 10
+        ) {
+          Token {
+            address
+            name
+            symbol
+            decimal
+          }
+          amount
+        }
+      }
+    `;
+    
+    // Add wildcard for partial address matching
+    const wildcardAddress = `%${address.toLowerCase()}%`;
+    const result = await graphQLClient.request(
+      assetsQuery, 
+      { address: wildcardAddress }
     );
     
-    return data.universalProfile || null;
+    const data = result as any;
+    if (data.Hold && Array.isArray(data.Hold)) {
+      // Map to expected format for backward compatibility
+      return {
+        ownedAssets: data.Hold.map((hold: any) => ({
+          tokenAddress: hold.Token?.address || "",
+          assetName: hold.Token?.name || "Unknown Token",
+          assetSymbol: hold.Token?.symbol || "???",
+          decimals: hold.Token?.decimal || 18,
+          isNFT: false,
+          balance: hold.amount || "0"
+        })),
+        issuedAssets: []
+      };
+    }
+    return null;
   } catch (error) {
     console.error(`Error getting assets for profile ${address}:`, error);
     return null;
@@ -1594,20 +1940,87 @@ async function getProfileAssets(address: string): Promise<any> {
  */
 async function searchNFTOwners(nftAddress: string): Promise<any[]> {
   try {
-    const { digitalAssetOwners } = await graphQLClient.request(
-      SEARCH_NFT_OWNERS_QUERY,
-      { nftAddress: nftAddress.toLowerCase() }
+    console.log(`Searching for owners of NFT at address: ${nftAddress}`);
+    
+    // Create a query for Token Holders using the Envio API
+    const searchQuery = gql`
+      query SearchTokenHolders($nftAddress: String!) {
+        Hold(
+          where: {Token: {address: {_ilike: $nftAddress}}},
+          limit: 5
+        ) {
+          Profile {
+            address
+            name
+          }
+          Token {
+            address
+            name
+            symbol
+          }
+          amount
+        }
+      }
+    `;
+    
+    const result = await graphQLClient.request(
+      searchQuery,
+      { nftAddress: `%${nftAddress.toLowerCase()}%` }
     );
     
-    return digitalAssetOwners || [];
+    console.log(`NFT search result:`, JSON.stringify(result, null, 2));
+    
+    const data = result as any;
+    if (data.Hold && Array.isArray(data.Hold)) {
+      // Map to expected format for the agent
+      return data.Hold.map((hold: any) => ({
+        address: hold.Profile?.address || "Unknown",
+        assetAddress: nftAddress,
+        balance: hold.amount || "1"
+      }));
+    }
+    return [];
   } catch (error) {
     console.error(`Error searching NFT owners for token ${nftAddress}:`, error);
     return [];
   }
 }
 
-// Track active groups created by the agent (in-memory cache)
-const activeGroups: Map<string, Group> = new Map();
+/**
+ * Alternative method to get inbox ID from address when getUsersFromIdentifiers is not available
+ */
+async function getInboxIdFromAddress(client: Client, address: string): Promise<string | null> {
+  try {
+    // Try to create a DM with the address to get its inbox ID
+    const dm = await client.conversations.newDmWithIdentifier({
+      identifierKind: IdentifierKind.Ethereum,
+      identifier: address,
+    });
+    
+    if (dm && dm.peerInboxId) {
+      return dm.peerInboxId;
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn(`Couldn't find XMTP user for address ${address}:`, error);
+    return null;
+  }
+}
+
+// Helper for converting addresses to inbox IDs in bulk
+async function getInboxIdsFromAddresses(client: Client, addresses: string[]): Promise<string[]> {
+  const inboxIds: string[] = [];
+  
+  for (const address of addresses) {
+    const inboxId = await getInboxIdFromAddress(client, address);
+    if (inboxId) {
+      inboxIds.push(inboxId);
+    }
+  }
+  
+  return inboxIds;
+}
 
 /**
  * Create a new XMTP group with specified members
@@ -1772,7 +2185,7 @@ async function addNFTHoldersToGroup(
     
     // Process each NFT holder
     for (const holder of nftHolders) {
-      const address = holder.ownerAddress.toLowerCase();
+      const address = holder.address.toLowerCase();
       
       // Skip if already a member
       if (currentMemberAddresses.has(address)) {
@@ -1792,21 +2205,23 @@ async function addNFTHoldersToGroup(
     }
     
     // Get inboxIds for each address (if available on XMTP)
-    // This step requires searching through XMTP's identifier mapping
-    // Instead, let's use the getInboxStatesByAddress method
-    const addedCount = 0;
+    let addedCount = 0;
     
     for (const address of addressesToAdd) {
       try {
-        // Try to find inbox ID for this address using invitation
-        const inboxStates = await client.getUsersFromIdentifiers([{
-          identifierKind: 0, // Ethereum address type 
-          identifier: address
-        }]);
-        
-        if (inboxStates.length > 0 && inboxStates[0].inboxId) {
-          const inboxId = inboxStates[0].inboxId;
-          inboxIdsToAdd.push(inboxId);
+        // Try to find inbox ID for this address by creating a DM
+        try {
+          // Try to create a DM conversation with the address (this checks if user exists)
+          const dm = await client.conversations.newDmWithIdentifier({
+            identifierKind: IdentifierKind.Ethereum,
+            identifier: address,
+          });
+          
+          if (dm && dm.peerInboxId) {
+            inboxIdsToAdd.push(dm.peerInboxId);
+          }
+        } catch (error) {
+          console.warn(`Couldn't create DM for XMTP user at address ${address}`);
         }
       } catch (error) {
         console.warn(`Couldn't find XMTP user for address ${address}`);
@@ -1816,10 +2231,14 @@ async function addNFTHoldersToGroup(
     // Add members to the group
     if (inboxIdsToAdd.length > 0) {
       await group.addMembers(inboxIdsToAdd);
+      addedCount = inboxIdsToAdd.length;
+      
+      // Save groups to cache after updating
+      saveGroupsToCache();
       
       return { 
         success: true, 
-        addedCount: inboxIdsToAdd.length,
+        addedCount,
         message: `Added ${inboxIdsToAdd.length} NFT holders to the group`
       };
     } else {
@@ -1837,5 +2256,51 @@ async function addNFTHoldersToGroup(
       addedCount: 0,
       message: `Error: ${error instanceof Error ? error.message : String(error)}`
     };
+  }
+}
+
+// Helper function to save groups to cache
+function saveGroupsToCache(): void {
+  try {
+    const groupsCache: GroupCacheEntry[] = [];
+    
+    // Convert all active groups to cache entries
+    for (const [id, group] of activeGroups.entries()) {
+      groupsCache.push({
+        id,
+        name: group.name || "Unnamed Group",
+        description: group.description,
+        createdAt: Date.now(),
+        memberCount: 0 // This will be updated when we load groups
+      });
+    }
+    
+    // Write to file
+    fs.writeFileSync(
+      GROUPS_CACHE_FILE, 
+      JSON.stringify(groupsCache, null, 2)
+    );
+    
+    console.log(`Saved ${groupsCache.length} groups to cache`);
+  } catch (error) {
+    console.error("Error saving groups to cache:", error);
+  }
+}
+
+// Helper function to load groups from cache
+function loadGroupsFromCache(): GroupCacheEntry[] {
+  try {
+    if (!fs.existsSync(GROUPS_CACHE_FILE)) {
+      return [];
+    }
+    
+    const fileContents = fs.readFileSync(GROUPS_CACHE_FILE, "utf8");
+    const groupsCache = JSON.parse(fileContents) as GroupCacheEntry[];
+    
+    console.log(`Loaded ${groupsCache.length} groups from cache`);
+    return groupsCache;
+  } catch (error) {
+    console.error("Error loading groups from cache:", error);
+    return [];
   }
 } 

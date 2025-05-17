@@ -1,3 +1,35 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Build output
+dist/
+build/
+out/
+
+# IDE/Editor specific
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# XMTP specific
+.data/
+*.db3
+*.sqlite
+*.sqlite3
+groups-cache.json
+
 # Logs
 logs
 *.log
@@ -5,29 +37,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Dependencies
-node_modules
-/.pnp
-.pnp.js
-
-# Build
-dist
-build
-out
-
 # OS
-.DS_Store
 ._.DS_Store
-Thumbs.db
-
-# Database
-*.db
-*.db3
-.data 
+Thumbs.db 
