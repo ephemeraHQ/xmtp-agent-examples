@@ -802,18 +802,44 @@ async function getTransactionHistory(address: string): Promise<any> {
  */
 async function getNFTs(address: string): Promise<any> {
   try {
+    console.log(`Getting NFTs for address: ${address}`);
+    
     // Create contract instance for the Universal Profile
     const profileContract = new ethers.Contract(address, erc725yAbi, provider);
     const nfts: any[] = [];
     
+    // Arrays to store assets
+    let issuedAssets: string[] = [];
+    let receivedAssets: string[] = [];
+    
     try {
-      // 1. Check LSP12 Issued Assets (tokens created by this profile)
-      const [issuedAssetsData] = await profileContract.getData([LSP12_ISSUED_ASSETS_KEY]);
-      const issuedAssets = decodeAssetsArray(issuedAssetsData);
+      // 1. Try to get LSP12 Issued Assets (tokens created by this profile)
+      try {
+        const issuedAssetsData = await profileContract.getData([LSP12_ISSUED_ASSETS_KEY])
+          .catch(() => ["0x"]);
+        
+        // Make sure we have valid data and it's an array
+        if (Array.isArray(issuedAssetsData) && issuedAssetsData[0]) {
+          issuedAssets = decodeAssetsArray(issuedAssetsData[0]);
+        }
+        console.log(`Found ${issuedAssets.length} issued assets`);
+      } catch (error) {
+        console.error("Error fetching issued assets:", error);
+      }
       
-      // 2. Check LSP5 Received Assets (tokens owned by this profile)
-      const [receivedAssetsData] = await profileContract.getData([LSP5_RECEIVED_ASSETS_KEY]);
-      const receivedAssets = decodeAssetsArray(receivedAssetsData);
+      // 2. Try to get LSP5 Received Assets (tokens owned by this profile)
+      try {
+        const receivedAssetsData = await profileContract.getData([LSP5_RECEIVED_ASSETS_KEY])
+          .catch(() => ["0x"]);
+        
+        // Make sure we have valid data and it's an array  
+        if (Array.isArray(receivedAssetsData) && receivedAssetsData[0]) {
+          receivedAssets = decodeAssetsArray(receivedAssetsData[0]);
+        }
+        console.log(`Found ${receivedAssets.length} received assets`);
+      } catch (error) {
+        console.error("Error fetching received assets:", error);
+      }
       
       // Combine unique assets from both lists
       const allAssets = [...new Set([...issuedAssets, ...receivedAssets])];
@@ -821,21 +847,53 @@ async function getNFTs(address: string): Promise<any> {
       // Process each asset to determine if it's an LSP8 NFT
       for (const assetAddress of allAssets) {
         try {
+          // Skip invalid addresses
+          if (!ethers.isAddress(assetAddress)) {
+            continue;
+          }
+          
           // Try to interact with it as an LSP8 contract
           const assetContract = new ethers.Contract(assetAddress, lsp8Abi, provider);
           
           // Check if this address owns any tokens from this contract
-          const balance = await assetContract.balanceOf(address);
+          const balance = await assetContract.balanceOf(address)
+            .catch(() => 0n);
           
           if (balance > 0n) {
             // Get basic contract metadata
-            const [name, symbol] = await Promise.all([
-              assetContract.name().catch(() => "Unknown NFT"),
-              assetContract.symbol().catch(() => "NFT")
-            ]);
+            let name = "Unknown NFT";
+            let symbol = "NFT";
             
-            // Get token IDs owned by this address
-            const tokenIds = await assetContract.tokenIdsOf(address).catch(() => []);
+            try {
+              name = await assetContract.name().catch(() => "Unknown NFT");
+              symbol = await assetContract.symbol().catch(() => "NFT");
+            } catch (error) {
+              console.error(`Error getting name/symbol for ${assetAddress}:`, error);
+            }
+            
+            // Get token IDs owned by this address - handle errors gracefully
+            let tokenIds: any[] = [];
+            try {
+              tokenIds = await assetContract.tokenIdsOf(address);
+            } catch (error) {
+              console.error(`Error getting token IDs for ${assetAddress}:`, error);
+              
+              // Add a placeholder entry since we know they own tokens but can't list them
+              nfts.push({
+                id: `error-${assetAddress}`,
+                name: `${name} (${symbol})`,
+                description: `You own ${balance.toString()} tokens from this collection, but details can't be retrieved`,
+                contract: assetAddress,
+                imageUrl: "",
+                isIssued: issuedAssets.includes(assetAddress)
+              });
+              continue;
+            }
+            
+            // Make sure tokenIds is valid and not empty
+            if (!tokenIds || !Array.isArray(tokenIds) || tokenIds.length === 0) {
+              continue;
+            }
             
             // Get metadata for first few tokens (limit to 5 to prevent too many requests)
             const tokenLimit = Math.min(5, tokenIds.length);
@@ -851,76 +909,84 @@ async function getNFTs(address: string): Promise<any> {
             };
             
             for (let i = 0; i < tokenLimit; i++) {
-              const tokenId = tokenIds[i];
-              
-              // Get the token owner to verify ownership
-              const tokenOwner = await assetContract.tokenOwnerOf(tokenId).catch(() => "");
-              
-              // Skip if the token is not owned by this address anymore
-              if (tokenOwner.toLowerCase() !== address.toLowerCase()) {
-                continue;
-              }
-              
-              // Try to get token metadata using LSP8's tokenURI
-              let tokenUri = "";
-              let imageUrl = "";
-              let metadata = null;
-              
               try {
-                tokenUri = await assetContract.tokenURI(tokenId);
+                const tokenId = tokenIds[i];
+                if (!tokenId) continue;
                 
-                // If the URI is IPFS based, format it for HTTP gateway access
-                if (tokenUri.startsWith("ipfs://")) {
-                  const ipfsHash = tokenUri.replace("ipfs://", "");
-                  // Use a public IPFS gateway
-                  const ipfsGatewayUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
-                  
-                  // We don't actually fetch the data here to avoid external dependencies
-                  // but in a real implementation we would fetch and parse the JSON
-                  metadata = {
-                    name: `${name} #${tokenId.slice(0, 8)}`,
-                    description: "LUKSO NFT",
-                    image: ipfsGatewayUrl
-                  };
-                  
-                  imageUrl = ipfsGatewayUrl;
-                } else if (tokenUri.startsWith("http")) {
-                  // For HTTP URIs, we could fetch the metadata directly
-                  // but for simplicity we just use the URI as is
-                  imageUrl = tokenUri;
-                  metadata = {
-                    name: `${name} #${tokenId.slice(0, 8)}`,
-                    description: "LUKSO NFT",
-                    image: tokenUri
-                  };
+                // Get the token owner to verify ownership - handle errors
+                let tokenOwner = "";
+                try {
+                  tokenOwner = await assetContract.tokenOwnerOf(tokenId)
+                    .catch(() => "");
+                } catch (error) {
+                  console.error(`Error getting token owner for ${tokenId}:`, error);
                 }
+                
+                // Skip if the token is not owned by this address anymore
+                if (tokenOwner && tokenOwner.toLowerCase() !== address.toLowerCase()) {
+                  continue;
+                }
+                
+                // Try to get token metadata using LSP8's tokenURI
+                let tokenUri = "";
+                let imageUrl = "";
+                let metadata = null;
+                
+                try {
+                  tokenUri = await assetContract.tokenURI(tokenId)
+                    .catch(() => "");
+                  
+                  // Generate a token ID string that can be displayed
+                  const displayTokenId = typeof tokenId === 'string' ? 
+                    tokenId : tokenId.toString();
+                  const shortTokenId = displayTokenId.slice(0, 8);
+                  
+                  // If the URI is IPFS based, format it for HTTP gateway access
+                  if (tokenUri && tokenUri.startsWith("ipfs://")) {
+                    const ipfsHash = tokenUri.replace("ipfs://", "");
+                    // Use a public IPFS gateway
+                    const ipfsGatewayUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
+                    
+                    metadata = {
+                      name: `${name} #${shortTokenId}`,
+                      description: "LUKSO NFT",
+                      image: ipfsGatewayUrl
+                    };
+                    
+                    imageUrl = ipfsGatewayUrl;
+                  } else if (tokenUri && tokenUri.startsWith("http")) {
+                    imageUrl = tokenUri;
+                    metadata = {
+                      name: `${name} #${shortTokenId}`,
+                      description: "LUKSO NFT",
+                      image: tokenUri
+                    };
+                  }
+                } catch (error) {
+                  console.error(`Error getting token URI for ${assetAddress} token ${tokenId}:`, error);
+                }
+                
+                // Add the token to the list with proper error handling for display
+                const tokenDisplay = typeof tokenId === 'string' ? 
+                  tokenId : tokenId.toString();
+                const shortDisplay = tokenDisplay.slice(0, 8);
+                
+                nfts.push({
+                  id: tokenDisplay,
+                  name: metadata?.name || `${name} #${shortDisplay}`,
+                  description: metadata?.description || `Token from ${name} collection`,
+                  contract: assetAddress,
+                  contractName: name,
+                  symbol: symbol,
+                  tokenId: tokenDisplay,
+                  imageUrl: imageUrl,
+                  tokenUri: tokenUri,
+                  isIssued: issuedAssets.includes(assetAddress),
+                  collection: collectionData
+                });
               } catch (error) {
-                console.error(`Error getting token URI for ${assetAddress} token ${tokenId}:`, error);
+                console.error(`Error processing token ${i}:`, error);
               }
-              
-              // Try to get additional metadata from the LSP8 contract directly
-              try {
-                // In LSP8, additional metadata might be stored directly on the token
-                // using specific ERC725Y data keys for each token
-                // This would be the proper implementation for LSP8 metadata
-                // but is simplified here
-              } catch (error) {
-                console.error(`Error getting additional metadata for ${assetAddress} token ${tokenId}:`, error);
-              }
-              
-              nfts.push({
-                id: tokenId,
-                name: metadata?.name || `${name} #${tokenId.slice(0, 8)}`,
-                description: metadata?.description || `Token from ${name} collection`,
-                contract: assetAddress,
-                contractName: name,
-                symbol: symbol,
-                tokenId: tokenId,
-                imageUrl: imageUrl,
-                tokenUri: tokenUri,
-                isIssued: issuedAssets.includes(assetAddress),
-                collection: collectionData
-              });
             }
             
             // If we have more tokens than the limit, add a placeholder
@@ -999,9 +1065,24 @@ async function queryLuksoData(command: string, params: Record<string, string>): 
     case "transactions":
       return getTransactionHistory(address);
     case "nfts":
-      return getNFTs(address);
+      // Try GraphQL first, then fall back to blockchain method
+      try {
+        const graphqlResult = await getNFTsViaGraphQL(address);
+        if (graphqlResult && graphqlResult.nfts && graphqlResult.nfts.length > 0 && 
+            graphqlResult.nfts[0].id !== "No NFTs found" && 
+            graphqlResult.nfts[0].id !== "Error") {
+          console.log("Successfully retrieved NFTs via GraphQL");
+          return graphqlResult;
+        }
+        
+        console.log("Falling back to blockchain method for NFTs");
+        return getNFTs(address);
+      } catch (error) {
+        console.error("Error with GraphQL NFT retrieval, falling back:", error);
+        return getNFTs(address);
+      }
     default:
-      throw new Error(`Unknown command: ${command}`);
+      throw new Error(`Unsupported command: ${command}`);
   }
 }
 
@@ -2303,4 +2384,130 @@ function loadGroupsFromCache(): GroupCacheEntry[] {
     console.error("Error loading groups from cache:", error);
     return [];
   }
-} 
+}
+
+// Add GraphQL constants for the LUKSO network
+const LUKSO_GRAPHQL_ENDPOINT = NETWORK_ID === "lukso-mainnet" 
+  ? "https://api.mainnet.lukso.network/graphql"
+  : "https://api.testnet.lukso.network/graphql";
+
+// Create a GraphQL client for LUKSO API
+const luksoGraphQLClient = new GraphQLClient(LUKSO_GRAPHQL_ENDPOINT);
+
+/**
+ * Get NFTs using Envio GraphQL API
+ */
+async function getNFTsViaGraphQL(address: string): Promise<any> {
+  try {
+    console.log(`Getting NFTs from GraphQL for address: ${address}`);
+    
+    // Query for NFTs
+    const query = gql`
+      query GetTokens($address: String!) {
+        Hold(where: {
+          Profile: {address: {_ilike: $address}},
+          Token: {lsp8TokenIdFormat: {_is_null: false}}
+        }, limit: 20) {
+          Token {
+            id
+            tokenId
+            formattedTokenId
+            name
+            lsp4TokenName
+            lsp4TokenSymbol
+            description
+            images {
+              url
+            }
+            icons {
+              url
+            }
+            asset {
+              address
+              name
+              symbol
+            }
+          }
+        }
+      }
+    `;
+    
+    const variables = {
+      address: `%${address.toLowerCase()}%`
+    };
+    
+    // Make the GraphQL request
+    const result = await luksoGraphQLClient.request(query, variables);
+    
+    // Type guard to check if result has the expected structure
+    if (!result || typeof result !== 'object' || !('Hold' in result)) {
+      console.log("Invalid GraphQL response structure");
+      return null;
+    }
+    
+    const holds = (result as any).Hold;
+    
+    if (!Array.isArray(holds) || holds.length === 0) {
+      console.log("No NFTs found via GraphQL");
+      return {
+        address,
+        nfts: [
+          { id: "No NFTs found", name: "No NFTs found for this address", imageUrl: "" }
+        ]
+      };
+    }
+    
+    console.log(`Found ${holds.length} NFTs via GraphQL`);
+    
+    // Process NFTs from GraphQL response
+    const nfts = holds.map((hold: any) => {
+      const token = hold.Token || {};
+      
+      // Get image URL from available sources
+      let imageUrl = "";
+      if (token.images && token.images.length > 0 && token.images[0].url) {
+        imageUrl = token.images[0].url;
+      } else if (token.icons && token.icons.length > 0 && token.icons[0].url) {
+        imageUrl = token.icons[0].url;
+      }
+      
+      // Get token ID info - handle different formats
+      const tokenId = token.tokenId || token.id || "unknown";
+      const formattedId = token.formattedTokenId || tokenId;
+      
+      // Shorten ID for display
+      const shortId = typeof formattedId === 'string' ? 
+        (formattedId.length > 8 ? formattedId.slice(0, 8) + '...' : formattedId) : 
+        formattedId;
+      
+      // Get asset info
+      const asset = token.asset || {};
+      
+      return {
+        id: tokenId,
+        name: token.lsp4TokenName || token.name || `Token #${shortId}`,
+        description: token.description || `LUKSO NFT from ${asset.name || 'Unknown'} collection`,
+        contract: asset.address || "",
+        contractName: asset.name || "Unknown Collection",
+        symbol: token.lsp4TokenSymbol || asset.symbol || "",
+        tokenId: formattedId,
+        imageUrl: imageUrl,
+        collection: {
+          name: asset.name || "Unknown Collection",
+          symbol: asset.symbol || "",
+          contractAddress: asset.address || "",
+          standard: "LSP8"
+        }
+      };
+    });
+    
+    return {
+      address,
+      nfts,
+      source: "graphql"
+    };
+  } catch (error) {
+    console.error("Error fetching NFTs from GraphQL:", error);
+    return null;
+  }
+}
