@@ -2,6 +2,8 @@
 
 This agent connects the LUKSO blockchain with XMTP messaging, providing real blockchain data lookups, AI-powered responses, and NFT-gated group management for LUKSO users.
 
+> **SEE XMTP.chat + UP client app**[xmtp.up](https://github.com/tantodefi/xmtp-js/tree/main/apps/xmtp.chat)
+
 ## Features
 
 - Responds to LUKSO blockchain data requests via XMTP messaging
