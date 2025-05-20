@@ -1872,57 +1872,343 @@ const GET_TRANSACTIONS_QUERY = gql`
 `;
 
 /**
+ * Check for profile existence on external domains
+ */
+async function checkExternalProfiles(searchTerm: string): Promise<{ url: string; exists: boolean }[]> {
+  const results: { url: string; exists: boolean }[] = [];
+  
+  // Check ENS domain
+  const ensUrl = `https://app.ens.domains/${searchTerm}.eth`;
+  try {
+    // First check if the ENS name actually resolves
+    const ensName = `${searchTerm}.eth`;
+    const ensRegistry = new ethers.Contract(
+      "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e", // ENS Registry address
+      [
+        "function resolver(bytes32 node) view returns (address)",
+        "function owner(bytes32 node) view returns (address)"
+      ],
+      provider
+    );
+
+    // Get the namehash of the ENS name
+    const namehash = ethers.namehash(ensName);
+    console.log(`Checking ENS name: ${ensName}`);
+    console.log(`Generated namehash: ${namehash}`);
+    
+    try {
+      // Check if the name is owned (registered)
+      const owner = await ensRegistry.owner(namehash);
+      const isRegistered = owner !== "0x0000000000000000000000000000000000000000";
+      
+      console.log(`ENS ownership check for ${ensName}:`, {
+        owner,
+        isRegistered
+      });
+
+      if (isRegistered) {
+        // Get the resolver address
+        const resolverAddress = await ensRegistry.resolver(namehash);
+        console.log(`Resolver address for ${ensName}: ${resolverAddress}`);
+        
+        if (resolverAddress !== "0x0000000000000000000000000000000000000000") {
+          // Create resolver contract
+          const resolver = new ethers.Contract(
+            resolverAddress,
+            ["function addr(bytes32 node) view returns (address)"],
+            provider
+          );
+          
+          // Get the resolved address
+          const resolvedAddress = await resolver.addr(namehash);
+          console.log(`Resolved address for ${ensName}: ${resolvedAddress}`);
+          
+          if (resolvedAddress !== "0x0000000000000000000000000000000000000000") {
+            // Now check the ENS profile page
+            const ensResponse = await fetch(ensUrl, { 
+              method: 'GET',
+              redirect: 'follow'
+            });
+            
+            // Get the page content
+            const text = await ensResponse.text();
+            
+            // Get the final URL after any redirects
+            const finalUrl = ensResponse.url;
+            
+            console.log(`ENS web check for ${ensName}:`, {
+              initialUrl: ensUrl,
+              finalUrl,
+              status: ensResponse.status,
+              redirected: ensResponse.redirected
+            });
+            
+            // A valid ENS profile must:
+            // 1. Have a successful response
+            // 2. Not be redirected to /register
+            // 3. Not be on the registration page
+            const isRedirectedToRegister = finalUrl.includes('/register');
+            const isOnRegistrationPage = text.includes('Register your name') || 
+                                      text.includes('Available to register') ||
+                                      text.includes('This name is available');
+            
+            const exists = ensResponse.ok && 
+                          !isRedirectedToRegister &&
+                          !isOnRegistrationPage &&
+                          !text.includes('Page not found') &&
+                          !text.includes('404');
+            
+            console.log(`ENS profile exists check:`, {
+              isRedirectedToRegister,
+              isOnRegistrationPage,
+              exists
+            });
+            
+            if (exists) {
+              results.push({
+                url: ensUrl,
+                exists: true
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error checking ENS registration for ${ensName}:`, error);
+    }
+  } catch (error) {
+    console.error(`Error checking ENS profile for ${searchTerm}.eth:`, error);
+  }
+  
+  // Check convos.org
+  const convosUrl = `https://${searchTerm}.convos.org`;
+  try {
+    console.log(`Checking convos.org profile at: ${convosUrl}`);
+    const convosResponse = await fetch(convosUrl, { 
+      method: 'GET',
+      redirect: 'follow'
+    });
+    
+    // Get the page content to check for "Profile Not Found"
+    const text = await convosResponse.text();
+    
+    // Check if it's a valid profile (not a "Profile Not Found" page)
+    const exists = convosResponse.ok && 
+                  !text.includes('Profile Not Found') &&
+                  !text.includes('could not be found') &&
+                  !convosResponse.url.includes('404');
+    
+    console.log(`Convos profile exists: ${exists}`);
+    
+    results.push({
+      url: convosUrl,
+      exists
+    });
+  } catch (error) {
+    console.error(`Error checking convos.org profile:`, error);
+    results.push({
+      url: convosUrl,
+      exists: false
+    });
+  }
+  
+  // Check base.org
+  const baseUrl = `https://www.base.org/name/${searchTerm}`;
+  try {
+    console.log(`Checking base.org profile at: ${baseUrl}`);
+    const baseResponse = await fetch(baseUrl, { 
+      method: 'GET',
+      redirect: 'follow'
+    });
+    
+    console.log(`Base response status: ${baseResponse.status}`);
+    console.log(`Base response URL: ${baseResponse.url}`);
+    
+    // Get the page content
+    const text = await baseResponse.text();
+    console.log(`Base response content length: ${text.length}`);
+    
+    // Log key content checks
+    const hasBase = text.includes('Base');
+    const hasActivity = text.includes('Activity');
+    const hasExplore = text.includes('Explore ways to build your profile');
+    const hasPageNotFound = text.includes('Page not found');
+    const hasRegister = baseResponse.url.includes('/register');
+    
+    console.log('Base profile content checks:', {
+      hasBase,
+      hasActivity,
+      hasExplore,
+      hasPageNotFound,
+      hasRegister
+    });
+    
+    // Check if it's a valid profile by looking for specific content
+    const exists = baseResponse.ok && 
+                  hasBase && 
+                  hasActivity && 
+                  hasExplore && 
+                  !hasPageNotFound &&
+                  !hasRegister;
+    
+    console.log(`Base profile exists: ${exists}`);
+    
+    results.push({
+      url: baseUrl,
+      exists
+    });
+  } catch (error) {
+    console.error(`Error checking base.org profile:`, error);
+    results.push({
+      url: baseUrl,
+      exists: false
+    });
+  }
+  
+  return results;
+}
+
+/**
  * Search for Universal Profiles by name
  */
 async function searchUniversalProfiles(searchTerm: string, limit: number = 5): Promise<any[]> {
   try {
-    // Add wildcard for partial matches
+    console.log(`Searching for profiles with term: "${searchTerm}"`);
+    
+    // Always try ENS resolution first
+    let address = searchTerm;
+    let ensName = searchTerm;
+    
+    // If it doesn't end with .eth, try adding it
+    if (!searchTerm.toLowerCase().endsWith('.eth')) {
+      ensName = `${searchTerm}.eth`;
+    }
+    
+    // Try to resolve the ENS name
+    const resolvedAddress = await resolveENSName(ensName);
+    if (resolvedAddress) {
+      address = resolvedAddress;
+      console.log(`Resolved ENS name ${ensName} to address ${address}`);
+    }
+    
+    let profiles: any[] = [];
+    
+    // Try Whisk API if we have an address
+    if (address.startsWith('0x')) {
+      try {
+        const whiskResult = await whiskGraphQLClient.request(WHISK_PROFILE_QUERY, {
+          address: address
+        });
+        
+        if (whiskResult?.identity) {
+          const whiskProfile = whiskResult.identity;
+          const description = [
+            whiskProfile.base?.name ? `Name: ${whiskProfile.base.name}` : null,
+            whiskProfile.ens?.name ? `ENS: ${whiskProfile.ens.name}` : null,
+            whiskProfile.farcaster?.name ? `Farcaster: ${whiskProfile.farcaster.name}` : null,
+            whiskProfile.lens?.name ? `Lens: ${whiskProfile.lens.name}` : null
+          ].filter(Boolean).join("\n");
+          
+          // Add ENS profile link if we have an ENS name
+          const ensProfileUrl = whiskProfile.ens?.name ? 
+            `https://app.ens.domains/${whiskProfile.ens.name}` : null;
+          
+          profiles.push({
+            accountAddress: address,
+            name: whiskProfile.base?.name || whiskProfile.ens?.name || `Address ${address.substring(0, 8)}...`,
+            description: [
+              description,
+              ensProfileUrl ? `ENS Profile: ${ensProfileUrl}` : null
+            ].filter(Boolean).join("\n"),
+            createdAt: Math.floor(Date.now() / 1000)
+          });
+        }
+      } catch (error) {
+        console.error("Error getting Whisk profile data:", error);
+      }
+    }
+    
+    // Check external profiles
+    const externalProfiles = await checkExternalProfiles(searchTerm);
+    const existingExternalUrls = externalProfiles
+      .filter(profile => profile.exists)
+      .map(profile => profile.url);
+    
+    // Add external profile URLs to the results
+    if (existingExternalUrls.length > 0) {
+      const validExternalUrls = existingExternalUrls.filter(url => !url.includes('/register'));
+      
+      if (validExternalUrls.length > 0) {
+        // Add ENS profile link if we have an ENS name
+        const ensProfileUrl = ensName ? `https://app.ens.domains/${ensName}` : null;
+        
+        const description = [
+          `Found profiles on: ${validExternalUrls.join(", ")}`,
+          ensProfileUrl ? `ENS Profile: ${ensProfileUrl}` : null
+        ].filter(Boolean).join("\n");
+        
+        profiles.push({
+          accountAddress: "external",
+          name: "External Profiles",
+          description,
+          createdAt: Math.floor(Date.now() / 1000)
+        });
+      }
+    }
+    
+    // Add wildcard for partial matches in GraphQL search
     const wildcardTerm = `%${searchTerm}%`;
-    console.log(`Searching for profiles with term: "${wildcardTerm}"`);
-    console.log(`Using GraphQL endpoint: ${LUKSO_API_URL}`);
+    console.log(`Searching GraphQL with term: "${wildcardTerm}"`);
     
     const result = await graphQLClient.request(
       SEARCH_PROFILES_QUERY,
       { searchTerm: wildcardTerm }
     );
     
-    console.log(`Search result:`, JSON.stringify(result, null, 2));
+    console.log(`GraphQL search result:`, JSON.stringify(result, null, 2));
     
     const data = result as any;
+    
     if (data.Profile && Array.isArray(data.Profile)) {
-      // Map to the format expected by the agent
-      return data.Profile.map((profile: any) => ({
+      const graphqlProfiles = data.Profile.map((profile: any) => ({
         accountAddress: profile.id,
         name: profile.name || `Address ${profile.id.substring(0, 8)}...`,
         description: "LUKSO Universal Profile",
         createdAt: Math.floor(Date.now() / 1000)
       }));
+      
+      // Add GraphQL profiles to results
+      profiles = [...profiles, ...graphqlProfiles];
     }
     
-    // If no results are found, return a fallback message
-    if (searchTerm.startsWith("0x") && searchTerm.length >= 8) {
-      // Try to get on-chain data if the search term looks like an address
+    // If no results are found, try on-chain data if the search term looks like an address
+    if (profiles.length === 0 && address.startsWith("0x") && address.length >= 8) {
       try {
-        const onChainProfile = await getProfileData(searchTerm);
+        const onChainProfile = await getProfileData(address);
         if (onChainProfile) {
-          return [{
+          profiles.push({
             accountAddress: onChainProfile.address,
             name: onChainProfile.name,
             description: onChainProfile.description,
             createdAt: Math.floor(Date.now() / 1000)
-          }];
+          });
         }
       } catch (error) {
         console.error("Error getting on-chain profile data:", error);
       }
     }
     
-    return [{
-      accountAddress: "0x0000000000000000000000000000000000000000",
-      name: "No results found",
-      description: "Try searching with a different term or use a complete address with /query",
-      createdAt: Math.floor(Date.now() / 1000)
-    }];
+    // If still no results, return a fallback message
+    if (profiles.length === 0) {
+      return [{
+        accountAddress: "0x0000000000000000000000000000000000000000",
+        name: "No results found",
+        description: "Try searching with a different term or use a complete address with /query",
+        createdAt: Math.floor(Date.now() / 1000)
+      }];
+    }
+    
+    return profiles;
   } catch (error) {
     console.error('Error searching Universal Profiles:', error);
     return [{
@@ -2508,6 +2794,50 @@ async function getNFTsViaGraphQL(address: string): Promise<any> {
     };
   } catch (error) {
     console.error("Error fetching NFTs from GraphQL:", error);
+    return null;
+  }
+}
+
+// Add Whisk GraphQL client setup
+const WHISK_API_URL = "https://api.whisk.so/graphql";
+const whiskGraphQLClient = new GraphQLClient(WHISK_API_URL, {
+  headers: {
+    Authorization: `Bearer ${process.env.WHISK_API_KEY || '79dd90e4-b3b8-45a7-a155-7abe59ec0e39'}`
+  }
+});
+
+// Update Whisk query to match their schema
+const WHISK_PROFILE_QUERY = gql`
+  query GetProfile($address: String!) {
+    identity(address: $address) {
+      base {
+        name
+        avatar
+      }
+      ens {
+        name
+        avatar
+      }
+      farcaster {
+        name
+        avatar
+      }
+      lens {
+        name
+        avatar
+      }
+    }
+  }
+`;
+
+// Add ENS resolution function
+async function resolveENSName(name: string): Promise<string | null> {
+  try {
+    const response = await fetch(`https://api.ensideas.com/ens/resolve/${name}`);
+    const data = await response.json();
+    return data.address || null;
+  } catch (error) {
+    console.error("Error resolving ENS name:", error);
     return null;
   }
 }
