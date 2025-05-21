@@ -79,6 +79,8 @@ We have a guide for deploying the agent on [Railway](https://github.com/ephemera
 
 ## Basic usage
 
+### Listening and sending messages
+
 These are the steps to initialize the XMTP listener and send messages.
 
 ```tsx
@@ -106,6 +108,20 @@ async function main() {
 main().catch(console.error);
 ```
 
+### Getting the address of a user
+
+Each user has a unique inbox id, which can be used to get the address associated with it.
+
+```tsx
+const inboxState = await client.preferences.inboxStateFromInboxIds([
+  message.senderInboxId,
+]);
+const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+```
+
+_Keep in mind that not necessarily all users have an address associated with it._
+
 ## Examples
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
@@ -132,3 +148,7 @@ This examples are outside of this monorepo and showcase how to use and deploy XM
 Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
 ![](/examples/xmtp-gm/screenshot.png)
+
+```
+
+```
