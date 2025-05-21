@@ -13,8 +13,11 @@ This agent connects the LUKSO blockchain with XMTP messaging, providing real blo
 - **Integrated AI Responses** (when API key is provided) for natural language interactions
 - **Reliable Message Streaming** with automatic stream recovery
 - **Transaction Support** for handling LYX transfers
-- **Universal Profile Search** via on-chain data
+- **Universal Profile Search** via on-chain data and external APIs
 - **NFT-Gated Group Management** for creating and managing groups with NFT holders
+- **Enhanced Profile Data** from multiple sources (ENS, Farcaster, Lens)
+- **Cross-Chain Token Holdings** via Whisk API integration
+- **DeFi Position Tracking** for Aave and Morpho protocols
 
 ## Getting Started
 
@@ -44,6 +47,9 @@ NETWORK_ID=lukso-testnet # or lukso-mainnet
 
 # Custom RPC URL (optional)
 LUKSO_CUSTOM_RPC= # optional custom RPC URL
+
+# Whisk API key for enhanced profile data (optional)
+WHISK_API_KEY= # your Whisk API key
 ```
 
 You can generate XMTP keys with:
@@ -81,17 +87,20 @@ Once the agent is running, you can send messages to it using any XMTP-compatible
 
 - `profile <address>` - Get LUKSO Universal Profile information
 - `nfts <address>` - List LSP8 NFTs owned by or issued by an address
-- `tokens <address>` - List tokens owned by an address (LYX and LSP7 tokens)
+- `tokens <address> [chain]` - List tokens owned by an address (LYX, LSP7, and cross-chain tokens)
+- `transactions <address>` - View recent transactions
 
 #### Transaction Commands
 
 - `/balance` - Check your LYX balance
-- `/tx <amount>` - Initiate a LYX transfer (requires OpenAI API key)
+- `/tx <amount> [address]` - Initiate a LYX transfer (requires OpenAI API key)
 
 #### Search & User Commands
 
 - `/search <term>` - Search for Universal Profiles by name
 - `/query <address>` - Get detailed info about a Universal Profile
+- `/tokenholdings <address> [chain]` - Get cross-chain token holdings
+- `/defipositions <address> [chain]` - Get DeFi positions (Aave, Morpho)
 
 #### Group Management Commands
 
@@ -107,6 +116,35 @@ Once the agent is running, you can send messages to it using any XMTP-compatible
 - `help` or `/help` - Show available commands
 - Any natural language question - Get an AI-powered response (requires OpenAI API key)
 
+## Enhanced Features
+
+### Universal Profile Integration
+
+The agent now provides enhanced Universal Profile data through multiple sources:
+
+- **On-chain LSP3 Data**: Full decoding of Universal Profile data
+- **ENS Integration**: Resolution and profile data from ENS
+- **Social Profiles**: Integration with Farcaster and Lens protocols
+- **Cross-chain Identity**: Unified identity across multiple chains
+
+### Token Holdings
+
+Enhanced token tracking capabilities:
+
+- **LUKSO Tokens**: Native LYX and LSP7 Digital Assets
+- **Cross-chain Tokens**: Token holdings across multiple chains
+- **Value Tracking**: USD value estimates for token holdings
+- **Chain-specific Views**: Filter tokens by blockchain
+
+### DeFi Integration
+
+Track DeFi positions across protocols:
+
+- **Aave V3**: Supply and borrow positions with APY
+- **Morpho**: Lending and borrowing positions
+- **Multi-chain Support**: Positions across different networks
+- **APY Tracking**: Real-time APY information
+
 ## Known Issues
 
 1. **Transaction History**: Due to limitations in the current ethers.js implementation, the transaction history functionality is not fully operational.
@@ -117,6 +155,8 @@ Once the agent is running, you can send messages to it using any XMTP-compatible
 
 4. **RPC Connectivity**: There may be occasional issues connecting to the LUKSO RPC nodes. The agent will automatically retry connections, but performance may be affected.
 
+5. **Whisk API Rate Limits**: The enhanced profile features using Whisk API may be subject to rate limits. Consider using your own API key for production use.
+
 ## How It Works
 
 This agent combines several advanced capabilities:
@@ -124,11 +164,13 @@ This agent combines several advanced capabilities:
 1. **XMTP Client**: Handles secure messaging with automatic stream recovery
 2. **Command Parser**: Extracts commands and parameters from user messages
 3. **LUKSO Connection**: Connects to LUKSO blockchain via ethers.js
-4. **AI Integration**: Uses OpenAI API for natural language responses (when API key is provided)
+4. **AI Integration**: Uses OpenAI API for natural language responses
 5. **Transaction Support**: Enables LYX transfers directly from the chat
 6. **Response Formatter**: Formats blockchain data into human-readable messages
 7. **Group Management**: Creates and manages XMTP groups with NFT-gating
-8. **Group Persistence**: Stores group information in a local cache file for persistence across restarts
+8. **Group Persistence**: Stores group information in a local cache file
+9. **Enhanced Profile Data**: Aggregates profile information from multiple sources
+10. **Cross-chain Support**: Integrates with Whisk API for multi-chain data
 
 ### Enhanced Universal Profile Support
 
@@ -138,6 +180,7 @@ The agent now has advanced Universal Profile data decoding capabilities:
 - **Multi-Key Retrieval**: Gets profile information using both combined and individual LSP3 data keys
 - **Profile Links**: Extracts website, social media, and other links from profile data
 - **Profile Images**: Properly handles profile image information from LSP3 data
+- **Cross-chain Identity**: Resolves and displays identities across multiple chains
 
 ### Advanced Token Support
 
@@ -147,6 +190,7 @@ The agent supports both native LYX tokens and LSP7 Digital Assets:
 - **Dual Asset Discovery**: Checks LSP5 Received Assets for owned tokens
 - **Metadata Retrieval**: Gets token names, symbols, and decimals for proper formatting
 - **Balance Formatting**: Correctly formats token balances based on token decimal places
+- **Cross-chain Tokens**: Displays token holdings from other chains via Whisk API
 
 ### NFT Integration
 
@@ -180,6 +224,10 @@ Create and manage XMTP group conversations with advanced features:
 4. **Caching Mechanisms**: To improve performance and reduce RPC calls, we're implementing smart caching for blockchain data.
 
 5. **Rate Limiting**: To prevent abuse, we're adding rate limiting for certain high-impact operations.
+
+6. **Additional DeFi Protocols**: Support for more DeFi protocols beyond Aave and Morpho.
+
+7. **Enhanced Social Integration**: More social profile sources and better identity resolution.
 
 ## Contributing
 
@@ -262,3 +310,11 @@ If you're experiencing connection issues with the LUKSO RPC:
 1. Try a different RPC endpoint in your `.env` file
 2. Ensure your internet connection is stable
 3. Verify if the LUKSO network is experiencing any outages
+
+### Whisk API Issues
+
+If you're having issues with enhanced profile features:
+
+1. **API Key**: Make sure you have a valid `WHISK_API_KEY` in your `.env` file
+2. **Rate Limits**: Be aware of API rate limits and consider implementing caching
+3. **Network Issues**: Check if the Whisk API is experiencing any outages

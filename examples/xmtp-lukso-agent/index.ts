@@ -2841,3 +2841,549 @@ async function resolveENSName(name: string): Promise<string | null> {
     return null;
   }
 }
+
+// Enhanced Whisk GraphQL queries
+const WHISK_ENHANCED_IDENTITY_QUERY = gql`
+  query GetEnhancedIdentity($address: String!) {
+    identity(address: $address) {
+      base {
+        name
+        avatar
+        address
+      }
+      ens {
+        name
+        avatar
+        address
+      }
+      farcaster {
+        name
+        avatar
+        address
+      }
+      lens {
+        name
+        avatar
+        address
+      }
+      tokenHoldings {
+        token {
+          address
+          name
+          symbol
+          decimals
+        }
+        balance
+        value
+      }
+      aaveV3MarketPositions {
+        market {
+          name
+          address
+        }
+        position {
+          supply
+          borrow
+          apy
+        }
+      }
+      morphoMarketPositions {
+        market {
+          name
+          address
+        }
+        position {
+          supply
+          borrow
+          apy
+        }
+      }
+    }
+  }
+`;
+
+const WHISK_VAULT_QUERY = gql`
+  query GetVaultInfo($address: String!) {
+    vault(identifier: { address: $address }) {
+      name
+      type
+      protocol
+      apy
+      tvl
+      metadata {
+        description
+        website
+      }
+    }
+  }
+`;
+
+/**
+ * Get enhanced profile information from Whisk API
+ */
+async function getEnhancedProfileInfo(address: string): Promise<any> {
+  try {
+    const result = await whiskGraphQLClient.request(WHISK_ENHANCED_IDENTITY_QUERY, {
+      address: address
+    });
+    
+    if (!result?.identity) {
+      return null;
+    }
+    
+    const profile = result.identity;
+    
+    // Build profile sections
+    const sections = [];
+    
+    // Basic info
+    if (profile.base) {
+      sections.push({
+        title: "Basic Info",
+        content: [
+          profile.base.name ? `Name: ${profile.base.name}` : null,
+          profile.base.avatar ? `Avatar: ${profile.base.avatar}` : null
+        ].filter(Boolean).join("\n")
+      });
+    }
+    
+    // Web3 Identities
+    const web3Identities = [];
+    if (profile.ens?.name) web3Identities.push(`ENS: ${profile.ens.name}`);
+    if (profile.farcaster?.name) web3Identities.push(`Farcaster: ${profile.farcaster.name}`);
+    if (profile.lens?.name) web3Identities.push(`Lens: ${profile.lens.name}`);
+    
+    if (web3Identities.length > 0) {
+      sections.push({
+        title: "Web3 Identities",
+        content: web3Identities.join("\n")
+      });
+    }
+    
+    // Token Holdings
+    if (profile.tokenHoldings?.length > 0) {
+      const tokenInfo = profile.tokenHoldings.map((holding: any) => {
+        const token = holding.token;
+        return `${token.symbol}: ${holding.balance} (${holding.value})`;
+      }).join("\n");
+      
+      sections.push({
+        title: "Token Holdings",
+        content: tokenInfo
+      });
+    }
+    
+    // DeFi Positions
+    const defiPositions = [];
+    
+    // Aave positions
+    if (profile.aaveV3MarketPositions?.length > 0) {
+      const aaveInfo = profile.aaveV3MarketPositions.map((pos: any) => {
+        return `Aave ${pos.market.name}:\n  Supply: ${pos.position.supply}\n  Borrow: ${pos.position.borrow}\n  APY: ${pos.position.apy}%`;
+      }).join("\n\n");
+      
+      defiPositions.push(aaveInfo);
+    }
+    
+    // Morpho positions
+    if (profile.morphoMarketPositions?.length > 0) {
+      const morphoInfo = profile.morphoMarketPositions.map((pos: any) => {
+        return `Morpho ${pos.market.name}:\n  Supply: ${pos.position.supply}\n  Borrow: ${pos.position.borrow}\n  APY: ${pos.position.apy}%`;
+      }).join("\n\n");
+      
+      defiPositions.push(morphoInfo);
+    }
+    
+    if (defiPositions.length > 0) {
+      sections.push({
+        title: "DeFi Positions",
+        content: defiPositions.join("\n\n")
+      });
+    }
+    
+    return {
+      address,
+      sections,
+      links: {
+        ens: profile.ens?.name ? `https://app.ens.domains/${profile.ens.name}` : null,
+        farcaster: profile.farcaster?.name ? `https://warpcast.com/${profile.farcaster.name}` : null,
+        lens: profile.lens?.name ? `https://lenster.xyz/u/${profile.lens.name}` : null
+      }
+    };
+  } catch (error) {
+    console.error("Error getting enhanced profile info:", error);
+    return null;
+  }
+}
+
+/**
+ * Get vault information from Whisk API
+ */
+async function getVaultInfo(address: string): Promise<any> {
+  try {
+    const result = await whiskGraphQLClient.request(WHISK_VAULT_QUERY, {
+      address: address
+    });
+    
+    if (!result?.vault) {
+      return null;
+    }
+    
+    const vault = result.vault;
+    return {
+      name: vault.name,
+      type: vault.type,
+      protocol: vault.protocol,
+      apy: vault.apy,
+      tvl: vault.tvl,
+      description: vault.metadata?.description,
+      website: vault.metadata?.website
+    };
+  } catch (error) {
+    console.error("Error getting vault info:", error);
+    return null;
+  }
+}
+
+// Update the searchUniversalProfiles function to use enhanced profile info
+async function searchUniversalProfiles(searchTerm: string, limit: number = 5): Promise<any[]> {
+  try {
+    // ... existing ENS resolution code ...
+    
+    // Try Whisk API if we have an address
+    if (address.startsWith('0x')) {
+      try {
+        const enhancedProfile = await getEnhancedProfileInfo(address);
+        if (enhancedProfile) {
+          const description = enhancedProfile.sections
+            .map((section: any) => `${section.title}:\n${section.content}`)
+            .join("\n\n");
+          
+          const links = Object.entries(enhancedProfile.links)
+            .filter(([_, url]) => url)
+            .map(([platform, url]) => `${platform}: ${url}`)
+            .join("\n");
+          
+          profiles.push({
+            accountAddress: address,
+            name: enhancedProfile.sections[0]?.content.split("\n")[0].replace("Name: ", "") || 
+                  `Address ${address.substring(0, 8)}...`,
+            description: `${description}\n\nLinks:\n${links}`,
+            createdAt: Math.floor(Date.now() / 1000)
+          });
+        }
+      } catch (error) {
+        console.error("Error getting enhanced profile data:", error);
+      }
+    }
+    
+    // ... rest of the existing search code ...
+  } catch (error) {
+    console.error('Error searching Universal Profiles:', error);
+    return [{
+      accountAddress: "0x0000000000000000000000000000000000000000",
+      name: "Search Error",
+      description: `Error: ${error instanceof Error ? error.message : String(error)}`,
+      createdAt: Math.floor(Date.now() / 1000)
+    }];
+  }
+}
+
+// Add new GraphQL queries for token holdings and DeFi positions
+const WHISK_TOKEN_HOLDINGS_QUERY = gql`
+  query GetTokenHoldings($address: String!, $chain: Chain) {
+    identity(address: $address) {
+      tokenHoldings(chain: $chain) {
+        token {
+          address
+          name
+          symbol
+          decimals
+          chain
+        }
+        balance
+        value
+      }
+    }
+  }
+`;
+
+const WHISK_DEFI_POSITIONS_QUERY = gql`
+  query GetDeFiPositions($address: String!, $chain: Chain) {
+    identity(address: $address) {
+      aaveV3MarketPositions(chain: $chain) {
+        market {
+          name
+          address
+          chain
+        }
+        position {
+          supply
+          borrow
+          apy
+        }
+      }
+      morphoMarketPositions(chain: $chain) {
+        market {
+          name
+          address
+          chain
+        }
+        position {
+          supply
+          borrow
+          apy
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Get token holdings from Whisk API
+ */
+async function getTokenHoldings(address: string, chain?: string): Promise<any> {
+  try {
+    const result = await whiskGraphQLClient.request(WHISK_TOKEN_HOLDINGS_QUERY, {
+      address,
+      chain: chain?.toUpperCase()
+    });
+    
+    if (!result?.identity?.tokenHoldings) {
+      return null;
+    }
+    
+    return {
+      address,
+      tokens: result.identity.tokenHoldings.map((holding: any) => ({
+        name: holding.token.name,
+        symbol: holding.token.symbol,
+        address: holding.token.address,
+        chain: holding.token.chain,
+        balance: holding.balance,
+        value: holding.value,
+        decimals: holding.token.decimals
+      }))
+    };
+  } catch (error) {
+    console.error("Error getting token holdings:", error);
+    return null;
+  }
+}
+
+/**
+ * Get DeFi positions from Whisk API
+ */
+async function getDeFiPositions(address: string, chain?: string): Promise<any> {
+  try {
+    const result = await whiskGraphQLClient.request(WHISK_DEFI_POSITIONS_QUERY, {
+      address,
+      chain: chain?.toUpperCase()
+    });
+    
+    if (!result?.identity) {
+      return null;
+    }
+    
+    const positions = {
+      address,
+      aave: result.identity.aaveV3MarketPositions?.map((pos: any) => ({
+        market: pos.market.name,
+        address: pos.market.address,
+        chain: pos.market.chain,
+        supply: pos.position.supply,
+        borrow: pos.position.borrow,
+        apy: pos.position.apy
+      })) || [],
+      morpho: result.identity.morphoMarketPositions?.map((pos: any) => ({
+        market: pos.market.name,
+        address: pos.market.address,
+        chain: pos.market.chain,
+        supply: pos.position.supply,
+        borrow: pos.position.borrow,
+        apy: pos.position.apy
+      })) || []
+    };
+    
+    return positions;
+  } catch (error) {
+    console.error("Error getting DeFi positions:", error);
+    return null;
+  }
+}
+
+// Update the processMessage function to handle new commands
+async function processMessage(
+  content: string,
+  senderAddress: string,
+  agentAddress: string,
+  lyxHandler: LYXHandler,
+  conversation: any,
+  client: Client
+): Promise<{ text?: string; contentType?: any; content?: any }> {
+  const parts = content.trim().split(" ");
+  const command = parts[0].toLowerCase();
+  const args = parts.slice(1);
+  
+  // ... existing command handling ...
+  
+  // Add new commands for token holdings and DeFi positions
+  if (command === "/tokenholdings") {
+    if (args.length === 0) {
+      return { text: "Please provide an address. Usage: /tokenholdings <address> [chain]" };
+    }
+    
+    const address = args[0];
+    const chain = args[1]; // Optional chain parameter
+    
+    if (!ethers.isAddress(address)) {
+      return { text: `Invalid Ethereum address: ${address}` };
+    }
+    
+    try {
+      const holdings = await getTokenHoldings(address, chain);
+      
+      if (!holdings || holdings.tokens.length === 0) {
+        return { text: `No token holdings found for ${address}` };
+      }
+      
+      const tokenList = holdings.tokens.map((token: any) => {
+        let line = `- ${token.symbol} (${token.name})`;
+        if (token.balance) {
+          line += `\n  Balance: ${token.balance}`;
+        }
+        if (token.value) {
+          line += `\n  Value: ${token.value}`;
+        }
+        if (token.chain) {
+          line += `\n  Chain: ${token.chain}`;
+        }
+        return line;
+      }).join("\n\n");
+      
+      return { 
+        text: `Token Holdings for ${address}:\n\n${tokenList}` 
+      };
+    } catch (error) {
+      console.error("Error getting token holdings:", error);
+      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  } else if (command === "/defipositions") {
+    if (args.length === 0) {
+      return { text: "Please provide an address. Usage: /defipositions <address> [chain]" };
+    }
+    
+    const address = args[0];
+    const chain = args[1]; // Optional chain parameter
+    
+    if (!ethers.isAddress(address)) {
+      return { text: `Invalid Ethereum address: ${address}` };
+    }
+    
+    try {
+      const positions = await getDeFiPositions(address, chain);
+      
+      if (!positions || (positions.aave.length === 0 && positions.morpho.length === 0)) {
+        return { text: `No DeFi positions found for ${address}` };
+      }
+      
+      let response = `DeFi Positions for ${address}:\n\n`;
+      
+      if (positions.aave.length > 0) {
+        response += "Aave V3 Positions:\n";
+        positions.aave.forEach((pos: any) => {
+          response += `- ${pos.market}\n`;
+          if (pos.supply) response += `  Supply: ${pos.supply}\n`;
+          if (pos.borrow) response += `  Borrow: ${pos.borrow}\n`;
+          if (pos.apy) response += `  APY: ${pos.apy}%\n`;
+          if (pos.chain) response += `  Chain: ${pos.chain}\n`;
+          response += "\n";
+        });
+      }
+      
+      if (positions.morpho.length > 0) {
+        response += "Morpho Positions:\n";
+        positions.morpho.forEach((pos: any) => {
+          response += `- ${pos.market}\n`;
+          if (pos.supply) response += `  Supply: ${pos.supply}\n`;
+          if (pos.borrow) response += `  Borrow: ${pos.borrow}\n`;
+          if (pos.apy) response += `  APY: ${pos.apy}%\n`;
+          if (pos.chain) response += `  Chain: ${pos.chain}\n`;
+          response += "\n";
+        });
+      }
+      
+      return { text: response };
+    } catch (error) {
+      console.error("Error getting DeFi positions:", error);
+      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  } else if (command === "tokens") {
+    if (args.length === 0) {
+      return { text: "Please provide an address. Usage: tokens <address> [chain]" };
+    }
+    
+    const address = args[0];
+    const chain = args[1]; // Optional chain parameter
+    
+    if (!ethers.isAddress(address)) {
+      return { text: `Invalid Ethereum address: ${address}` };
+    }
+    
+    try {
+      // Get LSP7 tokens from LUKSO
+      const lsp7Tokens = await getTokenBalance(address);
+      
+      // Get token holdings from Whisk
+      const whiskHoldings = await getTokenHoldings(address, chain);
+      
+      let response = `Tokens for ${address}:\n\n`;
+      
+      // Add LSP7 tokens
+      if (lsp7Tokens && lsp7Tokens.tokens && lsp7Tokens.tokens.length > 0) {
+        response += "LUKSO LSP7 Tokens:\n";
+        lsp7Tokens.tokens.forEach((token: any) => {
+          response += `- ${token.symbol} (${token.name})\n`;
+          if (token.formattedBalance) {
+            response += `  Balance: ${token.formattedBalance}\n`;
+          }
+          if (token.value) {
+            response += `  Value: ${token.value}\n`;
+          }
+          response += "\n";
+        });
+      }
+      
+      // Add Whisk token holdings
+      if (whiskHoldings && whiskHoldings.tokens && whiskHoldings.tokens.length > 0) {
+        response += "Other Chain Tokens:\n";
+        whiskHoldings.tokens.forEach((token: any) => {
+          response += `- ${token.symbol} (${token.name})\n`;
+          if (token.balance) {
+            response += `  Balance: ${token.balance}\n`;
+          }
+          if (token.value) {
+            response += `  Value: ${token.value}\n`;
+          }
+          if (token.chain) {
+            response += `  Chain: ${token.chain}\n`;
+          }
+          response += "\n";
+        });
+      }
+      
+      if (!lsp7Tokens?.tokens?.length && !whiskHoldings?.tokens?.length) {
+        response = `No tokens found for ${address}`;
+      }
+      
+      return { text: response };
+    } catch (error) {
+      console.error("Error getting tokens:", error);
+      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+  
+  // ... rest of the existing command handling ...
+}
+
+// ... rest of the existing code ...
