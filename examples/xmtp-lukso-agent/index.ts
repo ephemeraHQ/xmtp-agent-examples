@@ -596,7 +596,7 @@ async function getTokenBalance(address: string): Promise<any> {
       
       // Limit the number of tokens to fetch (to prevent too many requests)
       const assetLimit = Math.min(5, receivedAssets.length);
-      const processedAssets = [];
+      const processedAssets: string[] = [];
       
       // Process each asset to determine if it's an LSP7 token
       for (let i = 0; i < assetLimit; i++) {
@@ -730,7 +730,12 @@ async function getTransactionHistory(address: string): Promise<any> {
       const lookbackBlocks = 5;
       const startBlock = Math.max(0, latestBlock - lookbackBlocks);
       
-      const fallbackTxs = [];
+      const fallbackTxs: Array<{
+        hash: string;
+        type: string;
+        value: string;
+        timestamp: string;
+      }> = [];
       
       for (let blockNum = latestBlock; blockNum >= startBlock; blockNum--) {
         try {
@@ -930,7 +935,7 @@ async function getNFTs(address: string): Promise<any> {
                 // Try to get token metadata using LSP8's tokenURI
                 let tokenUri = "";
                 let imageUrl = "";
-                let metadata = null;
+                let metadata: { name: string; description: string; image: string } | null = null;
                 
                 try {
                   tokenUri = await assetContract.tokenURI(tokenId)
@@ -1663,6 +1668,169 @@ ${result.transactions.map((tx: any) => `- ${tx.timestamp}: ${tx.type} ${tx.value
   // If not a recognized command, process with AI
   const aiResponse = await getAIResponse(content);
   return { text: aiResponse };
+
+  // Handle token holdings command
+  if (command === "/tokenholdings") {
+    if (args.length === 0) {
+      return { text: "Please provide an address. Usage: /tokenholdings <address> [chain]" };
+    }
+    
+    const address = args[0];
+    const chain = args[1]; // Optional chain parameter
+    
+    if (!ethers.isAddress(address)) {
+      return { text: `Invalid Ethereum address: ${address}` };
+    }
+    
+    try {
+      const holdings = await getTokenHoldings(address, chain);
+      
+      if (!holdings || holdings.tokens.length === 0) {
+        return { text: `No token holdings found for ${address}` };
+      }
+      
+      const tokenList = holdings.tokens.map((token: any) => {
+        let line = `- ${token.symbol} (${token.name})`;
+        if (token.balance) {
+          line += `\n  Balance: ${token.balance}`;
+        }
+        if (token.value) {
+          line += `\n  Value: ${token.value}`;
+        }
+        if (token.chain) {
+          line += `\n  Chain: ${token.chain}`;
+        }
+        return line;
+      }).join("\n\n");
+      
+      return { 
+        text: `Token Holdings for ${address}:\n\n${tokenList}` 
+      };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Error getting token holdings:", errorMessage);
+      return { text: `Error: ${errorMessage}` };
+    }
+  }
+
+  // Handle DeFi positions command
+  if (command === "/defipositions") {
+    if (args.length === 0) {
+      return { text: "Please provide an address. Usage: /defipositions <address> [chain]" };
+    }
+    
+    const address = args[0];
+    const chain = args[1]; // Optional chain parameter
+    
+    if (!ethers.isAddress(address)) {
+      return { text: `Invalid Ethereum address: ${address}` };
+    }
+    
+    try {
+      const positions = await getDeFiPositions(address, chain);
+      
+      if (!positions || (positions.aave.length === 0 && positions.morpho.length === 0)) {
+        return { text: `No DeFi positions found for ${address}` };
+      }
+      
+      let response = `DeFi Positions for ${address}:\n\n`;
+      
+      if (positions.aave.length > 0) {
+        response += "Aave V3 Positions:\n";
+        positions.aave.forEach((pos: any) => {
+          response += `- ${pos.market}\n`;
+          if (pos.supply) response += `  Supply: ${pos.supply}\n`;
+          if (pos.borrow) response += `  Borrow: ${pos.borrow}\n`;
+          if (pos.apy) response += `  APY: ${pos.apy}%\n`;
+          if (pos.chain) response += `  Chain: ${pos.chain}\n`;
+          response += "\n";
+        });
+      }
+      
+      if (positions.morpho.length > 0) {
+        response += "Morpho Positions:\n";
+        positions.morpho.forEach((pos: any) => {
+          response += `- ${pos.market}\n`;
+          if (pos.supply) response += `  Supply: ${pos.supply}\n`;
+          if (pos.borrow) response += `  Borrow: ${pos.borrow}\n`;
+          if (pos.apy) response += `  APY: ${pos.apy}%\n`;
+          if (pos.chain) response += `  Chain: ${pos.chain}\n`;
+          response += "\n";
+        });
+      }
+      
+      return { text: response };
+    } catch (error: unknown) {
+      console.error("Error getting DeFi positions:", error instanceof Error ? error.message : String(error));
+      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  // Handle tokens command
+  if (command === "tokens") {
+    if (args.length === 0) {
+      return { text: "Please provide an address. Usage: tokens <address> [chain]" };
+    }
+    
+    const address = args[0];
+    const chain = args[1]; // Optional chain parameter
+    
+    if (!ethers.isAddress(address)) {
+      return { text: `Invalid Ethereum address: ${address}` };
+    }
+    
+    try {
+      // Get LSP7 tokens from LUKSO
+      const lsp7Tokens = await getTokenBalance(address);
+      
+      // Get token holdings from Whisk
+      const whiskHoldings = await getTokenHoldings(address, chain);
+      
+      let response = `Tokens for ${address}:\n\n`;
+      
+      // Add LSP7 tokens
+      if (lsp7Tokens && lsp7Tokens.tokens && lsp7Tokens.tokens.length > 0) {
+        response += "LUKSO LSP7 Tokens:\n";
+        lsp7Tokens.tokens.forEach((token: any) => {
+          response += `- ${token.symbol} (${token.name})\n`;
+          if (token.formattedBalance) {
+            response += `  Balance: ${token.formattedBalance}\n`;
+          }
+          if (token.value) {
+            response += `  Value: ${token.value}\n`;
+          }
+          response += "\n";
+        });
+      }
+      
+      // Add Whisk token holdings
+      if (whiskHoldings && whiskHoldings.tokens && whiskHoldings.tokens.length > 0) {
+        response += "Other Chain Tokens:\n";
+        whiskHoldings.tokens.forEach((token: any) => {
+          response += `- ${token.symbol} (${token.name})\n`;
+          if (token.balance) {
+            response += `  Balance: ${token.balance}\n`;
+          }
+          if (token.value) {
+            response += `  Value: ${token.value}\n`;
+          }
+          if (token.chain) {
+            response += `  Chain: ${token.chain}\n`;
+          }
+          response += "\n";
+        });
+      }
+      
+      if (!lsp7Tokens?.tokens?.length && !whiskHoldings?.tokens?.length) {
+        response = `No tokens found for ${address}`;
+      }
+      
+      return { text: response };
+    } catch (error: unknown) {
+      console.error("Error getting tokens:", error instanceof Error ? error.message : String(error));
+      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
 }
 
 /**
@@ -2098,7 +2266,7 @@ async function searchUniversalProfiles(searchTerm: string, limit: number = 5): P
       try {
         const whiskResult = await whiskGraphQLClient.request(WHISK_PROFILE_QUERY, {
           address: address
-        });
+        }) as WhiskResult;
         
         if (whiskResult?.identity) {
           const whiskProfile = whiskResult.identity;
@@ -2123,8 +2291,8 @@ async function searchUniversalProfiles(searchTerm: string, limit: number = 5): P
             createdAt: Math.floor(Date.now() / 1000)
           });
         }
-      } catch (error) {
-        console.error("Error getting Whisk profile data:", error);
+      } catch (error: unknown) {
+        console.error("Error getting Whisk profile data:", error instanceof Error ? error.message : String(error));
       }
     }
     
@@ -2193,8 +2361,8 @@ async function searchUniversalProfiles(searchTerm: string, limit: number = 5): P
             createdAt: Math.floor(Date.now() / 1000)
           });
         }
-      } catch (error) {
-        console.error("Error getting on-chain profile data:", error);
+      } catch (error: unknown) {
+        console.error("Error getting on-chain profile data:", error instanceof Error ? error.message : String(error));
       }
     }
     
@@ -2209,8 +2377,8 @@ async function searchUniversalProfiles(searchTerm: string, limit: number = 5): P
     }
     
     return profiles;
-  } catch (error) {
-    console.error('Error searching Universal Profiles:', error);
+  } catch (error: unknown) {
+    console.error('Error searching Universal Profiles:', error instanceof Error ? error.message : String(error));
     return [{
       accountAddress: "0x0000000000000000000000000000000000000000",
       name: "Search Error",
@@ -2918,6 +3086,76 @@ const WHISK_VAULT_QUERY = gql`
   }
 `;
 
+// Add type definitions at the top of the file after imports
+interface WhiskResult {
+  identity?: {
+    base?: {
+      name?: string;
+      avatar?: string;
+    };
+    ens?: {
+      name?: string;
+    };
+    farcaster?: {
+      name?: string;
+    };
+    lens?: {
+      name?: string;
+    };
+    tokenHoldings?: Array<{
+      token: {
+        name: string;
+        symbol: string;
+        address: string;
+        chain: string;
+        decimals: number;
+      };
+      balance: string;
+      value: string;
+    }>;
+    aaveV3MarketPositions?: Array<{
+      market: {
+        name: string;
+        address: string;
+        chain: string;
+      };
+      position: {
+        supply: string;
+        borrow: string;
+        apy: string;
+      };
+    }>;
+    morphoMarketPositions?: Array<{
+      market: {
+        name: string;
+        address: string;
+        chain: string;
+      };
+      position: {
+        supply: string;
+        borrow: string;
+        apy: string;
+      };
+    }>;
+  };
+  vault?: {
+    name: string;
+    type: string;
+    protocol: string;
+    apy: string;
+    tvl: string;
+    metadata?: {
+      description?: string;
+      website?: string;
+    };
+  };
+}
+
+interface ProfileSection {
+  title: string;
+  content: string;
+}
+
 /**
  * Get enhanced profile information from Whisk API
  */
@@ -2925,7 +3163,7 @@ async function getEnhancedProfileInfo(address: string): Promise<any> {
   try {
     const result = await whiskGraphQLClient.request(WHISK_ENHANCED_IDENTITY_QUERY, {
       address: address
-    });
+    }) as WhiskResult;
     
     if (!result?.identity) {
       return null;
@@ -2934,7 +3172,7 @@ async function getEnhancedProfileInfo(address: string): Promise<any> {
     const profile = result.identity;
     
     // Build profile sections
-    const sections = [];
+    const sections: ProfileSection[] = [];
     
     // Basic info
     if (profile.base) {
@@ -2948,7 +3186,7 @@ async function getEnhancedProfileInfo(address: string): Promise<any> {
     }
     
     // Web3 Identities
-    const web3Identities = [];
+    const web3Identities: string[] = [];
     if (profile.ens?.name) web3Identities.push(`ENS: ${profile.ens.name}`);
     if (profile.farcaster?.name) web3Identities.push(`Farcaster: ${profile.farcaster.name}`);
     if (profile.lens?.name) web3Identities.push(`Lens: ${profile.lens.name}`);
@@ -2961,8 +3199,8 @@ async function getEnhancedProfileInfo(address: string): Promise<any> {
     }
     
     // Token Holdings
-    if (profile.tokenHoldings?.length > 0) {
-      const tokenInfo = profile.tokenHoldings.map((holding: any) => {
+    if (profile.tokenHoldings && profile.tokenHoldings.length > 0) {
+      const tokenInfo = profile.tokenHoldings.map((holding) => {
         const token = holding.token;
         return `${token.symbol}: ${holding.balance} (${holding.value})`;
       }).join("\n");
@@ -2974,11 +3212,11 @@ async function getEnhancedProfileInfo(address: string): Promise<any> {
     }
     
     // DeFi Positions
-    const defiPositions = [];
+    const defiPositions: string[] = [];
     
     // Aave positions
-    if (profile.aaveV3MarketPositions?.length > 0) {
-      const aaveInfo = profile.aaveV3MarketPositions.map((pos: any) => {
+    if (profile.aaveV3MarketPositions && profile.aaveV3MarketPositions.length > 0) {
+      const aaveInfo = profile.aaveV3MarketPositions.map((pos) => {
         return `Aave ${pos.market.name}:\n  Supply: ${pos.position.supply}\n  Borrow: ${pos.position.borrow}\n  APY: ${pos.position.apy}%`;
       }).join("\n\n");
       
@@ -2986,8 +3224,8 @@ async function getEnhancedProfileInfo(address: string): Promise<any> {
     }
     
     // Morpho positions
-    if (profile.morphoMarketPositions?.length > 0) {
-      const morphoInfo = profile.morphoMarketPositions.map((pos: any) => {
+    if (profile.morphoMarketPositions && profile.morphoMarketPositions.length > 0) {
+      const morphoInfo = profile.morphoMarketPositions.map((pos) => {
         return `Morpho ${pos.market.name}:\n  Supply: ${pos.position.supply}\n  Borrow: ${pos.position.borrow}\n  APY: ${pos.position.apy}%`;
       }).join("\n\n");
       
@@ -3010,8 +3248,8 @@ async function getEnhancedProfileInfo(address: string): Promise<any> {
         lens: profile.lens?.name ? `https://lenster.xyz/u/${profile.lens.name}` : null
       }
     };
-  } catch (error) {
-    console.error("Error getting enhanced profile info:", error);
+  } catch (error: unknown) {
+    console.error("Error getting enhanced profile info:", error instanceof Error ? error.message : String(error));
     return null;
   }
 }
@@ -3023,7 +3261,7 @@ async function getVaultInfo(address: string): Promise<any> {
   try {
     const result = await whiskGraphQLClient.request(WHISK_VAULT_QUERY, {
       address: address
-    });
+    }) as WhiskResult;
     
     if (!result?.vault) {
       return null;
@@ -3039,57 +3277,86 @@ async function getVaultInfo(address: string): Promise<any> {
       description: vault.metadata?.description,
       website: vault.metadata?.website
     };
-  } catch (error) {
-    console.error("Error getting vault info:", error);
+  } catch (error: unknown) {
+    console.error("Error getting vault info:", error instanceof Error ? error.message : String(error));
     return null;
   }
 }
 
-// Update the searchUniversalProfiles function to use enhanced profile info
-async function searchUniversalProfiles(searchTerm: string, limit: number = 5): Promise<any[]> {
+/**
+ * Get token holdings from Whisk API
+ */
+async function getTokenHoldings(address: string, chain?: string): Promise<any> {
   try {
-    // ... existing ENS resolution code ...
+    const result = await whiskGraphQLClient.request(WHISK_TOKEN_HOLDINGS_QUERY, {
+      address,
+      chain: chain?.toUpperCase()
+    }) as WhiskResult;
     
-    // Try Whisk API if we have an address
-    if (address.startsWith('0x')) {
-      try {
-        const enhancedProfile = await getEnhancedProfileInfo(address);
-        if (enhancedProfile) {
-          const description = enhancedProfile.sections
-            .map((section: any) => `${section.title}:\n${section.content}`)
-            .join("\n\n");
-          
-          const links = Object.entries(enhancedProfile.links)
-            .filter(([_, url]) => url)
-            .map(([platform, url]) => `${platform}: ${url}`)
-            .join("\n");
-          
-          profiles.push({
-            accountAddress: address,
-            name: enhancedProfile.sections[0]?.content.split("\n")[0].replace("Name: ", "") || 
-                  `Address ${address.substring(0, 8)}...`,
-            description: `${description}\n\nLinks:\n${links}`,
-            createdAt: Math.floor(Date.now() / 1000)
-          });
-        }
-      } catch (error) {
-        console.error("Error getting enhanced profile data:", error);
-      }
+    if (!result?.identity?.tokenHoldings) {
+      return null;
     }
     
-    // ... rest of the existing search code ...
-  } catch (error) {
-    console.error('Error searching Universal Profiles:', error);
-    return [{
-      accountAddress: "0x0000000000000000000000000000000000000000",
-      name: "Search Error",
-      description: `Error: ${error instanceof Error ? error.message : String(error)}`,
-      createdAt: Math.floor(Date.now() / 1000)
-    }];
+    return {
+      address,
+      tokens: result.identity.tokenHoldings.map((holding) => ({
+        name: holding.token.name,
+        symbol: holding.token.symbol,
+        address: holding.token.address,
+        chain: holding.token.chain,
+        balance: holding.balance,
+        value: holding.value,
+        decimals: holding.token.decimals
+      }))
+    };
+  } catch (error: unknown) {
+    console.error("Error getting token holdings:", error instanceof Error ? error.message : String(error));
+    return null;
   }
 }
 
-// Add new GraphQL queries for token holdings and DeFi positions
+/**
+ * Get DeFi positions from Whisk API
+ */
+async function getDeFiPositions(address: string, chain?: string): Promise<any> {
+  try {
+    const result = await whiskGraphQLClient.request(WHISK_DEFI_POSITIONS_QUERY, {
+      address,
+      chain: chain?.toUpperCase()
+    }) as WhiskResult;
+    
+    if (!result?.identity) {
+      return null;
+    }
+    
+    const positions = {
+      address,
+      aave: result.identity.aaveV3MarketPositions?.map((pos) => ({
+        market: pos.market.name,
+        address: pos.market.address,
+        chain: pos.market.chain,
+        supply: pos.position.supply,
+        borrow: pos.position.borrow,
+        apy: pos.position.apy
+      })) || [],
+      morpho: result.identity.morphoMarketPositions?.map((pos) => ({
+        market: pos.market.name,
+        address: pos.market.address,
+        chain: pos.market.chain,
+        supply: pos.position.supply,
+        borrow: pos.position.borrow,
+        apy: pos.position.apy
+      })) || []
+    };
+    
+    return positions;
+  } catch (error: unknown) {
+    console.error("Error getting DeFi positions:", error instanceof Error ? error.message : String(error));
+    return null;
+  }
+}
+
+// Add GraphQL queries at the top of the file after imports
 const WHISK_TOKEN_HOLDINGS_QUERY = gql`
   query GetTokenHoldings($address: String!, $chain: Chain) {
     identity(address: $address) {
@@ -3138,252 +3405,5 @@ const WHISK_DEFI_POSITIONS_QUERY = gql`
     }
   }
 `;
-
-/**
- * Get token holdings from Whisk API
- */
-async function getTokenHoldings(address: string, chain?: string): Promise<any> {
-  try {
-    const result = await whiskGraphQLClient.request(WHISK_TOKEN_HOLDINGS_QUERY, {
-      address,
-      chain: chain?.toUpperCase()
-    });
-    
-    if (!result?.identity?.tokenHoldings) {
-      return null;
-    }
-    
-    return {
-      address,
-      tokens: result.identity.tokenHoldings.map((holding: any) => ({
-        name: holding.token.name,
-        symbol: holding.token.symbol,
-        address: holding.token.address,
-        chain: holding.token.chain,
-        balance: holding.balance,
-        value: holding.value,
-        decimals: holding.token.decimals
-      }))
-    };
-  } catch (error) {
-    console.error("Error getting token holdings:", error);
-    return null;
-  }
-}
-
-/**
- * Get DeFi positions from Whisk API
- */
-async function getDeFiPositions(address: string, chain?: string): Promise<any> {
-  try {
-    const result = await whiskGraphQLClient.request(WHISK_DEFI_POSITIONS_QUERY, {
-      address,
-      chain: chain?.toUpperCase()
-    });
-    
-    if (!result?.identity) {
-      return null;
-    }
-    
-    const positions = {
-      address,
-      aave: result.identity.aaveV3MarketPositions?.map((pos: any) => ({
-        market: pos.market.name,
-        address: pos.market.address,
-        chain: pos.market.chain,
-        supply: pos.position.supply,
-        borrow: pos.position.borrow,
-        apy: pos.position.apy
-      })) || [],
-      morpho: result.identity.morphoMarketPositions?.map((pos: any) => ({
-        market: pos.market.name,
-        address: pos.market.address,
-        chain: pos.market.chain,
-        supply: pos.position.supply,
-        borrow: pos.position.borrow,
-        apy: pos.position.apy
-      })) || []
-    };
-    
-    return positions;
-  } catch (error) {
-    console.error("Error getting DeFi positions:", error);
-    return null;
-  }
-}
-
-// Update the processMessage function to handle new commands
-async function processMessage(
-  content: string,
-  senderAddress: string,
-  agentAddress: string,
-  lyxHandler: LYXHandler,
-  conversation: any,
-  client: Client
-): Promise<{ text?: string; contentType?: any; content?: any }> {
-  const parts = content.trim().split(" ");
-  const command = parts[0].toLowerCase();
-  const args = parts.slice(1);
-  
-  // ... existing command handling ...
-  
-  // Add new commands for token holdings and DeFi positions
-  if (command === "/tokenholdings") {
-    if (args.length === 0) {
-      return { text: "Please provide an address. Usage: /tokenholdings <address> [chain]" };
-    }
-    
-    const address = args[0];
-    const chain = args[1]; // Optional chain parameter
-    
-    if (!ethers.isAddress(address)) {
-      return { text: `Invalid Ethereum address: ${address}` };
-    }
-    
-    try {
-      const holdings = await getTokenHoldings(address, chain);
-      
-      if (!holdings || holdings.tokens.length === 0) {
-        return { text: `No token holdings found for ${address}` };
-      }
-      
-      const tokenList = holdings.tokens.map((token: any) => {
-        let line = `- ${token.symbol} (${token.name})`;
-        if (token.balance) {
-          line += `\n  Balance: ${token.balance}`;
-        }
-        if (token.value) {
-          line += `\n  Value: ${token.value}`;
-        }
-        if (token.chain) {
-          line += `\n  Chain: ${token.chain}`;
-        }
-        return line;
-      }).join("\n\n");
-      
-      return { 
-        text: `Token Holdings for ${address}:\n\n${tokenList}` 
-      };
-    } catch (error) {
-      console.error("Error getting token holdings:", error);
-      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
-    }
-  } else if (command === "/defipositions") {
-    if (args.length === 0) {
-      return { text: "Please provide an address. Usage: /defipositions <address> [chain]" };
-    }
-    
-    const address = args[0];
-    const chain = args[1]; // Optional chain parameter
-    
-    if (!ethers.isAddress(address)) {
-      return { text: `Invalid Ethereum address: ${address}` };
-    }
-    
-    try {
-      const positions = await getDeFiPositions(address, chain);
-      
-      if (!positions || (positions.aave.length === 0 && positions.morpho.length === 0)) {
-        return { text: `No DeFi positions found for ${address}` };
-      }
-      
-      let response = `DeFi Positions for ${address}:\n\n`;
-      
-      if (positions.aave.length > 0) {
-        response += "Aave V3 Positions:\n";
-        positions.aave.forEach((pos: any) => {
-          response += `- ${pos.market}\n`;
-          if (pos.supply) response += `  Supply: ${pos.supply}\n`;
-          if (pos.borrow) response += `  Borrow: ${pos.borrow}\n`;
-          if (pos.apy) response += `  APY: ${pos.apy}%\n`;
-          if (pos.chain) response += `  Chain: ${pos.chain}\n`;
-          response += "\n";
-        });
-      }
-      
-      if (positions.morpho.length > 0) {
-        response += "Morpho Positions:\n";
-        positions.morpho.forEach((pos: any) => {
-          response += `- ${pos.market}\n`;
-          if (pos.supply) response += `  Supply: ${pos.supply}\n`;
-          if (pos.borrow) response += `  Borrow: ${pos.borrow}\n`;
-          if (pos.apy) response += `  APY: ${pos.apy}%\n`;
-          if (pos.chain) response += `  Chain: ${pos.chain}\n`;
-          response += "\n";
-        });
-      }
-      
-      return { text: response };
-    } catch (error) {
-      console.error("Error getting DeFi positions:", error);
-      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
-    }
-  } else if (command === "tokens") {
-    if (args.length === 0) {
-      return { text: "Please provide an address. Usage: tokens <address> [chain]" };
-    }
-    
-    const address = args[0];
-    const chain = args[1]; // Optional chain parameter
-    
-    if (!ethers.isAddress(address)) {
-      return { text: `Invalid Ethereum address: ${address}` };
-    }
-    
-    try {
-      // Get LSP7 tokens from LUKSO
-      const lsp7Tokens = await getTokenBalance(address);
-      
-      // Get token holdings from Whisk
-      const whiskHoldings = await getTokenHoldings(address, chain);
-      
-      let response = `Tokens for ${address}:\n\n`;
-      
-      // Add LSP7 tokens
-      if (lsp7Tokens && lsp7Tokens.tokens && lsp7Tokens.tokens.length > 0) {
-        response += "LUKSO LSP7 Tokens:\n";
-        lsp7Tokens.tokens.forEach((token: any) => {
-          response += `- ${token.symbol} (${token.name})\n`;
-          if (token.formattedBalance) {
-            response += `  Balance: ${token.formattedBalance}\n`;
-          }
-          if (token.value) {
-            response += `  Value: ${token.value}\n`;
-          }
-          response += "\n";
-        });
-      }
-      
-      // Add Whisk token holdings
-      if (whiskHoldings && whiskHoldings.tokens && whiskHoldings.tokens.length > 0) {
-        response += "Other Chain Tokens:\n";
-        whiskHoldings.tokens.forEach((token: any) => {
-          response += `- ${token.symbol} (${token.name})\n`;
-          if (token.balance) {
-            response += `  Balance: ${token.balance}\n`;
-          }
-          if (token.value) {
-            response += `  Value: ${token.value}\n`;
-          }
-          if (token.chain) {
-            response += `  Chain: ${token.chain}\n`;
-          }
-          response += "\n";
-        });
-      }
-      
-      if (!lsp7Tokens?.tokens?.length && !whiskHoldings?.tokens?.length) {
-        response = `No tokens found for ${address}`;
-      }
-      
-      return { text: response };
-    } catch (error) {
-      console.error("Error getting tokens:", error);
-      return { text: `Error: ${error instanceof Error ? error.message : String(error)}` };
-    }
-  }
-  
-  // ... rest of the existing command handling ...
-}
 
 // ... rest of the existing code ...
