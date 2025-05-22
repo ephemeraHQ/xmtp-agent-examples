@@ -2040,10 +2040,74 @@ const GET_TRANSACTIONS_QUERY = gql`
 `;
 
 /**
+ * Extract XMTP inbox ID from Convos profile page
+ */
+async function extractInboxIdFromConvosProfile(profileUrl: string): Promise<string | null> {
+  try {
+    console.log(`Fetching Convos profile at: ${profileUrl}`);
+    const response = await fetch(profileUrl, {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    
+    if (!response.ok) {
+      console.log(`Failed to fetch Convos profile: ${response.status}`);
+      return null;
+    }
+    
+    const text = await response.text();
+    console.log('Received HTML content length:', text.length);
+    
+    // Look for the JSON data in the script tag
+    const scriptRegex = /<script id="__NEXT_DATA__" type="application\/json">(.*?)<\/script>/s;
+    const scriptMatch = text.match(scriptRegex);
+    
+    if (!scriptMatch || !scriptMatch[1]) {
+      console.log('Could not find JSON data in script tag');
+      return null;
+    }
+    
+    console.log('Found script tag with JSON data');
+    
+    try {
+      // Parse the JSON data
+      const jsonData = JSON.parse(scriptMatch[1]);
+      console.log('Successfully parsed JSON data');
+      
+      // Log the structure to help debug
+      console.log('JSON structure:', {
+        hasProps: !!jsonData?.props,
+        hasPageProps: !!jsonData?.props?.pageProps,
+        hasProfile: !!jsonData?.props?.pageProps?.profile,
+        hasXmtpId: !!jsonData?.props?.pageProps?.profile?.xmtpId
+      });
+      
+      // Extract the XMTP ID from the profile data
+      const xmtpId = jsonData?.props?.pageProps?.profile?.xmtpId;
+      
+      if (!xmtpId) {
+        console.log('Could not find XMTP ID in profile data');
+        return null;
+      }
+      
+      console.log(`Extracted XMTP ID: ${xmtpId}`);
+      return xmtpId;
+    } catch (parseError: unknown) {
+      console.error('Error parsing JSON data:', parseError instanceof Error ? parseError.message : String(parseError));
+      console.log('Raw JSON data:', scriptMatch[1].substring(0, 200) + '...'); // Log first 200 chars of raw data
+      return null;
+    }
+  } catch (error: unknown) {
+    console.error('Error extracting XMTP ID from Convos profile:', error instanceof Error ? error.message : String(error));
+    return null;
+  }
+}
+
+/**
  * Check for profile existence on external domains
  */
-async function checkExternalProfiles(searchTerm: string): Promise<{ url: string; exists: boolean }[]> {
-  const results: { url: string; exists: boolean }[] = [];
+async function checkExternalProfiles(searchTerm: string): Promise<{ url: string; exists: boolean; inboxId?: string }[]> {
+  const results: { url: string; exists: boolean; inboxId?: string }[] = [];
   
   // Check ENS domain
   const ensUrl = `https://app.ens.domains/${searchTerm}.eth`;
@@ -2168,12 +2232,19 @@ async function checkExternalProfiles(searchTerm: string): Promise<{ url: string;
     
     console.log(`Convos profile exists: ${exists}`);
     
+    let inboxId: string | null = null;
+    if (exists) {
+      // Try to extract the inbox ID from the profile page
+      inboxId = await extractInboxIdFromConvosProfile(convosUrl);
+    }
+    
     results.push({
       url: convosUrl,
-      exists
+      exists,
+      inboxId: inboxId || undefined
     });
-  } catch (error) {
-    console.error(`Error checking convos.org profile:`, error);
+  } catch (error: unknown) {
+    console.error(`Error checking convos.org profile:`, error instanceof Error ? error.message : String(error));
     results.push({
       url: convosUrl,
       exists: false
@@ -2310,8 +2381,21 @@ async function searchUniversalProfiles(searchTerm: string, limit: number = 5): P
         // Add ENS profile link if we have an ENS name
         const ensProfileUrl = ensName ? `https://app.ens.domains/${ensName}` : null;
         
+        // Find the Convos profile to get the XMTP ID
+        const convosProfile = externalProfiles.find(profile => 
+          profile.url.includes('convos.org') && profile.exists && profile.inboxId
+        );
+        
+        // Format the URLs with XMTP ID if available
+        const formattedUrls = validExternalUrls.map(url => {
+          if (url.includes('convos.org') && convosProfile?.inboxId) {
+            return `${url}\nConvos Inbox ID: ${convosProfile.inboxId}`;
+          }
+          return url;
+        });
+        
         const description = [
-          `Found profiles on: ${validExternalUrls.join(", ")}`,
+          `Found profiles on: ${formattedUrls.join(", ")}`,
           ensProfileUrl ? `ENS Profile: ${ensProfileUrl}` : null
         ].filter(Boolean).join("\n");
         
