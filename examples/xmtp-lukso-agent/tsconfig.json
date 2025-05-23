@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "../..",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "../..",
+    "paths": {
+      "@helpers/*": ["helpers/*"]
+    },
+    "noImplicitAny": false,
+    "downlevelIteration": true
+  },
+  "include": [
+    "./**/*.ts",
+    "../../helpers/**/*.ts"
+  ],
+  "references": []
+} 
