@@ -110,17 +110,17 @@ main().catch(console.error);
 
 ### Getting the address of a user
 
-Each user has a unique inbox id, which can be used to get the address associated with it.
+Each user has a unique inboxId for retrieving their associated addresses (identifiers). One inboxId can have multiple identifiers like passkeys or EVM wallet addresses.
+
+> [!NOTE]
+> The inboxId differs from the address—it's a user identifier, while the address identifies the user's wallet. Not all users have associated addresses.
 
 ```tsx
 const inboxState = await client.preferences.inboxStateFromInboxIds([
   message.senderInboxId,
 ]);
 const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-console.log(`Sending "gm" response to ${addressFromInboxId}...`);
 ```
-
-_Keep in mind that not necessarily all users have an address associated with it._
 
 ## Examples
 
