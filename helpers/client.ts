@@ -77,7 +77,7 @@ export const getDbPath = (description: string = "xmtp") => {
 };
 
 export const logAgentDetails = async (
-  clients: Client | Client[],
+  clients: Client<any> | Client<any>[],
 ): Promise<void> => {
   const clientsByAddress = Array.isArray(clients)
     ? clients.reduce<Record<string, Client[]>>((acc, client) => {

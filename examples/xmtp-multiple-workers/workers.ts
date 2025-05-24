@@ -13,7 +13,7 @@ export interface WorkerInstance {
   name: string;
   address: string;
   inboxId: string;
-  client: Client;
+  client: Client<any>;
   messageStream?: AsyncIterable<DecodedMessage>;
   isTerminated: boolean;
 }

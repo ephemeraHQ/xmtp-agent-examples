@@ -83,8 +83,8 @@ async function main(): Promise<void> {
  * Start periodic sync for both clients
  */
 function startPeriodicSync(
-  receivingClient: Client,
-  sendingClient: Client,
+  receivingClient: Client<any>,
+  sendingClient: Client<any>,
 ): void {
   console.log(`Setting up periodic sync every ${SYNC_INTERVAL} minutes`);
 
@@ -110,7 +110,7 @@ function startPeriodicSync(
   );
 }
 
-async function setupMessageStream(client: Client): Promise<void> {
+async function setupMessageStream(client: Client<any>): Promise<void> {
   try {
     console.log("Setting up message stream on receiving client...");
     const stream = await client.conversations.streamAllMessages();
@@ -153,7 +153,7 @@ async function setupMessageStream(client: Client): Promise<void> {
   }
 }
 
-function startMessageProcessor(client: Client): void {
+function startMessageProcessor(client: Client<any>): void {
   console.log("Starting message processor on sending client...");
   // Process message queue periodically
   setInterval(() => {

@@ -310,7 +310,7 @@ async function handleMessage(message: DecodedMessage, client: Client) {
  *
  * @param client - The XMTP client instance
  */
-async function startMessageListener(client: Client) {
+async function startMessageListener(client: Client<any>) {
   console.log("Starting message listener...");
   const stream = await client.conversations.streamAllMessages();
   for await (const message of stream) {
