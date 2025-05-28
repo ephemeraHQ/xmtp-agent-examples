@@ -93,7 +93,7 @@ const signer: Signer = ...;
 const env: XmtpEnv = "dev";
 
 // create the client
-const client = await Client.create(signer, encryptionKey, { env });
+const client = await Client.create(signer, {encryptionKey, env });
 await client.conversations.sync();
 const stream = await client.conversations.streamAllMessages();
 
