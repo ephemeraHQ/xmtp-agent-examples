@@ -86,14 +86,18 @@ These are the steps to initialize the XMTP listener and send messages.
 ```tsx
 // import the xmtp sdk
 import { Client, type XmtpEnv, type Signer } from "@xmtp/node-sdk";
+
 // encryption key, must be consistent across runs
 const encryptionKey: Uint8Array = ...;
 const signer: Signer = ...;
 const env: XmtpEnv = "dev";
+
 // create the client
 const client = await Client.create(signer, encryptionKey, { env });
 await client.conversations.sync();
 const stream = await client.conversations.streamAllMessages();
+
+// listen to all messages
 for await (const message of  stream) {
   // ignore messages from the agent
   if (message?.senderInboxId === client.inboxId ) {
