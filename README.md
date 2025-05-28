@@ -90,22 +90,19 @@ import { Client, type XmtpEnv, type Signer } from "@xmtp/node-sdk";
 const encryptionKey: Uint8Array = ...;
 const signer: Signer = ...;
 const env: XmtpEnv = "dev";
-
-async function main() {
-  const client = await Client.create(signer, encryptionKey, { env });
-  await client.conversations.sync();
-  const stream = await client.conversations.streamAllMessages();
-  for await (const message of  stream) {
-    // ignore messages from the agent
-   if (message?.senderInboxId === client.inboxId ) {
-      continue;
-    }
-    const conversation = await client.conversations.getConversationById(message.conversationId);
-    // send a message from the agent
-    await conversation.send("gm");
+// create the client
+const client = await Client.create(signer, encryptionKey, { env });
+await client.conversations.sync();
+const stream = await client.conversations.streamAllMessages();
+for await (const message of  stream) {
+  // ignore messages from the agent
+  if (message?.senderInboxId === client.inboxId ) {
+    continue;
   }
+  const conversation = await client.conversations.getConversationById(message.conversationId);
+  // send a message from the agent
+  await conversation.send("gm");
 }
-main().catch(console.error);
 ```
 
 ### Getting the address of a user
