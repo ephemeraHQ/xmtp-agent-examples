@@ -100,9 +100,8 @@ const stream = await client.conversations.streamAllMessages();
 // listen to all messages
 for await (const message of  stream) {
   // ignore messages from the agent
-  if (message?.senderInboxId === client.inboxId ) {
-    continue;
-  }
+  if (message?.senderInboxId === client.inboxId ) continue;
+  // get the conversation by id
   const conversation = await client.conversations.getConversationById(message.conversationId);
   // send a message from the agent
   await conversation.send("gm");
