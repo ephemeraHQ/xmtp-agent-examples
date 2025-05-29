@@ -23,7 +23,6 @@
     "@xmtp/node-sdk": "2.1.0-rc5"
   },
   "dependencies": {
-    "@xmtp/content-type-group-updated": "^2.0.2",
     "@xmtp/node-sdk": "2.1.0-rc5",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"

@@ -5684,7 +5684,6 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/node-sdk": "npm:2.1.0-rc5"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
