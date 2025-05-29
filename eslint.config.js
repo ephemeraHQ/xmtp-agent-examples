@@ -75,11 +75,5 @@ export default tseslint.config(
       "@typescript-eslint/no-require-imports": "off",
     },
   },
-  {
-    files: ["**/xmtp-stream-restart/**"],
-    rules: {
-      "@typescript-eslint/no-unnecessary-condition": "off",
-    },
-  },
   eslintPluginPrettierRecommended,
 );

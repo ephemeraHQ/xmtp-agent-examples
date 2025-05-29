@@ -37,7 +37,7 @@ async function main() {
 
   const identifier = await signer.getIdentifier();
   const agentAddress = identifier.identifier;
-  void logAgentDetails(client);
+  void logAgentDetails(client as Client);
 
   /* Sync the conversations from the network to update the local db */
   console.log("✓ Syncing conversations...");

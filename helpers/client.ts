@@ -79,22 +79,22 @@ export const getDbPath = (description: string = "xmtp") => {
 export const logAgentDetails = async (
   clients: Client | Client[],
 ): Promise<void> => {
-  const clientsByAddress = Array.isArray(clients)
-    ? clients.reduce<Record<string, Client[]>>((acc, client) => {
-        const address = client.accountIdentifier?.identifier ?? "";
-        acc[address] = acc[address] ?? [];
-        acc[address].push(client);
-        return acc;
-      }, {})
-    : {
-        [clients.accountIdentifier?.identifier ?? ""]: [clients],
-      };
+  const clientArray = Array.isArray(clients) ? clients : [clients];
+  const clientsByAddress = clientArray.reduce<Record<string, Client[]>>(
+    (acc, client) => {
+      const address = client.accountIdentifier?.identifier as string;
+      acc[address] = acc[address] ?? [];
+      acc[address].push(client);
+      return acc;
+    },
+    {},
+  );
 
   for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
     const firstClient = clientGroup[0];
     const inboxId = firstClient.inboxId;
     const environments = clientGroup
-      .map((c) => c.options?.env ?? "dev")
+      .map((c: Client) => c.options?.env ?? "dev")
       .join(", ");
     console.log(`\x1b[38;2;252;76;52m
         ██╗  ██╗███╗   ███╗████████╗██████╗ 
