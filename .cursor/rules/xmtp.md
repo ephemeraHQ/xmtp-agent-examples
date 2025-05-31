@@ -466,6 +466,32 @@ declare class Client {
   constructor(client: Client$1, signer: Signer, codecs: ContentCodec[]);
 ```
 
+## Consent Best Practices
+
+```tsx
+// Only sync conversations with explicit consent
+await client.conversations.sync({
+  consentState: ConsentState.Allowed,
+});
+
+// Filter conversations by consent state
+const allowedConversations = await client.conversations.list({
+  consentState: ConsentState.Allowed,
+});
+
+// Strategic message streaming
+const stream = await client.conversations.streamAllMessages();
+for await (const message of stream) {
+  // Check consent before processing
+  const conversation = await client.conversations.getConversationById(
+    message.conversationId,
+  );
+  if (conversation.consentState !== ConsentState.Allowed) continue;
+
+  // Process allowed message
+}
+```
+
 ## XMTP Identifiers Reference
 
 When working with XMTP, you'll encounter several types of identifiers:
