@@ -54,6 +54,7 @@ async function main() {
           console.log("Skipping DM conversation, skipping");
           continue;
         }
+        console.log("Conversation found", fetchedConversation.id);
 
         const messages = await fetchedConversation.messages();
         const hasSentBefore = messages.some(
@@ -78,12 +79,17 @@ async function main() {
     const stream = await client.conversations.streamAllMessages();
 
     for await (const message of stream) {
-      // Filter out messages from the agent itself
       if (
         !message ||
-        message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-        message.contentType?.typeId !== "group_updated"
-      ) {
+        message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
+      )
+        continue;
+
+      if (message.contentType?.typeId === "text") {
+        console.log(message.content);
+        continue;
+      }
+      if (message.contentType?.typeId !== "group_updated") {
         continue;
       }
 
