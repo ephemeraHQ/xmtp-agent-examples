@@ -4,7 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, Dm, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, Dm, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -32,27 +32,24 @@ async function main() {
   console.log("Starting streams...");
 
   // Stream conversations for welcome messages
-  const conversationStream = async () => {
+  const conversationStream = () => {
     console.log("Waiting for new conversations...");
-    const stream = client.conversations.stream();
-
-    for await (const conversation of stream) {
+    const handleConversation = async (
+      error: Error | null,
+      conversation: Conversation,
+    ) => {
       try {
-        if (!conversation) {
-          console.log("Unable to find conversation, skipping");
-          continue;
-        }
         const fetchedConversation =
           await client.conversations.getConversationById(conversation.id);
 
         if (!fetchedConversation) {
           console.log("Unable to find conversation, skipping");
-          continue;
+          return;
         }
         const isDm = fetchedConversation instanceof Dm;
         if (isDm) {
           console.log("Skipping DM conversation, skipping");
-          continue;
+          return;
         }
         console.log("Conversation found", fetchedConversation.id);
 
@@ -70,7 +67,9 @@ async function main() {
       } catch (error) {
         console.error("Error sending message:", error);
       }
-    }
+    };
+
+    void client.conversations.stream(handleConversation);
   };
 
   // Stream all messages for logging
