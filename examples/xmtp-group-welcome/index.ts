@@ -39,6 +39,8 @@ async function main() {
       conversation: Conversation,
     ) => {
       try {
+        console.log("error", error);
+        console.log("conversation", conversation);
         const fetchedConversation =
           await client.conversations.getConversationById(conversation.id);
 
