@@ -29,35 +29,49 @@ async function main() {
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
-  console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
-
-  for await (const message of stream) {
-    if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
-    ) {
-      continue;
-    }
-
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    await conversation.send("gm");
-
+  // Stream all messages for GM responses
+  const messageStream = () => {
     console.log("Waiting for messages...");
-  }
+    void client.conversations.streamAllMessages((error, message) => {
+      if (error) {
+        console.error("Error in message stream:", error);
+        return;
+      }
+      if (!message) {
+        console.log("No message received");
+        return;
+      }
+
+      void (async () => {
+        if (
+          message.senderInboxId.toLowerCase() ===
+            client.inboxId.toLowerCase() ||
+          message.contentType?.typeId !== "text"
+        ) {
+          return;
+        }
+
+        const conversation = await client.conversations.getConversationById(
+          message.conversationId,
+        );
+
+        if (!conversation) {
+          console.log("Unable to find conversation, skipping");
+          return;
+        }
+
+        const inboxState = await client.preferences.inboxStateFromInboxIds([
+          message.senderInboxId,
+        ]);
+        const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+        console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+        await conversation.send("gm");
+      })();
+    });
+  };
+
+  // Start the message stream
+  messageStream();
 }
 
 main().catch(console.error);
