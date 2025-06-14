@@ -4,7 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, Dm, type Conversation, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, Dm, type Group, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -34,87 +34,100 @@ async function main() {
   // Stream conversations for welcome messages
   const conversationStream = () => {
     console.log("Waiting for new conversations...");
-    const handleConversation = async (
+    const handleConversation = (
       error: Error | null,
-      conversation: Conversation,
+      conversation: Group | Dm | undefined,
     ) => {
-      try {
-        console.log("error", error);
-        console.log("conversation", conversation);
-        const fetchedConversation =
-          await client.conversations.getConversationById(conversation.id);
-
-        if (!fetchedConversation) {
-          console.log("Unable to find conversation, skipping");
-          return;
-        }
-        const isDm = fetchedConversation instanceof Dm;
-        if (isDm) {
-          console.log("Skipping DM conversation, skipping");
-          return;
-        }
-        console.log("Conversation found", fetchedConversation.id);
-
-        const messages = await fetchedConversation.messages();
-        const hasSentBefore = messages.some(
-          (msg) =>
-            msg.senderInboxId.toLowerCase() === client.inboxId.toLowerCase(),
-        );
-
-        if (!hasSentBefore) {
-          await fetchedConversation.send(
-            "Hey thanks for adding me to the group",
-          );
-        }
-      } catch (error) {
-        console.error("Error sending message:", error);
+      if (error) {
+        console.error("Error in conversation stream:", error);
+        return;
       }
-    };
+      if (!conversation) {
+        console.log("No conversation received");
+        return;
+      }
 
+      void (async () => {
+        try {
+          const fetchedConversation =
+            await client.conversations.getConversationById(conversation.id);
+
+          if (!fetchedConversation) {
+            console.log("Unable to find conversation, skipping");
+            return;
+          }
+          const isDm = fetchedConversation instanceof Dm;
+          if (isDm) {
+            console.log("Skipping DM conversation, skipping");
+            return;
+          }
+          console.log("Conversation found", fetchedConversation.id);
+
+          const messages = await fetchedConversation.messages();
+          const hasSentBefore = messages.some(
+            (msg) =>
+              msg.senderInboxId.toLowerCase() === client.inboxId.toLowerCase(),
+          );
+
+          if (!hasSentBefore) {
+            await fetchedConversation.send(
+              "Hey thanks for adding me to the group",
+            );
+          }
+        } catch (error) {
+          console.error("Error sending message:", error);
+        }
+      })();
+    };
+    // @ts-expect-error - TODO: fix this
     void client.conversations.stream(handleConversation);
   };
 
   // Stream all messages for logging
-  const messageStream = async () => {
+  const messageStream = () => {
     console.log("Waiting for messages...");
-    const stream = await client.conversations.streamAllMessages();
-
-    for await (const message of stream) {
-      if (
-        !message ||
-        message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
-      )
-        continue;
-
-      if (message.contentType?.typeId === "text") {
-        console.log(message.content);
-        continue;
+    void client.conversations.streamAllMessages((error, message) => {
+      if (error) {
+        console.error("Error in message stream:", error);
+        return;
       }
-      if (message.contentType?.typeId !== "group_updated") {
-        continue;
+      if (!message) {
+        console.log("No message received");
+        return;
       }
 
-      const conversation = await client.conversations.getConversationById(
-        message.conversationId,
-      );
-      if (conversation) {
-        if (
-          message.content &&
-          typeof message.content === "object" &&
-          "addedInboxes" in message.content
-        ) {
-          for (const addedInbox of message.content.addedInboxes) {
-            await conversation.send(
-              "Welcome to the group " + addedInbox.inboxId,
-            );
+      void (async () => {
+        if (message.contentType?.typeId === "text") {
+          console.log(message.content);
+          return;
+        }
+        if (message.contentType?.typeId !== "group_updated") {
+          return;
+        }
+
+        const conversation = await client.conversations.getConversationById(
+          message.conversationId,
+        );
+        if (conversation) {
+          if (
+            message.content &&
+            typeof message.content === "object" &&
+            "addedInboxes" in message.content
+          ) {
+            for (const addedInbox of message.content.addedInboxes) {
+              await conversation.send(
+                "Welcome to the group " + addedInbox.inboxId,
+              );
+            }
           }
         }
-      }
-    }
+      })();
+    });
   };
 
   // Run both streams concurrently
-  await Promise.all([conversationStream(), messageStream()]);
+  conversationStream();
+  messageStream();
 }
 
 main().catch(console.error);
