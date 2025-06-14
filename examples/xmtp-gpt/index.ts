@@ -40,58 +40,71 @@ async function main() {
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
-  console.log("Waiting for messages...");
-  /* Stream all messages from the network */
-  const stream = await client.conversations.streamAllMessages();
-
-  for await (const message of stream) {
-    /* Ignore messages from the same agent or non-text messages */
-    if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
-    ) {
-      continue;
-    }
-
-    console.log(
-      `Received message: ${message.content as string} by ${message.senderInboxId}`,
-    );
-
-    /* Get the conversation from the local db */
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    /* If the conversation is not found, skip the message */
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    try {
-      /* Get the AI response */
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: "user", content: message.content as string }],
-        model: "gpt-4.1-mini",
-      });
-
-      /* Get the AI response */
-      const response =
-        completion.choices[0]?.message?.content ||
-        "I'm not sure how to respond to that.";
-
-      console.log(`Sending AI response: ${response}`);
-      /* Send the AI response to the conversation */
-      await conversation.send(response);
-    } catch (error) {
-      console.error("Error getting AI response:", error);
-      await conversation.send(
-        "Sorry, I encountered an error processing your message.",
-      );
-    }
-
+  // Stream all messages for GPT responses
+  const messageStream = () => {
     console.log("Waiting for messages...");
-  }
+    void client.conversations.streamAllMessages((error, message) => {
+      if (error) {
+        console.error("Error in message stream:", error);
+        return;
+      }
+      if (!message) {
+        console.log("No message received");
+        return;
+      }
+
+      void (async () => {
+        /* Ignore messages from the same agent or non-text messages */
+        if (
+          message.senderInboxId.toLowerCase() ===
+            client.inboxId.toLowerCase() ||
+          message.contentType?.typeId !== "text"
+        ) {
+          return;
+        }
+
+        console.log(
+          `Received message: ${message.content as string} by ${message.senderInboxId}`,
+        );
+
+        /* Get the conversation from the local db */
+        const conversation = await client.conversations.getConversationById(
+          message.conversationId,
+        );
+
+        /* If the conversation is not found, skip the message */
+        if (!conversation) {
+          console.log("Unable to find conversation, skipping");
+          return;
+        }
+
+        try {
+          /* Get the AI response */
+          const completion = await openai.chat.completions.create({
+            messages: [{ role: "user", content: message.content as string }],
+            model: "gpt-4.1-mini",
+          });
+
+          /* Get the AI response */
+          const response =
+            completion.choices[0]?.message?.content ||
+            "I'm not sure how to respond to that.";
+
+          console.log(`Sending AI response: ${response}`);
+          /* Send the AI response to the conversation */
+          await conversation.send(response);
+        } catch (error) {
+          console.error("Error getting AI response:", error);
+          await conversation.send(
+            "Sorry, I encountered an error processing your message.",
+          );
+        }
+      })();
+    });
+  };
+
+  // Start the message stream
+  messageStream();
 }
 
 main().catch(console.error);
