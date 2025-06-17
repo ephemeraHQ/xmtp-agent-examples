@@ -93,6 +93,7 @@ export const logAgentDetails = async (
   for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
     const firstClient = clientGroup[0];
     const inboxId = firstClient.inboxId;
+    const installationId = firstClient.installationId;
     const environments = clientGroup
       .map((c: Client) => c.options?.env ?? "dev")
       .join(", ");
@@ -112,10 +113,11 @@ export const logAgentDetails = async (
 
     console.log(`
     ✓ XMTP Client:
-    • Address: ${address}
-    • Installations: ${installations.installations.length}
-    • Conversations: ${conversations.length}
     • InboxId: ${inboxId}
+    • Address: ${address}
+    • Conversations: ${conversations.length}
+    • Installations: ${installations.installations.length}
+    • InstallationId: ${installationId}
     • Networks: ${environments}
     ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
   }

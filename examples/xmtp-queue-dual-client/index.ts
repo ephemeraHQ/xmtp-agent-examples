@@ -118,14 +118,17 @@ async function setupMessageStream(client: Client): Promise<void> {
 
     // Process incoming messages
     for await (const message of stream) {
-      // Ignore messages from self or non-text messages
+      /* Ignore messages from the same agent or non-text messages */
       if (
-        message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-        message?.contentType?.typeId !== "text"
+        message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
       ) {
         continue;
       }
 
+      /* Ignore non-text messages */
+      if (message?.contentType?.typeId !== "text") {
+        continue;
+      }
       const content = message.content as string;
       console.log(
         `Received: "${content}" in conversation ${message.conversationId}`,

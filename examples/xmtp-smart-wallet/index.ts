@@ -48,10 +48,13 @@ const main = async () => {
   const stream = await client.conversations.streamAllMessages();
 
   for await (const message of stream) {
-    if (
-      message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message?.contentType?.typeId !== "text"
-    ) {
+    /* Ignore messages from the same agent or non-text messages */
+    if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+      continue;
+    }
+
+    /* Ignore non-text messages */
+    if (message?.contentType?.typeId !== "text") {
       continue;
     }
 
