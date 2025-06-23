@@ -9,7 +9,6 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 2.  Use the @xmtp/node-sdk and default to the latest version.
 
 3.  Only import from @xmtp/node-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
-
     - Never use the deprecated @xmtp/xmtp-js library, which has been completely replaced by @xmtp/node-sdk
     - Always import directly from @xmtp/node-sdk as shown below:
 
@@ -65,7 +64,6 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 10. Consistent error handling pattern with try/catch blocks and specific error messages.
 
 11. Use the helper functions from the shared helpers directory for common operations:
-
     - `createSigner` - Creates a signer from a private key
     - `getEncryptionKeyFromHex` - Converts a hex string to an encryption key
 
@@ -97,7 +95,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     });
     ```
 
-14. When checking message content types, use string literals instead of importing a non-existent ContentTypeId enum:
+14. When checking message types, use string literals instead of importing a non-existent ContentTypeId enum:
 
     ```typescript
     // CORRECT:
@@ -195,7 +193,6 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     ```
 
     This command will:
-
     1. Generate a secure wallet private key
     2. Create an encryption key for the local database
     3. Output the corresponding public key
@@ -845,25 +842,22 @@ export interface CreateGroupOptions {
 When working with these classes:
 
 1. **Client**
-
    - Gateway to all XMTP functionality
-   - Contains the conversations, contacts, and content types registries
+   - Contains the conversations, and messages
+   - Handles encryption and decryption of messages
 
 2. **Conversations**
-
    - Central interface for managing all conversations
    - Use `sync()` before accessing local conversation data
    - Use `streamAllMessages()` to listen for new messages in real-time
    - Create conversations with `newDm()`, `newGroup()`, etc.
 
 3. **Dm**
-
    - Access the peer using `conversation.peerInboxId`
    - Create new DMs with `client.conversations.newDm(inboxId)`
    - Send messages with `dm.send(content)`
 
 4. **Group**
-
    - Get members with `await group.members();` (this works for DMs too)
    - Manage group metadata with `updateName()`, `updateDescription()`, etc.
    - Add/remove members with `addMembers()` and `removeMembers()`

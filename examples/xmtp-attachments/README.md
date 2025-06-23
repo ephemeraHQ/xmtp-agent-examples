@@ -1,6 +1,6 @@
-# Attachment content type agent
+# Attachments (image)
 
-This agent replies with an attachment.
+This agent replies with an image attachment.
 
 ## Getting started
 
@@ -45,7 +45,7 @@ yarn gen:keys
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-attachment-content-type
+cd examples/xmtp-attachments
 # install packages
 yarn
 # generate random xmtp keys (optional)

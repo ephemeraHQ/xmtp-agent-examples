@@ -889,9 +889,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@examples/xmtp-attachment-content-type@workspace:examples/xmtp-attachment-content-type":
+"@examples/xmtp-attachments@workspace:examples/xmtp-attachments":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-attachment-content-type@workspace:examples/xmtp-attachment-content-type"
+  resolution: "@examples/xmtp-attachments@workspace:examples/xmtp-attachments"
   dependencies:
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/node-sdk": "npm:*"

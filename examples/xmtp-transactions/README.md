@@ -1,6 +1,6 @@
-# Transaction Content Type example
+# Transaction example
 
-This example uses 2 content types related to transaction requests and receipts.
+This example allows users to send tokens like USDC to an agent.
 
 https://github.com/user-attachments/assets/efb8006d-9758-483d-ad1b-9287ea4d426d
 

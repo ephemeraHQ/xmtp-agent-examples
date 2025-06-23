@@ -1,5 +1,5 @@
 {
-  "name": "@examples/xmtp-attachment-content-type",
+  "name": "@examples/xmtp-attachments",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-attachment-content-type",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-attachments",
     "start": "tsx index.ts"
   },
   "dependencies": {
