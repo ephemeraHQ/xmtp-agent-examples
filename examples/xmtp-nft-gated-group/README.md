@@ -1,6 +1,6 @@
 # Building a gated group with NFT verification
 
-To create a gated group chat using XMTP, you will need an admin bot within the group to manage member additions and removals. The admin bot will create the group, assign you as the admin, and then verify NFT ownership before adding new members.
+To create a gated group chat using XMTP, you will need an admin agent within the group to manage member additions and removals. The admin agent will create the group, assign you as the admin, and then verify NFT ownership before adding new members.
 
 ![](./screenshot.png)
 
@@ -53,10 +53,10 @@ yarn dev
 
 ## Usage
 
-1. Start the bot with your environment variables configured
-2. Message the bot at its address to create a new group using `/create`
+1. Start the agent with your environment variables configured
+2. Message the agent at its address to create a new group using `/create`
 3. Once you have the group ID, you can add members using `/add <group_id> <wallet_address>`
-4. The bot will verify NFT ownership and add the wallet if they own the required NFT
+4. The agent will verify NFT ownership and add the wallet if they own the required NFT
 
 ### Commands
 
@@ -99,7 +99,7 @@ if (message.content.startsWith("/add")) {
 
 ## Verify NFT ownership
 
-The bot checks if a wallet owns the required NFT using Alchemy's API:
+The agent checks if a wallet owns the required NFT using Alchemy's API:
 
 ```bash
 async function checkNft(

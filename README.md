@@ -77,6 +77,8 @@ XMTP_ENV = local
 
 We have a guide for deploying the agent on [Railway](https://github.com/ephemeraHQ/xmtp-agent-examples/discussions/77).
 
+> For reference, check out the [gm-bot](https://github.com/xmtp/gm-bot) as a standalone deployed agent.
+
 ## Basic usage
 
 ### Listening and sending messages
@@ -136,11 +138,6 @@ const addressFromInboxId = inboxState[0].identifiers[0].identifier;
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-group-welcome](/examples/xmtp-group-welcome/): Sends a welcome message when its added and to new members
-
-These examples are outside of this monorepo and showcase how to use and deploy XMTP in different environments.
-
-- [gm-bot](https://github.com/xmtp/gm-bot): Simple standalone agent that replies to all messages with "gm"
-- [xmtp-mini-app-example](https://github.com/ephemeraHQ/xmtp-mini-app): A simple mini app that interacts with a group
 
 ## Web inbox
 

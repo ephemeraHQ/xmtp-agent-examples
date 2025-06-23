@@ -134,7 +134,7 @@ async function main() {
         "Available commands:\n\n" +
           "/create - Create a new gated group\n" +
           "/add <group_id> <wallet_address> - Add a member to an existing group (requires XMTPeople NFT)\n" +
-          "Note: The bot verifies NFT ownership before adding members to groups.",
+          "Note: The agent verifies NFT ownership before adding members to groups.",
       );
       return;
     }

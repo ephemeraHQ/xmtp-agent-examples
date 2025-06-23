@@ -268,7 +268,7 @@ async function handleMessage(message: DecodedMessage, client: Client) {
     const senderAddress = message.senderInboxId;
     const botAddress = client.inboxId.toLowerCase();
 
-    // Ignore messages from the bot itself
+    // Ignore messages from the agent itself
     if (senderAddress.toLowerCase() === botAddress) {
       return;
     }

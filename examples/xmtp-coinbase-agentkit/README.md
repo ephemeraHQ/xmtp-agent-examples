@@ -1,4 +1,4 @@
-# CDP AgentKit LangChain XMTP Extension Examples - Chatbot Typescript
+# CDP AgentKit LangChain
 
 This example demonstrates an agent setup on XMTP Network with access to the full set of CDP AgentKit actions.
 
