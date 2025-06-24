@@ -4,7 +4,7 @@ An installation in XMTP refers to a unique instance of an app (like on a device 
 
 Keeping the local database across runs ensures the client can reuse the same inbox ID and avoid unnecessary creation of new installations, helping users stay within the 5-installation cap and maintain seamless access to their messages.
 
-> See how to keep the DB across runs in [Railway](https://github.com/ephemeraHQ/xmtp-agent-examples/discussions/77)
+> See how to keep the DB across runs in [Railway](https://github.com/ephemeraHQ/xmtp-agent-examples/discussions/77) volumes.
 
 ## Getting started
 
