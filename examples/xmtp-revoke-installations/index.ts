@@ -25,7 +25,13 @@ async function main() {
   });
   const installations = await client.preferences.inboxState();
   if (installations.installations.length > 4) {
-    await client.revokeAllOtherInstallations();
+    console.log(
+      `${installations.installations.length} detected, revoking all other installations`,
+    );
+    console.log("uncomment this to revoke all other installations");
+
+    // uncomment this to revoke all other installations
+    //await client.revokeAllOtherInstallations();
   }
   console.log(`✓ Installations: ${installations.installations.length}`);
 }
