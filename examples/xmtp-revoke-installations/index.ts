@@ -5,6 +5,10 @@ import {
 } from "@helpers/client";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
+const INBOX_ID =
+  "e3f6b9e01dac4bb3c4c5d96f856151f69b73433b868c3f1239cc82e2b0270e8b";
+const MAX_INSTALLATIONS = 5;
+
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
@@ -20,11 +24,11 @@ const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 async function main() {
   const inboxState = await Client.inboxStateFromInboxIds(
-    ["e3f6b9e01dac4bb3c4c5d96f856151f69b73433b868c3f1239cc82e2b0270e8b"],
+    [INBOX_ID],
     XMTP_ENV as XmtpEnv,
   );
 
-  if (inboxState[0].installations.length > 4) {
+  if (inboxState[0].installations.length >= MAX_INSTALLATIONS) {
     console.log(
       `${inboxState[0].installations.length} detected, revoking all other installations`,
     );
@@ -33,7 +37,7 @@ async function main() {
     );
     await Client.revokeInstallations(
       signer,
-      "e3f6b9e01dac4bb3c4c5d96f856151f69b73433b868c3f1239cc82e2b0270e8b",
+      INBOX_ID,
       installationsBytes,
       XMTP_ENV as XmtpEnv,
     );
@@ -44,7 +48,7 @@ async function main() {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
-  const installations = await client.preferences.inboxState();
+  const installations = await client.preferences.inboxState(true);
   console.log(`✓ Installations: ${installations.installations.length}`);
 }
 
