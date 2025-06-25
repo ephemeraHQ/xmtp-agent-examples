@@ -6,6 +6,9 @@ Keeping the local database across runs ensures the client can reuse the same inb
 
 > See how to keep the DB across runs in [Railway](https://github.com/ephemeraHQ/xmtp-agent-examples/discussions/77) volumes.
 
+> [!WARNING]
+> **Message Loss Risk**: Revoking an installation permanently deletes messages only accessible from that device. Ensure conversations are backed up or synced to other installations first.
+
 ## Getting started
 
 > [!TIP]
