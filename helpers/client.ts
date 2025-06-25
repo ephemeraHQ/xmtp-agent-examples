@@ -109,14 +109,15 @@ export const logAgentDetails = async (
     const urls = [`http://xmtp.chat/dm/${address}`];
 
     const conversations = await firstClient.conversations.list();
-    const installations = await firstClient.preferences.inboxState();
+    const inboxState = await firstClient.preferences.inboxState();
 
+    console.log(inboxState);
     console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
     • Address: ${address}
     • Conversations: ${conversations.length}
-    • Installations: ${installations.installations.length}
+    • Installations: ${inboxState.installations.length}
     • InstallationId: ${installationId}
     • Networks: ${environments}
     ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
