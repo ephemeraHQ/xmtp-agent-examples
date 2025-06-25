@@ -28,10 +28,13 @@ async function main() {
     console.log(
       `${inboxState[0].installations.length} detected, revoking all other installations`,
     );
+    const installationsBytes = inboxState[0].installations.map(
+      (installation) => installation.bytes,
+    );
     await Client.revokeInstallations(
       signer,
       "e3f6b9e01dac4bb3c4c5d96f856151f69b73433b868c3f1239cc82e2b0270e8b",
-      inboxState[0].installations.map((installation) => installation.bytes),
+      installationsBytes,
       XMTP_ENV as XmtpEnv,
     );
     console.log(`${inboxState[0].installations.length} installations revoked`);
