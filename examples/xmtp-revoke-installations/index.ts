@@ -28,28 +28,35 @@ async function main() {
     XMTP_ENV as XmtpEnv,
   );
 
-  if (inboxState[0].installations.length >= MAX_INSTALLATIONS) {
-    console.log(
-      `${inboxState[0].installations.length} detected, revoking all other installations`,
-    );
-    const installationsBytes = inboxState[0].installations.map(
-      (installation) => installation.bytes,
-    );
+  const currentInstallations = inboxState[0].installations;
+  console.log(`Current installations: ${currentInstallations.length}`);
+
+  // Only revoke if we're at or over the limit (accounting for new installation)
+  if (currentInstallations.length >= MAX_INSTALLATIONS) {
+    const excessCount = currentInstallations.length - MAX_INSTALLATIONS + 1;
+    const installationsToRevoke = currentInstallations
+      .slice(0, excessCount)
+      .map((installation) => installation.bytes);
+
+    console.log(`Revoking ${excessCount} oldest installations...`);
+
     await Client.revokeInstallations(
       signer,
       INBOX_ID,
-      installationsBytes,
+      installationsToRevoke,
       XMTP_ENV as XmtpEnv,
     );
-    console.log(`${inboxState[0].installations.length} installations revoked`);
+
+    console.log(`✓ Revoked ${excessCount} installations`);
   }
 
   const client = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
-  const installations = await client.preferences.inboxState(true);
-  console.log(`✓ Installations: ${installations.installations.length}`);
+
+  const finalState = await client.preferences.inboxState(true);
+  console.log(`✓ Final installations: ${finalState.installations.length}`);
 }
 
 main().catch(console.error);
