@@ -135,6 +135,7 @@ const addressFromInboxId = inboxState[0].identifiers[0].identifier;
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 - [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends images
+- [xmtp-revoke-installations](/examples/xmtp-revoke-installations/): Script that revokes excess installations
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-group-welcome](/examples/xmtp-group-welcome/): Sends a welcome message when its added and to new members
