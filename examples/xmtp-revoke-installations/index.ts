@@ -19,20 +19,29 @@ const signer = createSigner(WALLET_KEY);
 const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
 async function main() {
+  const inboxState = await Client.inboxStateFromInboxIds(
+    ["e3f6b9e01dac4bb3c4c5d96f856151f69b73433b868c3f1239cc82e2b0270e8b"],
+    XMTP_ENV as XmtpEnv,
+  );
+
+  if (inboxState[0].installations.length > 4) {
+    console.log(
+      `${inboxState[0].installations.length} detected, revoking all other installations`,
+    );
+    await Client.revokeInstallations(
+      signer,
+      "e3f6b9e01dac4bb3c4c5d96f856151f69b73433b868c3f1239cc82e2b0270e8b",
+      inboxState[0].installations.map((installation) => installation.bytes),
+      XMTP_ENV as XmtpEnv,
+    );
+    console.log(`${inboxState[0].installations.length} installations revoked`);
+  }
+
   const client = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
   });
   const installations = await client.preferences.inboxState();
-  if (installations.installations.length > 4) {
-    console.log(
-      `${installations.installations.length} detected, revoking all other installations`,
-    );
-    console.log("uncomment this to revoke all other installations");
-
-    // uncomment this to revoke all other installations
-    //await client.revokeAllOtherInstallations();
-  }
   console.log(`✓ Installations: ${installations.installations.length}`);
 }
 
