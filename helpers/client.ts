@@ -111,7 +111,6 @@ export const logAgentDetails = async (
     const conversations = await firstClient.conversations.list();
     const inboxState = await firstClient.preferences.inboxState();
 
-    console.log(inboxState);
     console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
