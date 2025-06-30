@@ -37,7 +37,7 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 ### Cursor rules
 
-See these [Cursor rules](https://github.com/ephemeraHQ/xmtp-agent-examples/tree/main/.cursor) for vibe coding agents with XMTP using best practices.
+See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
 
 ### Set environment variables
 
