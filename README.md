@@ -1,8 +1,10 @@
 # XMTP agent examples
 
-This repository contains examples of agents that use the [XMTP](https://docs.xmtp.org/) network.
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk).
 
-## Why XMTP?
+🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
+
+## Why build agents with XMTP?
 
 - **End-to-end & compliant**: Data is encrypted in transit and at rest, meeting strict security and regulatory standards.
 - **Open-source & trustless**: Built on top of the [MLS](https://messaginglayersecurity.rocks/) protocol, it replaces trust in centralized certificate authorities with cryptographic proofs.
@@ -10,21 +12,36 @@ This repository contains examples of agents that use the [XMTP](https://docs.xmt
 - **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure and ensuring continued operation even if some nodes go offline.
 - **Multi-agent**: Allows confidential communication between multiple agents and humans through MLS group chats.
 
-## Getting started
+## Example agents
 
-> [!TIP]
-> See the video [here](https://youtu.be/djRLnWUvwIA) for a quickstart guide.
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+- [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
+- [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
+- [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
+- [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gasless USDC on base
+- [xmtp-transactions](/examples/xmtp-transactions/): Allow transactions between users and agents.
+- [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gasless USDC on base
+- [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
+- [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends images
+- [xmtp-revoke-installations](/examples/xmtp-revoke-installations/): Script that revokes excess installations
+- [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
+- [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
+- [xmtp-group-welcome](/examples/xmtp-group-welcome/): Sends a welcome message when its added and to new members
 
-### Requirements
+## Run example agents
+
+### Prerequisites
 
 - Node.js v20 or higher
 - Yarn v4 or higher
-- Docker (optional, for local network)
+- Docker (to run a local XMTP network, optional)
 
-### Environment variables
+### Cursor rules
 
-To run your XMTP agent, you must create a `.env` file with the following variables:
+See these [Cursor rules](https://github.com/ephemeraHQ/xmtp-agent-examples/tree/main/.cursor) for vibe coding agents with XMTP using best practices.
+
+### Set environment variables
+
+To run an example XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
 WALLET_KEY= # the private key of the wallet
@@ -32,7 +49,7 @@ ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
 
-You can generate random xmtp keys with the following command:
+You can generate random XMTP keys by running:
 
 ```bash
 yarn gen:keys
@@ -41,7 +58,7 @@ yarn gen:keys
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
 
-### Run the agent
+### Run an example agent
 
 ```bash
 # git clone repo
@@ -56,92 +73,28 @@ yarn gen:keys
 yarn dev
 ```
 
-### Work in local network
+### Optional: Run a local XMTP network
 
-`dev` and `production` networks are hosted by XMTP, while `local` network is hosted by yourself.
+`dev` and `production` networks are hosted by XMTP, while you can run your own `local` network.
 
-- 1. Install docker
-- 2. Start the XMTP service and database
+1. Install Docker
 
-```bash
-./dev/up
-```
+2. Start the XMTP service and database
 
-- 3. Change the .env file to use the local network
+   ```bash
+   ./dev/up
+   ```
 
-```bash
-XMTP_ENV = local
-```
+3. Change the `.env` file to use the `local` network
 
-### Deployment
+   ```bash
+   XMTP_ENV = local
+   ```
 
-We have a guide for deploying the agent on [Railway](https://github.com/ephemeraHQ/xmtp-agent-examples/discussions/77).
+4. Try out the example agents using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
 
-> For reference, check out the [gm-bot](https://github.com/xmtp/gm-bot) as a standalone deployed agent.
+   ![](/examples/xmtp-gm/screenshot.png)
 
-## Basic usage
+## Build your own agent
 
-### Listening and sending messages
-
-These are the steps to initialize the XMTP listener and send messages.
-
-```tsx
-// import the xmtp sdk
-import { Client, type XmtpEnv, type Signer } from "@xmtp/node-sdk";
-
-// encryption key, must be consistent across runs
-const encryptionKey: Uint8Array = ...;
-const signer: Signer = ...;
-const env: XmtpEnv = "dev";
-
-// create the client
-const client = await Client.create(signer, {encryptionKey, env });
-// sync the client to get the latest messages
-await client.conversations.sync();
-
-// listen to all messages
-const stream = await client.conversations.streamAllMessages();
-for await (const message of  stream) {
-  // ignore messages from the agent
-  if (message?.senderInboxId === client.inboxId ) continue;
-  // get the conversation by id
-  const conversation = await client.conversations.getConversationById(message.conversationId);
-  // send a message from the agent
-  await conversation.send("gm");
-}
-```
-
-### Getting the address of a user
-
-Each user has a unique inboxId for retrieving their associated addresses (identifiers). One inboxId can have multiple identifiers like passkeys or EVM wallet addresses.
-
-> [!NOTE]
-> The inboxId differs from the address—it's a user identifier, while the address identifies the user's wallet. Not all users have associated addresses.
-
-```tsx
-const inboxState = await client.preferences.inboxStateFromInboxIds([
-  message.senderInboxId,
-]);
-const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-```
-
-## Examples
-
-- [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
-- [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
-- [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
-- [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gassless USDC on base
-- [xmtp-transactions](/examples/xmtp-transactions/): Allow transactions between users and agents.
-- [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gassless USDC on base
-- [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
-- [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends images
-- [xmtp-revoke-installations](/examples/xmtp-revoke-installations/): Script that revokes excess installations
-- [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
-- [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
-- [xmtp-group-welcome](/examples/xmtp-group-welcome/): Sends a welcome message when its added and to new members
-
-## Web inbox
-
-Interact with the XMTP network using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
-
-![](/examples/xmtp-gm/screenshot.png)
+To learn how to build your own production-grade agent with XMTP, see [Quickstart: Build an agent](https://docs.xmtp.org/agents/build-an-agent).
