@@ -1,0 +1,25 @@
+{
+  "name": "@examples/xmtp-markdown",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "demo": "tsx demo.ts",
+    "dev": "tsx --watch index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-markdown",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@xmtp/content-type-markdown": "^1.0.0",
+    "@xmtp/node-sdk": "*"
+  },
+  "devDependencies": {
+    "tsx": "*",
+    "typescript": "*"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

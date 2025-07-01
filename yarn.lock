@@ -959,6 +959,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-markdown@workspace:examples/xmtp-markdown":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-markdown@workspace:examples/xmtp-markdown"
+  dependencies:
+    "@xmtp/content-type-markdown": "npm:^1.0.0"
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-multiple-workers@workspace:examples/xmtp-multiple-workers":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-multiple-workers@workspace:examples/xmtp-multiple-workers"
@@ -2061,6 +2072,15 @@ __metadata:
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/proto": "npm:^3.78.0"
   checksum: 10/83aeef5e2bf0f882df9e400898ff6845b763e38d18ce2dda764a22f241c83b7765f0b7e18161a71e770f725da29f2760c48b720ca1b77cbe5abbdc91bfb6c5c8
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-markdown@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@xmtp/content-type-markdown@npm:1.0.0"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
+  checksum: 10/04cc9d51a0b2f4c5e922a9bf9fb489a56438cb53241a04ec841df094c4b0e646dc466e5f5091282d04e43c9e832af37a98eefc62c7c6a1df8b949fa1c7e7147d
   languageName: node
   linkType: hard
 
