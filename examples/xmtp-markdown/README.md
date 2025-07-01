@@ -56,25 +56,30 @@ yarn dev
 
 The agent sends back a markdown message like:
 
-```markdown
+````markdown
 # Hello from XMTP! 🤖
 
 This is a **markdown** message example.
 
 ## Features demonstrated:
 
-- **Bold text** and *italic text*
+- **Bold text** and _italic text_
 - `Inline code`
 - [Links](https://xmtp.org)
 
 ### Code block:
+
 ```javascript
 console.log("Hello XMTP with markdown!");
 ```
+````
 
 > This is a blockquote showing markdown formatting.
 
 ---
 
-*Message sent using @xmtp/content-type-markdown*
+_Message sent using @xmtp/content-type-markdown_
+
+```
+
 ```

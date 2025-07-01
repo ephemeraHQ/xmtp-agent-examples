@@ -4,8 +4,11 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
+import {
+  ContentTypeMarkdown,
+  MarkdownCodec,
+} from "@xmtp/content-type-markdown";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { MarkdownCodec, ContentTypeMarkdown } from "@xmtp/content-type-markdown";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -27,7 +30,7 @@ async function main() {
     // Register the markdown codec with the client
     codecs: [new MarkdownCodec()],
   });
-  
+
   void logAgentDetails(client);
 
   console.log("✓ Syncing conversations...");
@@ -50,7 +53,7 @@ async function main() {
         // Ignore messages from the same agent
         if (
           message.senderInboxId.toLowerCase() ===
-          client.inboxId.toLowerCase() ||
+            client.inboxId.toLowerCase() ||
           message.contentType?.typeId !== "text"
         ) {
           return;
