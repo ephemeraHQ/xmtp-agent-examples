@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "demo": "tsx demo.ts",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-markdown",
