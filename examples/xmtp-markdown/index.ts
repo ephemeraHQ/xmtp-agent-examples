@@ -33,7 +33,7 @@ async function main() {
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
-  // Stream all messages for markdown processing
+  // Stream all messages
   const messageStream = () => {
     console.log("Waiting for messages...");
     void client.conversations.streamAllMessages((error, message) => {
@@ -50,7 +50,8 @@ async function main() {
         // Ignore messages from the same agent
         if (
           message.senderInboxId.toLowerCase() ===
-          client.inboxId.toLowerCase()
+          client.inboxId.toLowerCase() ||
+          message.contentType?.typeId !== "text"
         ) {
           return;
         }
@@ -69,111 +70,32 @@ async function main() {
             message.senderInboxId,
           ]);
           const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+          console.log(`Sending markdown example to ${addressFromInboxId}...`);
 
-          // Check if it's a markdown message
-          if (message.contentType?.typeId === "markdown") {
-            console.log(`📝 Received markdown message from ${addressFromInboxId}:`);
-            console.log("Raw markdown content:", message.content);
-            
-            // Send a markdown response
-            const markdownResponse = `# Hello from XMTP Markdown Agent! 🤖
+          // Send a markdown example
+          const markdownExample = `# Hello from XMTP! 🤖
 
-Thank you for your **markdown** message!
+This is a **markdown** message example.
 
-## Your Message Analysis:
-- Sender: \`${addressFromInboxId}\`
-- Content Type: **${message.contentType?.typeId}**
-- Length: ${(message.content as string).length} characters
+## Features demonstrated:
 
-### Markdown Features Detected:
-${analyzeMarkdownFeatures(message.content as string)}
+- **Bold text** and *italic text*
+- \`Inline code\`
+- [Links](https://xmtp.org)
 
----
-
-*This is an automated response demonstrating XMTP markdown content type support.*
-
-\`\`\`typescript
-// Example: How to send markdown with XMTP
-await conversation.send(markdownContent, {
-  contentType: MarkdownCodec.contentType
-});
-\`\`\`
-
-> 💡 **Tip**: Try sending messages with headers, lists, code blocks, or emphasis!`;
-
-            await conversation.send(markdownResponse, ContentTypeMarkdown);
-            
-            console.log(`✅ Sent markdown response to ${addressFromInboxId}`);
-            
-          } else if (message.contentType?.typeId === "text") {
-            // Handle plain text messages and encourage markdown usage
-            const textContent = message.content as string;
-            console.log(`💬 Received text message from ${addressFromInboxId}: "${textContent}"`);
-            
-            // Check if the text contains markdown-like patterns
-            const hasMarkdownPatterns = checkForMarkdownPatterns(textContent);
-            
-            if (hasMarkdownPatterns) {
-              const response = `# I noticed some markdown-like formatting! 📝
-
-Your message: "${textContent}"
-
-Would you like to try sending this as **actual markdown**? Here's your message converted:
-
-${convertTextToMarkdown(textContent)}
-
----
-
-*Send me messages with markdown content type to see enhanced formatting and analysis!*`;
-
-              await conversation.send(response, ContentTypeMarkdown);
-            } else {
-              // Send a simple markdown introduction
-              const introResponse = `# Welcome to XMTP Markdown Demo! 🎯
-
-You sent: "${textContent}"
-
-## Try sending markdown messages! 
-
-Here are some examples you can try:
-
-### Headers
-\`\`\`markdown
-# This is a header
-## This is a subheader
-\`\`\`
-
-### Emphasis
-\`\`\`markdown
-**bold text** and *italic text*
-\`\`\`
-
-### Lists
-\`\`\`markdown
-- Item 1
-- Item 2
-- Item 3
-\`\`\`
-
-### Code
-\`\`\`markdown
-\`inline code\` or code blocks:
+### Code block:
 \`\`\`javascript
-console.log("Hello, XMTP!");
+console.log("Hello XMTP with markdown!");
 \`\`\`
-\`\`\`
+
+> This is a blockquote showing markdown formatting.
 
 ---
 
-*Send your next message using the markdown content type to see the full analysis!* ✨`;
+*Message sent using @xmtp/content-type-markdown*`;
 
-              await conversation.send(introResponse, ContentTypeMarkdown);
-            }
-            
-            console.log(`✅ Sent markdown introduction to ${addressFromInboxId}`);
-          } else {
-            console.log(`❓ Received unsupported content type: ${message.contentType?.typeId}`);
-          }
+          await conversation.send(markdownExample, ContentTypeMarkdown);
+          console.log(`✅ Sent markdown example to ${addressFromInboxId}`);
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
@@ -185,96 +107,6 @@ console.log("Hello, XMTP!");
 
   // Start the message stream
   messageStream();
-}
-
-/**
- * Analyze markdown features in the content
- */
-function analyzeMarkdownFeatures(content: string): string {
-  const features: string[] = [];
-  
-  // Check for headers
-  if (content.includes("#")) {
-    const headerMatches = content.match(/^#{1,6}\s/gm);
-    if (headerMatches) {
-      features.push(`📋 **Headers**: ${headerMatches.length} found`);
-    }
-  }
-  
-  // Check for emphasis
-  if (content.includes("**") || content.includes("*")) {
-    features.push("💪 **Emphasis**: Bold/italic text detected");
-  }
-  
-  // Check for code
-  if (content.includes("`")) {
-    if (content.includes("```")) {
-      features.push("📦 **Code Blocks**: Multi-line code detected");
-    } else {
-      features.push("💻 **Inline Code**: Code snippets detected");
-    }
-  }
-  
-  // Check for lists
-  if (content.match(/^[\s]*[-*+]\s/gm) || content.match(/^[\s]*\d+\.\s/gm)) {
-    features.push("📝 **Lists**: Bullet or numbered lists detected");
-  }
-  
-  // Check for links
-  if (content.includes("[") && content.includes("]") && content.includes("(")) {
-    features.push("🔗 **Links**: Hyperlinks detected");
-  }
-  
-  // Check for blockquotes
-  if (content.includes(">")) {
-    features.push("💬 **Blockquotes**: Quoted text detected");
-  }
-  
-  // Check for horizontal rules
-  if (content.includes("---") || content.includes("***")) {
-    features.push("➖ **Horizontal Rules**: Section dividers detected");
-  }
-  
-  if (features.length === 0) {
-    return "- No special markdown features detected (plain text content)";
-  }
-  
-  return features.map(feature => `- ${feature}`).join("\n");
-}
-
-/**
- * Check if text contains markdown-like patterns
- */
-function checkForMarkdownPatterns(text: string): boolean {
-  const markdownPatterns = [
-    /^#{1,6}\s/, // Headers
-    /\*\*.*\*\*/, // Bold
-    /\*.*\*/, // Italic (but not bold)
-    /`.*`/, // Inline code
-    /```/, // Code blocks
-    /^[\s]*[-*+]\s/m, // Bullet lists
-    /^[\s]*\d+\.\s/m, // Numbered lists
-    /\[.*\]\(.*\)/, // Links
-    /^>/m, // Blockquotes
-    /^---/m, // Horizontal rules
-  ];
-  
-  return markdownPatterns.some(pattern => pattern.test(text));
-}
-
-/**
- * Convert plain text with markdown patterns to proper markdown
- */
-function convertTextToMarkdown(text: string): string {
-  // This is a simple example - in practice you might want more sophisticated conversion
-  let converted = text;
-  
-  // Add markdown formatting if patterns are detected
-  if (checkForMarkdownPatterns(text)) {
-    converted = `\`\`\`markdown\n${text}\n\`\`\``;
-  }
-  
-  return converted;
 }
 
 main().catch(console.error);

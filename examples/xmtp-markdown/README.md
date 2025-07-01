@@ -1,13 +1,10 @@
 # XMTP Markdown Agent
 
-This agent demonstrates how to use the `@xmtp/content-type-markdown` package to send and receive markdown-formatted messages with XMTP.
+This agent demonstrates how to use the `@xmtp/content-type-markdown` package to send markdown-formatted messages with XMTP.
 
-## Features
+## What it does
 
-- 📝 **Receives markdown messages**: Analyzes and responds to markdown content with feature breakdown
-- 💬 **Handles plain text**: Provides markdown tutorials and examples for text messages  
-- 🔍 **Pattern detection**: Identifies markdown-like patterns in text and suggests improvements
-- 📚 **Educational responses**: Teaches users markdown syntax through interactive examples
+Sends a markdown example message to anyone who messages the agent.
 
 ## Getting started
 
@@ -55,27 +52,29 @@ yarn gen:keys
 yarn dev
 ```
 
-## What the agent does
+## Example response
 
-1. **For markdown messages**: Analyzes the content and responds with a detailed breakdown of markdown features detected
-2. **For plain text**: Provides an introduction to markdown with examples and syntax guides
-3. **Pattern recognition**: Detects when text contains markdown-like formatting and suggests using the markdown content type
-
-## Example interactions
-
-Send the agent a markdown message like:
+The agent sends back a markdown message like:
 
 ```markdown
-# Hello Agent!
+# Hello from XMTP! 🤖
 
-This is a **markdown** message with:
-- A header
-- Some *emphasis*  
-- A list item
+This is a **markdown** message example.
 
-\`\`\`javascript
-console.log("And some code!");
-\`\`\`
+## Features demonstrated:
+
+- **Bold text** and *italic text*
+- `Inline code`
+- [Links](https://xmtp.org)
+
+### Code block:
+```javascript
+console.log("Hello XMTP with markdown!");
 ```
 
-The agent will analyze your markdown and respond with feature detection, message metadata, and tips for more markdown usage.
+> This is a blockquote showing markdown formatting.
+
+---
+
+*Message sent using @xmtp/content-type-markdown*
+```
