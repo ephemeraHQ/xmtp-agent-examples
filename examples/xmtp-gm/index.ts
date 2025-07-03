@@ -4,7 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, Group, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -43,11 +43,14 @@ async function main() {
       }
 
       void (async () => {
+        // Skip if the message is from the agent
         if (
-          message.senderInboxId.toLowerCase() ===
-            client.inboxId.toLowerCase() ||
-          message.contentType?.typeId !== "text"
+          message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
         ) {
+          return;
+        }
+        // Skip if the message is not a text message
+        if (message.contentType?.typeId !== "text") {
           return;
         }
 
@@ -57,6 +60,12 @@ async function main() {
 
         if (!conversation) {
           console.log("Unable to find conversation, skipping");
+          return;
+        }
+
+        // Skip if the conversation is a group
+        if (conversation instanceof Group) {
+          console.log("Conversation is a group, skipping");
           return;
         }
 
