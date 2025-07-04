@@ -69,6 +69,7 @@ async function main() {
           return;
         }
 
+        //Getting the address from the inbox id
         const inboxState = await client.preferences.inboxStateFromInboxIds([
           message.senderInboxId,
         ]);
