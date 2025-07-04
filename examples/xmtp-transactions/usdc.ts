@@ -12,22 +12,7 @@ export type NetworkConfig = {
 };
 
 // Available network configurations
-export const USDC_NETWORKS: NetworkConfig[] = [
-  {
-    tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on Base Sepolia
-    chainId: toHex(84532), // Base Sepolia network ID (84532 in hex)
-    decimals: 6,
-    networkName: "Base Sepolia",
-    networkId: "base-sepolia",
-  },
-  {
-    tokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base Mainnet
-    chainId: toHex(8453), // Base Mainnet network ID (8453 in hex)
-    decimals: 6,
-    networkName: "Base Mainnet",
-    networkId: "base-mainnet",
-  },
-];
+export const USDC_NETWORKS = [{}, {}];
 
 // ERC20 minimal ABI for balance checking
 const erc20Abi = [
@@ -41,24 +26,19 @@ const erc20Abi = [
 ] as const;
 
 export class USDCHandler {
-  private networkConfig: NetworkConfig;
+  private networkConfig: {};
   private publicClient;
 
   /**
    * Create a USDC handler for a specific network
-   * @param networkId - The network identifier ("base-sepolia" or "base-mainnet")
+   * @param networkId - The network identifier
    */
   constructor(networkId: string) {
-    const config = USDC_NETWORKS.find(
-      (network) => network.networkId === networkId,
-    );
-    if (!config) {
-      throw new Error(`Network configuration not found for: ${networkId}`);
-    }
-
+    const config = USDC_NETWORKS[0]; // Use first empty object
+    
     this.networkConfig = config;
     this.publicClient = createPublicClient({
-      chain: networkId === "base-mainnet" ? base : baseSepolia,
+      chain: baseSepolia, // Default to base sepolia
       transport: http(),
     });
   }
@@ -68,13 +48,13 @@ export class USDCHandler {
    */
   async getUSDCBalance(address: string): Promise<string> {
     const balance = await this.publicClient.readContract({
-      address: this.networkConfig.tokenAddress as `0x${string}`,
+      address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as `0x${string}`,
       abi: erc20Abi,
       functionName: "balanceOf",
       args: [address as `0x${string}`],
     });
 
-    return formatUnits(balance, this.networkConfig.decimals);
+    return formatUnits(balance, 6);
   }
 
   /**
@@ -95,18 +75,18 @@ export class USDCHandler {
     return {
       version: "1.0",
       from: fromAddress as `0x${string}`,
-      chainId: this.networkConfig.chainId,
+      chainId: toHex(84532),
       calls: [
         {
-          to: this.networkConfig.tokenAddress as `0x${string}`,
+          to: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as `0x${string}`,
           data: transactionData as `0x${string}`,
           metadata: {
-            description: `Transfer ${amount / Math.pow(10, this.networkConfig.decimals)} USDC on ${this.networkConfig.networkName}`,
+            description: `Transfer ${amount / Math.pow(10, 6)} USDC on Base Sepolia`,
             transactionType: "transfer",
             currency: "USDC",
             amount: amount,
-            decimals: this.networkConfig.decimals,
-            networkId: this.networkConfig.networkId,
+            decimals: 6,
+            networkId: "base-sepolia",
           },
         },
         /* add more calls here */
