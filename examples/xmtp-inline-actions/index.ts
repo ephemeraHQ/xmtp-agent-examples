@@ -42,6 +42,7 @@ async function main() {
   const stream = await client.conversations.streamAllMessages();
 
   for await (const message of stream) {
+    console.log("Message:", message);
     // Skip if message is undefined
     if (!message) {
       continue;
@@ -54,10 +55,7 @@ async function main() {
 
     try {
       // Check if this is an intent response (user selecting an option)
-      if (
-        message.contentType?.authorityId === "coinbase.com" &&
-        message.contentType.typeId === "intent"
-      ) {
+      if (message.contentType?.typeId === "intent") {
         await handleIntentResponse(message, client);
         continue;
       }
