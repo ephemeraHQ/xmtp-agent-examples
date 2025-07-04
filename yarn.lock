@@ -959,6 +959,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-helper@workspace:examples/xmtp-helper":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-helper@workspace:examples/xmtp-helper"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-multiple-workers@workspace:examples/xmtp-multiple-workers":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-multiple-workers@workspace:examples/xmtp-multiple-workers"
