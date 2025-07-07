@@ -5,7 +5,7 @@ import { XmtpHelper, type ProcessedMessage } from "./xmtp-helper";
  */
 function processMessage(message: ProcessedMessage): string {
   console.log(`Received message from ${message.senderAddress}:`);
-  console.log(`Content: ${message.content}`);source ~/.bashrc;pr_push
+  console.log(`Content: ${message.content}`);
 
   // Example business logic - respond with "gm" to any message
   return "gm";
