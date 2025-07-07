@@ -1,3 +1,4 @@
+import { validateEnvironment } from "@helpers/client";
 import { XmtpHelper, type ProcessedMessage } from "./xmtp-helper";
 
 /**
@@ -11,11 +12,17 @@ function processMessage(message: ProcessedMessage): string {
   return "gm";
 }
 
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+  "WALLET_KEY",
+  "ENCRYPTION_KEY",
+  "XMTP_ENV",
+]);
+
 XmtpHelper.createAndStart(
   {
-    walletKey: process.env.WALLET_KEY as string,
-    encryptionKey: process.env.ENCRYPTION_KEY as string,
-    env: process.env.XMTP_ENV as string,
+    walletKey: WALLET_KEY,
+    encryptionKey: ENCRYPTION_KEY,
+    env: XMTP_ENV,
   },
   (message: ProcessedMessage) => processMessage(message),
 ).catch(console.error);
