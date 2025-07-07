@@ -2,6 +2,14 @@
 
 This example shows how to build XMTP agents using a helper pattern that separates XMTP logic from business logic.
 
+## Features
+
+- **Simple API**: Just write a message processing function
+- **Automatic message filtering**: Skips messages from the agent itself and non-text messages
+- **Stream retry mechanism**: Automatically retries failed message streams with configurable retries (5 attempts with 5-second intervals)
+- **Address resolution**: Converts inbox IDs to Ethereum addresses automatically
+- **Error handling**: Graceful error handling for message processing and sending
+
 ## Getting started
 
 ### Requirements
@@ -52,4 +60,4 @@ function processMessage(message: ProcessedMessage): string {
 XmtpHelper.createAndStart(config, processMessage);
 ```
 
-That's it! The helper handles client initialization, message streaming, filtering, and sending responses.
+That's it! The helper handles client initialization, message streaming, filtering, sending responses, and stream recovery if the connection fails.
