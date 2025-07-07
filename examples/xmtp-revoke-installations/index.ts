@@ -63,6 +63,9 @@ async function main() {
 
   const finalState = await client.preferences.inboxState(true);
   console.log(`✓ Final installations: ${finalState.installations.length}`);
+
+  // If you want to revoke all other installations, you can do the following:
+  // await client.revokeAllOtherInstallations();
 }
 
 main().catch(console.error);
