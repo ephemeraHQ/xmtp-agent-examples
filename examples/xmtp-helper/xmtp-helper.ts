@@ -96,6 +96,14 @@ export class XmtpHelper {
   }
 
   /**
+   * Handle stream failure
+   */
+  private onFail = (messageHandler: MessageHandler) => {
+    console.log("Stream failed");
+    this.retry(messageHandler);
+  };
+
+  /**
    * Handle the message stream with retry capability
    */
   private async handleStream(messageHandler: MessageHandler): Promise<void> {
@@ -106,41 +114,41 @@ export class XmtpHelper {
     console.log("Syncing conversations...");
     await this.client.conversations.sync();
 
-    const onMessage = (error: Error | null, message?: DecodedMessage) => {
-      if (error) {
-        console.log("Stream failed");
-        this.retry(messageHandler);
-        return;
-      }
-
-      if (!message) {
-        return;
-      }
-
-      void (async () => {
-        try {
-          const processedMessage = await this.processMessage(message);
-          if (processedMessage) {
-            const response = await Promise.resolve(
-              messageHandler(processedMessage),
-            );
-            if (response) {
-              console.log(
-                `Sending response to ${processedMessage.senderAddress}...`,
-              );
-              await this.sendMessage(processedMessage.conversationId, response);
-            }
-          }
-        } catch (error: unknown) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          console.error("Error processing message:", errorMessage);
-        }
-      })();
-    };
+    const stream = await this.client.conversations.streamAllMessages(
+      undefined,
+      undefined,
+      undefined,
+      () => {
+        this.onFail(messageHandler);
+      },
+    );
 
     console.log("Waiting for messages...");
-    void this.client.conversations.streamAllMessages(onMessage);
+
+    for await (const message of stream) {
+      if (!message) {
+        continue;
+      }
+
+      try {
+        const processedMessage = await this.processMessage(message);
+        if (processedMessage) {
+          const response = await Promise.resolve(
+            messageHandler(processedMessage),
+          );
+          if (response) {
+            console.log(
+              `Sending response to ${processedMessage.senderAddress}...`,
+            );
+            await this.sendMessage(processedMessage.conversationId, response);
+          }
+        }
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        console.error("Error processing message:", errorMessage);
+      }
+    }
   }
 
   /**
