@@ -1,5 +1,5 @@
 import { validateEnvironment } from "@helpers/client";
-import { XmtpHelper, type ProcessedMessage } from "./xmtp-skills";
+import { xmtpAgent, type ProcessedMessage } from "./xmtp-skills";
 
 /**
  * Process incoming messages - this is where your business logic goes
@@ -18,11 +18,13 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "XMTP_ENV",
 ]);
 
-XmtpHelper.createAndStart(
-  {
-    walletKey: WALLET_KEY,
-    encryptionKey: ENCRYPTION_KEY,
-    env: XMTP_ENV,
-  },
-  (message: ProcessedMessage) => processMessage(message),
-).catch(console.error);
+xmtpAgent
+  .createAndStart(
+    {
+      walletKey: WALLET_KEY,
+      encryptionKey: ENCRYPTION_KEY,
+      env: XMTP_ENV,
+    },
+    (message: ProcessedMessage) => processMessage(message),
+  )
+  .catch(console.error);

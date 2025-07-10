@@ -26,7 +26,7 @@ export type MessageHandler = (
   message: ProcessedMessage,
 ) => Promise<string | undefined> | string | undefined;
 
-export class XmtpHelper {
+export class xmtpAgent {
   private client?: Client;
   private config: XmtpConfig;
   private retries: number = MAX_RETRIES;
@@ -42,12 +42,12 @@ export class XmtpHelper {
   static async createAndStart(
     config: XmtpConfig,
     messageHandler: MessageHandler,
-  ): Promise<XmtpHelper> {
+  ): Promise<xmtpAgent> {
     if (!config.walletKey || !config.encryptionKey || !config.env) {
       throw new Error("Missing required configuration");
     }
 
-    const helper = new XmtpHelper(config);
+    const helper = new xmtpAgent(config);
     await helper.initialize();
     await helper.startMessageStream(messageHandler);
     return helper;

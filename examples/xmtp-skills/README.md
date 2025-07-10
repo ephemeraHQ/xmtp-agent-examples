@@ -3,14 +3,16 @@
 This example shows how to build XMTP agents using a helper pattern that separates XMTP logic from business logic.
 
 ```typescript
-XmtpHelper.createAndStart(
-  {
-    walletKey: WALLET_KEY,
-    encryptionKey: ENCRYPTION_KEY,
-    env: XMTP_ENV,
-  },
-  (message: ProcessedMessage) => processMessage(message),
-).catch(console.error);
+xmtpAgent
+  .createAndStart(
+    {
+      walletKey: WALLET_KEY,
+      encryptionKey: ENCRYPTION_KEY,
+      env: XMTP_ENV,
+    },
+    (message: ProcessedMessage) => processMessage(message),
+  )
+  .catch(console.error);
 ```
 
 ## Features
@@ -68,7 +70,7 @@ function processMessage(message: ProcessedMessage): string {
 }
 
 // Start the agent
-XmtpHelper.createAndStart(config, processMessage);
+xmtpAgent.createAndStart(config, processMessage);
 ```
 
 That's it! The helper handles client initialization, message streaming, filtering, sending responses, and stream recovery if the connection fails.
