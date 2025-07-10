@@ -59,7 +59,6 @@ async function main() {
 
         // Increment message counter for valid messages
         messageCount++;
-        console.log(`📩 Message received! Total count: ${messageCount}`);
 
         const conversation = await client.conversations.getConversationById(
           message.conversationId,
