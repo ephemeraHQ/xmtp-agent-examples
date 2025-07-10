@@ -19,9 +19,6 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
 const signer = createSigner(WALLET_KEY);
 const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
-// Message counter
-let messageCount = 0;
-
 async function main() {
   const client = await Client.create(signer, {
     dbEncryptionKey,
