@@ -30,6 +30,7 @@ export class XmtpHelper {
   private client?: Client;
   private config: XmtpConfig;
   private retries: number = MAX_RETRIES;
+  private messageHandler?: MessageHandler;
 
   constructor(config: XmtpConfig) {
     this.config = config;
@@ -80,33 +81,95 @@ export class XmtpHelper {
   /**
    * Retry mechanism for stream handling
    */
-  private retry(messageHandler: MessageHandler): void {
+  private retry = (): void => {
     console.log(
       `Retrying in ${RETRY_INTERVAL / 1000}s, ${this.retries} retries left`,
     );
     if (this.retries > 0) {
       this.retries--;
       setTimeout(() => {
-        void this.handleStream(messageHandler);
+        void this.handleStream();
       }, RETRY_INTERVAL);
     } else {
       console.log("Max retries reached, ending process");
       process.exit(1);
     }
-  }
+  };
 
   /**
    * Handle stream failure
    */
-  private onFail = (messageHandler: MessageHandler) => {
+  private onFail = (): void => {
     console.log("Stream failed");
-    this.retry(messageHandler);
+    this.retry();
   };
+
+  /**
+   * Handle incoming messages
+   */
+  private onMessage = (err: Error | null, message?: DecodedMessage): void => {
+    if (err) {
+      console.log("Error", err);
+      return;
+    }
+
+    if (!message) {
+      console.log("No message received");
+      return;
+    }
+
+    if (!this.client || !this.messageHandler) {
+      return;
+    }
+
+    // Skip messages from the agent itself
+    if (
+      message.senderInboxId.toLowerCase() ===
+        this.client.inboxId.toLowerCase() ||
+      message.contentType?.typeId !== "text"
+    ) {
+      return;
+    }
+
+    // Handle async operations without blocking
+    void this.handleMessageAsync(message);
+  };
+
+  /**
+   * Handle async message processing
+   */
+  private async handleMessageAsync(message: DecodedMessage): Promise<void> {
+    if (!this.messageHandler) {
+      return;
+    }
+
+    try {
+      const processedMessage = await this.processMessage(message);
+      if (processedMessage) {
+        const response = await Promise.resolve(
+          this.messageHandler(processedMessage),
+        );
+        if (response) {
+          console.log(
+            `Sending response to ${processedMessage.senderAddress}...`,
+          );
+          await this.sendMessage(processedMessage.conversationId, response);
+        }
+      }
+
+      // Reset retry count on successful message processing
+      this.retries = MAX_RETRIES;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("Error processing message:", errorMessage);
+    }
+  }
 
   /**
    * Handle the message stream with retry capability
    */
-  private async handleStream(messageHandler: MessageHandler): Promise<void> {
+  private async handleStream(): Promise<void> {
     if (!this.client) {
       throw new Error("XMTP client not initialized. Call initialize() first.");
     }
@@ -114,48 +177,22 @@ export class XmtpHelper {
     console.log("Syncing conversations...");
     await this.client.conversations.sync();
 
-    const stream = await this.client.conversations.streamAllMessages(
+    await this.client.conversations.streamAllMessages(
+      this.onMessage,
       undefined,
       undefined,
-      undefined,
-      () => {
-        this.onFail(messageHandler);
-      },
+      this.onFail,
     );
 
     console.log("Waiting for messages...");
-
-    for await (const message of stream) {
-      if (!message) {
-        continue;
-      }
-
-      try {
-        const processedMessage = await this.processMessage(message);
-        if (processedMessage) {
-          const response = await Promise.resolve(
-            messageHandler(processedMessage),
-          );
-          if (response) {
-            console.log(
-              `Sending response to ${processedMessage.senderAddress}...`,
-            );
-            await this.sendMessage(processedMessage.conversationId, response);
-          }
-        }
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        console.error("Error processing message:", errorMessage);
-      }
-    }
   }
 
   /**
    * Start listening for messages and process them with the provided handler
    */
   async startMessageStream(messageHandler: MessageHandler): Promise<void> {
-    await this.handleStream(messageHandler);
+    this.messageHandler = messageHandler;
+    await this.handleStream();
   }
 
   /**
@@ -202,18 +239,6 @@ export class XmtpHelper {
     message: DecodedMessage,
   ): Promise<ProcessedMessage | null> {
     if (!this.client) {
-      return null;
-    }
-
-    // Skip messages from the agent itself
-    if (
-      message.senderInboxId.toLowerCase() === this.client.inboxId.toLowerCase()
-    ) {
-      return null;
-    }
-
-    // Skip non-text messages
-    if (message.contentType?.typeId !== "text") {
       return null;
     }
 
