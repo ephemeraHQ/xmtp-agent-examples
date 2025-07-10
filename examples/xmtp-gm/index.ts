@@ -19,6 +19,9 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
 const signer = createSigner(WALLET_KEY);
 const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
+// Message counter
+let messageCount = 0;
+
 async function main() {
   const client = await Client.create(signer, {
     dbEncryptionKey,
@@ -53,6 +56,10 @@ async function main() {
         if (message.contentType?.typeId !== "text") {
           return;
         }
+
+        // Increment message counter for valid messages
+        messageCount++;
+        console.log(`📩 Message received! Total count: ${messageCount}`);
 
         const conversation = await client.conversations.getConversationById(
           message.conversationId,
