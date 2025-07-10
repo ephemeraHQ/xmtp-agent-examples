@@ -26,6 +26,8 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-group-welcome](/examples/xmtp-group-welcome/): Sends a welcome message when its added and to new members
+- [xmtp-stream-restart](/examples/xmtp-stream-restart/): Restart a stream after a failure
+- [xmtp-skills](/examples/xmtp-skills/): Helper functions for XMTP agents
 
 ## Run example agents
 

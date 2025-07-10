@@ -1021,6 +1021,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-restart"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-transactions@workspace:examples/xmtp-transactions":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-transactions@workspace:examples/xmtp-transactions"
@@ -2121,22 +2131,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-bindings@npm:1.2.7":
-  version: 1.2.7
-  resolution: "@xmtp/node-bindings@npm:1.2.7"
-  checksum: 10/b077e651c0dde2b3dbc1d259ca876fecf995bb984e39c4d644b94c87f4d0f6b8b743dfc0813f7a485f00936ba04e88cd66444bab94feadfc06927111991b865a
+"@xmtp/node-bindings@npm:1.2.8":
+  version: 1.2.8
+  resolution: "@xmtp/node-bindings@npm:1.2.8"
+  checksum: 10/80c34b8868c0ae7dbd4986398f77a7c4453ec917cbcab2e45424b837f78482714c4a8100049824414403121b8816c0e8d2f2696f0db94b42322f61fcdc010b64
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:3.1.1":
-  version: 3.1.1
-  resolution: "@xmtp/node-sdk@npm:3.1.1"
+"@xmtp/node-sdk@npm:3.1.2":
+  version: 3.1.2
+  resolution: "@xmtp/node-sdk@npm:3.1.2"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
-    "@xmtp/node-bindings": "npm:1.2.7"
-  checksum: 10/d262eec49e3ef79104bd15c13c89943c06cbf151a1997806710d14b06bb90fe4f3320856e1549e1e0ddcc9060e18d8caf807acd45138a3a9aad1fb77a9fd3ce1
+    "@xmtp/node-bindings": "npm:1.2.8"
+  checksum: 10/5289180b18917609113822cc27ebde7d8088ef7a5f3349187fc2e2d5311b7609f5c5fdc2f28806c32e06fb24b072ca9e611e0126f375b0bc4ec29e6ca1b91251
   languageName: node
   linkType: hard
 
@@ -5744,7 +5754,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:3.1.1"
+    "@xmtp/node-sdk": "npm:3.1.2"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"

@@ -1,5 +1,5 @@
 import { validateEnvironment } from "@helpers/client";
-import { XmtpHelper, type ProcessedMessage } from "./xmtp-helper";
+import { XmtpHelper, type ProcessedMessage } from "./xmtp-skills";
 
 /**
  * Process incoming messages - this is where your business logic goes
