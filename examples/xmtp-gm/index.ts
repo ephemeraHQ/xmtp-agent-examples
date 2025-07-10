@@ -54,9 +54,6 @@ async function main() {
           return;
         }
 
-        // Increment message counter for valid messages
-        messageCount++;
-
         const conversation = await client.conversations.getConversationById(
           message.conversationId,
         );
