@@ -46,7 +46,6 @@ const handleStream = async (client) => {
 const onMessage = (err: Error | null, message?: DecodedMessage) => {
   if (err) {
     console.error(err);
-    onFail();
     return;
   }
 
