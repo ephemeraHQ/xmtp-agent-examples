@@ -1,5 +1,5 @@
 {
-  "name": "@examples/xmtp-helper",
+  "name": "@examples/xmtp-skills",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-helper",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-skills",
     "start": "tsx index.ts"
   },
   "dependencies": {
