@@ -1,5 +1,10 @@
 import "dotenv/config";
-import { Client, type DecodedMessage, type XmtpEnv } from "@xmtp/node-sdk";
+import {
+  Client,
+  type DecodedMessage,
+  type LogLevel,
+  type XmtpEnv,
+} from "@xmtp/node-sdk";
 import {
   createSigner,
   getDbPath,
@@ -104,11 +109,11 @@ async function main() {
     dbEncryptionKey,
     env,
     dbPath: getDbPath(env + "-" + signerIdentifier),
-    loggingLevel: process.env.LOGGING_LEVEL as any,
+    loggingLevel: process.env.LOGGING_LEVEL as LogLevel,
   });
-  logAgentDetails(client);
+  void logAgentDetails(client);
 
-  await handleStream(client);
+  void handleStream(client);
 }
 
 main().catch(console.error);
