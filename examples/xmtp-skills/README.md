@@ -1,59 +1,16 @@
 # XMTP Skills
 
-All streaming methods accept a callback as the last argument that will be called when the stream fails. Use this callback to restart the stream.
-
-An example of how to use the callback to restart the stream:
+This example shows how to build XMTP agents using a helper pattern that separates XMTP logic from business logic.
 
 ```typescript
-const MAX_RETRIES = 5;
-// wait 5 seconds before each retry
-const RETRY_INTERVAL = 5000;
-
-let retries = MAX_RETRIES;
-
-const retry = () => {
-  console.log(`Retrying in ${RETRY_INTERVAL / 1000}s, ${retries} retries left`);
-  if (retries > 0) {
-    retries--;
-    setTimeout(() => {
-      handleStream(client);
-    }, RETRY_INTERVAL);
-  } else {
-    console.log("Max retries reached, ending process");
-    process.exit(1);
-  }
-};
-
-const onFail = () => {
-  console.log("Stream failed");
-  retry();
-};
-
-const handleStream = async (client) => {
-  console.log("Syncing conversations...");
-  await client.conversations.sync();
-
-  const stream = await client.conversations.streamAllMessages(
-    void onMessage,
-    undefined,
-    undefined,
-    onFail,
-  );
-
-  console.log("Waiting for messages...");
-};
-
-const onMessage = (err: Error | null, message?: DecodedMessage) => {
-  if (err) {
-    console.error(err);
-    return;
-  }
-
-  console.log(`Received message from ${message.senderAddress}:`);
-  console.log(`Content: ${message.content}`);
-};
-
-await handleStream(client);
+XmtpHelper.createAndStart(
+  {
+    walletKey: WALLET_KEY,
+    encryptionKey: ENCRYPTION_KEY,
+    env: XMTP_ENV,
+  },
+  (message: ProcessedMessage) => processMessage(message),
+).catch(console.error);
 ```
 
 ## Features
@@ -115,7 +72,3 @@ XmtpHelper.createAndStart(config, processMessage);
 ```
 
 That's it! The helper handles client initialization, message streaming, filtering, sending responses, and stream recovery if the connection fails.
-
-```
-
-```
