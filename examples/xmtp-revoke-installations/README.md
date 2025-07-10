@@ -28,6 +28,8 @@ To run your XMTP agent, you must create a `.env` file with the following variabl
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
+INBOX_ID= # the inbox id of the user
+MAX_INSTALLATIONS= # the maximum number of installations allowed
 ```
 
 You can generate random xmtp keys with the following command:
@@ -46,11 +48,9 @@ yarn gen:keys
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-gm
+cd examples/xmtp-revoke-installations
 # install packages
 yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
 # run the example
 yarn dev
 ```
