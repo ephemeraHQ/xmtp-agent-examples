@@ -1,4 +1,4 @@
-# Attachments (image)
+# Image attachment example
 
 This agent replies with an image attachment.
 

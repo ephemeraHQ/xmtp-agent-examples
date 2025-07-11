@@ -1,4 +1,4 @@
-# GM agent
+# GM example
 
 This agent replies `gm`
 

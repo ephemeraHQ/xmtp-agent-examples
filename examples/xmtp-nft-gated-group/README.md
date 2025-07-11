@@ -1,4 +1,4 @@
-# Building a gated group with NFT verification
+# NFT gated group example
 
 To create a gated group chat using XMTP, you will need an admin agent within the group to manage member additions and removals. The admin agent will create the group, assign you as the admin, and then verify NFT ownership before adding new members.
 

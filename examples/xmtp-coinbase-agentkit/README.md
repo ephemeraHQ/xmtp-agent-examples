@@ -1,4 +1,4 @@
-# CDP AgentKit LangChain
+# CDP agentKit langchain example
 
 This example demonstrates an agent setup on XMTP Network with access to the full set of CDP AgentKit actions.
 

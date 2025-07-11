@@ -1,4 +1,4 @@
-# Revoking installations
+# Revoking installations example
 
 An installation in XMTP refers to a unique instance of an app (like on a device ) that accesses a user’s inbox. Each installation gets its own ID and is tracked separately, allowing users to manage which devices have access to their messages. Starting with node `2.2.0`, XMTP enforces a strict limit of `5` active installations per inbox. This is crucial to prevent excessive group sizes and avoid hitting the 256 inbox update limit, which would force users to rotate their inbox and lose existing conversations.
 
