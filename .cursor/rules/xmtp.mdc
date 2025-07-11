@@ -1,8 +1,9 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
+
 # Writing XMTP Agents
 
 You're an expert in writing TypeScript with Node.js. Generate **high-quality XMTP Agents** that adhere to the following best practices:
@@ -390,7 +391,7 @@ async function main() {
 main().catch(console.error);
 ```
 
-## XMTP Helper Functions
+## Helper Functions
 
 ```typescript
 import { getRandomValues } from "node:crypto";
@@ -460,7 +461,7 @@ export const getEncryptionKeyFromHex = (hex: string) => {
 };
 ```
 
-## XMTP Packages Reference
+## Packages Reference
 
 ```tsx
 // Client Class
@@ -494,7 +495,7 @@ for await (const message of stream) {
 }
 ```
 
-## XMTP Identifiers Reference
+## Identifiers Reference
 
 When working with XMTP, you'll encounter several types of identifiers:
 

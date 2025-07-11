@@ -20,15 +20,15 @@ To run your XMTP agents, you must create a `.env` file with the following variab
 ```bash
 XMTP_ENV=dev # local, dev, production
 
-# XMTP keys for agent 1
+#keys for agent 1
 WALLET_KEY_AGENT1= # the private key of the wallet
 ENCRYPTION_KEY_AGENT1= # encryption key for local db encryption
 
-# XMTP keys for agent 2
+#keys for agent 2
 WALLET_KEY_AGENT2= # the private key of the wallet
 ENCRYPTION_KEY_AGENT2= # encryption key for local db encryption
 
-# XMTP keys for agent 3
+#keys for agent 3
 WALLET_KEY_AGENT3= # the private key of the wallet
 ENCRYPTION_KEY_AGENT3= # encryption key for local db encryption
 ```

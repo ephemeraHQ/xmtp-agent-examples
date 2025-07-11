@@ -1,4 +1,4 @@
-# XMTP Queue Dual Client Agent
+#Queue Dual Client Agent
 
 This agent demonstrates the use of dual clients in XMTP.
 

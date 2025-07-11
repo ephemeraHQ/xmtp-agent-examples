@@ -1,4 +1,4 @@
-# XMTP code of conduct
+#code of conduct
 
 This code of conduct applies within all XMTP community spaces, virtual and physical, and also applies when an individual is officially representing the XMTP community in public spaces. Examples of representing our community include using an official email address, posting via an official social media account, or acting as an appointed representative at an online or offline event.
 

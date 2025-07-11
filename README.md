@@ -1,4 +1,4 @@
-# XMTP agent examples
+#agent examples
 
 This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk).
 

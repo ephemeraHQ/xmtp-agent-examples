@@ -1,4 +1,4 @@
-# XMTP Stream Restart
+#Stream Restart
 
 All streaming methods accept a callback as the last argument that will be called when the stream fails. Use this callback to restart the stream.
 
