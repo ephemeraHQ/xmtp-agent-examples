@@ -13,15 +13,28 @@ if (major < 20) {
 }
 
 async function main() {
-  // Get inbox ID from command line argument
+  // Get inbox ID and revoke count from command line arguments
   const inboxId = process.argv[2];
+  const revokeCount = process.argv[3];
 
   if (!inboxId) {
     console.error("Error: Inbox ID is required as a command line argument");
-    console.error("Usage: yarn revoke-installations <inbox-id>");
+    console.error("Usage: yarn revoke-installations <inbox-id> [revoke-count]");
     console.error(
-      "Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64",
+      "Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64 3",
     );
+    process.exit(1);
+  }
+
+  // Parse revoke count, default to automatic calculation if not provided
+  const maxInstallations = "5"; // protocol limit
+  const installationsToRevoke = revokeCount ? parseInt(revokeCount) : null;
+
+  if (
+    installationsToRevoke !== null &&
+    (isNaN(installationsToRevoke) || installationsToRevoke < 0)
+  ) {
+    console.error("Error: Revoke count must be a positive number");
     process.exit(1);
   }
 
@@ -63,13 +76,13 @@ async function main() {
     process.exit(1);
   }
 
-  // Get optional variables with defaults
-  const maxInstallations = "5"; // protocol limit
-
   console.log(`Revoking installations for ${exampleName}...`);
   console.log(`Inbox ID: ${inboxId}`);
   console.log(`Max installations: ${maxInstallations}`);
   console.log(`Environment: ${envVars.XMTP_ENV}`);
+  if (installationsToRevoke !== null) {
+    console.log(`Manual revoke count: ${installationsToRevoke}`);
+  }
 
   try {
     // Create signer and encryption key
@@ -85,31 +98,49 @@ async function main() {
     const currentInstallations = inboxState[0].installations;
     console.log(`✓ Current installations: ${currentInstallations.length}`);
 
-    // Only revoke if we're at or over the limit
-    if (currentInstallations.length >= parseInt(maxInstallations)) {
-      // Calculate how many to revoke: current count - max allowed + 1 (for the new installation we're about to create)
-      const excessCount =
-        currentInstallations.length - parseInt(maxInstallations) + 1;
+    // Determine how many installations to revoke
+    let countToRevoke: number;
+    let reason: string;
 
+    if (installationsToRevoke !== null) {
+      // Use manual count if provided
+      countToRevoke = Math.min(
+        installationsToRevoke,
+        currentInstallations.length,
+      );
+      reason = `manual request (${installationsToRevoke})`;
+    } else {
+      // Use automatic calculation if at or over the limit
+      if (currentInstallations.length >= parseInt(maxInstallations)) {
+        countToRevoke =
+          currentInstallations.length - parseInt(maxInstallations) + 1;
+        reason = `automatic (exceeds limit of ${maxInstallations})`;
+      } else {
+        countToRevoke = 0;
+        reason = `none needed (${currentInstallations.length} < ${maxInstallations})`;
+      }
+    }
+
+    if (countToRevoke > 0) {
       // Revoke the oldest installations first (slice from beginning of array)
-      const installationsToRevoke = currentInstallations
-        .slice(0, excessCount)
+      const installationsToRevokeBytes = currentInstallations
+        .slice(0, countToRevoke)
         .map((installation) => installation.bytes);
 
-      console.log(`Revoking ${excessCount} oldest installations...`);
+      console.log(
+        `Revoking ${countToRevoke} oldest installations (${reason})...`,
+      );
 
       await Client.revokeInstallations(
         signer,
         inboxId,
-        installationsToRevoke,
+        installationsToRevokeBytes,
         envVars.XMTP_ENV as XmtpEnv,
       );
 
-      console.log(`✓ Revoked ${excessCount} installations`);
+      console.log(`✓ Revoked ${countToRevoke} installations`);
     } else {
-      console.log(
-        `✓ No installations need to be revoked (${currentInstallations.length} < ${maxInstallations})`,
-      );
+      console.log(`✓ No installations need to be revoked (${reason})`);
     }
 
     // Create new client to verify the state
