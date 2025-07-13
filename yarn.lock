@@ -990,16 +990,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-revoke-installations@workspace:examples/xmtp-revoke-installations":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-revoke-installations@workspace:examples/xmtp-revoke-installations"
-  dependencies:
-    "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-skills@workspace:examples/xmtp-skills":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-skills@workspace:examples/xmtp-skills"
