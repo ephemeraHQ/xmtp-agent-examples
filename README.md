@@ -59,7 +59,7 @@ yarn gen:keys
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
 
-You can revoke excess installations by running:
+You can revoke old installations by running:
 
 ```bash
 yarn revoke <inbox-id> <revoke-count>
