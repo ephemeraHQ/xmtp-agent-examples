@@ -13,6 +13,18 @@ if (major < 20) {
 }
 
 async function main() {
+  // Get inbox ID from command line argument
+  const inboxId = process.argv[2];
+
+  if (!inboxId) {
+    console.error("Error: Inbox ID is required as a command line argument");
+    console.error("Usage: yarn revoke-installations <inbox-id>");
+    console.error(
+      "Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64",
+    );
+    process.exit(1);
+  }
+
   // Get the current working directory (should be the example directory)
   const exampleDir = process.cwd();
   const exampleName = exampleDir.split("/").pop() || "example";
@@ -52,16 +64,7 @@ async function main() {
   }
 
   // Get optional variables with defaults
-  const maxInstallations = envVars.MAX_INSTALLATIONS || "5";
-  const inboxId = envVars.INBOX_ID;
-
-  if (!inboxId) {
-    console.error("Error: INBOX_ID not found in .env file");
-    console.error(
-      "Please add your inbox ID to the .env file or run the agent first to get it.",
-    );
-    process.exit(1);
-  }
+  const maxInstallations = "5"; // protocol limit
 
   console.log(`Revoking installations for ${exampleName}...`);
   console.log(`Inbox ID: ${inboxId}`);

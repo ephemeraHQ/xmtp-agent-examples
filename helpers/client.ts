@@ -110,14 +110,17 @@ export const logAgentDetails = async (
 
     const conversations = await firstClient.conversations.list();
     const inboxState = await firstClient.preferences.inboxState();
-
+    const installationWarning =
+      inboxState.installations.length === 4
+        ? `\n\t\x1b[38;2;252;76;52m⚠️ approaching max installations, run "yarn revoke" to revoke the old installations.\x1b[0m`
+        : "";
     console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
     • Address: ${address}
     • Conversations: ${conversations.length}
-    • Installations: ${inboxState.installations.length}
-    • InstallationId: ${installationId}
+    • Installations: ${inboxState.installations.length} ${installationWarning}
+    • InstallationId: ${installationId} 
     • Networks: ${environments}
     ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
   }
