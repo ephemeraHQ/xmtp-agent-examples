@@ -1,0 +1,130 @@
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+
+// Check Node.js version
+const nodeVersion = process.versions.node;
+const [major] = nodeVersion.split(".").map(Number);
+if (major < 20) {
+  console.error("Error: Node.js version 20 or higher is required");
+  process.exit(1);
+}
+
+async function main() {
+  // Get the current working directory (should be the example directory)
+  const exampleDir = process.cwd();
+  const exampleName = exampleDir.split("/").pop() || "example";
+  const envPath = join(exampleDir, ".env");
+
+  console.log(`Looking for .env file in: ${exampleDir}`);
+
+  // Check if .env file exists
+  if (!existsSync(envPath)) {
+    console.error(
+      "Error: .env file not found. Please run 'yarn gen:keys' first to generate keys.",
+    );
+    process.exit(1);
+  }
+
+  // Read and parse .env file
+  const envContent = await readFile(envPath, "utf-8");
+  const envVars: Record<string, string> = {};
+
+  envContent.split("\n").forEach((line) => {
+    const [key, value] = line.split("=");
+    if (key && value && !key.startsWith("#")) {
+      envVars[key.trim()] = value.trim();
+    }
+  });
+
+  // Validate required environment variables
+  const requiredVars = ["WALLET_KEY", "ENCRYPTION_KEY", "XMTP_ENV"];
+  const missingVars = requiredVars.filter((varName) => !envVars[varName]);
+
+  if (missingVars.length > 0) {
+    console.error(
+      `Error: Missing required environment variables: ${missingVars.join(", ")}`,
+    );
+    console.error("Please run 'yarn gen:keys' first to generate keys.");
+    process.exit(1);
+  }
+
+  // Get optional variables with defaults
+  const maxInstallations = envVars.MAX_INSTALLATIONS || "5";
+  const inboxId = envVars.INBOX_ID;
+
+  if (!inboxId) {
+    console.error("Error: INBOX_ID not found in .env file");
+    console.error(
+      "Please add your inbox ID to the .env file or run the agent first to get it.",
+    );
+    process.exit(1);
+  }
+
+  console.log(`Revoking installations for ${exampleName}...`);
+  console.log(`Inbox ID: ${inboxId}`);
+  console.log(`Max installations: ${maxInstallations}`);
+  console.log(`Environment: ${envVars.XMTP_ENV}`);
+
+  try {
+    // Create signer and encryption key
+    const signer = createSigner(envVars.WALLET_KEY as `0x${string}`);
+    const dbEncryptionKey = getEncryptionKeyFromHex(envVars.ENCRYPTION_KEY);
+
+    // Get current inbox state
+    const inboxState = await Client.inboxStateFromInboxIds(
+      [inboxId],
+      envVars.XMTP_ENV as XmtpEnv,
+    );
+
+    const currentInstallations = inboxState[0].installations;
+    console.log(`✓ Current installations: ${currentInstallations.length}`);
+
+    // Only revoke if we're at or over the limit
+    if (currentInstallations.length >= parseInt(maxInstallations)) {
+      // Calculate how many to revoke: current count - max allowed + 1 (for the new installation we're about to create)
+      const excessCount =
+        currentInstallations.length - parseInt(maxInstallations) + 1;
+
+      // Revoke the oldest installations first (slice from beginning of array)
+      const installationsToRevoke = currentInstallations
+        .slice(0, excessCount)
+        .map((installation) => installation.bytes);
+
+      console.log(`Revoking ${excessCount} oldest installations...`);
+
+      await Client.revokeInstallations(
+        signer,
+        inboxId,
+        installationsToRevoke,
+        envVars.XMTP_ENV as XmtpEnv,
+      );
+
+      console.log(`✓ Revoked ${excessCount} installations`);
+    } else {
+      console.log(
+        `✓ No installations need to be revoked (${currentInstallations.length} < ${maxInstallations})`,
+      );
+    }
+
+    // Create new client to verify the state
+    const client = await Client.create(signer, {
+      dbEncryptionKey,
+      env: envVars.XMTP_ENV as XmtpEnv,
+    });
+
+    const finalState = await client.preferences.inboxState(true);
+    console.log(`✓ Final installations: ${finalState.installations.length}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error revoking installations:", errorMessage);
+    process.exit(1);
+  }
+}
+
+main().catch((error: unknown) => {
+  console.error("Unexpected error:", error);
+  process.exit(1);
+});
