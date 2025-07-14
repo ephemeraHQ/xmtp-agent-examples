@@ -63,7 +63,7 @@ You can revoke old installations by running:
 
 ```bash
 # you can get your values from terminal logs
-yarn revoke <inbox-id> <installations-to-save>
+yarn revoke <inbox-id> <installations-to-exclude>
 ```
 
 ### Run an example agent
