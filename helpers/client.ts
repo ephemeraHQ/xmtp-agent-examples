@@ -121,8 +121,7 @@ export const logAgentDetails = async (
 
     if (inboxState.installations.length >= 4) {
       console.log(
-        `\n\x1b[38;2;252;76;52m⚠️ 5 max installations, run "yarn revoke <inbox-id> <installations-to-save>" to revoke the old installations.\x1b[0m \n
-        Example: yarn revoke ${inboxId} ${installationId}`,
+        `\n\x1b[33m⚠️  Warning: 5 max installations reached!\nRun "yarn revoke <inbox-id> <installations-to-save>" to revoke old installations.\nExample: yarn revoke ${inboxId} ${installationId}\x1b[0m\n`,
       );
     }
   }
