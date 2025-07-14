@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { createSigner, getEncryptionKeyFromHex } from "@helpers/client";
+import { createSigner } from "@helpers/client";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 // Check Node.js version
@@ -115,16 +115,6 @@ async function main() {
   try {
     // Create signer and encryption key
     const signer = createSigner(envVars.WALLET_KEY as `0x${string}`);
-    const dbEncryptionKey = getEncryptionKeyFromHex(envVars.ENCRYPTION_KEY);
-
-    // Create client first to get current installation ID
-    const client = await Client.create(signer, {
-      dbEncryptionKey,
-      env: envVars.XMTP_ENV as XmtpEnv,
-    });
-
-    const currentInstallationId = client.installationId;
-    console.log(`✓ Current installation ID: ${currentInstallationId}`);
 
     // Get current inbox state
     const inboxState = await Client.inboxStateFromInboxIds(
@@ -168,8 +158,18 @@ async function main() {
         process.exit(1);
       }
     } else {
-      // Default to keeping only the current installation
-      installationsToKeepIds = [currentInstallationId];
+      // Require explicit specification of installations to keep
+      console.error(
+        "Error: No installations specified to keep. Please provide installation IDs to keep.",
+      );
+      console.error(
+        "Available installation IDs:",
+        currentInstallations.map((inst) => inst.id).join(", "),
+      );
+      console.error(
+        'Usage: yarn revoke-installations <inbox-id> "installation-id1,installation-id2"',
+      );
+      process.exit(1);
     }
 
     // Find installations to revoke (all except the ones to keep)
@@ -187,22 +187,6 @@ async function main() {
         `✓ No installations to revoke - all specified installations are already kept`,
       );
       return;
-    }
-
-    // Additional safety check: ensure we're not revoking the current installation unless explicitly specified
-    const isRevokingCurrent = installationsToRevoke.some(
-      (installation) => installation.id === currentInstallationId,
-    );
-
-    if (isRevokingCurrent && installationsToKeep.length === 0) {
-      console.error(
-        "Error: Cannot revoke current installation when no specific installations are provided to keep.",
-      );
-      console.error("Current installation ID:", currentInstallationId);
-      console.error(
-        "To revoke current installation, explicitly specify which other installations to keep.",
-      );
-      process.exit(1);
     }
 
     // Safety check: ensure at least 1 installation remains after revocation
@@ -234,8 +218,14 @@ async function main() {
 
     console.log(`✓ Revoked ${installationsToRevoke.length} installations`);
 
-    const finalState = await client.preferences.inboxState(true);
-    console.log(`✓ Final installations: ${finalState.installations.length}`);
+    // Get final state to confirm
+    const finalInboxState = await Client.inboxStateFromInboxIds(
+      [inboxId],
+      envVars.XMTP_ENV as XmtpEnv,
+    );
+    console.log(
+      `✓ Final installations: ${finalInboxState[0].installations.length}`,
+    );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error revoking installations:", errorMessage);

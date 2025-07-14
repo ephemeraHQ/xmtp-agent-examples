@@ -114,14 +114,14 @@ export const logAgentDetails = async (
       • InboxId: ${inboxId}
       • Address: ${address}
       • Conversations: ${conversations.length}
-      • Installations: ${inboxState.installations.length}
+      • Installations: ${inboxState.installations.length}/5
       • InstallationId: ${installationId} 
       • Networks: ${environments}
       • URL: https://xmtp.chat/dm/${address}`);
 
     if (inboxState.installations.length >= 4) {
       console.log(
-        `\n\x1b[33m⚠️  Warning: 5 max installations reached!\nRun "yarn revoke <inbox-id> <installations-to-save>" to revoke old installations.\nExample: yarn revoke ${inboxId} ${installationId}\x1b[0m\n`,
+        `\n\x1b[33m⚠️  Warning: 5 is the max number of installations\nRun "yarn revoke <inbox-id> <installations-to-save>" to revoke old installations.\nExample: yarn revoke ${inboxId} ${installationId}\x1b[0m\n`,
       );
     }
   }
