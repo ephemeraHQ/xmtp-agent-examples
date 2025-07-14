@@ -23,9 +23,6 @@ async function main() {
       "Usage: yarn revoke-installations <inbox-id> [installations-to-save]",
     );
     console.error(
-      "Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64",
-    );
-    console.error(
       'Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64 "current-installation-id,another-installation-id"',
     );
     process.exit(1);
@@ -205,6 +202,19 @@ async function main() {
       console.error(
         "To revoke current installation, explicitly specify which other installations to keep.",
       );
+      process.exit(1);
+    }
+
+    // Safety check: ensure at least 1 installation remains after revocation
+    const remainingInstallations =
+      currentInstallations.length - installationsToRevoke.length;
+    if (remainingInstallations === 0) {
+      console.error(
+        "Error: Cannot revoke all installations. At least 1 installation must remain.",
+      );
+      console.error("Current installations:", currentInstallations.length);
+      console.error("Installations to revoke:", installationsToRevoke.length);
+      console.error("Please specify at least 1 installation to keep.");
       process.exit(1);
     }
 

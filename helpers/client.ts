@@ -106,26 +106,25 @@ export const logAgentDetails = async (
         ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
       \x1b[0m`);
 
-    const urls = [`http://xmtp.chat/dm/${address}`];
-
     const conversations = await firstClient.conversations.list();
     const inboxState = await firstClient.preferences.inboxState();
-    const installationWarning =
-      inboxState.installations.length >= 4
-        ? `\n\x1b[38;2;252;76;52m⚠️ 5 max installations, run "yarn revoke <inbox-id> <installations-to-save>" to revoke the old installations.\x1b[0m \n
-        Example: yarn revoke ${inboxId} ${installationId}`
-        : "";
+
     console.log(`
     ✓ XMTP Client:
-    • InboxId: ${inboxId}
-    • Address: ${address}
-    • Conversations: ${conversations.length}
-    • Installations: ${inboxState.installations.length}
-    • InstallationId: ${installationId} 
-    • Networks: ${environments}
-    ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
+      • InboxId: ${inboxId}
+      • Address: ${address}
+      • Conversations: ${conversations.length}
+      • Installations: ${inboxState.installations.length}
+      • InstallationId: ${installationId} source ~/.bashrc;pr_push
+      • Networks: ${environments}
+      • URL: https://xmtp.chat/dm/${address}`);
 
-    console.log(installationWarning);
+    if (inboxState.installations.length >= 4) {
+      console.log(
+        `\n\x1b[38;2;252;76;52m⚠️ 5 max installations, run "yarn revoke <inbox-id> <installations-to-save>" to revoke the old installations.\x1b[0m \n
+        Example: yarn revoke ${inboxId} ${installationId}`,
+      );
+    }
   }
 };
 export function validateEnvironment(vars: string[]): Record<string, string> {
