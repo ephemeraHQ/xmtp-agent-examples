@@ -4,7 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, Group, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, Group, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
