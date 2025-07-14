@@ -62,7 +62,7 @@ yarn gen:keys
 You can revoke old installations by running:
 
 ```bash
-yarn revoke <inbox-id> <revoke-count>
+yarn revoke <inbox-id> <installations-to-save>
 ```
 
 ### Run an example agent

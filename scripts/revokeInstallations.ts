@@ -13,29 +13,59 @@ if (major < 20) {
 }
 
 async function main() {
-  // Get inbox ID and revoke count from command line arguments
+  // Get inbox ID and installations to save from command line arguments
   const inboxId = process.argv[2];
-  const revokeCount = process.argv[3];
+  const installationsToSave = process.argv[3];
 
   if (!inboxId) {
     console.error("Error: Inbox ID is required as a command line argument");
-    console.error("Usage: yarn revoke-installations <inbox-id> [revoke-count]");
     console.error(
-      "Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64 3",
+      "Usage: yarn revoke-installations <inbox-id> [installations-to-save]",
+    );
+    console.error(
+      "Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64",
+    );
+    console.error(
+      'Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64 "current-installation-id,another-installation-id"',
     );
     process.exit(1);
   }
 
-  // Parse revoke count, default to automatic calculation if not provided
-  const maxInstallations = "5"; // protocol limit
-  const installationsToRevoke = revokeCount ? parseInt(revokeCount) : null;
-
-  if (
-    installationsToRevoke !== null &&
-    (isNaN(installationsToRevoke) || installationsToRevoke < 0)
-  ) {
-    console.error("Error: Revoke count must be a positive number");
+  // Validate inbox ID format (should be 64 hex characters)
+  if (!/^[a-f0-9]{64}$/i.test(inboxId)) {
+    console.error(
+      "Error: Invalid inbox ID format. Must be 64 hexadecimal characters.",
+    );
+    console.error(`Provided: ${inboxId}`);
     process.exit(1);
+  }
+
+  // Parse installations to save, default to current installation if not provided
+  const installationsToKeep = installationsToSave
+    ? installationsToSave
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+    : [];
+
+  // Validate installation IDs if provided
+  if (installationsToKeep.length > 0) {
+    const invalidInstallations = installationsToKeep.filter(
+      (id) => !/^[a-f0-9]{64}$/i.test(id),
+    );
+    if (invalidInstallations.length > 0) {
+      console.error(
+        "Error: Invalid installation ID format(s). Must be 64 hexadecimal characters.",
+      );
+      console.error("Invalid IDs:", invalidInstallations.join(", "));
+      console.error(
+        "Usage: Provide installation IDs separated by commas, or omit to keep only current installation.",
+      );
+      console.error(
+        'Example: yarn revoke-installations <inbox-id> "installation-id1,installation-id2"',
+      );
+      process.exit(1);
+    }
   }
 
   // Get the current working directory (should be the example directory)
@@ -78,10 +108,11 @@ async function main() {
 
   console.log(`Revoking installations for ${exampleName}...`);
   console.log(`Inbox ID: ${inboxId}`);
-  console.log(`Max installations: ${maxInstallations}`);
   console.log(`Environment: ${envVars.XMTP_ENV}`);
-  if (installationsToRevoke !== null) {
-    console.log(`Manual revoke count: ${installationsToRevoke}`);
+  if (installationsToKeep.length > 0) {
+    console.log(`Installations to keep: ${installationsToKeep.join(", ")}`);
+  } else {
+    console.log(`Installations to keep: current installation only`);
   }
 
   try {
@@ -115,66 +146,83 @@ async function main() {
       return;
     }
 
-    // Keep the latest installation (last in array) and revoke the rest
-    const installationsToRevoke = currentInstallations.slice(0, -1);
-    console.log(
-      `Available for revocation: ${installationsToRevoke.length} (keeping latest)`,
+    // Determine which installations to keep
+    let installationsToKeepIds: string[];
+
+    if (installationsToKeep.length > 0) {
+      // Use provided installation IDs
+      installationsToKeepIds = installationsToKeep;
+
+      // Validate that all specified installations actually exist
+      const existingInstallationIds = currentInstallations.map(
+        (inst) => inst.id,
+      );
+      const nonExistentInstallations = installationsToKeepIds.filter(
+        (id) => !existingInstallationIds.includes(id),
+      );
+
+      if (nonExistentInstallations.length > 0) {
+        console.error("Error: Some specified installation IDs do not exist:");
+        console.error("Non-existent IDs:", nonExistentInstallations.join(", "));
+        console.error(
+          "Available installation IDs:",
+          existingInstallationIds.join(", "),
+        );
+        process.exit(1);
+      }
+    } else {
+      // Default to keeping only the current installation
+      installationsToKeepIds = [currentInstallationId];
+    }
+
+    // Find installations to revoke (all except the ones to keep)
+    const installationsToRevoke = currentInstallations.filter(
+      (installation) => !installationsToKeepIds.includes(installation.id),
     );
 
-    // Determine how many installations to revoke
-    let countToRevoke: number;
-    let reason: string;
-
-    if (revokeCount) {
-      // Use manual count if provided
-      countToRevoke = Math.min(
-        parseInt(revokeCount),
-        installationsToRevoke.length,
-      );
-      reason = `manual request (${revokeCount})`;
-    } else {
-      // Use automatic calculation if at or over the limit
-      if (currentInstallations.length >= parseInt(maxInstallations)) {
-        countToRevoke =
-          currentInstallations.length - parseInt(maxInstallations) + 1;
-        // Ensure we don't revoke more than available (excluding current)
-        countToRevoke = Math.min(countToRevoke, installationsToRevoke.length);
-        reason = `automatic (exceeds limit of ${maxInstallations})`;
-      } else {
-        countToRevoke = 0;
-        reason = `none needed (${currentInstallations.length} < ${maxInstallations})`;
-      }
-    }
+    console.log(
+      `Available for revocation: ${installationsToRevoke.length} (keeping ${installationsToKeepIds.length})`,
+    );
 
     // Safety check: if no installations are available for revocation, don't proceed
     if (installationsToRevoke.length === 0) {
-      console.log(`✓ Only current installation remains - nothing to revoke`);
-      console.log(`Current installation ID: ${currentInstallationId}`);
+      console.log(
+        `✓ No installations to revoke - all specified installations are already kept`,
+      );
       return;
     }
 
-    if (countToRevoke > 0) {
-      // Revoke the oldest installations first (slice from beginning of array)
-      // but only from the filtered list that excludes current installation
-      const installationsToRevokeBytes = installationsToRevoke
-        .slice(0, countToRevoke)
-        .map((installation) => installation.bytes);
+    // Additional safety check: ensure we're not revoking the current installation unless explicitly specified
+    const isRevokingCurrent = installationsToRevoke.some(
+      (installation) => installation.id === currentInstallationId,
+    );
 
-      console.log(
-        `Revoking ${countToRevoke} oldest installations (${reason})...`,
+    if (isRevokingCurrent && installationsToKeep.length === 0) {
+      console.error(
+        "Error: Cannot revoke current installation when no specific installations are provided to keep.",
       );
-
-      await Client.revokeInstallations(
-        signer,
-        inboxId,
-        installationsToRevokeBytes,
-        envVars.XMTP_ENV as XmtpEnv,
+      console.error("Current installation ID:", currentInstallationId);
+      console.error(
+        "To revoke current installation, explicitly specify which other installations to keep.",
       );
-
-      console.log(`✓ Revoked ${countToRevoke} installations`);
-    } else {
-      console.log(`✓ No installations need to be revoked (${reason})`);
+      process.exit(1);
     }
+
+    // Revoke the installations
+    const installationsToRevokeBytes = installationsToRevoke.map(
+      (installation) => installation.bytes,
+    );
+
+    console.log(`Revoking ${installationsToRevoke.length} installations...`);
+
+    await Client.revokeInstallations(
+      signer,
+      inboxId,
+      installationsToRevokeBytes,
+      envVars.XMTP_ENV as XmtpEnv,
+    );
+
+    console.log(`✓ Revoked ${installationsToRevoke.length} installations`);
 
     const finalState = await client.preferences.inboxState(true);
     console.log(`✓ Final installations: ${finalState.installations.length}`);

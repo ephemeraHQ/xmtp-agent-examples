@@ -112,17 +112,20 @@ export const logAgentDetails = async (
     const inboxState = await firstClient.preferences.inboxState();
     const installationWarning =
       inboxState.installations.length >= 4
-        ? `\n\t\x1b[38;2;252;76;52m⚠️ 5 max installations, run "yarn revoke <inbox-id> <revoke-count>" to revoke the old installations.\x1b[0m`
+        ? `\n\x1b[38;2;252;76;52m⚠️ 5 max installations, run "yarn revoke <inbox-id> <installations-to-save>" to revoke the old installations.\x1b[0m \n
+        Example: yarn revoke ${inboxId} ${installationId}`
         : "";
     console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
     • Address: ${address}
     • Conversations: ${conversations.length}
-    • Installations: ${inboxState.installations.length} ${installationWarning}
+    • Installations: ${inboxState.installations.length}
     • InstallationId: ${installationId} 
     • Networks: ${environments}
     ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
+
+    console.log(installationWarning);
   }
 };
 export function validateEnvironment(vars: string[]): Record<string, string> {
