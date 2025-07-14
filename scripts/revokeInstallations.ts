@@ -89,6 +89,15 @@ async function main() {
     const signer = createSigner(envVars.WALLET_KEY as `0x${string}`);
     const dbEncryptionKey = getEncryptionKeyFromHex(envVars.ENCRYPTION_KEY);
 
+    // Create client first to get current installation ID
+    const client = await Client.create(signer, {
+      dbEncryptionKey,
+      env: envVars.XMTP_ENV as XmtpEnv,
+    });
+
+    const currentInstallationId = client.installationId;
+    console.log(`✓ Current installation ID: ${currentInstallationId}`);
+
     // Get current inbox state
     const inboxState = await Client.inboxStateFromInboxIds(
       [inboxId],
@@ -98,22 +107,32 @@ async function main() {
     const currentInstallations = inboxState[0].installations;
     console.log(`✓ Current installations: ${currentInstallations.length}`);
 
+    // Filter out the current installation ID to protect it
+    const installationsToRevoke = currentInstallations.filter(
+      (installation) => {
+        const installationHex = Buffer.from(installation.bytes).toString("hex");
+        return installationHex !== currentInstallationId;
+      },
+    );
+
     // Determine how many installations to revoke
     let countToRevoke: number;
     let reason: string;
 
-    if (installationsToRevoke !== null) {
+    if (revokeCount) {
       // Use manual count if provided
       countToRevoke = Math.min(
-        installationsToRevoke,
-        currentInstallations.length,
+        parseInt(revokeCount),
+        installationsToRevoke.length,
       );
-      reason = `manual request (${installationsToRevoke})`;
+      reason = `manual request (${revokeCount})`;
     } else {
       // Use automatic calculation if at or over the limit
       if (currentInstallations.length >= parseInt(maxInstallations)) {
         countToRevoke =
           currentInstallations.length - parseInt(maxInstallations) + 1;
+        // Ensure we don't revoke more than available (excluding current)
+        countToRevoke = Math.min(countToRevoke, installationsToRevoke.length);
         reason = `automatic (exceeds limit of ${maxInstallations})`;
       } else {
         countToRevoke = 0;
@@ -121,9 +140,16 @@ async function main() {
       }
     }
 
+    // Safety check: if no installations are available for revocation, don't proceed
+    if (installationsToRevoke.length === 0) {
+      console.log(`✓ Only current installation remains - nothing to revoke`);
+      return;
+    }
+
     if (countToRevoke > 0) {
       // Revoke the oldest installations first (slice from beginning of array)
-      const installationsToRevokeBytes = currentInstallations
+      // but only from the filtered list that excludes current installation
+      const installationsToRevokeBytes = installationsToRevoke
         .slice(0, countToRevoke)
         .map((installation) => installation.bytes);
 
@@ -142,12 +168,6 @@ async function main() {
     } else {
       console.log(`✓ No installations need to be revoked (${reason})`);
     }
-
-    // Create new client to verify the state
-    const client = await Client.create(signer, {
-      dbEncryptionKey,
-      env: envVars.XMTP_ENV as XmtpEnv,
-    });
 
     const finalState = await client.preferences.inboxState(true);
     console.log(`✓ Final installations: ${finalState.installations.length}`);

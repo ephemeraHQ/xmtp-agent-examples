@@ -4,16 +4,18 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, Group, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, Group, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
+const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
+  validateEnvironment([
+    "WALLET_KEY",
+    "ENCRYPTION_KEY",
+    "XMTP_ENV",
+    "LOGGING_LEVEL",
+  ]);
 
 /* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(WALLET_KEY);
@@ -23,6 +25,7 @@ async function main() {
   const client = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
+    loggingLevel: LOGGING_LEVEL as LogLevel,
   });
   void logAgentDetails(client);
 
@@ -68,6 +71,7 @@ async function main() {
           console.log("Conversation is a group, skipping");
           return;
         }
+        console.log("Conversation with ", message.senderInboxId);
 
         //Getting the address from the inbox id
         const inboxState = await client.preferences.inboxStateFromInboxIds([
@@ -82,6 +86,16 @@ async function main() {
 
   // Start the message stream
   messageStream();
+
+  await client.conversations.syncAll();
+  const dm = await client.conversations.newDm(
+    "ed78558739ee53e9455cc76e86c70fee070b342e06ee794d8c4e0859f0a07f98",
+  );
+  const debugStatus = (await dm.debugInfo()).maybeForked;
+  console.log("Debug status:", debugStatus);
+  console.log("Id:", dm.id);
+  await dm.sync();
+  await dm.send("gm" + dm.id);
 }
 
 main().catch(console.error);
