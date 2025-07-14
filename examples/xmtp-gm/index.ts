@@ -23,7 +23,6 @@ async function main() {
   const client = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
-    loggingLevel: LOGGING_LEVEL as LogLevel,
   });
   void logAgentDetails(client);
 
