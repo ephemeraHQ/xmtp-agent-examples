@@ -43,6 +43,8 @@ const handleStream = async (client) => {
 
 const onMessage = (err: Error | null, message?: DecodedMessage) => {
   console.log("New message received");
+  // Reset retry count on successful message processing
+  retries = MAX_RETRIES;
 };
 await handleStream(client);
 ```
