@@ -107,12 +107,18 @@ async function main() {
     const currentInstallations = inboxState[0].installations;
     console.log(`✓ Current installations: ${currentInstallations.length}`);
 
-    // Filter out the current installation ID to protect it
-    const installationsToRevoke = currentInstallations.filter(
-      (installation) => {
-        const installationHex = Buffer.from(installation.bytes).toString("hex");
-        return installationHex !== currentInstallationId;
-      },
+    // If there's only 1 installation, it's the current one - don't revoke anything
+    if (currentInstallations.length === 1) {
+      console.log(
+        `✓ Only 1 installation found - this is the current one, nothing to revoke`,
+      );
+      return;
+    }
+
+    // Keep the latest installation (last in array) and revoke the rest
+    const installationsToRevoke = currentInstallations.slice(0, -1);
+    console.log(
+      `Available for revocation: ${installationsToRevoke.length} (keeping latest)`,
     );
 
     // Determine how many installations to revoke
@@ -143,6 +149,7 @@ async function main() {
     // Safety check: if no installations are available for revocation, don't proceed
     if (installationsToRevoke.length === 0) {
       console.log(`✓ Only current installation remains - nothing to revoke`);
+      console.log(`Current installation ID: ${currentInstallationId}`);
       return;
     }
 
