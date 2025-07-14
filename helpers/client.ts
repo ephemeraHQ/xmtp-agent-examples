@@ -115,7 +115,7 @@ export const logAgentDetails = async (
       • Address: ${address}
       • Conversations: ${conversations.length}
       • Installations: ${inboxState.installations.length}
-      • InstallationId: ${installationId} source ~/.bashrc;pr_push
+      • InstallationId: ${installationId} 
       • Networks: ${environments}
       • URL: https://xmtp.chat/dm/${address}`);
 
