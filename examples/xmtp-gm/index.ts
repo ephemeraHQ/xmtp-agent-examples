@@ -86,16 +86,6 @@ async function main() {
 
   // Start the message stream
   messageStream();
-
-  // await client.conversations.syncAll();
-  // const dm = await client.conversations.newDm(
-  //   "ed78558739ee53e9455cc76e86c70fee070b342e06ee794d8c4e0859f0a07f98",
-  // );
-  // const debugStatus = (await dm.debugInfo()).maybeForked;
-  // console.log("Debug status:", debugStatus);
-  // console.log("Id:", dm.id);
-  // await dm.sync();
-  // await dm.send("gm" + dm.id);
 }
 
 main().catch(console.error);
