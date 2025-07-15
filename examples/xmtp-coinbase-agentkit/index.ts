@@ -32,6 +32,7 @@ const {
   CDP_API_KEY_NAME,
   CDP_API_KEY_PRIVATE_KEY,
   NETWORK_ID,
+  OPENAI_API_KEY,
 } = validateEnvironment([
   "WALLET_KEY",
   "ENCRYPTION_KEY",
@@ -39,6 +40,7 @@ const {
   "CDP_API_KEY_NAME",
   "CDP_API_KEY_PRIVATE_KEY",
   "NETWORK_ID",
+  "OPENAI_API_KEY",
 ]);
 
 // Storage constants
@@ -143,6 +145,7 @@ async function initializeAgent(
   try {
     const llm = new ChatOpenAI({
       model: "gpt-4.1-mini",
+      apiKey: OPENAI_API_KEY,
     });
 
     const storedWalletData = getWalletData(userId);
@@ -200,8 +203,8 @@ async function initializeAgent(
         IMPORTANT:
         Your default network is Base Sepolia testnet. Your main and only token for transactions is USDC. Token address is 0x036CbD53842c5426634e7929541eC2318f3dCF7e. USDC is gasless on Base.
 
-        
-        Be concise, helpful, and security-focused in all your interactions. You can only perform payment and wallet-related tasks. For other requests, politely explain that you're 
+
+        Be concise, helpful, and security-focused in all your interactions. You can only perform payment and wallet-related tasks. For other requests, politely explain that you're
         specialized in processing payments and can't assist with other tasks.
       `,
     });
