@@ -7,7 +7,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, IdentifierKind, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -126,11 +126,11 @@ function updateConversationHistory(profile: UserProfile): void {
 /**
  * Parse and execute user commands
  */
-async function handleUserCommand(
+function handleUserCommand(
   message: string,
   inboxId: string,
   address?: string,
-): Promise<string> {
+): string {
   const command = message.toLowerCase().trim();
   let profile = loadUserProfile(inboxId);
 
@@ -338,9 +338,9 @@ async function getUserAddress(
     const inboxState = await client.preferences.inboxStateFromInboxIds([
       inboxId,
     ]);
-    if (inboxState && inboxState.length > 0) {
+    if (inboxState.length > 0) {
       const ethIdentifier = inboxState[0].identifiers.find(
-        (id) => id.identifierKind === 0, // IdentifierKind.Ethereum
+        (id) => id.identifierKind === IdentifierKind.Ethereum,
       );
       return ethIdentifier?.identifier;
     }
@@ -402,7 +402,7 @@ async function main(): Promise<void> {
       const userAddress = await getUserAddress(client, senderInboxId);
 
       // Handle the command and get response
-      const response = await handleUserCommand(
+      const response = handleUserCommand(
         messageContent,
         senderInboxId,
         userAddress,
@@ -454,7 +454,7 @@ process.on("SIGTERM", () => {
   process.exit(0);
 });
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   console.error("💥 Fatal error:", error);
   process.exit(1);
 });
