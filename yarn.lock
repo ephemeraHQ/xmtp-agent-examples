@@ -2121,22 +2121,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-bindings@npm:1.2.8":
-  version: 1.2.8
-  resolution: "@xmtp/node-bindings@npm:1.2.8"
-  checksum: 10/80c34b8868c0ae7dbd4986398f77a7c4453ec917cbcab2e45424b837f78482714c4a8100049824414403121b8816c0e8d2f2696f0db94b42322f61fcdc010b64
+"@xmtp/node-bindings@npm:1.3.0":
+  version: 1.3.0
+  resolution: "@xmtp/node-bindings@npm:1.3.0"
+  checksum: 10/1ce331b662d4eb79d740d214bd3c6bf5aa361256bbb9be2ff49c66494156aa191528b8024e8c22f3b62c19b7ad0d4f7a3a57556fd49151aadf552a762b08f5b7
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:3.1.2":
-  version: 3.1.2
-  resolution: "@xmtp/node-sdk@npm:3.1.2"
+"@xmtp/node-sdk@npm:3.2.0":
+  version: 3.2.0
+  resolution: "@xmtp/node-sdk@npm:3.2.0"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
-    "@xmtp/node-bindings": "npm:1.2.8"
-  checksum: 10/5289180b18917609113822cc27ebde7d8088ef7a5f3349187fc2e2d5311b7609f5c5fdc2f28806c32e06fb24b072ca9e611e0126f375b0bc4ec29e6ca1b91251
+    "@xmtp/node-bindings": "npm:1.3.0"
+  checksum: 10/31f6494c491ea103b87293181e353e00bdf2bc34616718521d667a39c818a8fcf200fbcf6427be06f3a9fecd231e6fe0d95f673f555075903b8e7b316c07d687
   languageName: node
   linkType: hard
 
@@ -5744,7 +5744,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:3.1.2"
+    "@xmtp/node-sdk": "npm:3.2.0"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"
