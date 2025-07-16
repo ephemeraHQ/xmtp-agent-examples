@@ -16,6 +16,7 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
+- [xmtp-user-memory](/examples/xmtp-user-memory/): Agent that stores user details persistently across chat sessions
 - [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gasless USDC on base
 - [xmtp-transactions](/examples/xmtp-transactions/): Allow transactions between users and agents.
