@@ -4,12 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import {
-  Client,
-  Group,
-  type DecodedMessage,
-  type XmtpEnv,
-} from "@xmtp/node-sdk";
+import { Client, Group, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -34,29 +29,18 @@ async function main() {
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
-  const onMessage = async (err: Error | null, message?: DecodedMessage) => {
-    if (err) {
-      console.log("Error", err);
+  console.log("Waiting for messages...");
+  const messageStream = await client.conversations.streamAllMessages();
+  for await (const message of messageStream) {
+    console.log(message);
+    // Skip if the message is from the agent
+    if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
       return;
     }
-
-    if (!message) {
-      console.log("No message received");
+    // Skip if the message is not a text message
+    if (message?.contentType?.typeId !== "text") {
       return;
     }
-
-    if (
-      message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message.contentType?.typeId !== "text"
-    ) {
-      return;
-    }
-
-    console.log(
-      `Received message: ${message.content as string} by ${
-        message.senderInboxId
-      }`,
-    );
 
     const conversation = await client.conversations.getConversationById(
       message.conversationId,
@@ -66,26 +50,21 @@ async function main() {
       console.log("Unable to find conversation, skipping");
       return;
     }
+
     // Skip if the conversation is a group
     if (conversation instanceof Group) {
       console.log("Conversation is a group, skipping");
       return;
     }
 
-    console.log(`Sending "gm" response...`);
+    //Getting the address from the inbox id
+    const inboxState = await client.preferences.inboxStateFromInboxIds([
+      message.senderInboxId,
+    ]);
+    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
     await conversation.send("gm");
-  };
-
-  const handleStream = async (client: Client) => {
-    console.log("Syncing conversations...");
-    await client.conversations.sync();
-
-    await client.conversations.streamAllMessages(void onMessage);
-
-    console.log("Waiting for messages...");
-  };
-
-  await handleStream(client);
+  }
 }
 
 main().catch(console.error);
