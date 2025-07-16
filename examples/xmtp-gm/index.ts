@@ -4,7 +4,12 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, Group, type XmtpEnv } from "@xmtp/node-sdk";
+import {
+  Client,
+  Group,
+  type DecodedMessage,
+  type XmtpEnv,
+} from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -29,60 +34,58 @@ async function main() {
   console.log("✓ Syncing conversations...");
   await client.conversations.sync();
 
-  // Stream all messages for GM responses
-  const messageStream = () => {
-    console.log("Waiting for messages...");
-    void client.conversations.streamAllMessages((error, message) => {
-      if (error) {
-        console.error("Error in message stream:", error);
-        return;
-      }
-      if (!message) {
-        console.log("No message received");
-        return;
-      }
+  const onMessage = async (err: Error | null, message?: DecodedMessage) => {
+    if (err) {
+      console.log("Error", err);
+      return;
+    }
 
-      void (async () => {
-        // Skip if the message is from the agent
-        if (
-          message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
-        ) {
-          return;
-        }
-        // Skip if the message is not a text message
-        if (message.contentType?.typeId !== "text") {
-          return;
-        }
+    if (!message) {
+      console.log("No message received");
+      return;
+    }
 
-        const conversation = await client.conversations.getConversationById(
-          message.conversationId,
-        );
+    if (
+      message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
+      message.contentType?.typeId !== "text"
+    ) {
+      return;
+    }
 
-        if (!conversation) {
-          console.log("Unable to find conversation, skipping");
-          return;
-        }
+    console.log(
+      `Received message: ${message.content as string} by ${
+        message.senderInboxId
+      }`,
+    );
 
-        // Skip if the conversation is a group
-        if (conversation instanceof Group) {
-          console.log("Conversation is a group, skipping");
-          return;
-        }
-        console.log("Conversation with ", message.senderInboxId);
+    const conversation = await client.conversations.getConversationById(
+      message.conversationId,
+    );
 
-        //Getting the address from the inbox id
-        const inboxState = await client.preferences.inboxStateFromInboxIds([
-          message.senderInboxId,
-        ]);
-        const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-        console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-        await conversation.send("gm");
-      })();
-    });
+    if (!conversation) {
+      console.log("Unable to find conversation, skipping");
+      return;
+    }
+    // Skip if the conversation is a group
+    if (conversation instanceof Group) {
+      console.log("Conversation is a group, skipping");
+      return;
+    }
+
+    console.log(`Sending "gm" response...`);
+    await conversation.send("gm");
   };
 
-  // Start the message stream
-  messageStream();
+  const handleStream = async (client: Client) => {
+    console.log("Syncing conversations...");
+    await client.conversations.sync();
+
+    await client.conversations.streamAllMessages(void onMessage);
+
+    console.log("Waiting for messages...");
+  };
+
+  await handleStream(client);
 }
 
 main().catch(console.error);
