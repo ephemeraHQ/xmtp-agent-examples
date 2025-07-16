@@ -44,6 +44,7 @@ async function main() {
   await client.conversations.sync();
 
   console.log("Waiting for messages...");
+  console.log("Network:", NETWORK_ID);
   /* Stream all messages from the network */
   const stream = await client.conversations.streamAllMessages();
 
