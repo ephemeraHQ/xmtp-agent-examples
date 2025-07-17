@@ -1,0 +1,32 @@
+{
+  "name": "@examples/xmtp-user-memory",
+  "version": "0.0.1",
+  "private": true,
+  "description": "XMTP agent that stores user details persistently across chat sessions",
+  "keywords": [
+    "xmtp",
+    "agent",
+    "memory",
+    "storage",
+    "user-profile",
+    "persistent"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-user-memory",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@xmtp/node-sdk": "*"
+  },
+  "devDependencies": {
+    "tsx": "*",
+    "typescript": "*"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
