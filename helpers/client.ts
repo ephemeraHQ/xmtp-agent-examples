@@ -1,7 +1,7 @@
 import { getRandomValues } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { IdentifierKind, type Client, type Signer } from "@xmtp/node-sdk";
+import { Client, IdentifierKind, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
 import { createWalletClient, http, toBytes } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -106,26 +106,24 @@ export const logAgentDetails = async (
         ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
       \x1b[0m`);
 
+    const urls = [`http://xmtp.chat/dm/${address}`];
+
     const conversations = await firstClient.conversations.list();
     const inboxState = await firstClient.preferences.inboxState();
 
     console.log(`
     ✓ XMTP Client:
-      • InboxId: ${inboxId}
-      • Address: ${address}
-      • Conversations: ${conversations.length}
-      • Installations: ${inboxState.installations.length}/5
-      • InstallationId: ${installationId} 
-      • Networks: ${environments}
-      • URL: https://xmtp.chat/dm/${address}`);
-
-    if (inboxState.installations.length >= 4) {
-      console.log(
-        `\n\x1b[33m⚠️  Warning: 5 is the max number of installations\nRun "yarn revoke <inbox-id> <installations-to-exclude>" to revoke old installations.\nExample: yarn revoke ${inboxId} ${installationId}\x1b[0m\n`,
-      );
-    }
+    • InboxId: ${inboxId}
+    • Bindings: ${Client.version}
+    • Address: ${address}
+    • Conversations: ${conversations.length}
+    • Installations: ${inboxState.installations.length}
+    • InstallationId: ${installationId}
+    • Networks: ${environments}
+    ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
   }
 };
+
 export function validateEnvironment(vars: string[]): Record<string, string> {
   const missing = vars.filter((v) => !process.env[v]);
 
