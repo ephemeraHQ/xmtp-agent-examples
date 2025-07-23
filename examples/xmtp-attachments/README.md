@@ -13,7 +13,7 @@ This agent replies with an image attachment.
 - Yarn v4 or higher
 - Docker (optional, for local network)
 - [Pinata API key](https://app.pinata.cloud/developers/api-keys)
-- [@xmtp/content-type-remote-attachment](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-remote-attachment)
+- [@xmtp/content-type-remote-attachment](https://docs.xmtp.org/inboxes/content-types/attachments#receive-encrypted-file)
 
 ### Environment variables
 
@@ -37,6 +37,32 @@ yarn gen:keys
 
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
+
+## Send encrypted file
+
+```tsx
+const blob = new Blob([file], { type: extname });
+let imgArray = new Uint8Array(await blob.arrayBuffer());
+
+const attachment = {
+  filename: filename,
+  mimeType: extname, //image, video or audio
+  data: imgArray,
+};
+
+console.log("Attachment created", attachment);
+await conversation.send(attachment, { contentType: ContentTypeAttachment });
+```
+
+```javascript
+// Receive encrypted file
+if (message.contentType.sameAs(ContentTypeAttachment)) {
+  const blobdecoded = new Blob([message.content.data], {
+    type: message.content.mimeType,
+  });
+  const url = URL.createObjectURL(blobdecoded);
+}
+```
 
 ### Run the agent
 
