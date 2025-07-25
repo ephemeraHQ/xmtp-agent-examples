@@ -117,8 +117,15 @@ export const logAgentDetails = async (
 
     let createdDate = new Date();
     let expiryDate = new Date();
-    createdDate = new Date(Number(keyPackageStatuses.createdAt) * 1000);
-    expiryDate = new Date(Number(keyPackageStatuses.validUntil) * 1000);
+
+    // Extract key package status for the specific installation
+    const keyPackageStatus = keyPackageStatuses[installationId];
+    if (keyPackageStatus.lifetime) {
+      createdDate = new Date(
+        Number(keyPackageStatus.lifetime.notBefore) * 1000,
+      );
+      expiryDate = new Date(Number(keyPackageStatus.lifetime.notAfter) * 1000);
+    }
     console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
