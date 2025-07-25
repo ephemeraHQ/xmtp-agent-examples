@@ -145,6 +145,11 @@ export const logAgentDetails = async (
     • Networks: ${environments}
     • URL: https://xmtp.chat/dm/${address}
     `);
+    if (inboxState.installations.length > 4) {
+      console.warn(
+        `You can revoke old installations by running: \n yarn revoke <inbox-id> <installations-to-exclude>`,
+      );
+    }
   }
 };
 
