@@ -106,25 +106,30 @@ export const logAgentDetails = async (
         ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
       \x1b[0m`);
 
-    const urls = [`http://xmtp.chat/dm/${address}`];
-
     const conversations = await firstClient.conversations.list();
     const inboxState = await firstClient.preferences.inboxState();
     const keyPackageStatuses =
       await firstClient.getKeyPackageStatusesForInstallationIds([
         installationId,
       ]);
+    // Count valid and invalid installations
+    const totalInstallations = Object.keys(keyPackageStatuses).length;
+    const validInstallations = Object.values(keyPackageStatuses).filter(
+      (value) => !value?.validationError,
+    ).length;
+    const invalidInstallations = totalInstallations - validInstallations;
 
     let createdDate = new Date();
     let expiryDate = new Date();
-
-    // Extract key package status for the specific installation
-    const keyPackageStatus = keyPackageStatuses[installationId];
-    if (keyPackageStatus.lifetime) {
+    // Create summary for current installation
+    const currentInstallationStatus = keyPackageStatuses[installationId];
+    if (currentInstallationStatus?.lifetime) {
       createdDate = new Date(
-        Number(keyPackageStatus.lifetime.notBefore) * 1000,
+        Number(currentInstallationStatus.lifetime.notBefore) * 1000,
       );
-      expiryDate = new Date(Number(keyPackageStatus.lifetime.notAfter) * 1000);
+      expiryDate = new Date(
+        Number(currentInstallationStatus.lifetime.notAfter) * 1000,
+      );
     }
     console.log(`
     ✓ XMTP Client:
@@ -134,10 +139,12 @@ export const logAgentDetails = async (
     • Conversations: ${conversations.length}
     • Installations: ${inboxState.installations.length}
     • InstallationId: ${installationId}
-    • Key Package created: ${createdDate.toLocaleString()}
-    • Key Package valid until: ${expiryDate.toLocaleString()}
+    • Installation created: ${createdDate.toLocaleString()}
+    • Installation valid until: ${expiryDate.toLocaleString()}
+    • Installations: ${totalInstallations} total, ${validInstallations} valid, ${invalidInstallations} invalid
     • Networks: ${environments}
-    ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
+    • URL: https://xmtp.chat/dm/${address}
+    `);
   }
 };
 
