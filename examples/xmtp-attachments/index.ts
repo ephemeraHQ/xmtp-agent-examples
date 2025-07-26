@@ -10,6 +10,7 @@ import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,
   RemoteAttachmentCodec,
+  type Attachment,
   type RemoteAttachment,
 } from "@xmtp/content-type-remote-attachment";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
@@ -121,7 +122,7 @@ async function main() {
 
     /* Get the conversation from the local db */
     const conversation = await client.conversations.getConversationById(
-      message.conversationId,
+      message?.conversationId as string,
     );
 
     /* If the conversation is not found, skip the message */
@@ -141,8 +142,11 @@ async function main() {
           client,
         );
 
-        const filename = (receivedAttachment as any).filename as string;
-        const mimeType = (receivedAttachment as any).mimeType as string;
+        const filename =
+          (receivedAttachment as Attachment).filename || "unnamed";
+        const mimeType =
+          (receivedAttachment as Attachment).mimeType ||
+          "application/octet-stream";
 
         console.log(`Processing attachment: ${filename} (${mimeType})`);
 
@@ -153,7 +157,7 @@ async function main() {
 
         // Create a new remote attachment from the decoded data
         const reEncodedAttachment = await createRemoteAttachmentFromData(
-          receivedAttachment.data,
+          (receivedAttachment as Attachment).data,
           filename,
           mimeType,
         );
@@ -201,77 +205,5 @@ async function main() {
     }
   }
 }
-
-// async function createNativeAttachment(
-//   source: string,
-// ): Promise<Attachment | undefined> {
-//   try {
-//     let imgArray: Uint8Array;
-//     let mimeType: string;
-//     let filename: string;
-
-//     const MAX_SIZE = 1024 * 1024; // 1MB in bytes
-
-//     // Check if source is a URL
-//     if (source.startsWith("http://") || source.startsWith("https://")) {
-//       try {
-//         // Handle URL
-//         const response = await fetch(source);
-//         if (!response.ok) {
-//           throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-
-//         // Check Content-Length header first if available
-//         const contentLength = response.headers.get("content-length");
-//         if (contentLength && parseInt(contentLength) > MAX_SIZE) {
-//           throw new Error("Image size exceeds 1MB limit");
-//         }
-
-//         const arrayBuffer = await response.arrayBuffer();
-
-//         // Double check actual size
-//         if (arrayBuffer.byteLength > MAX_SIZE) {
-//           throw new Error("Image size exceeds 1MB limit");
-//         }
-
-//         imgArray = new Uint8Array(arrayBuffer);
-//         mimeType = response.headers.get("content-type") || "image/jpeg";
-//         filename = source.split("/").pop() || "image";
-
-//         // If filename doesn't have an extension, add one based on mime type
-//         if (!filename.includes(".")) {
-//           const ext = mimeType.split("/")[1];
-//           filename = `${filename}.${ext}`;
-//         }
-//       } catch (error) {
-//         console.error("Error fetching image from URL:", error);
-//         throw error;
-//       }
-//     } else {
-//       // Handle file path
-//       const file = await readFile(source);
-
-//       // Check file size
-//       if (file.length > MAX_SIZE) {
-//         throw new Error("Image size exceeds 1MB limit");
-//       }
-
-//       filename = path.basename(source);
-//       const extname = path.extname(source);
-//       mimeType = `image/${extname.replace(".", "").replace("jpg", "jpeg")}`;
-//       imgArray = new Uint8Array(file);
-//     }
-
-//     const attachment: Attachment = {
-//       filename,
-//       mimeType,
-//       data: imgArray,
-//     };
-//     return attachment;
-//   } catch (error) {
-//     console.error("Failed to send image:", error);
-//     throw error;
-//   }
-// }
 
 void main();
