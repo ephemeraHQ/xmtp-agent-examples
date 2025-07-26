@@ -165,7 +165,11 @@ export function validateEnvironment(vars: string[]): Record<string, string> {
           .split("\n")
           .filter((line) => line.trim() && !line.startsWith("#"))
           .reduce<Record<string, string>>((acc, line) => {
-            const [key, ...val] = line.split("=");
+            // Remove inline comments (everything after #)
+            const lineWithoutComments = line.split("#")[0].trim();
+            if (!lineWithoutComments) return acc;
+
+            const [key, ...val] = lineWithoutComments.split("=");
             if (key && val.length) acc[key.trim()] = val.join("=").trim();
             return acc;
           }, {});

@@ -141,8 +141,8 @@ async function main() {
           client,
         );
 
-        const filename = receivedAttachment?.filename as string;
-        const mimeType = receivedAttachment.mimeType as string;
+        const filename = (receivedAttachment as any).filename as string;
+        const mimeType = (receivedAttachment as any).mimeType as string;
 
         console.log(`Processing attachment: ${filename} (${mimeType})`);
 
