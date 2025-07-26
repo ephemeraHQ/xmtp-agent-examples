@@ -10,7 +10,6 @@ import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,
   RemoteAttachmentCodec,
-  type Attachment,
   type RemoteAttachment,
 } from "@xmtp/content-type-remote-attachment";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
@@ -65,6 +64,40 @@ async function createRemoteAttachment(
   };
 }
 
+async function createRemoteAttachmentFromData(
+  data: Uint8Array,
+  filename: string,
+  mimeType: string,
+): Promise<RemoteAttachment> {
+  const attachment = {
+    filename,
+    mimeType,
+    data,
+  };
+
+  const encryptedEncoded = await RemoteAttachmentCodec.encodeEncrypted(
+    attachment,
+    new AttachmentCodec(),
+  );
+
+  const fileUrl = await uploadToPinata(
+    encryptedEncoded.payload,
+    attachment.filename,
+  );
+  const scheme = `${new URL(fileUrl).protocol}//`;
+
+  return {
+    url: fileUrl,
+    contentDigest: encryptedEncoded.digest,
+    salt: encryptedEncoded.salt,
+    nonce: encryptedEncoded.nonce,
+    secret: encryptedEncoded.secret,
+    scheme: scheme,
+    filename: attachment.filename,
+    contentLength: attachment.data.byteLength,
+  };
+}
+
 async function main() {
   const client = await Client.create(signer, {
     dbEncryptionKey,
@@ -81,53 +114,91 @@ async function main() {
   const stream = await client.conversations.streamAllMessages();
 
   for await (const message of stream) {
-    /* Ignore messages from the same agent or non-text messages */
+    /* Ignore messages from the same agent */
     if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
       continue;
     }
 
-    /* Ignore non-text messages */
-    if (message?.contentType?.typeId !== "text") {
-      continue;
-    }
-
-    console.log(`Received message with type: ${message.contentType.typeId}`);
-
+    /* Get the conversation from the local db */
     const conversation = await client.conversations.getConversationById(
       message.conversationId,
     );
 
-    if (!conversation) continue;
+    /* If the conversation is not found, skip the message */
+    if (!conversation) {
+      console.log("Unable to find conversation, skipping");
+      continue;
+    }
 
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+    // Check if this is a remote attachment
+    if (message && message.contentType?.typeId === "remoteStaticAttachment") {
+      console.log("Received a remote attachment!");
 
-    if (message.contentType.sameAs(ContentTypeRemoteAttachment)) {
-      console.log("Received an attachment!");
+      try {
+        // Load and decode the received attachment
+        const receivedAttachment = await RemoteAttachmentCodec.load(
+          message.content as RemoteAttachment,
+          client,
+        );
 
-      const attachment = await RemoteAttachmentCodec.load(
-        message.content as RemoteAttachment,
-        client,
-      );
+        const filename = receivedAttachment?.filename as string;
+        const mimeType = receivedAttachment.mimeType as string;
 
-      const filename = (attachment as Attachment).filename || "unnamed";
-      await conversation.send(`I received your attachment "${filename}"!`);
+        console.log(`Processing attachment: ${filename} (${mimeType})`);
+
+        // Send acknowledgment message
+        await conversation.send(
+          `I received your attachment "${filename}"! Processing it now...`,
+        );
+
+        // Create a new remote attachment from the decoded data
+        const reEncodedAttachment = await createRemoteAttachmentFromData(
+          receivedAttachment.data,
+          filename,
+          mimeType,
+        );
+
+        // Send the re-encoded attachment back
+        await conversation.send(
+          reEncodedAttachment,
+          ContentTypeRemoteAttachment,
+        );
+
+        console.log(`Successfully sent back attachment: ${filename}`);
+
+        // Send confirmation message
+        await conversation.send(`Here's your attachment back: ${filename}`);
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        console.error("Error processing attachment:", errorMessage);
+        await conversation.send(
+          "Sorry, I encountered an error processing your attachment.",
+        );
+      }
 
       continue;
     }
 
-    console.log(`Preparing attachment for ${addressFromInboxId}...`);
-    await conversation.send(`I'll send you an attachment now...`);
+    /* Handle text messages */
+    if (message?.contentType?.typeId === "text") {
+      console.log(
+        `Received text message: ${message.content as string} by ${message.senderInboxId}`,
+      );
 
-    const remoteAttachment = await createRemoteAttachment(DEFAULT_IMAGE_PATH);
-    await conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
+      const inboxState = await client.preferences.inboxStateFromInboxIds([
+        message.senderInboxId,
+      ]);
+      const addressFromInboxId = inboxState[0].identifiers[0].identifier;
 
-    // TODO: Mobile apps currently don't support native attachments
-    // const nativeAttachment = await createNativeAttachment(DEFAULT_IMAGE_PATH);
-    // await conversation.send(nativeAttachment, ContentTypeAttachment);
-    console.log("Remote attachment sent successfully");
+      console.log(`Preparing attachment for ${addressFromInboxId}...`);
+      await conversation.send(`I'll send you an attachment now...`);
+
+      const remoteAttachment = await createRemoteAttachment(DEFAULT_IMAGE_PATH);
+      await conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
+
+      console.log("Remote attachment sent successfully");
+    }
   }
 }
 
