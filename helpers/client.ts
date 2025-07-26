@@ -115,7 +115,7 @@ export const logAgentDetails = async (
     // Count valid and invalid installations
     const totalInstallations = Object.keys(keyPackageStatuses).length;
     const validInstallations = Object.values(keyPackageStatuses).filter(
-      (value) => !value?.validationError,
+      (value) => !value.validationError,
     ).length;
     const invalidInstallations = totalInstallations - validInstallations;
 
@@ -123,7 +123,7 @@ export const logAgentDetails = async (
     let expiryDate = new Date();
     // Create summary for current installation
     const currentInstallationStatus = keyPackageStatuses[installationId];
-    if (currentInstallationStatus?.lifetime) {
+    if (currentInstallationStatus.lifetime) {
       createdDate = new Date(
         Number(currentInstallationStatus.lifetime.notBefore) * 1000,
       );
