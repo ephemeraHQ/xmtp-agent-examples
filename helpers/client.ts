@@ -1,5 +1,6 @@
 import { getRandomValues } from "node:crypto";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { Client, IdentifierKind, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
@@ -89,6 +90,17 @@ export const logAgentDetails = async (
     },
     {},
   );
+  // Get XMTP SDK version from package.json
+  const require = createRequire(import.meta.url);
+  const packageJson = require("../package.json") as {
+    dependencies: Record<string, string>;
+  };
+  const xmtpSdkVersion = packageJson.dependencies["@xmtp/node-sdk"];
+  const bindingVersion = (
+    require("../node_modules/@xmtp/node-bindings/package.json") as {
+      version: string;
+    }
+  ).version;
 
   for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
     const firstClient = clientGroup[0];
@@ -106,50 +118,40 @@ export const logAgentDetails = async (
         ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
       \x1b[0m`);
 
+    const urls = [`http://xmtp.chat/dm/${address}`];
+
     const conversations = await firstClient.conversations.list();
     const inboxState = await firstClient.preferences.inboxState();
     const keyPackageStatuses =
       await firstClient.getKeyPackageStatusesForInstallationIds([
         installationId,
       ]);
-    // Count valid and invalid installations
-    const totalInstallations = Object.keys(keyPackageStatuses).length;
-    const validInstallations = Object.values(keyPackageStatuses).filter(
-      (value) => !value.validationError,
-    ).length;
-    const invalidInstallations = totalInstallations - validInstallations;
 
     let createdDate = new Date();
     let expiryDate = new Date();
-    // Create summary for current installation
-    const currentInstallationStatus = keyPackageStatuses[installationId];
-    if (currentInstallationStatus.lifetime) {
+
+    // Extract key package status for the specific installation
+    const keyPackageStatus = keyPackageStatuses[installationId];
+    if (keyPackageStatus.lifetime) {
       createdDate = new Date(
-        Number(currentInstallationStatus.lifetime.notBefore) * 1000,
+        Number(keyPackageStatus.lifetime.notBefore) * 1000,
       );
-      expiryDate = new Date(
-        Number(currentInstallationStatus.lifetime.notAfter) * 1000,
-      );
+      expiryDate = new Date(Number(keyPackageStatus.lifetime.notAfter) * 1000);
     }
     console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
-    • Bindings: ${Client.version}
+    • SDK: ${xmtpSdkVersion}
+    • Bindings: ${bindingVersion}
+    • Version: ${Client.version}
     • Address: ${address}
     • Conversations: ${conversations.length}
     • Installations: ${inboxState.installations.length}
     • InstallationId: ${installationId}
-    • Installation created: ${createdDate.toLocaleString()}
-    • Installation valid until: ${expiryDate.toLocaleString()}
-    • Installations: ${totalInstallations} total, ${validInstallations} valid, ${invalidInstallations} invalid
+    • Key Package created: ${createdDate.toLocaleString()}
+    • Key Package valid until: ${expiryDate.toLocaleString()}
     • Networks: ${environments}
-    • URL: https://xmtp.chat/dm/${address}
-    `);
-    if (inboxState.installations.length > 4) {
-      console.warn(
-        `You can revoke old installations by running: \n yarn revoke <inbox-id> <installations-to-exclude>`,
-      );
-    }
+    ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
   }
 };
 
