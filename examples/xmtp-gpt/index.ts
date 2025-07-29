@@ -111,11 +111,6 @@ async function main() {
         }
       },
     });
-
-    // Keep the stream alive
-    for await (const _ of stream) {
-      // This loop keeps the stream active
-    }
   };
 
   // Start the message stream

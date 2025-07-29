@@ -112,21 +112,17 @@ async function main() {
   await client.conversations.sync();
 
   console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages({
-    onError: (error) => {
-      console.error("Error in message stream:", error);
-    },
-  });
+  const stream = client.conversations.streamAllMessages();
 
-  for await (const message of stream) {
+  for await (const message of await stream) {
     /* Ignore messages from the same agent */
-    if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
       continue;
     }
 
     /* Get the conversation from the local db */
     const conversation = await client.conversations.getConversationById(
-      message?.conversationId as string,
+      message.conversationId,
     );
 
     /* If the conversation is not found, skip the message */
@@ -136,7 +132,7 @@ async function main() {
     }
 
     // Check if this is a remote attachment
-    if (message && message.contentType?.typeId === "remoteStaticAttachment") {
+    if (message.contentType?.typeId === "remoteStaticAttachment") {
       console.log("Received a remote attachment!");
 
       try {
@@ -189,7 +185,7 @@ async function main() {
     }
 
     /* Handle text messages */
-    if (message?.contentType?.typeId === "text") {
+    if (message.contentType?.typeId === "text") {
       console.log(
         `Received text message: ${message.content as string} by ${message.senderInboxId}`,
       );

@@ -94,7 +94,7 @@ async function main() {
     onRetry: (attempts, maxAttempts) => {
       console.log("🔄 onRetry callback triggered");
       console.log(`   Retry attempt: ${attempts}/${maxAttempts}`);
-      console.log(`   Waiting ${5000}ms before retry...`);
+      console.log(`   Waiting 5000ms before retry...`);
     },
 
     // Callback when the stream is restarted
@@ -116,12 +116,6 @@ async function main() {
   console.log("💡 Try sending a message to see the callbacks in action!");
   console.log("💡 You can also simulate network issues to see retry behavior");
   console.log("=".repeat(60));
-
-  // Keep the stream alive
-  for await (const _ of stream) {
-    // This loop keeps the stream active
-    // The actual message processing happens in onValue callback
-  }
 }
 
 main().catch(console.error);
