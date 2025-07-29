@@ -1,6 +1,6 @@
 # XMTP agent examples
 
-This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk).
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk) v5.0.0+.
 
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
@@ -11,6 +11,35 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - **Privacy & metadata protection**: Offers anonymous usage through SDKs and pseudonymous usage with nodes tracking minimum metadata.
 - **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure and ensuring continued operation even if some nodes go offline.
 - **Multi-agent**: Allows confidential communication between multiple agents and humans through MLS group chats.
+
+## Streaming API
+
+This repository uses the latest XMTP SDK v5.0.0+ which introduces a new streaming API with automatic retry capabilities. All streaming methods are now async and accept a single options argument:
+
+```typescript
+const stream = await client.conversations.streamAllMessages({
+  onError: (error) => {
+    console.error("Error in message stream:", error);
+  },
+  onRetry: (attempts, maxAttempts) => {
+    console.log(`Retrying stream... (${attempts}/${maxAttempts})`);
+  },
+  onRestart: () => {
+    console.log("Stream restarted");
+  },
+  onValue: async (message) => {
+    // Handle each message
+    console.log(`Received: ${message.content}`);
+  },
+});
+```
+
+The new API provides:
+
+- **Automatic retry**: Streams automatically retry 6 times with 10-second delays by default
+- **Configurable retry**: Customize retry attempts and delays via options
+- **Better error handling**: Streams no longer end on error, errors are passed to callbacks
+- **Simplified usage**: All streaming methods use a consistent options-based API
 
 ## Example agents
 

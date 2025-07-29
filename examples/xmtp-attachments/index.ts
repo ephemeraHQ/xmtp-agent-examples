@@ -112,7 +112,11 @@ async function main() {
   await client.conversations.sync();
 
   console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
+  const stream = await client.conversations.streamAllMessages({
+    onError: (error) => {
+      console.error("Error in message stream:", error);
+    },
+  });
 
   for await (const message of stream) {
     /* Ignore messages from the same agent */

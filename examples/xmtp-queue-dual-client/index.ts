@@ -111,48 +111,37 @@ function startPeriodicSync(
 }
 
 async function setupMessageStream(client: Client): Promise<void> {
-  try {
-    console.log("Setting up message stream on receiving client...");
-    const stream = await client.conversations.streamAllMessages();
-    console.log("Message stream started successfully");
+  console.log("Waiting for messages...");
+  const stream = await client.conversations.streamAllMessages({
+    onError: (error) => {
+      console.error("Error in message stream:", error);
+    },
+  });
 
-    // Process incoming messages
-    for await (const message of stream) {
-      /* Ignore messages from the same agent or non-text messages */
-      if (
-        message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
-      ) {
-        continue;
-      }
-
-      /* Ignore non-text messages */
-      if (message?.contentType?.typeId !== "text") {
-        continue;
-      }
-      const content = message.content as string;
-      console.log(
-        `Received: "${content}" in conversation ${message.conversationId}`,
-      );
-
-      // Queue response
-      const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
-      messageQueue.push({
-        conversationId: message.conversationId,
-        content: response,
-        timestamp: Date.now(),
-      });
-
-      console.log(`Queued response for conversation ${message.conversationId}`);
+  for await (const message of stream) {
+    /* Ignore messages from the same agent or non-text messages */
+    if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+      continue;
     }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error in message stream:", errorMessage);
 
-    // Attempt to reconnect after a delay
-    setTimeout(() => {
-      console.log("Attempting to reconnect message stream...");
-      void setupMessageStream(client);
-    }, 5000);
+    /* Ignore non-text messages */
+    if (message?.contentType?.typeId !== "text") {
+      continue;
+    }
+    const content = message.content as string;
+    console.log(
+      `Received: "${content}" in conversation ${message.conversationId}`,
+    );
+
+    // Queue response
+    const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
+    messageQueue.push({
+      conversationId: message.conversationId,
+      content: response,
+      timestamp: Date.now(),
+    });
+
+    console.log(`Queued response for conversation ${message.conversationId}`);
   }
 }
 

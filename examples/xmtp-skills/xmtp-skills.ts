@@ -177,14 +177,22 @@ export class xmtpAgent {
     console.log("Syncing conversations...");
     await this.client.conversations.sync();
 
-    await this.client.conversations.streamAllMessages(
-      this.onMessage,
-      undefined,
-      undefined,
-      this.onFail,
-    );
+    const stream = await this.client.conversations.streamAllMessages({
+      onError: (error) => {
+        console.error("Error in message stream:", error);
+      },
+      onFail: this.onFail,
+      onValue: async (message) => {
+        await this.handleMessageAsync(message);
+      },
+    });
 
     console.log("Waiting for messages...");
+
+    // Keep the stream alive
+    for await (const _ of stream) {
+      // This loop keeps the stream active
+    }
   }
 
   /**

@@ -105,8 +105,12 @@ export class XmtpWorkerManager {
     await worker.client.conversations.sync();
 
     console.log(`✓ Starting message stream for ${name}...`);
-    const stream = await worker.client.conversations.streamAllMessages();
-    worker.messageStream = stream as unknown as AsyncIterable<DecodedMessage>;
+    const stream = await worker.client.conversations.streamAllMessages({
+      onError: (error) => {
+        console.error(`Error in message stream for ${name}:`, error);
+      },
+    });
+    worker.messageStream = stream;
 
     // Process messages in the background
     this.processMessages(worker, messageHandler).catch((error: unknown) => {

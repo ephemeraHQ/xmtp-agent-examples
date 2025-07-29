@@ -46,7 +46,11 @@ async function main() {
   console.log("Waiting for messages...");
   console.log("Network:", NETWORK_ID);
   /* Stream all messages from the network */
-  const stream = await client.conversations.streamAllMessages();
+  const stream = await client.conversations.streamAllMessages({
+    onError: (error) => {
+      console.error("Error in message stream:", error);
+    },
+  });
 
   for await (const message of stream) {
     /* Ignore messages from the same agent or non-text messages */
