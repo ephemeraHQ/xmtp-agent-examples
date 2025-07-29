@@ -32,12 +32,14 @@ async function main() {
   // Stream all messages for GM responses
   const messageStream = () => {
     console.log("Waiting for messages...");
-    void client.conversations.streamAllMessages((error, message) => {
-      if (error) {
-        console.error("Error in message stream:", error);
-        return;
-      }
-      if (!message) {
+    void client.conversations.streamAllMessages({
+      onValue: (message) => {
+        void (async () => {
+          // Skip if the message is from the agent
+          if (
+            message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
+          ) {
+        if (!message) {
         console.log("No message received");
         return;
       }
@@ -77,7 +79,8 @@ async function main() {
         console.log(`Sending "gm" response to ${addressFromInboxId}...`);
         await conversation.send("gm");
       })();
-    });
+      }
+  });
   };
 
   // Start the message stream
