@@ -1,6 +1,6 @@
 # XMTP agent examples
 
-This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk) v5.0.0+.
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk) v4.0.0+.
 
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
@@ -14,7 +14,7 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 ## Streaming API
 
-This repository uses the latest XMTP SDK v5.0.0+ which introduces a new streaming API with automatic retry capabilities. All streaming methods are now async and accept a single options argument:
+This repository uses the XMTP SDK v4.0.0+ which provides streaming capabilities. All streaming methods are async and accept a single options argument:
 
 ```typescript
 const stream = await client.conversations.streamAllMessages({
@@ -34,11 +34,11 @@ const stream = await client.conversations.streamAllMessages({
 });
 ```
 
-The new API provides:
+The streaming API provides:
 
-- **Automatic retry**: Streams automatically retry 6 times with 10-second delays by default
-- **Configurable retry**: Customize retry attempts and delays via options
-- **Better error handling**: Streams no longer end on error, errors are passed to callbacks
+- **Error handling**: Streams handle errors gracefully
+- **Retry capabilities**: Built-in retry mechanisms for reliability
+- **Lifecycle callbacks**: Monitor stream events and status
 - **Simplified usage**: All streaming methods use a consistent options-based API
 
 ## Example agents
@@ -53,7 +53,7 @@ The new API provides:
 - [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends images
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
-- [xmtp-stream-restart](/examples/xmtp-stream-restart/): Restart a stream after a failure
+- [xmtp-stream-callbacks](/examples/xmtp-stream-callbacks/): Comprehensive demonstration of streaming callbacks and retry configuration
 - [xmtp-skills](/examples/xmtp-skills/): Helper functions for XMTP agents
 
 ## Run example agents

@@ -1,0 +1,54 @@
+globs: \*.md
+alwaysApply: false
+
+# README Style Guide
+
+## README Writing Standards
+
+When creating or editing README files, follow these strict guidelines:
+
+### Content Style
+
+- **Sentence-style capitalization**: Use sentence-style capitalization for headers
+- **No emojis**: Never use emojis in READMEs
+- **Concise**: Be brief and to the point
+- **No redundancy**: Avoid repeating information
+- **Code-heavy**: Prioritize code examples and snippets over lengthy explanations
+- **Sentence-style capitalization**: Use sentence-style capitalization for headers
+
+### Structure
+
+- Use clear, direct headers without decorative elements
+- Lead with practical examples rather than theory
+- Include minimal explanatory text - let code speak for itself
+- Focus on "how" rather than "why"
+
+### Format Requirements
+
+- Use plain text headers (no emoji prefixes)
+- Include more code blocks than paragraphs
+- Keep descriptions brief - one sentence when possible
+- Use tables for structured data without emoji indicators
+
+### Code Examples
+
+- Always include working code examples
+- Show real command line usage
+- Provide copy-paste ready snippets
+- Include minimal setup instructions
+
+### Performance Tables
+
+- Use text instead of emoji status indicators:
+  - "On Target" instead of ✅
+  - "Concern" instead of ⚠️
+  - "Failed" instead of ❌
+- Keep table data clean and readable
+
+### Anti-patterns to Avoid
+
+- Emoji decorations in headers or content
+- Long explanatory paragraphs
+- Redundant information across sections
+- Flowery or marketing language
+- Over-explanation of simple concepts
