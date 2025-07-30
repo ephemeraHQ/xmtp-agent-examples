@@ -24,7 +24,7 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends images
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
-- [xmtp-stream-restart](/examples/xmtp-stream-restart/): Restart a stream after a failure
+- [xmtp-stream-callbacks](/examples/xmtp-stream-callbacks/): Stream callbacks for XMTP agents
 - [xmtp-skills](/examples/xmtp-skills/): Helper functions for XMTP agents
 
 ## Run example agents

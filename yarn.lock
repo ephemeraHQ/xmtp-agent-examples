@@ -1001,9 +1001,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-callbacks":
+"@examples/xmtp-stream-callbacks@workspace:examples/xmtp-stream-callbacks":
   version: 0.0.0-use.local
-  resolution: "@examples/xmtp-stream-restart@workspace:examples/xmtp-stream-callbacks"
+  resolution: "@examples/xmtp-stream-callbacks@workspace:examples/xmtp-stream-callbacks"
   dependencies:
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
