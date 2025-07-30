@@ -64,18 +64,27 @@ async function main() {
       }
 
       console.log("   ✅ Processing message...");
-      const conversation = await client.conversations.getConversationById(
-        message.conversationId,
-      );
 
-      if (!conversation) {
-        console.log("   ❌ Conversation not found, skipping");
-        return;
-      }
+      // Handle async operations without awaiting in the callback
+      client.conversations
+        .getConversationById(message.conversationId)
+        .then((conversation) => {
+          if (!conversation) {
+            console.log("   ❌ Conversation not found, skipping");
+            return;
+          }
 
-      console.log("   💬 Sending response...");
-      await conversation.send("gm");
-      console.log("   ✅ Response sent successfully");
+          console.log("   💬 Sending response...");
+          return conversation.send("gm");
+        })
+        .then(() => {
+          console.log("   ✅ Response sent successfully");
+        })
+        .catch((error: unknown) => {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          console.log(`   ❌ Error processing message: ${errorMessage}`);
+        });
     },
 
     // Callback when a stream error occurs (stream continues running)
@@ -123,7 +132,7 @@ async function main() {
   console.log("\n🚀 Example 2: Different stream types");
 
   // Stream only conversations
-  const conversationStream = await client.conversations.stream({
+  const _conversationStream = await client.conversations.stream({
     onValue: (conversation) => {
       console.log(`📞 New conversation: ${conversation?.id || "unknown"}`);
     },
@@ -133,7 +142,7 @@ async function main() {
   });
 
   // Stream only groups
-  const groupStream = await client.conversations.streamGroups({
+  const _groupStream = await client.conversations.streamGroups({
     onValue: (group) => {
       console.log(`👥 New group: ${group.name || group.id}`);
     },
@@ -143,7 +152,7 @@ async function main() {
   });
 
   // Stream only DMs
-  const dmStream = await client.conversations.streamDms({
+  const _dmStream = await client.conversations.streamDms({
     onValue: (dm) => {
       console.log(`💬 New DM with: ${dm.peerInboxId}`);
     },
@@ -154,7 +163,7 @@ async function main() {
 
   // Example 3: Disable retry for a stream
   console.log("\n🚀 Example 3: Stream with retry disabled");
-  const noRetryStream = await client.conversations.streamAllMessages({
+  await client.conversations.streamAllMessages({
     retryOnFail: false, // Disable retry
     onValue: (message) => {
       console.log(`📨 Message without retry: ${message.content as string}`);

@@ -317,9 +317,7 @@ async function startMessageListener(client: Client) {
   console.log("Starting message listener...");
   const stream = await client.conversations.streamAllMessages();
   for await (const message of stream) {
-    if (message) {
-      await handleMessage(message, client);
-    }
+    await handleMessage(message, client);
   }
 }
 
