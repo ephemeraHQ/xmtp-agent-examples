@@ -49,12 +49,12 @@ async function main() {
 
   for await (const message of stream) {
     /* Ignore messages from the same agent or non-text messages */
-    if (message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
       continue;
     }
 
     /* Ignore non-text messages */
-    if (message?.contentType?.typeId !== "text") {
+    if (message.contentType?.typeId !== "text") {
       continue;
     }
 

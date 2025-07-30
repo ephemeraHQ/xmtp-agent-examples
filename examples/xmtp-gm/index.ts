@@ -69,9 +69,10 @@ async function main() {
     await conversation.send("gm");
   };
 
-  client.conversations.streamAllMessages({
+  void client.conversations.streamAllMessages({
     onValue,
   });
+
   console.log("Message stream started");
 }
 
