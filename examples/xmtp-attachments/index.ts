@@ -25,11 +25,16 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
 const signer = createSigner(WALLET_KEY);
 const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 
+// Check this path is correct in your case of errors
 const DEFAULT_IMAGE_PATH = "./logo.png";
 
 async function createRemoteAttachment(
   filePath: string,
 ): Promise<RemoteAttachment> {
+  // Log the full path of the image
+  const fullPath = path.resolve(filePath);
+  console.log(`Full path of image: ${fullPath}`);
+
   const fileData = await readFile(filePath);
   const filename = path.basename(filePath);
   const mimeType = filename.endsWith(".png")
