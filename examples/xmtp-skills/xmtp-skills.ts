@@ -5,10 +5,6 @@ import {
 } from "@helpers/client";
 import { Client, type DecodedMessage, type XmtpEnv } from "@xmtp/node-sdk";
 
-// Constants for retry mechanism
-const MAX_RETRIES = 5;
-const RETRY_INTERVAL = 5000; // 5 seconds
-
 export interface XmtpConfig {
   walletKey: string;
   encryptionKey: string;
@@ -29,7 +25,6 @@ export type MessageHandler = (
 export class xmtpAgent {
   private client?: Client;
   private config: XmtpConfig;
-  private retries: number = MAX_RETRIES;
   private messageHandler?: MessageHandler;
 
   constructor(config: XmtpConfig) {
@@ -79,45 +74,9 @@ export class xmtpAgent {
   }
 
   /**
-   * Retry mechanism for stream handling
-   */
-  private retry = (): void => {
-    console.log(
-      `Retrying in ${RETRY_INTERVAL / 1000}s, ${this.retries} retries left`,
-    );
-    if (this.retries > 0) {
-      this.retries--;
-      setTimeout(() => {
-        void this.handleStream();
-      }, RETRY_INTERVAL);
-    } else {
-      console.log("Max retries reached, ending process");
-      process.exit(1);
-    }
-  };
-
-  /**
-   * Handle stream failure
-   */
-  private onFail = (): void => {
-    console.log("Stream failed");
-    this.retry();
-  };
-
-  /**
    * Handle incoming messages
    */
-  private onMessage = (err: Error | null, message?: DecodedMessage): void => {
-    if (err) {
-      console.log("Error", err);
-      return;
-    }
-
-    if (!message) {
-      console.log("No message received");
-      return;
-    }
-
+  private onMessage = (message: DecodedMessage): void => {
     if (!this.client || !this.messageHandler) {
       return;
     }
@@ -156,9 +115,6 @@ export class xmtpAgent {
           await this.sendMessage(processedMessage.conversationId, response);
         }
       }
-
-      // Reset retry count on successful message processing
-      this.retries = MAX_RETRIES;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -167,7 +123,7 @@ export class xmtpAgent {
   }
 
   /**
-   * Handle the message stream with retry capability
+   * Handle the message stream
    */
   private async handleStream(): Promise<void> {
     if (!this.client) {
@@ -177,12 +133,11 @@ export class xmtpAgent {
     console.log("Syncing conversations...");
     await this.client.conversations.sync();
 
+    console.log("Waiting for messages...");
     const stream = await this.client.conversations.streamAllMessages();
     for await (const message of stream) {
-      this.onMessage(null, message);
+      this.onMessage(message);
     }
-
-    console.log("Waiting for messages...");
   }
 
   /**
