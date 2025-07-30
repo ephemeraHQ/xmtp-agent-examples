@@ -1,4 +1,4 @@
-# XMTP Secret Word Gated Group
+# XMTP secret word group example
 
 An XMTP agent that creates a group that requires a secret passphrase to join.
 
