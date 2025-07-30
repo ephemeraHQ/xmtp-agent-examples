@@ -980,6 +980,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-secret-word-gated-group@workspace:examples/xmtp-secret-word-gated-group":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-secret-word-gated-group@workspace:examples/xmtp-secret-word-gated-group"
+  dependencies:
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-skills@workspace:examples/xmtp-skills":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-skills@workspace:examples/xmtp-skills"

@@ -19,10 +19,29 @@ yarn gen:keys
 
 2. Update the secret word in `index.ts`:
 
-```typescript
+```json
+// Configuration for the secret word gated group
 const GROUP_CONFIG = {
-  secretWord: "YOUR_SECRET_WORD_HERE",
-  // ...
+  // The secret passphrase users must provide to join
+  secretWord: SECRET_WORD,
+  // Group details
+  groupName: "Secret Word Gated Group",
+  groupDescription: "A group that requires a secret passphrase to join",
+
+  // Messages
+  messages: {
+    welcome:
+      "Hi! I can add you to our exclusive group. What's the secret passphrase?",
+    success: [
+      "🎉 Correct! You've been added to the group.",
+      "Welcome to our exclusive community!",
+      "Please introduce yourself and follow our community guidelines.",
+    ],
+    alreadyInGroup: "You're already in the group!",
+    invalid: "❌ Invalid passphrase. Please try again.",
+    error: "Sorry, something went wrong. Please try again.",
+    help: "Send me the secret passphrase to join our exclusive group!",
+  },
 };
 ```
 
@@ -38,6 +57,7 @@ Send the secret passphrase to the agent to join the group. The default passphras
 
 ## Environment Variables
 
+- `SECRET_WORD` - The secret word to join the group
 - `WALLET_KEY` - Your wallet private key
 - `ENCRYPTION_KEY` - Database encryption key
 - `XMTP_ENV` - Network environment (dev, production, local)
