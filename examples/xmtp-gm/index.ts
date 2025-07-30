@@ -4,12 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import {
-  Client,
-  Group,
-  type DecodedMessage,
-  type XmtpEnv,
-} from "@xmtp/node-sdk";
+import { Client, Group, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -35,7 +30,8 @@ async function main() {
   await client.conversations.sync();
 
   console.log("Waiting for messages...");
-  const onValue = async (message: DecodedMessage) => {
+  const stream = await client.conversations.streamAllMessages();
+  for await (const message of stream) {
     // Skip if the message is from the agent
     if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
       return;
@@ -67,11 +63,7 @@ async function main() {
     const addressFromInboxId = inboxState[0].identifiers[0].identifier;
     console.log(`Sending "gm" response to ${addressFromInboxId}...`);
     await conversation.send("gm");
-  };
-
-  void client.conversations.streamAllMessages({
-    onValue,
-  });
+  }
 
   console.log("Message stream started");
 }
