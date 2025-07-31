@@ -41,6 +41,8 @@ yarn gen:keys
 > [!WARNING]
 > The `gen:keys` command appends keys to your existing `.env` file.
 
+## Usage
+
 1. Update the secret word in `index.ts`:
 
 ```tsx
