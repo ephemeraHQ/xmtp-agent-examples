@@ -2,6 +2,9 @@
 
 To create a gated group chat using XMTP, you will need an admin agent within the group to manage member additions and removals. The admin agent will create the group, assign you as the admin, and then verify NFT ownership before adding new members.
 
+> [!IMPORTANT]
+> Because of XMTP's security guarantees, you need to add the bot to the group manually and make it an admin.
+
 ![](./screenshot.png)
 
 ## Getting started

@@ -2,24 +2,48 @@
 
 An XMTP agent that creates a group that requires a secret passphrase to join.
 
-## How it works
-
 1. Users send a message to the agent
 2. The agent checks if the message matches the secret passphrase
 3. If correct, the user is added to an exclusive group
 4. If incorrect, the user gets an error message
 
-## Setup
+> [!IMPORTANT]
+> Because of XMTP's security guarantees, you need to add the bot to the group manually and make it an admin.
 
-1. Generate keys:
+## Getting Started
+
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network testing)
+
+### Environment Variables
+
+To run your XMTP agent, create a `.env` file with the following variables:
+
+```bash
+SECRET_WORD= # the secret word to join the group
+WALLET_KEY= # the private key of the wallet
+ENCRYPTION_KEY= # encryption key for the local database
+XMTP_ENV=dev # local, dev, production
+```
+
+Generate random XMTP keys with:
 
 ```bash
 yarn gen:keys
 ```
 
-2. Update the secret word in `index.ts`:
+> [!WARNING]
+> The `gen:keys` command appends keys to your existing `.env` file.
 
-```json
+1. Update the secret word in `index.ts`:
+
+```tsx
 // Configuration for the secret word gated group
 const GROUP_CONFIG = {
   // The secret passphrase users must provide to join
@@ -45,19 +69,17 @@ const GROUP_CONFIG = {
 };
 ```
 
-3. Start the agent:
+### Running the Agent
 
 ```bash
+# Clone the repository
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# Navigate to the secret word group example directory
+cd xmtp-agent-examples/examples/xmtp-secret-word-group
+# Install dependencies
+yarn
+# Generate random XMTP keys (optional)
+yarn gen:keys
+# Run the example
 yarn dev
 ```
-
-## Usage
-
-Send the secret passphrase to the agent to join the group. The default passphrase is "XMTP2024".
-
-## Environment Variables
-
-- `SECRET_WORD` - The secret word to join the group
-- `WALLET_KEY` - Your wallet private key
-- `ENCRYPTION_KEY` - Database encryption key
-- `XMTP_ENV` - Network environment (dev, production, local)
