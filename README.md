@@ -14,19 +14,20 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 ## Example agents
 
-- [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm".
-- [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages.e
+- [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
+- [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
 - [xmtp-nft-gated-group](/examples/xmtp-nft-gated-group/): Add members to a group based on an NFT
 - [xmtp-secret-word-group](/examples/xmtp-secret-word-group/): Add members to a group based on a secret word
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gasless USDC on base
-- [xmtp-transactions](/examples/xmtp-transactions/): Allow transactions between users and agents.
+- [xmtp-transactions](/examples/xmtp-transactions/): Allow transactions between users and agents
 - [xmtp-gaia](/examples/xmtp-gaia/): Agent that uses a CDP for gasless USDC on base
+- [xmtp-group-welcome](/examples/xmtp-group-welcome/): Sends a welcome message when its added and to new members
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
-- [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends images
+- [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends and receives images
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-stream-callbacks](/examples/xmtp-stream-callbacks/): Stream callbacks for XMTP agents
-- [xmtp-skills](/examples/xmtp-skills/): Helper functions for XMTP agents
+- [xmtp-skills](/examples/xmtp-skills/): Helper functions for managing XMTP agents
 
 ## Run example agents
 
