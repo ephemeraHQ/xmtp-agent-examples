@@ -46,34 +46,12 @@ export const createSigner = (key: string): Signer => {
   };
 };
 
-/**
- * Generate a random encryption key
- * @returns The encryption key
- */
-export const generateEncryptionKeyHex = () => {
-  /* Generate a random encryption key */
-  const uint8Array = getRandomValues(new Uint8Array(32));
-  /* Convert the encryption key to a hex string */
-  return toString(uint8Array, "hex");
-};
-
-/**
- * Get the encryption key from a hex string
- * @param hex - The hex string
- * @returns The encryption key
- */
-export const getEncryptionKeyFromHex = (hex: string) => {
-  /* Convert the hex string to an encryption key */
-  return fromString(hex, "hex");
-};
-
-export const getDbPath = (description: string = "xmtp") => {
-  //Checks if the environment is a Railway deployment
+export const generateEncryptionKeyHex = () =>
+  toString(getRandomValues(new Uint8Array(32)), "hex");
+export const getEncryptionKeyFromHex = (hex: string) => fromString(hex, "hex");
+export const getDbPath = (description = "xmtp") => {
   const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  // Create database directory if it doesn't exist
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
+  if (!fs.existsSync(volumePath)) fs.mkdirSync(volumePath, { recursive: true });
   return `${volumePath}/${description}.db3`;
 };
 
@@ -157,7 +135,6 @@ export const logAgentDetails = async (
 
 export function validateEnvironment(vars: string[]): Record<string, string> {
   const missing = vars.filter((v) => !process.env[v]);
-
   if (missing.length) {
     try {
       const envPath = path.resolve(process.cwd(), ".env");
@@ -167,31 +144,25 @@ export function validateEnvironment(vars: string[]): Record<string, string> {
           .split("\n")
           .filter((line) => line.trim() && !line.startsWith("#"))
           .reduce<Record<string, string>>((acc, line) => {
-            // Remove inline comments (everything after #)
             const lineWithoutComments = line.split("#")[0].trim();
             if (!lineWithoutComments) return acc;
-
             const [key, ...val] = lineWithoutComments.split("=");
             if (key && val.length) acc[key.trim()] = val.join("=").trim();
             return acc;
           }, {});
-
         missing.forEach((v) => {
           if (envVars[v]) process.env[v] = envVars[v];
         });
       }
     } catch (e) {
       console.error(e);
-      /* ignore errors */
     }
-
     const stillMissing = vars.filter((v) => !process.env[v]);
     if (stillMissing.length) {
       console.error("Missing env vars:", stillMissing.join(", "));
       process.exit(1);
     }
   }
-
   return vars.reduce<Record<string, string>>((acc, key) => {
     acc[key] = process.env[key] as string;
     return acc;
