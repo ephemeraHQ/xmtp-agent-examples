@@ -1,6 +1,6 @@
-# Group welcome agent
+# Welcome message example
 
-This agent sends a welcome message when its added and to new members of a group.
+This example script sends a welcome message when it's added to a new group, only once.
 
 ## Getting started
 
