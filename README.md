@@ -24,6 +24,7 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - [xmtp-group-welcome](/examples/xmtp-group-welcome/): Sends a welcome message when its added and to new members
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
 - [xmtp-attachments](/examples/xmtp-attachments/): Agent that sends and receives images
+- [xmtp-thinking-reaction](/examples/xmtp-thinking-reaction/): Agent that reacts to messages with a thinking emoji
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-stream-callbacks](/examples/xmtp-stream-callbacks/): Stream callbacks for XMTP agents

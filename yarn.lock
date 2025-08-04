@@ -1032,6 +1032,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-thinking-reaction@workspace:examples/xmtp-thinking-reaction":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-thinking-reaction@workspace:examples/xmtp-thinking-reaction"
+  dependencies:
+    "@xmtp/content-type-reaction": "npm:^2.0.2"
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-transactions@workspace:examples/xmtp-transactions":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-transactions@workspace:examples/xmtp-transactions"
@@ -2091,6 +2102,15 @@ __metadata:
   dependencies:
     "@xmtp/proto": "npm:^3.78.0"
   checksum: 10/9c115c1e792bca5e5e7180ba5494786bd3554265bc0ccdcb26d645689634ae239cefb3996bbbe493a487a2c8c7bf4e85954f4063811f784021afe16e58b1b03b
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-reaction@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@xmtp/content-type-reaction@npm:2.0.2"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
+  checksum: 10/704e64c79ae44fa002265d74b0f19a423ad2f7164397caafe842cd868d122d89b2b083989394bad50186b1aaf9944f632aa35cbbd2af840e9498d64cd52ad4f0
   languageName: node
   linkType: hard
 
