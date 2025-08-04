@@ -71,7 +71,7 @@ async function main() {
           content: "⏳",
           reference: message.id,
           schema: "shortcode",
-        },
+        } as Reaction,
         ContentTypeReaction,
       );
 
@@ -90,7 +90,7 @@ async function main() {
           content: "⏳",
           reference: message.id,
           schema: "shortcode",
-        },
+        } as Reaction,
         ContentTypeReaction,
       );
       console.log("✅ Response sent successfully");

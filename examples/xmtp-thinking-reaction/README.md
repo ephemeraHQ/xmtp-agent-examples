@@ -1,4 +1,4 @@
-# Thinking Reaction Agent
+# Thinking reaction example
 
 This agent reacts to messages with a thinking emoji (⏳), waits 2 seconds, then sends a response (and removes the reaction).
 
