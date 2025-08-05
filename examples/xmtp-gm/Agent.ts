@@ -1,5 +1,6 @@
 import EventEmitter from "node:events";
-import { Client, Conversation, DecodedMessage, Group } from "@xmtp/node-sdk";
+import { Client, Conversation, DecodedMessage } from "@xmtp/node-sdk";
+import { AgentMessageFilter } from "./AgentFilters";
 
 export type AgentEventHandler = (ctx: AgentContext) => Promise<void> | void;
 
@@ -7,11 +8,6 @@ export type AgentMiddleware = (
   ctx: AgentContext,
   next: () => Promise<void>,
 ) => Promise<void>;
-
-export type AgentMessageFilter = (
-  message: DecodedMessage,
-  client: Client,
-) => boolean | Promise<boolean>;
 
 export interface AgentOptions {
   /** XMTP client instance */
@@ -35,15 +31,15 @@ export class Agent extends EventEmitter {
   private middleware: AgentMiddleware[] = [];
   private messageHandlers: Map<
     string,
-    { filter?: unknown; handler: AgentEventHandler }[]
+    { filter?: AgentMessageFilter; handler: AgentEventHandler }[]
   > = new Map();
   private isListening = false;
 
   constructor(options: AgentOptions) {
     super();
     this.client = options.client;
-    process.once("SIGINT", this.stop);
-    process.once("SIGTERM", this.stop);
+    // process.once("SIGINT", this.stop);
+    // process.once("SIGTERM", this.stop);
   }
 
   use(middleware: AgentMiddleware): this {
@@ -51,16 +47,13 @@ export class Agent extends EventEmitter {
     return this;
   }
 
-  on(event: "message", handler: AgentEventHandler): this;
-  on(event: string, handler: AgentEventHandler): this {
+  on(
+    event: string,
+    handler: AgentEventHandler,
+    filter?: AgentMessageFilter,
+  ): this {
     if (event === "message") {
-      const actualHandler = handler;
-
-      if (!this.messageHandlers.has("message")) {
-        this.messageHandlers.set("message", []);
-      }
-
-      this.messageHandlers.get("message")?.push({ handler: actualHandler });
+      this.messageHandlers.get("message")?.push({ filter, handler });
     } else {
       super.on(event, handler);
     }
@@ -97,15 +90,9 @@ export class Agent extends EventEmitter {
   }
 
   private async processMessage(message: DecodedMessage): Promise<void> {
-    // Skip if the message is from the agent itself (prevents infinite loop)
     if (
       message.senderInboxId.toLowerCase() === this.client.inboxId.toLowerCase()
     ) {
-      return;
-    }
-
-    // Skip if it's not a text message
-    if (message.contentType?.typeId !== "text") {
       return;
     }
 
@@ -135,9 +122,12 @@ export class Agent extends EventEmitter {
   }
 
   private async executeHandlers(ctx: AgentContext) {
+    const { message } = ctx;
     const messageHandlers = this.messageHandlers.get("message") || [];
-    for (const { handler } of messageHandlers) {
-      await handler(ctx);
+    for (const { filter, handler } of messageHandlers) {
+      if (!filter || (await filter(message, this.client))) {
+        await handler(ctx);
+      }
     }
   }
 

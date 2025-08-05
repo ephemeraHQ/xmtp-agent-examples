@@ -1,4 +1,5 @@
 import { Agent } from "./Agent";
+import { filters } from "./AgentFilters";
 import { getClient } from "./getClient";
 
 (async () => {
@@ -10,9 +11,13 @@ import { getClient } from "./getClient";
     await next();
   });
 
-  agent.on("message", async (ctx) => {
-    ctx.conversation.send("gm! 🌅");
-  });
+  agent.on(
+    "message",
+    async (ctx) => {
+      ctx.conversation.send("Hey!");
+    },
+    filters.and(filters.notFromSelf, filters.textOnly),
+  );
 
   await agent.start();
 })();
