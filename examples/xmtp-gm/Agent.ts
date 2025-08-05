@@ -8,6 +8,11 @@ export type AgentMiddleware = (
   next: () => Promise<void>,
 ) => Promise<void>;
 
+export type AgentMessageFilter = (
+  message: DecodedMessage,
+  client: Client,
+) => boolean | Promise<boolean>;
+
 export interface AgentOptions {
   /** XMTP client instance */
   client: Client;
@@ -15,14 +20,14 @@ export interface AgentOptions {
   autoSync?: boolean;
 }
 
+type Identifier = string;
+
 export interface AgentContext {
-  message: DecodedMessage;
-  conversation: Conversation;
   client: Client;
+  conversation: Conversation;
+  message: DecodedMessage;
   send: (text: string) => Promise<void>;
-  isGroup: () => boolean;
-  isDM: () => boolean;
-  getSenderAddress: () => Promise<string>;
+  getSenderAddress: () => Promise<Identifier>;
 }
 
 export class Agent extends EventEmitter {
@@ -33,13 +38,10 @@ export class Agent extends EventEmitter {
     { filter?: unknown; handler: AgentEventHandler }[]
   > = new Map();
   private isListening = false;
-  private autoSync: boolean;
 
   constructor(options: AgentOptions) {
     super();
     this.client = options.client;
-    this.autoSync = options.autoSync ?? true;
-
     process.once("SIGINT", this.stop);
     process.once("SIGTERM", this.stop);
   }
@@ -58,7 +60,7 @@ export class Agent extends EventEmitter {
         this.messageHandlers.set("message", []);
       }
 
-      this.messageHandlers.get("message")!.push({ handler: actualHandler });
+      this.messageHandlers.get("message")?.push({ handler: actualHandler });
     } else {
       super.on(event, handler);
     }
@@ -72,10 +74,8 @@ export class Agent extends EventEmitter {
     }
 
     try {
-      if (this.autoSync) {
-        console.log("✓ Syncing conversations...");
-        await this.client.conversations.sync();
-      }
+      console.log("✓ Syncing conversations...");
+      await this.client.conversations.sync();
 
       console.log("🤖 Agent starting to listen for messages...");
       this.isListening = true;
@@ -122,7 +122,7 @@ export class Agent extends EventEmitter {
     const ctx = await this.createContext(message, conversation);
 
     let index = 0;
-    const next = async (): Promise<void> => {
+    const next = async () => {
       if (index < this.middleware.length) {
         const middleware = this.middleware[index++];
         await middleware(ctx, next);
@@ -134,7 +134,7 @@ export class Agent extends EventEmitter {
     await next();
   }
 
-  private async executeHandlers(ctx: AgentContext): Promise<void> {
+  private async executeHandlers(ctx: AgentContext) {
     const messageHandlers = this.messageHandlers.get("message") || [];
     for (const { handler } of messageHandlers) {
       await handler(ctx);
@@ -143,7 +143,9 @@ export class Agent extends EventEmitter {
 
   private async createContext(
     message: DecodedMessage,
-    conversation: any,
+    conversation: NonNullable<
+      Awaited<ReturnType<typeof this.client.conversations.getConversationById>>
+    >,
   ): Promise<AgentContext> {
     const ctx: AgentContext = {
       message,
@@ -152,8 +154,6 @@ export class Agent extends EventEmitter {
       send: async (text: string) => {
         await conversation.send(text);
       },
-      isGroup: () => conversation instanceof Group,
-      isDM: () => !(conversation instanceof Group),
       getSenderAddress: async () => {
         const inboxState = await this.client.preferences.inboxStateFromInboxIds(
           [message.senderInboxId],
@@ -164,14 +164,14 @@ export class Agent extends EventEmitter {
     return ctx;
   }
 
-  stop(): void {
+  stop() {
     console.log("🛑 Stopping agent...");
     this.isListening = false;
     this.emit("stop");
   }
 
-  private handleError(error: unknown): void {
-    console.error("Agent error:", error);
+  private handleError(error: unknown) {
+    console.error("Agent error", error);
     this.emit("error", error);
   }
 }
