@@ -34,11 +34,11 @@ async function main() {
   for await (const message of stream) {
     // Skip if the message is from the agent
     if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      return;
+      continue;
     }
     // Skip if the message is not a text message
     if (message.contentType?.typeId !== "text") {
-      return;
+      continue;
     }
 
     const conversation = await client.conversations.getConversationById(
@@ -47,13 +47,13 @@ async function main() {
 
     if (!conversation) {
       console.log("Unable to find conversation, skipping");
-      return;
+      continue;
     }
 
     // Skip if the conversation is a group
     if (conversation instanceof Group) {
       console.log("Conversation is a group, skipping");
-      return;
+      continue;
     }
 
     //Getting the address from the inbox id

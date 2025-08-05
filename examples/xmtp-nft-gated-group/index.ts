@@ -94,7 +94,7 @@ async function main() {
       await conversation.send(
         `Group created!\n- ID: ${group.id}\n- Group URL: https://xmtp.chat/conversations/${group.id}: \n- This url will deeplink to the group created\n- Once in the other group you can share the invite with your friends.\n- You can add more members to the group by using the /add <group_id> <wallet_address>.`,
       );
-      return;
+      continue;
     } else if (
       typeof message.content === "string" &&
       message.content.startsWith("/add")
@@ -102,22 +102,22 @@ async function main() {
       const groupId = message.content.split(" ")[1];
       if (!groupId) {
         await conversation.send("Please provide a group id");
-        return;
+        continue;
       }
       const group = await client.conversations.getConversationById(groupId);
       if (!group) {
         await conversation.send("Please provide a valid group id");
-        return;
+        continue;
       }
       const walletAddress = message.content.split(" ")[2];
       if (!walletAddress) {
         await conversation.send("Please provide a wallet address");
-        return;
+        continue;
       }
       const result = await checkNft(walletAddress, NFT_COLLECTION_SLUG);
       if (!result) {
         console.log("User can't be added to the group");
-        return;
+        continue;
       } else {
         await (group as Group).addMembersByIdentifiers([
           {
@@ -136,7 +136,7 @@ async function main() {
           "/add <group_id> <wallet_address> - Add a member to an existing group (requires XMTPeople NFT)\n" +
           "Note: The agent verifies NFT ownership before adding members to groups.",
       );
-      return;
+      continue;
     }
   }
 }

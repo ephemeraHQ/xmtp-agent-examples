@@ -50,7 +50,7 @@ async function main() {
         message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
         message.contentType?.typeId !== "text"
       ) {
-        return;
+        continue;
       }
 
       console.log(
@@ -65,7 +65,7 @@ async function main() {
       /* If the conversation is not found, skip the message */
       if (!conversation) {
         console.log("Unable to find conversation, skipping");
-        return;
+        continue;
       }
 
       try {

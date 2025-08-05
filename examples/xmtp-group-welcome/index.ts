@@ -65,7 +65,7 @@ async function main() {
     for await (const message of stream) {
       if (message.contentType?.typeId !== "group_updated") {
         console.log("Skipping message", message.content);
-        return;
+        continue;
       }
 
       const conversation = await client.conversations.getConversationById(
