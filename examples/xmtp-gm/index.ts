@@ -4,7 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, Group, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, Group, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -23,6 +23,7 @@ async function main() {
   const client = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
+    loggingLevel: process.env.LOGGING_LEVEL as LogLevel,
   });
   void logAgentDetails(client);
 
@@ -50,11 +51,11 @@ async function main() {
       continue;
     }
 
-    // Skip if the conversation is a group
-    if (conversation instanceof Group) {
-      console.log("Conversation is a group, skipping");
-      continue;
-    }
+    // // Skip if the conversation is a group
+    // if (conversation instanceof Group) {
+    //   console.log("Conversation is a group, skipping");
+    //   continue;
+    // }
 
     //Getting the address from the inbox id
     const inboxState = await client.preferences.inboxStateFromInboxIds([
