@@ -4,7 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -22,6 +22,7 @@ const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
 async function main() {
   const client = await Client.create(signer, {
     dbEncryptionKey,
+    loggingLevel: "warn" as LogLevel,
     env: XMTP_ENV as XmtpEnv,
   });
   void logAgentDetails(client);

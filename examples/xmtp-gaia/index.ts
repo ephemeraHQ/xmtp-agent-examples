@@ -4,7 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
 
 /* Get the wallet key associated to the public key of
@@ -42,6 +42,7 @@ async function main() {
 
   const client = await Client.create(signer, {
     dbEncryptionKey,
+    loggingLevel: "warn" as LogLevel,
     env: XMTP_ENV as XmtpEnv,
   });
 
