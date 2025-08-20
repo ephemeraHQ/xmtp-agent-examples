@@ -1,4 +1,4 @@
-# XMTP Attachment Echo Agent
+# XMTP attachments example
 
 This XMTP agent receives attachments and sends them back after decoding and re-encoding them.
 
