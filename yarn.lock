@@ -576,6 +576,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-inline-actions@workspace:examples/xmtp-inline-actions"
   dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
+    "@xmtp/content-type-transaction-reference": "npm:^2.0.2"
+    "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
     typescript: "npm:*"
