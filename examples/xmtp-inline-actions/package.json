@@ -1,5 +1,5 @@
 {
-  "name": "@examples/xmtp-nft-gated-group",
+  "name": "@examples/xmtp-inline-actions",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,12 +7,14 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
-    "lint": "cd ../.. && yarn eslint examples/xmtp-nft-gated-group",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-gm",
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "*",
-    "alchemy-sdk": "^3.0.0"
+    "@xmtp/content-type-primitives": "^2.0.2",
+    "@xmtp/content-type-transaction-reference": "^2.0.2",
+    "@xmtp/content-type-wallet-send-calls": "^1.0.1",
+    "@xmtp/node-sdk": "*"
   },
   "devDependencies": {
     "tsx": "*",
