@@ -2,14 +2,10 @@
 
 An XMTP agent demonstrating wallet send calls, transaction references, and interactive inline actions using EIP-5792 and XIP-67 standards.
 
-## Features
+## Getting started
 
-- Multi-token support (ETH, USDC)
-- Multi-network support (Base, Ethereum)
-- Wallet send calls (EIP-5792)
-- Transaction references with metadata
-- Interactive inline actions (XIP-67)
-- Intent handling for button responses
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
 ## Commands
 
@@ -21,14 +17,16 @@ An XMTP agent demonstrating wallet send calls, transaction references, and inter
 | `/info`                  | Show network info                |
 | `/actions`               | Display action buttons           |
 
-### Interactive Actions
+### Features
 
-- **Show me actions** - Display action buttons
-- **Check balance** - Check USDC balance
-- **Send tokens** - Quick transfers
-- **More info** - Network details
+- Multi-token support (ETH, USDC)
+- Multi-network support (Base, Ethereum)
+- Wallet send calls (EIP-5792)
+- Transaction references with metadata
+- Interactive inline actions (XIP-67)
+- Intent handling for button responses
 
-## Networks & Tokens
+#### Networks & Tokens
 
 | Network          | Chain ID | Tokens    |
 | ---------------- | -------- | --------- |
@@ -60,29 +58,6 @@ export async function handleActionsCommand(conversation: any) {
 }
 ```
 
-### Adding Tokens
-
-Edit `handlers/tokenHandler.ts`:
-
-```typescript
-const NETWORK_CONFIGS = {
-  "base-sepolia": {
-    tokens: {
-      MYTOKEN: {
-        symbol: "MYTOKEN",
-        address: "0x...",
-        decimals: 18,
-      },
-    },
-  },
-};
-```
-
-## Getting started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
 ### Requirements
 
 - Node.js v20 or higher
@@ -97,6 +72,7 @@ To run your XMTP agent, you must create a `.env` file with the following variabl
 WALLET_KEY= # the private key of the wallet
 ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
+NETWORK_ID=base-sepolia # base-mainnet or others
 ```
 
 You can generate random xmtp keys with the following command:
