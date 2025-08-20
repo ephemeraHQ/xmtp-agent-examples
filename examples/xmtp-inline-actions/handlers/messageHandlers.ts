@@ -1,12 +1,12 @@
 import { ContentTypeWalletSendCalls } from "@xmtp/content-type-wallet-send-calls";
 import type { Conversation } from "@xmtp/node-sdk";
-import { type IntentContent } from "../types/IntentContent.js";
+import { type IntentContent } from "../types/IntentContent";
 import {
   handleActionsCommand,
   handleActionsWithImagesCommand,
   handleHelpCommand,
 } from "./actionHandlers";
-import type { TokenHandler } from "./tokenHandler.js";
+import type { TokenHandler } from "./tokenHandler";
 
 export async function handleTextMessage(
   conversation: Conversation,
@@ -98,7 +98,7 @@ export async function handleSendCommand(
       to: agentAddress,
       amount: amount,
       token: token,
-      networkId: tokenHandler.getNetworkInfo().id,
+      networkId: tokenHandler.getNetworkInfo().id as string,
       includeMetadata,
       usePaymaster,
     });
@@ -194,7 +194,7 @@ export async function handleInfoCommand(
   tokenHandler: TokenHandler,
 ) {
   const networkInfo = tokenHandler.getNetworkInfo();
-  const { getAvailableNetworks } = await import("./tokenHandler.js");
+  const { getAvailableNetworks } = await import("./tokenHandler");
   const availableNetworks = getAvailableNetworks();
 
   const infoMessage = `ℹ️ Network Information

@@ -5,7 +5,23 @@ import type {
   NetworkConfig,
   SendCallsRequest,
   TokenConfig,
-} from "../types/tokens.js";
+} from "../types/tokens";
+
+export interface TokenConfig {
+  symbol: string;
+  name: string;
+  address: string;
+  decimals: number;
+  networks: string[];
+}
+
+export interface NetworkConfig {
+  id: string;
+  name: string;
+  chainId: `0x${string}`;
+  nativeToken: string;
+  tokens: Record<string, TokenConfig>;
+}
 
 const hostname = "tba.chat";
 const faviconUrl =

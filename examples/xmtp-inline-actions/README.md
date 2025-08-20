@@ -1,4 +1,4 @@
-# Inline Actions Example
+# Inline-actions example
 
 An XMTP agent demonstrating wallet send calls, transaction references, and interactive inline actions using EIP-5792 and XIP-67 standards.
 
