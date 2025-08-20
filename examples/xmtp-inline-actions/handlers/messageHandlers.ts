@@ -98,7 +98,7 @@ export async function handleSendCommand(
       to: agentAddress,
       amount: amount,
       token: token,
-      networkId: tokenHandler.getNetworkInfo().id as string,
+      networkId: tokenHandler.getNetworkInfo().id,
       includeMetadata,
       usePaymaster,
     });
