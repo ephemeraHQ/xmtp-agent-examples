@@ -1,11 +1,16 @@
 import type { WalletSendCallsParams } from "@xmtp/content-type-wallet-send-calls";
 import { createPublicClient, formatUnits, http, toHex } from "viem";
 import { base, baseSepolia, mainnet, sepolia } from "viem/chains";
-import type {
-  NetworkConfig,
-  SendCallsRequest,
-  TokenConfig,
-} from "../types/tokens";
+
+export interface SendCallsRequest {
+  from: string;
+  to: string;
+  amount: number;
+  token: string;
+  networkId: string;
+  includeMetadata?: boolean;
+  usePaymaster?: boolean;
+}
 
 export interface TokenConfig {
   symbol: string;
