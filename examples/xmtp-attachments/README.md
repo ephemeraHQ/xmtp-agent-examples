@@ -2,12 +2,6 @@
 
 This XMTP agent receives attachments and sends them back after decoding and re-encoding them.
 
-## Features
-
-- **Attachment Echo**: Receives any attachment and sends it back to the sender
-- **Text Response**: Sends a default logo.png attachment when receiving text messages
-- **Error Handling**: Graceful error handling with user-friendly messages
-
 ## How it works
 
 1. **Receiving Attachments**: When someone sends an attachment, the agent:
@@ -20,42 +14,48 @@ This XMTP agent receives attachments and sends them back after decoding and re-e
 2. **Receiving Text**: When someone sends a text message, the agent:
    - Sends back the default logo.png attachment
 
-## Setup
+## Getting started
 
-1. Install dependencies:
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
-   ```bash
-   yarn install
-   ```
+### Requirements
 
-2. Set up environment variables in `.env`:
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
 
-   ```bash
-   WALLET_KEY=your_private_key_here
-   ENCRYPTION_KEY=your_encryption_key_here
-   XMTP_ENV=dev
-   PINATA_API_KEY=your_pinata_api_key
-   PINATA_SECRET_KEY=your_pinata_secret_key
-   ```
+### Environment variables
 
-3. Generate keys if needed:
+To run your XMTP agent, you must create a `.env` file with the following variables:
 
-   ```bash
-   yarn gen:keys
-   ```
+```bash
+WALLET_KEY= # the private key of the wallet
+ENCRYPTION_KEY= # encryption key for the local database
+XMTP_ENV=dev # local, dev, production
+```
 
-4. Start the agent:
-   ```bash
-   yarn dev
-   ```
+You can generate random xmtp keys with the following command:
 
-## Usage
+```bash
+yarn gen:keys
+```
 
-- Send any attachment to the agent and it will echo it back
-- Send a text message to receive the default logo.png attachment
+> [!WARNING]
+> Running the `gen:keys` command will append keys to your existing `.env` file.
 
-## Requirements
+### Run the agent
 
-- Node.js v20+
-- Pinata API credentials for IPFS uploads
-- XMTP wallet with private key
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/xmtp-attachments
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```

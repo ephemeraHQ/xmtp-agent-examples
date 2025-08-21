@@ -17,9 +17,11 @@ export async function handleTransactionReference(
   const networkInfo = tokenHandler.getNetworkInfo();
 
   // Extract transaction details from the TransactionReference object
-  const txHash = transactionRef.reference;
-  const networkId = transactionRef.networkId.toString();
-  const metadata = transactionRef.metadata;
+  // Based on the actual structure from console output
+  const txRef = (transactionRef as any).transactionReference;
+  const txHash = txRef?.reference || "unknown";
+  const networkId = txRef?.networkId?.toString() || "unknown";
+  const metadata = txRef?.metadata;
 
   console.log("🔍 Extracted data:");
   console.log(`  • txHash: ${txHash}`);
