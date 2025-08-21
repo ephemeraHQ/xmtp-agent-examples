@@ -2,6 +2,11 @@
 
 An XMTP agent demonstrating wallet send calls, transaction references, and interactive inline actions using EIP-5792 and XIP-67 standards.
 
+<p align="center">
+  <img src="left.png" alt="Image 1" width="45%">
+  <img src="right.png" alt="Image 2" width="45%">
+</p>
+
 ## Getting started
 
 > [!TIP]
