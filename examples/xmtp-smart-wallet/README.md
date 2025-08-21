@@ -13,7 +13,7 @@ This example demonstrates an agent setup on XMTP Network with access to the full
 - Yarn v4 or higher
 - Docker (optional, for local network)
 - [Coinbase Developer Platform](https://portal.cdp.coinbase.com) (CDP) API credentials
-- Faucets for [USDC](https://faucet.circle.com)
+- Faucets: [Circle](https://faucet.circle.com), [Base](https://portal.cdp.coinbase.com/products/faucet)
 
 ### Environment variables
 

@@ -35,7 +35,7 @@ An XMTP agent demonstrating wallet send calls, transaction references, and inter
 | Ethereum Sepolia | 11155111 | ETH       |
 | Ethereum Mainnet | 1        | ETH, USDC |
 
-**Testnet tokens**: [Base Faucet](https://faucet.quicknode.com/base/sepolia), [Circle Faucet](https://faucet.circle.com)
+- Faucets: [Circle](https://faucet.circle.com), [Base](https://portal.cdp.coinbase.com/products/faucet)
 
 ## Usage
 
