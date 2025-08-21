@@ -77,19 +77,17 @@ export const getDbPath = (description: string = "xmtp") => {
   return `${volumePath}/${description}.db3`;
 };
 
-export const logAgentDetails = async (
-  clients: Client | Client[],
-): Promise<void> => {
-  const clientArray = Array.isArray(clients) ? clients : [clients];
-  const clientsByAddress = clientArray.reduce<Record<string, Client[]>>(
-    (acc, client) => {
-      const address = client.accountIdentifier?.identifier as string;
-      acc[address] = acc[address] ?? [];
-      acc[address].push(client);
-      return acc;
-    },
-    {},
-  );
+export const logAgentDetails = async (client: Client): Promise<void> => {
+  console.log(`\x1b[38;2;252;76;52m
+    ██╗  ██╗███╗   ███╗████████╗██████╗ 
+    ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
+     ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
+     ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ 
+    ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     
+    ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
+  \x1b[0m`);
+
+  const clientsByAddress = client.accountIdentifier?.identifier;
   // Get XMTP SDK version from package.json
   const require = createRequire(import.meta.url);
   const packageJson = require("../package.json") as {
@@ -102,49 +100,33 @@ export const logAgentDetails = async (
     }
   ).version;
 
-  for (const [address, clientGroup] of Object.entries(clientsByAddress)) {
-    const firstClient = clientGroup[0];
-    const inboxId = firstClient.inboxId;
-    const installationId = firstClient.installationId;
-    const environments = clientGroup
-      .map((c: Client) => c.options?.env ?? "dev")
-      .join(", ");
-    console.log(`\x1b[38;2;252;76;52m
-        ██╗  ██╗███╗   ███╗████████╗██████╗ 
-        ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗
-         ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝
-         ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ 
-        ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     
-        ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
-      \x1b[0m`);
+  const inboxId = client.inboxId;
+  const installationId = client.installationId;
+  const environments = client.options?.env ?? "dev";
 
-    const urls = [`http://xmtp.chat/dm/${address}`];
+  const urls = [`http://xmtp.chat/dm/${clientsByAddress}`];
 
-    const conversations = await firstClient.conversations.list();
-    const inboxState = await firstClient.preferences.inboxState();
-    const keyPackageStatuses =
-      await firstClient.getKeyPackageStatusesForInstallationIds([
-        installationId,
-      ]);
+  const conversations = await client.conversations.list();
+  const inboxState = await client.preferences.inboxState();
+  const keyPackageStatuses =
+    await client.getKeyPackageStatusesForInstallationIds([installationId]);
 
-    let createdDate = new Date();
-    let expiryDate = new Date();
+  let createdDate = new Date();
+  let expiryDate = new Date();
 
-    // Extract key package status for the specific installation
-    const keyPackageStatus = keyPackageStatuses[installationId];
-    if (keyPackageStatus.lifetime) {
-      createdDate = new Date(
-        Number(keyPackageStatus.lifetime.notBefore) * 1000,
-      );
-      expiryDate = new Date(Number(keyPackageStatus.lifetime.notAfter) * 1000);
-    }
-    console.log(`
+  // Extract key package status for the specific installation
+  const keyPackageStatus = keyPackageStatuses[installationId];
+  if (keyPackageStatus.lifetime) {
+    createdDate = new Date(Number(keyPackageStatus.lifetime.notBefore) * 1000);
+    expiryDate = new Date(Number(keyPackageStatus.lifetime.notAfter) * 1000);
+  }
+  console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
     • SDK: ${xmtpSdkVersion}
     • Bindings: ${bindingVersion}
     • Version: ${Client.version}
-    • Address: ${address}
+    • Address: ${clientsByAddress}
     • Conversations: ${conversations.length}
     • Installations: ${inboxState.installations.length}
     • InstallationId: ${installationId}
@@ -152,7 +134,6 @@ export const logAgentDetails = async (
     • Key Package valid until: ${expiryDate.toLocaleString()}
     • Networks: ${environments}
     ${urls.map((url) => `• URL: ${url}`).join("\n")}`);
-  }
 };
 
 export function validateEnvironment(vars: string[]): Record<string, string> {
