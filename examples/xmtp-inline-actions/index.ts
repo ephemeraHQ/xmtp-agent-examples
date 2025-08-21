@@ -67,79 +67,79 @@ async function main() {
   const stream = await client.conversations.streamAllMessages();
 
   for await (const message of stream) {
-    try {
-      // Skip messages from the agent itself
-      if (
-        message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
-      ) {
-        continue;
-      }
+    /* Ignore messages from the same agent or non-text messages */
+    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+      continue;
+    }
 
+    if (
+      message.contentType?.typeId !== "text" &&
+      message.contentType?.typeId !== "transactionReference" &&
+      message.contentType?.typeId !== "intent"
+    ) {
+      continue;
+    }
+
+    console.log(
+      `Received message: ${message.content as string} by ${message.senderInboxId}`,
+    );
+
+    /* Get the conversation from the local db */
+    const conversation = await client.conversations.getConversationById(
+      message.conversationId,
+    );
+
+    /* If the conversation is not found, skip the message */
+    if (!conversation) {
+      console.log("Unable to find conversation, skipping");
+      continue;
+    }
+
+    // Get sender address
+    const inboxState = await client.preferences.inboxStateFromInboxIds([
+      message.senderInboxId,
+    ]);
+    const senderAddress = inboxState[0]?.identifiers[0]?.identifier;
+
+    if (!senderAddress) {
+      console.log("❌ Unable to find sender address, skipping");
+      continue;
+    }
+
+    // Handle different message types
+    if (message.contentType?.typeId === "text") {
+      await handleTextMessage(
+        conversation,
+        message.content as string,
+        senderAddress,
+        agentAddress,
+        tokenHandler,
+      );
+    } else if (message.contentType?.typeId === "transactionReference") {
+      console.log("🧾 Detected transaction reference message");
       console.log(
-        `📨 Received: ${message.contentType?.typeId} from ${message.senderInboxId}`,
+        "📋 Raw message content:",
+        JSON.stringify(message.content, null, 2),
       );
-
-      const conversation = await client.conversations.getConversationById(
-        message.conversationId,
+      await handleTransactionReference(
+        conversation,
+        message.content as TransactionReference,
+        senderAddress,
+        tokenHandler,
       );
-
-      if (!conversation) {
-        console.log("❌ Unable to find conversation, skipping");
-        continue;
-      }
-
-      // Get sender address
-      const inboxState = await client.preferences.inboxStateFromInboxIds([
-        message.senderInboxId,
-      ]);
-      const senderAddress = inboxState[0]?.identifiers[0]?.identifier;
-
-      if (!senderAddress) {
-        console.log("❌ Unable to find sender address, skipping");
-        continue;
-      }
-
-      // Handle different message types
-      if (message.contentType?.typeId === "text") {
-        await handleTextMessage(
-          conversation,
-          message.content as string,
-          senderAddress,
-          agentAddress,
-          tokenHandler,
-        );
-      } else if (message.contentType?.typeId === "transactionReference") {
-        console.log("🧾 Detected transaction reference message");
-        console.log(
-          "📋 Raw message content:",
-          JSON.stringify(message.content, null, 2),
-        );
-        await handleTransactionReference(
-          conversation,
-          message.content as TransactionReference,
-          senderAddress,
-          tokenHandler,
-        );
-      } else if (message.contentType?.typeId === "intent") {
-        console.log("🎯 Detected intent message");
-        console.log(
-          "📋 Raw intent content:",
-          JSON.stringify(message.content, null, 2),
-        );
-        await handleIntentMessage(
-          conversation,
-          message.content as IntentContent,
-          senderAddress,
-          agentAddress,
-          tokenHandler,
-        );
-      } else {
-        continue;
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error("❌ Error in main loop:", errorMessage);
+    } else if (message.contentType?.typeId === "intent") {
+      console.log("🎯 Detected intent message");
+      console.log(
+        "📋 Raw intent content:",
+        JSON.stringify(message.content, null, 2),
+      );
+      await handleIntentMessage(
+        conversation,
+        message.content as IntentContent,
+        senderAddress,
+        agentAddress,
+        tokenHandler,
+      );
     }
   }
 }
