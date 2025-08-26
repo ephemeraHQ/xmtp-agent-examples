@@ -2,9 +2,30 @@ import type { TransactionReference } from "@xmtp/content-type-transaction-refere
 import type { Conversation } from "@xmtp/node-sdk";
 import type { TokenHandler } from "./tokenHandler";
 
+// Type definitions for the nested TransactionReference structure
+interface TransactionMetadata {
+  transactionType?: string;
+  fromAddress?: string;
+  toAddress?: string;
+  currency?: string;
+  amount?: number;
+  decimals?: number;
+  [key: string]: unknown;
+}
+
+interface TransactionRefData {
+  reference?: string;
+  networkId?: string | number;
+  metadata?: TransactionMetadata;
+}
+
+export interface ExtendedTransactionReference extends TransactionReference {
+  transactionReference?: TransactionRefData;
+}
+
 export async function handleTransactionReference(
   conversation: Conversation,
-  transactionRef: TransactionReference,
+  transactionRef: ExtendedTransactionReference,
   senderAddress: string,
   tokenHandler: TokenHandler,
 ) {
@@ -17,8 +38,7 @@ export async function handleTransactionReference(
   const networkInfo = tokenHandler.getNetworkInfo();
 
   // Extract transaction details from the TransactionReference object
-  // Based on the actual structure from console output
-  const txRef = (transactionRef as any).transactionReference;
+  const txRef = transactionRef.transactionReference;
   const txHash = txRef?.reference || "unknown";
   const networkId = txRef?.networkId?.toString() || "unknown";
   const metadata = txRef?.metadata;

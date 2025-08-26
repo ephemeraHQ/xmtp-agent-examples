@@ -11,7 +11,7 @@ import {
   type GroupMember,
   type XmtpEnv,
 } from "@xmtp/node-sdk";
-import { EthPriceService } from "./ethPrice";
+import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
   ContentTypeActions,
@@ -130,8 +130,8 @@ async function handleCurrentPrice(conversation: Conversation) {
   try {
     await conversation.send("⏳ Fetching current ETH price...");
 
-    const { price } = await EthPriceService.getCurrentPrice();
-    const formattedPrice = EthPriceService.formatPrice(price);
+    const { price } = await getCurrentPrice();
+    const formattedPrice = formatPrice(price);
 
     await conversation.send(`💰 **Current ETH Price**
 
@@ -151,9 +151,9 @@ async function handlePriceWithChange(conversation: Conversation) {
   try {
     await conversation.send("⏳ Fetching ETH price with 24h change...");
 
-    const { price, change24h } = await EthPriceService.getCurrentPrice();
-    const formattedPrice = EthPriceService.formatPrice(price);
-    const formattedChange = EthPriceService.formatPriceChange(change24h);
+    const { price, change24h } = await getCurrentPrice();
+    const formattedPrice = formatPrice(price);
+    const formattedChange = formatPriceChange(change24h);
 
     await conversation.send(`📊 **ETH Price with 24h Change**
 

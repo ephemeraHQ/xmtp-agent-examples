@@ -4,10 +4,7 @@ import {
   logAgentDetails,
   validateEnvironment,
 } from "@helpers/client";
-import {
-  TransactionReferenceCodec,
-  type TransactionReference,
-} from "@xmtp/content-type-transaction-reference";
+import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import {
@@ -15,7 +12,10 @@ import {
   handleTextMessage,
 } from "./handlers/messageHandlers";
 import { TokenHandler } from "./handlers/tokenHandler";
-import { handleTransactionReference } from "./handlers/transactionHandlers";
+import {
+  handleTransactionReference,
+  type ExtendedTransactionReference,
+} from "./handlers/transactionHandlers";
 import { ActionsCodec } from "./types/ActionsContent";
 import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
@@ -105,7 +105,7 @@ async function main() {
     }
 
     // Handle different message types
-    if (message.contentType?.typeId === "text") {
+    if (message.contentType.typeId === "text") {
       await handleTextMessage(
         conversation,
         message.content as string,
@@ -113,7 +113,7 @@ async function main() {
         agentAddress,
         tokenHandler,
       );
-    } else if (message.contentType?.typeId === "transactionReference") {
+    } else if (message.contentType.typeId === "transactionReference") {
       console.log("🧾 Detected transaction reference message");
       console.log(
         "📋 Raw message content:",
@@ -121,11 +121,12 @@ async function main() {
       );
       await handleTransactionReference(
         conversation,
-        message.content as TransactionReference,
+        message.content as ExtendedTransactionReference,
         senderAddress,
         tokenHandler,
       );
-    } else if (message.contentType?.typeId === "intent") {
+    } else {
+      // This must be an intent message since we filtered for text, transactionReference, and intent
       console.log("🎯 Detected intent message");
       console.log(
         "📋 Raw intent content:",
