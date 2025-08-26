@@ -104,3 +104,7 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
+
+## Reference
+
+This example is based on the [TBA Chat Example Bot](https://github.com/siwan-cb/tba-chat-example-bot).
