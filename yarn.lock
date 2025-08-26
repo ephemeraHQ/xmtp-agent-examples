@@ -561,17 +561,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-group-welcome@workspace:examples/xmtp-group-welcome":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-group-welcome@workspace:examples/xmtp-group-welcome"
-  dependencies:
-    "@xmtp/node-sdk": "npm:*"
-    openai: "npm:4.94.0"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-inline-actions@workspace:examples/xmtp-inline-actions":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-inline-actions@workspace:examples/xmtp-inline-actions"
@@ -615,31 +604,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-skills@workspace:examples/xmtp-skills":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-skills@workspace:examples/xmtp-skills"
-  dependencies:
-    "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-smart-wallet@workspace:examples/xmtp-smart-wallet"
   dependencies:
     "@coinbase/coinbase-sdk": "npm:^0.22.0"
-    "@xmtp/node-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
-"@examples/xmtp-stream-callbacks@workspace:examples/xmtp-stream-callbacks":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-stream-callbacks@workspace:examples/xmtp-stream-callbacks"
-  dependencies:
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
     typescript: "npm:*"
@@ -663,6 +632,17 @@ __metadata:
   dependencies:
     "@xmtp/content-type-transaction-reference": "npm:^2.0.2"
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"
+    "@xmtp/node-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+  languageName: unknown
+  linkType: soft
+
+"@examples/xmtp-welcome-message@workspace:examples/xmtp-welcome-message":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-welcome-message@workspace:examples/xmtp-welcome-message"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/node-sdk": "npm:*"
     tsx: "npm:*"
     typescript: "npm:*"
@@ -1766,22 +1746,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-bindings@npm:1.3.6":
-  version: 1.3.6
-  resolution: "@xmtp/node-bindings@npm:1.3.6"
-  checksum: 10/ac8f3aebc1a38a190e86cbb00ad766bbcdef14f3b200da925e9b7f77ae35eda4800eb2b1bc4fc4cfd89fa56e502426ce7a43a77eaa863e9983993f440f95745d
+"@xmtp/node-bindings@npm:1.4.0":
+  version: 1.4.0
+  resolution: "@xmtp/node-bindings@npm:1.4.0"
+  checksum: 10/76d7483c3a5dfe1abaeb9e4cff72fe5c4e88c312a4acb7dfdcafb815c681fc019dab133a8fa80dc986e08fb5e485b39d62539c63d10705459ba909910b7abe9a
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:4.0.3":
-  version: 4.0.3
-  resolution: "@xmtp/node-sdk@npm:4.0.3"
+"@xmtp/node-sdk@npm:4.1.0":
+  version: 4.1.0
+  resolution: "@xmtp/node-sdk@npm:4.1.0"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
-    "@xmtp/node-bindings": "npm:1.3.6"
-  checksum: 10/21a06f84a72128790d6facba64a25f00447f15c32f4450c0304b2786cafc2a41f6c8525eb9b6bc8fa09487991fa9114cb1e8d5e3ce5994122385007fc27e9a4e
+    "@xmtp/node-bindings": "npm:1.4.0"
+  checksum: 10/bce354f7dfa87a06c47c89ff1464b3aa2b76c509cdc73da9c8ecd6443af33a3c1197cf4201104204fb2c9c9240daacf6c8c5bf22621a2576b9616861da5551b8
   languageName: node
   linkType: hard
 
@@ -5182,7 +5162,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/node-sdk": "npm:4.0.3"
+    "@xmtp/node-sdk": "npm:4.1.0"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"
