@@ -80,11 +80,6 @@ async function isFirstTimeInteraction(
         member.inboxId.toLowerCase() === client.inboxId.toLowerCase() &&
         member.installationIds.length > 1,
     );
-    console.log("hasSentBefore", hasSentBefore);
-    console.log("wasMemberBefore", wasMemberBefore);
-    if (!hasSentBefore && !wasMemberBefore) {
-      await conversation.send("Hey thanks for adding me to the group");
-    }
 
     return !hasSentBefore && !wasMemberBefore;
   } catch (error) {
@@ -223,8 +218,6 @@ async function handleMessage(message: DecodedMessage, client: Client) {
 }
 
 async function main() {
-  console.log("🚀 Starting XMTP ETH Price Agent...");
-
   const client = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
