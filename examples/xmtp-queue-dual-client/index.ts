@@ -91,19 +91,13 @@ function startPeriodicSync(
   setInterval(
     () => {
       void (async () => {
-        try {
-          console.log("Syncing receiving client...");
-          await receivingClient.conversations.sync();
-          console.log("Receiving client synced successfully");
+        console.log("Syncing receiving client...");
+        await receivingClient.conversations.sync();
+        console.log("Receiving client synced successfully");
 
-          console.log("Syncing sending client...");
-          await sendingClient.conversations.sync();
-          console.log("Sending client synced successfully");
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          console.error("Error during periodic sync:", errorMessage);
-        }
+        console.log("Syncing sending client...");
+        await sendingClient.conversations.sync();
+        console.log("Sending client synced successfully");
       })();
     },
     SYNC_INTERVAL * 60 * 1000, // 5 minutes in milliseconds
@@ -111,48 +105,35 @@ function startPeriodicSync(
 }
 
 async function setupMessageStream(client: Client): Promise<void> {
-  try {
-    console.log("Setting up message stream on receiving client...");
-    const stream = await client.conversations.streamAllMessages();
-    console.log("Message stream started successfully");
+  console.log("Setting up message stream on receiving client...");
+  const stream = await client.conversations.streamAllMessages();
+  console.log("Message stream started successfully");
 
-    // Process incoming messages
-    for await (const message of stream) {
-      /* Ignore messages from the same agent or non-text messages */
-      if (
-        message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()
-      ) {
-        continue;
-      }
-
-      /* Ignore non-text messages */
-      if (message.contentType?.typeId !== "text") {
-        continue;
-      }
-      const content = message.content as string;
-      console.log(
-        `Received: "${content}" in conversation ${message.conversationId}`,
-      );
-
-      // Queue response
-      const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
-      messageQueue.push({
-        conversationId: message.conversationId,
-        content: response,
-        timestamp: Date.now(),
-      });
-
-      console.log(`Queued response for conversation ${message.conversationId}`);
+  // Process incoming messages
+  for await (const message of stream) {
+    /* Ignore messages from the same agent or non-text messages */
+    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+      continue;
     }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error in message stream:", errorMessage);
 
-    // Attempt to reconnect after a delay
-    setTimeout(() => {
-      console.log("Attempting to reconnect message stream...");
-      void setupMessageStream(client);
-    }, 5000);
+    /* Ignore non-text messages */
+    if (message.contentType?.typeId !== "text") {
+      continue;
+    }
+    const content = message.content as string;
+    console.log(
+      `Received: "${content}" in conversation ${message.conversationId}`,
+    );
+
+    // Queue response
+    const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
+    messageQueue.push({
+      conversationId: message.conversationId,
+      content: response,
+      timestamp: Date.now(),
+    });
+
+    console.log(`Queued response for conversation ${message.conversationId}`);
   }
 }
 
@@ -171,28 +152,20 @@ async function processMessageQueue(client: Client): Promise<void> {
   const message = messageQueue.shift();
   if (!message) return;
 
-  try {
-    await client.conversations.sync();
-    // Get conversation
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
+  await client.conversations.sync();
+  // Get conversation
+  const conversation = await client.conversations.getConversationById(
+    message.conversationId,
+  );
 
-    if (!conversation) {
-      console.log("Conversation not found, discarding message");
-      return;
-    }
-
-    // Send message
-    await conversation.send(message.content);
-    console.log(`Message sent successfully: "${message.content}"`);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error sending message:", errorMessage);
-
-    // Put the message back in the queue to try again later
-    messageQueue.push(message);
+  if (!conversation) {
+    console.log("Conversation not found, discarding message");
+    return;
   }
+
+  // Send message
+  await conversation.send(message.content);
+  console.log(`Message sent successfully: "${message.content}"`);
 }
 
 // Start the application
