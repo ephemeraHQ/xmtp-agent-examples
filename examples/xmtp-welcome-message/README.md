@@ -1,13 +1,13 @@
 # XMTP welcome message example
 
+When someone first messages the agent, they receive an interactive welcome message with two buttons. This helps with the onboarding UX of the users.
+
 <p align="center">
   <img src="left.png" alt="Image 1" width="49%">
   <img src="right.png" alt="Image 2" width="49%">
 </p>
 
 ## Usage
-
-When someone first messages the agent, they receive an interactive welcome message:
 
 **Message Text:**
 
