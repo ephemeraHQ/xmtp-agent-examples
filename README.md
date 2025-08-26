@@ -42,6 +42,8 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
 
+> lets create an example that gets a number and returns its 2x multiple (use claude max)
+
 ### Set environment variables
 
 To run an example XMTP agent, you must create a `.env` file with the following variables:
