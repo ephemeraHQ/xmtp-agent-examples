@@ -8,6 +8,7 @@ import {
   Client,
   type Conversation,
   type DecodedMessage,
+  type GroupMember,
   type XmtpEnv,
 } from "@xmtp/node-sdk";
 import { EthPriceService } from "./ethPrice";
@@ -70,13 +71,17 @@ async function isFirstTimeInteraction(
 ): Promise<boolean> {
   try {
     const messages = await conversation.messages();
-
-    // Check if agent has sent any messages before
-    const agentMessages = messages.filter(
+    const hasSentBefore = messages.some(
       (msg) => msg.senderInboxId.toLowerCase() === client.inboxId.toLowerCase(),
     );
+    const members = await conversation.members();
+    const wasMemberBefore = members.some(
+      (member: GroupMember) =>
+        member.inboxId.toLowerCase() === client.inboxId.toLowerCase() &&
+        member.installationIds.length > 1,
+    );
 
-    return agentMessages.length === 0;
+    return !hasSentBefore && !wasMemberBefore;
   } catch (error) {
     console.error("Error checking message history:", error);
     return false;
@@ -213,8 +218,6 @@ async function handleMessage(message: DecodedMessage, client: Client) {
 }
 
 async function main() {
-  console.log("🚀 Starting XMTP ETH Price Agent...");
-
   const client = await Client.create(signer, {
     dbEncryptionKey,
     env: XMTP_ENV as XmtpEnv,
@@ -223,17 +226,11 @@ async function main() {
 
   void logAgentDetails(client as Client);
 
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
-
-  console.log("✓ Setting up message streams...");
-
   // Handle all messages
   const messageStream = await client.conversations.streamAllMessages();
   console.log("🎧 Listening for messages...");
 
   for await (const message of messageStream) {
-    // Handle regular messages and action intents
     await handleMessage(message as DecodedMessage<string>, client as Client);
   }
 }

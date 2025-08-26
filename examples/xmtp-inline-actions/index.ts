@@ -29,8 +29,6 @@ const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
   ]);
 
 async function main() {
-  console.log("🚀 Starting TBA Chat Example Bot...");
-
   // Initialize token handler
   const tokenHandler = new TokenHandler(NETWORK_ID);
   console.log(`📡 Connected to network: ${tokenHandler.getNetworkInfo().name}`);
