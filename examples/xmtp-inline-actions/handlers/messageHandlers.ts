@@ -58,7 +58,10 @@ export async function handleTextMessage(
       break;
 
     default:
-      return;
+      await conversation.send(
+        "🤖 I didn't recognize that command. Try `/help` to see available commands!",
+      );
+      break;
   }
 }
 
