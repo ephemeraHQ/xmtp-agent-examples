@@ -58,7 +58,7 @@ export class XmtpWorkerManager {
     // Create XMTP client
     const client = await Client.create(signer, {
       dbEncryptionKey,
-      appVersion: "example/1.0.0",
+      appVersion: "example-agent/1.0.0",
       env: config.xmtpEnv,
     });
 
