@@ -240,6 +240,7 @@ async function main() {
   const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
   const client = await Client.create(signer, {
     dbEncryptionKey,
+    appVersion: "example-agent/1.0.0",
     env: XMTP_ENV as XmtpEnv,
   });
 
@@ -935,6 +936,7 @@ if (!fs.existsSync(dbPath)) {
 // Create a client with db path
 const client = await Client.create(signer, {
   dbEncryptionKey,
+appVersion:"example-agent/1.0.0",
   env: XMTP_ENV as XmtpEnv,
   // Use a unique DB directory
   dbPath,

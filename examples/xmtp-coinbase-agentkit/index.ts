@@ -120,6 +120,7 @@ async function initializeXmtpClient() {
 
   const client = await Client.create(signer, {
     dbEncryptionKey,
+    appVersion: "example-agent/1.0.0",
     env: XMTP_ENV as XmtpEnv,
     dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
   });

@@ -41,6 +41,7 @@ async function main(): Promise<void> {
   // Create receiving client
   const receivingClient = await Client.create(signer, {
     dbEncryptionKey,
+    appVersion: "example-agent/1.0.0",
     env: XMTP_ENV as XmtpEnv,
     loggingLevel: LOGGING_LEVEL as LogLevel,
     dbPath: getDbPath(XMTP_ENV + "-receiving"),
@@ -52,6 +53,7 @@ async function main(): Promise<void> {
   // Create sending client
   const sendingClient = await Client.create(signer, {
     dbEncryptionKey,
+    appVersion: "example-agent/1.0.0",
     env: XMTP_ENV as XmtpEnv,
     loggingLevel: LOGGING_LEVEL as LogLevel,
     dbPath: getDbPath(XMTP_ENV + "-sending"),

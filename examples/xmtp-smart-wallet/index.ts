@@ -35,6 +35,7 @@ const main = async () => {
 
   const client = await Client.create(signer, {
     dbEncryptionKey,
+    appVersion: "example-agent/1.0.0",
     env: XMTP_ENV as XmtpEnv,
   });
 
