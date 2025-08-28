@@ -22,15 +22,15 @@ XMTP_ENV=dev # local, dev, production
 
 # keys for agent 1
 WALLET_KEY_AGENT1= # the private key of the wallet
-ENCRYPTION_KEY_AGENT1= # encryption key for local db encryption
+DB_ENCRYPTION_KEY_AGENT1= # encryption key for local db encryption
 
 # keys for agent 2
 WALLET_KEY_AGENT2= # the private key of the wallet
-ENCRYPTION_KEY_AGENT2= # encryption key for local db encryption
+DB_ENCRYPTION_KEY_AGENT2= # encryption key for local db encryption
 
 # keys for agent 3
 WALLET_KEY_AGENT3= # the private key of the wallet
-ENCRYPTION_KEY_AGENT3= # encryption key for local db encryption
+DB_ENCRYPTION_KEY_AGENT3= # encryption key for local db encryption
 ```
 
 You can generate random xmtp keys with the following command:
@@ -68,19 +68,19 @@ const workerConfigs: WorkerConfig[] = [
   {
     name: "agent1",
     walletKey: WALLET_KEY_AGENT1,
-    encryptionKey: ENCRYPTION_KEY_AGENT1,
+    encryptionKey: DB_ENCRYPTION_KEY_AGENT1,
     xmtpEnv: XMTP_ENV as XmtpEnv,
   },
   {
     name: "agent2",
     walletKey: WALLET_KEY_AGENT2,
-    encryptionKey: ENCRYPTION_KEY_AGENT2,
+    encryptionKey: DB_ENCRYPTION_KEY_AGENT2,
     xmtpEnv: XMTP_ENV as XmtpEnv,
   },
   {
     name: "agent3",
     walletKey: WALLET_KEY_AGENT3,
-    encryptionKey: ENCRYPTION_KEY_AGENT3,
+    encryptionKey: DB_ENCRYPTION_KEY_AGENT3,
     xmtpEnv: XMTP_ENV as XmtpEnv,
   },
 ];

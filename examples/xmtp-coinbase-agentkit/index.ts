@@ -27,7 +27,7 @@ import {
 
 const {
   WALLET_KEY,
-  ENCRYPTION_KEY,
+  DB_ENCRYPTION_KEY,
   XMTP_ENV,
   CDP_API_KEY_NAME,
   CDP_API_KEY_PRIVATE_KEY,
@@ -35,7 +35,7 @@ const {
   OPENAI_API_KEY,
 } = validateEnvironment([
   "WALLET_KEY",
-  "ENCRYPTION_KEY",
+  "DB_ENCRYPTION_KEY",
   "XMTP_ENV",
   "CDP_API_KEY_NAME",
   "CDP_API_KEY_PRIVATE_KEY",
@@ -113,7 +113,7 @@ function getWalletData(userId: string): string | null {
  */
 async function initializeXmtpClient() {
   const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;

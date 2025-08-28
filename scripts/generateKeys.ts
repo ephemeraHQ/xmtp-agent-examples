@@ -40,7 +40,7 @@ const xmtpEnvExists = existingEnv.includes("XMTP_ENV=");
 
 const envContent = `# keys for ${exampleName}
 WALLET_KEY=${walletKey}
-ENCRYPTION_KEY=${encryptionKeyHex}
+DB_ENCRYPTION_KEY=${encryptionKeyHex}
 ${!xmtpEnvExists ? "XMTP_ENV=dev\n" : ""}# public key is ${publicKey}
 `;
 

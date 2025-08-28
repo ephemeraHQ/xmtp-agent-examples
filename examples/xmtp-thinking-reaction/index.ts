@@ -14,15 +14,15 @@ import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "WALLET_KEY",
-  "ENCRYPTION_KEY",
+  "DB_ENCRYPTION_KEY",
   "XMTP_ENV",
 ]);
 
 /* Create the signer using viem and parse the encryption key for the local db */
 const signer = createSigner(WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
 
 // Helper function to sleep for a specified number of milliseconds
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

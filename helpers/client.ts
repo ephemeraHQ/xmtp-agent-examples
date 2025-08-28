@@ -1,6 +1,5 @@
 import { getRandomValues } from "node:crypto";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { Client, IdentifierKind, type Signer } from "@xmtp/node-sdk";
 import { fromString, toString } from "uint8arrays";
@@ -88,18 +87,6 @@ export const logAgentDetails = async (client: Client): Promise<void> => {
   \x1b[0m`);
 
   const clientsByAddress = client.accountIdentifier?.identifier;
-  // Get XMTP SDK version from package.json
-  const require = createRequire(import.meta.url);
-  const packageJson = require("../package.json") as {
-    dependencies: Record<string, string>;
-  };
-  const xmtpSdkVersion = packageJson.dependencies["@xmtp/node-sdk"];
-  const bindingVersion = (
-    require("../node_modules/@xmtp/node-bindings/package.json") as {
-      version: string;
-    }
-  ).version;
-
   const inboxId = client.inboxId;
   const installationId = client.installationId;
   const environments = client.options?.env ?? "dev";
@@ -123,8 +110,6 @@ export const logAgentDetails = async (client: Client): Promise<void> => {
   console.log(`
     ✓ XMTP Client:
     • InboxId: ${inboxId}
-    • SDK: ${xmtpSdkVersion}
-    • Bindings: ${bindingVersion}
     • Version: ${Client.version}
     • Address: ${clientsByAddress}
     • Conversations: ${conversations.length}
