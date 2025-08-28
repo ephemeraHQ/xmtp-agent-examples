@@ -16,14 +16,14 @@ import {
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import { uploadToPinata } from "./upload";
 
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
+const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
   "WALLET_KEY",
-  "ENCRYPTION_KEY",
+  "DB_ENCRYPTION_KEY",
   "XMTP_ENV",
 ]);
 
 const signer = createSigner(WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
 
 // Check this path is correct in your case of errors
 const DEFAULT_IMAGE_PATH = "./logo.png";

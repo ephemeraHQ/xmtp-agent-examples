@@ -7,10 +7,10 @@ import {
 } from "@helpers/client";
 import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
+const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
   validateEnvironment([
     "WALLET_KEY",
-    "ENCRYPTION_KEY",
+    "DB_ENCRYPTION_KEY",
     "XMTP_ENV",
     "LOGGING_LEVEL",
   ]);
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
 
   // Create wallet signer and encryption key
   const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
 
   // Create receiving client
   const receivingClient = await Client.create(signer, {

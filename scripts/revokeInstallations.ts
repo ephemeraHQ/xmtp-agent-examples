@@ -92,7 +92,7 @@ async function main() {
   });
 
   // Validate required environment variables
-  const requiredVars = ["WALLET_KEY", "ENCRYPTION_KEY", "XMTP_ENV"];
+  const requiredVars = ["WALLET_KEY", "DB_ENCRYPTION_KEY", "XMTP_ENV"];
   const missingVars = requiredVars.filter((varName) => !envVars[varName]);
 
   if (missingVars.length > 0) {

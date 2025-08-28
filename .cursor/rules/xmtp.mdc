@@ -29,7 +29,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
     ```typescript
     const signer = createSigner(WALLET_KEY);
-    const encryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+    const encryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
     const client = await Client.create(signer, {
       dbEncryptionKey: encryptionKey,
       env: XMTP_ENV as XmtpEnv,
@@ -183,7 +183,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
 
     ```bash
     WALLET_KEY= # the private key of the wallet
-    ENCRYPTION_KEY= # encryption key for the local database
+    DB_ENCRYPTION_KEY= # encryption key for the local database
     XMTP_ENV=dev # local, dev, production
     ```
 
@@ -207,7 +207,7 @@ You're an expert in writing TypeScript with Node.js. Generate **high-quality XMT
     ```bash
     # Generic keys
     WALLET_KEY=0x...
-    ENCRYPTION_KEY=...
+    DB_ENCRYPTION_KEY=...
     XMTP_ENV=dev
     # public key is 0x...
     ```
@@ -237,7 +237,7 @@ const MEMBER_ADDRESS = "0x7c40611372d354799d138542e77243c284e460b2";
 async function main() {
   // Initialize client
   const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
   const client = await Client.create(signer, {
     dbEncryptionKey,
     appVersion: "example-agent/1.0.0",

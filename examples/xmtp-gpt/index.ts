@@ -10,10 +10,10 @@ import OpenAI from "openai";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, OPENAI_API_KEY, XMTP_ENV } =
+const { WALLET_KEY, DB_ENCRYPTION_KEY, OPENAI_API_KEY, XMTP_ENV } =
   validateEnvironment([
     "WALLET_KEY",
-    "ENCRYPTION_KEY",
+    "DB_ENCRYPTION_KEY",
     "OPENAI_API_KEY",
     "XMTP_ENV",
   ]);
@@ -27,7 +27,7 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 async function main() {
   /* Create the signer using viem and parse the encryption key for the local db */
   const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
 
   const client = await Client.create(signer, {
     dbEncryptionKey,

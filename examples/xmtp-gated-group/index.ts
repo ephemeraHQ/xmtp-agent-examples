@@ -7,10 +7,10 @@ import {
 import { Client, type Group, type XmtpEnv } from "@xmtp/node-sdk";
 
 // Validate required environment variables
-const { WALLET_KEY, ENCRYPTION_KEY, XMTP_ENV, SECRET_WORD } =
+const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, SECRET_WORD } =
   validateEnvironment([
     "WALLET_KEY",
-    "ENCRYPTION_KEY",
+    "DB_ENCRYPTION_KEY",
     "XMTP_ENV",
     "SECRET_WORD",
   ]);
@@ -45,7 +45,7 @@ const usersInGroup = new Set<string>();
 async function main() {
   // Initialize XMTP client
   const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
 
   const client = await Client.create(signer, {
     dbEncryptionKey,

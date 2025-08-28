@@ -48,7 +48,7 @@ To run an example XMTP agent, you must create a `.env` file with the following v
 
 ```bash
 WALLET_KEY= # the private key of the wallet
-ENCRYPTION_KEY= # encryption key for the local database
+DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
 
