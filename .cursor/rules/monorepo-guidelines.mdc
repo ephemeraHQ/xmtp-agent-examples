@@ -32,7 +32,7 @@ When creating new agent examples in this monorepo, follow these guidelines for c
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
+    "@xmtp/agent-sdk": "*" // Inherit the version from the root package.json
     /* other dependencies */
   },
   "devDependencies": {

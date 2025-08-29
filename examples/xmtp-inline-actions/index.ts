@@ -42,21 +42,21 @@ const agent = await XmtpAgent.create(undefined, {
 agent.on(
   "message",
   withFilter(filter.startsWith("/help"), async (ctx) => {
-    await handleHelpCommand(ctx.conversation, tokenHandler);
+    await handleHelpCommand(ctx, tokenHandler);
   }),
 );
 
 agent.on(
   "message",
   withFilter(filter.startsWith("/actions"), async (ctx) => {
-    await handleActionsCommand(ctx.conversation, tokenHandler);
+    await handleActionsCommand(ctx);
   }),
 );
 
 agent.on(
   "message",
   withFilter(filter.startsWith("/actions-with-images"), async (ctx) => {
-    await handleActionsWithImagesCommand(ctx.conversation, tokenHandler);
+    await handleActionsWithImagesCommand(ctx);
   }),
 );
 

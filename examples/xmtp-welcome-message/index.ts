@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { Agent, type AgentContext } from "@xmtp/agent-sdk";
-import { type GroupMember } from "@xmtp/node-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
