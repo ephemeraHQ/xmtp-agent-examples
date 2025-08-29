@@ -38,30 +38,6 @@ I can help you stay updated with the latest Ethereum price information. Choose a
 }
 
 /**
- * Check if this is the first interaction with a user
- */
-async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
-  try {
-    const messages = await ctx.conversation.messages();
-    const hasSentBefore = messages.some(
-      (msg) =>
-        msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
-    );
-    const members = await ctx.conversation.members();
-    const wasMemberBefore = members.some(
-      (member: { inboxId: string; installationIds: string[] }) =>
-        member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
-        member.installationIds.length > 1,
-    );
-
-    return !hasSentBefore && !wasMemberBefore;
-  } catch (error) {
-    console.error("Error checking message history:", error);
-    return false;
-  }
-}
-
-/**
  * Handle intent messages (when users click action buttons)
  */
 async function handleIntentMessage(
@@ -145,46 +121,17 @@ Data provided by CoinGecko 📈`);
   }
 }
 
-/**
- * Handle incoming messages with contextual responses
- */
-async function handleMessage(ctx: AgentContext) {
-  try {
-    // Handle different message types
-    if (ctx.message.contentType?.typeId === "text") {
-      const isFirstTime = await isFirstTimeInteraction(ctx);
-
-      // Handle first-time interactions with welcome actions
-      if (isFirstTime) {
-        await sendWelcomeWithActions(ctx);
-        return;
-      }
-
-      // Handle subsequent text messages
-      const messageContent = (ctx.message.content as string)
-        .toLowerCase()
-        .trim();
-      if (messageContent === "help" || messageContent === "gm") {
-        await sendWelcomeWithActions(ctx);
-      } else {
-        await ctx.conversation.send("👋 Type 'help' to see available options!");
-      }
-    } else if (ctx.message.contentType?.typeId === "intent") {
-      // Handle action button clicks
-      await handleIntentMessage(ctx, ctx.message.content as IntentContent);
-    }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error handling message:", errorMessage);
-  }
-}
-
 const agent = await Agent.create(undefined, {
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
 
 agent.on("message", async (ctx) => {
-  await handleMessage(ctx);
+  if (ctx.message.content === "help" || ctx.message.content === "gm") {
+    await sendWelcomeWithActions(ctx);
+  } else if (ctx.message.contentType?.typeId === "intent") {
+    // Handle action button clicks
+    await handleIntentMessage(ctx, ctx.message.content as IntentContent);
+  }
 });
 
 agent.on("start", () => {
