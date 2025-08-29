@@ -634,7 +634,6 @@ __metadata:
   dependencies:
     "@xmtp/agent-sdk": "npm:*"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
-    dotenv: "npm:^16.4.5"
     tsx: "npm:*"
     typescript: "npm:*"
   languageName: unknown
