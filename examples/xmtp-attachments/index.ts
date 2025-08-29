@@ -89,7 +89,7 @@ async function createRemoteAttachmentFromData(
   };
 }
 
-const agent = await Agent.create({
+const agent = await Agent.create(undefined, {
   codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
 });
 

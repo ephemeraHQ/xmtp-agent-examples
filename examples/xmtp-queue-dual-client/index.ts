@@ -1,4 +1,15 @@
-import { Agent, type AgentContext } from "@xmtp/agent-sdk";
+import fs from "fs";
+import { Agent } from "@xmtp/agent-sdk";
+
+const getDbPath = (description: string = "xmtp") => {
+  //Checks if the environment is a Railway deployment
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  // Create database directory if it doesn't exist
+  if (!fs.existsSync(volumePath)) {
+    fs.mkdirSync(volumePath, { recursive: true });
+  }
+  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
+};
 
 // Message queue interface
 interface QueuedMessage {
@@ -16,39 +27,47 @@ const PROCESS_INTERVAL = 1000;
 // Sync interval in minutes (5 minutes)
 const SYNC_INTERVAL = 5;
 
-async function main(): Promise<void> {
-  console.log("Starting XMTP Queue Dual Client Agent...");
+console.log("Starting XMTP Queue Dual Client Agent...");
 
-  // Create receiving client
-  const receivingClient = await Agent.create(undefined, {
-    dbPath: getDbPath(XMTP_ENV + "-receiving"),
+// Create receiving client
+const receivingClient = await Agent.create(undefined, {
+  dbPath: getDbPath("receiving"),
+});
+
+console.log("XMTP receiving client created");
+
+// Create sending client
+const sendingClient = await Agent.create(undefined, {
+  dbPath: getDbPath("sending"),
+});
+
+// Start periodic sync for both clients
+startPeriodicSync(receivingClient, sendingClient);
+
+// Start message processor with sending client
+startMessageProcessor(sendingClient);
+
+receivingClient.on("message", (ctx) => {
+  const content = ctx.message.content as string;
+  console.log(
+    `Received: "${content}" in conversation ${ctx.message.conversationId}`,
+  );
+
+  // Queue response
+  const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
+  messageQueue.push({
+    conversationId: ctx.message.conversationId,
+    content: response,
+    timestamp: Date.now(),
   });
-
-  console.log("XMTP receiving client created");
-
-  // Create sending client
-  const sendingClient = await Agent.create(undefined, {
-    dbPath: getDbPath(XMTP_ENV + "-sending"),
-  });
-
-  // Start periodic sync for both clients
-  startPeriodicSync(receivingClient, sendingClient);
-
-  // Start message processor with sending client
-  startMessageProcessor(sendingClient);
-
-  // Start message stream with receiving client
-  void setupMessageStream(receivingClient);
-
-  process.stdin.resume(); // Keep process running
-}
+});
 
 /**
  * Start periodic sync for both clients
  */
 function startPeriodicSync(
-  receivingClient: AgentContext,
-  sendingClient: AgentContext,
+  receivingClient: Agent<any>,
+  sendingClient: Agent<any>,
 ): void {
   console.log(`Setting up periodic sync every ${SYNC_INTERVAL} minutes`);
 
@@ -68,43 +87,7 @@ function startPeriodicSync(
   );
 }
 
-async function setupMessageStream(client: AgentContext): Promise<void> {
-  console.log("Setting up message stream on receiving client...");
-  const stream = await client.client.conversations.streamAllMessages();
-  console.log("Message stream started successfully");
-
-  // Process incoming messages
-  for await (const message of stream) {
-    /* Ignore messages from the same agent or non-text messages */
-    if (
-      message.senderInboxId.toLowerCase() ===
-      client.client.inboxId.toLowerCase()
-    ) {
-      continue;
-    }
-
-    /* Ignore non-text messages */
-    if (message.contentType?.typeId !== "text") {
-      continue;
-    }
-    const content = message.content as string;
-    console.log(
-      `Received: "${content}" in conversation ${message.conversationId}`,
-    );
-
-    // Queue response
-    const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
-    messageQueue.push({
-      conversationId: message.conversationId,
-      content: response,
-      timestamp: Date.now(),
-    });
-
-    console.log(`Queued response for conversation ${message.conversationId}`);
-  }
-}
-
-function startMessageProcessor(client: AgentContext): void {
+function startMessageProcessor(client: Agent<any>): void {
   console.log("Starting message processor on sending client...");
   // Process message queue periodically
   setInterval(() => {
@@ -112,19 +95,26 @@ function startMessageProcessor(client: AgentContext): void {
   }, PROCESS_INTERVAL);
 }
 
-async function processMessageQueue(ctx: AgentContext): Promise<void> {
+async function processMessageQueue(client: Agent<any>): Promise<void> {
   if (messageQueue.length === 0) return;
 
   // Process in FIFO order (oldest first)
   const message = messageQueue.shift();
   if (!message) return;
 
-  await ctx.conversation.sync();
-
-  // Send message
-  await ctx.conversation.send(message.content);
-  console.log(`Message sent successfully: "${message.content}"`);
+  try {
+    // Get the conversation and send the message
+    const conversation = await client.client.conversations.getConversationById(
+      message.conversationId,
+    );
+    if (conversation) {
+      await conversation.send(message.content);
+      console.log(`Message sent successfully: "${message.content}"`);
+    } else {
+      console.error(`Conversation not found for ID: ${message.conversationId}`);
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Error sending message: ${errorMessage}`);
+  }
 }
-
-// Start the application
-void main();
