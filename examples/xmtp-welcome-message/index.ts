@@ -9,6 +9,8 @@ import {
 } from "./types/ActionsContent";
 import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
+process.loadEnvFile(".env");
+
 /**
  * Send a welcome message with inline actions for ETH price
  */
@@ -187,7 +189,10 @@ agent.on("message", async (ctx) => {
 });
 
 agent.on("start", () => {
-  console.log("🚀 ETH Price Welcome Agent is online and ready!");
+  const address = agent.client.accountIdentifier?.identifier;
+  const env = agent.client.options?.env;
+  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`We are online\nAddress: ${address}\nURL: ${url}`);
 });
 
 void agent.start();
