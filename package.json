@@ -14,6 +14,7 @@
     "dev": "cd examples/xmtp-gm && tsx --env-file ../../.env --watch index.ts",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
+    "gen:keys": "tsx scripts/generateKeys.ts",
     "lint": "eslint .",
     "start": "cd examples/xmtp-gm && tsx index.ts",
     "typecheck": "tsc"
