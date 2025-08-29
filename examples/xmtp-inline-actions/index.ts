@@ -13,6 +13,8 @@ import {
 import { ActionsCodec } from "./types/ActionsContent";
 import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
+process.loadEnvFile(".env");
+
 // Initialize token handler
 const tokenHandler = new TokenHandler(process.env.NETWORK_ID || "base-sepolia");
 console.log(`📡 Connected to network: ${tokenHandler.getNetworkInfo().name}`);
