@@ -58,7 +58,7 @@ agent.on("start", () => {
   console.log(`We are online: ${url}`);
 });
 
-agent.start();
+void agent.start();
 
 async function handleSuccessfulPassphrase(ctx: AgentContext) {
   try {
