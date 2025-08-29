@@ -1,6 +1,8 @@
 import fs from "fs";
 import { Agent } from "@xmtp/agent-sdk";
 
+process.loadEnvFile(".env");
+
 const getDbPath = (description: string = "xmtp") => {
   //Checks if the environment is a Railway deployment
   const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
@@ -34,12 +36,15 @@ const receivingClient = await Agent.create(undefined, {
   dbPath: getDbPath("receiving"),
 });
 
+void receivingClient.start();
 console.log("XMTP receiving client created");
 
 // Create sending client
 const sendingClient = await Agent.create(undefined, {
   dbPath: getDbPath("sending"),
 });
+
+void sendingClient.start();
 
 // Start periodic sync for both clients
 startPeriodicSync(receivingClient, sendingClient);

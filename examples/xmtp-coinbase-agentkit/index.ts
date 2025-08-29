@@ -14,6 +14,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { Agent as XmtpAgent, type AgentContext } from "@xmtp/agent-sdk";
 
+process.loadEnvFile(".env");
 // Storage constants
 const XMTP_STORAGE_DIR = ".data/xmtp";
 const WALLET_STORAGE_DIR = ".data/wallet";

@@ -19,10 +19,10 @@
     "typecheck": "tsc"
   },
   "resolutions": {
-    "@xmtp/agent-sdk": "0.0.6"
+    "@xmtp/agent-sdk": "0.0.7"
   },
   "dependencies": {
-    "@xmtp/agent-sdk": "0.0.6",
+    "@xmtp/agent-sdk": "0.0.7",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"
   },

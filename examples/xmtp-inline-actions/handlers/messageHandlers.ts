@@ -4,66 +4,8 @@ import { type IntentContent } from "../types/IntentContent";
 import {
   handleActionsCommand,
   handleActionsWithImagesCommand,
-  handleHelpCommand,
 } from "./actionHandlers";
 import type { TokenHandler } from "./tokenHandler";
-
-export async function handleTextMessage(
-  conversation: Conversation,
-  messageContent: string,
-  senderAddress: string,
-  agentAddress: string,
-  tokenHandler: TokenHandler,
-) {
-  const command = messageContent.toLowerCase().trim();
-
-  switch (true) {
-    case command === "/help" || command.toLowerCase() === "gm":
-      await handleHelpCommand(conversation, tokenHandler);
-      break;
-
-    case command.startsWith("/actions"):
-      await handleActionsCommand(conversation, tokenHandler);
-      break;
-
-    case command.startsWith("/actions-with-images"):
-      await handleActionsWithImagesCommand(conversation, tokenHandler);
-      break;
-
-    case command.startsWith("/send "):
-      await handleSendCommand(
-        conversation,
-        command,
-        senderAddress,
-        agentAddress,
-        tokenHandler,
-      );
-      break;
-
-    case command.startsWith("/balance "):
-      await handleBalanceCommand(
-        conversation,
-        command,
-        agentAddress,
-        tokenHandler,
-      );
-      break;
-
-    case command === "/info":
-      await handleInfoCommand(conversation, tokenHandler);
-      break;
-
-    case command === "/ping" || command.toLowerCase() === "ping":
-      await conversation.send("pong");
-      break;
-
-    default:
-      await conversation.send(
-        "🤖 I didn't recognize that command. Try `/help` to see available commands!",
-      );
-      break;
-  }
-}
 
 export async function handleSendCommand(
   conversation: Conversation,

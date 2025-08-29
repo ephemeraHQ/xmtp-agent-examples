@@ -2,6 +2,8 @@ import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
 import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 
+process.loadEnvFile(".env");
+
 const WALLET_PATH = "wallet.json";
 const CDP_API_KEY_NAME = process.env.CDP_API_KEY_NAME || "";
 const CDP_API_KEY_PRIVATE_KEY = process.env.CDP_API_KEY_PRIVATE_KEY || "";
@@ -12,7 +14,7 @@ const walletData = await initializeWallet(WALLET_PATH);
 const user = createUser(walletData.seed as `0x${string}`);
 const signer = createSigner(user);
 const agent = await Agent.create(signer);
-
+void agent.start();
 agent.on("message", async (ctx) => {
   const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
     ctx.message.senderInboxId,

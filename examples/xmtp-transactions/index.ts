@@ -6,6 +6,8 @@ import {
 } from "@xmtp/content-type-wallet-send-calls";
 import { USDCHandler } from "./usdc";
 
+process.loadEnvFile(".env");
+
 const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
 const usdcHandler = new USDCHandler(NETWORK_ID);

@@ -1,9 +1,16 @@
-import { Agent as XmtpAgent } from "@xmtp/agent-sdk";
+import { filter, withFilter, Agent as XmtpAgent } from "@xmtp/agent-sdk";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
 import {
+  handleActionsCommand,
+  handleActionsWithImagesCommand,
+  handleHelpCommand,
+} from "./handlers/actionHandlers";
+import {
+  handleBalanceCommand,
+  handleInfoCommand,
   handleIntentMessage,
-  handleTextMessage,
+  handleSendCommand,
 } from "./handlers/messageHandlers";
 import { TokenHandler } from "./handlers/tokenHandler";
 import {
@@ -31,20 +38,62 @@ const agent = await XmtpAgent.create(undefined, {
   ],
 });
 
+// Commands
+agent.on(
+  "message",
+  withFilter(filter.startsWith("/help"), async (ctx) => {
+    await handleHelpCommand(ctx.conversation, tokenHandler);
+  }),
+);
+
+agent.on(
+  "message",
+  withFilter(filter.startsWith("/actions"), async (ctx) => {
+    await handleActionsCommand(ctx.conversation, tokenHandler);
+  }),
+);
+
+agent.on(
+  "message",
+  withFilter(filter.startsWith("/actions-with-images"), async (ctx) => {
+    await handleActionsWithImagesCommand(ctx.conversation, tokenHandler);
+  }),
+);
+
+agent.on(
+  "message",
+  withFilter(filter.startsWith("/send"), async (ctx) => {
+    await handleSendCommand(
+      ctx.conversation,
+      ctx.message.content as string,
+      ctx.message.senderInboxId,
+      agent.client.accountIdentifier?.identifier || "",
+      tokenHandler,
+    );
+  }),
+);
+
+agent.on(
+  "message",
+  withFilter(filter.startsWith("/balance"), async (ctx) => {
+    await handleBalanceCommand(
+      ctx.conversation,
+      ctx.message.content as string,
+      agent.client.accountIdentifier?.identifier || "",
+      tokenHandler,
+    );
+  }),
+);
+
+agent.on(
+  "message",
+  withFilter(filter.startsWith("/info"), async (ctx) => {
+    await handleInfoCommand(ctx.conversation, tokenHandler);
+  }),
+);
+
 agent.on("message", async (ctx) => {
   const message = ctx.message;
-
-  if (
-    message.contentType?.typeId !== "text" &&
-    message.contentType?.typeId !== "transactionReference" &&
-    message.contentType?.typeId !== "intent"
-  ) {
-    return;
-  }
-
-  console.log(
-    `Received message: ${message.content as string} by ${message.senderInboxId}`,
-  );
 
   // Get sender address
   const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
@@ -57,16 +106,7 @@ agent.on("message", async (ctx) => {
     return;
   }
 
-  // Handle different message types
-  if (message.contentType.typeId === "text") {
-    await handleTextMessage(
-      ctx.conversation,
-      message.content as string,
-      senderAddress,
-      agent.client.accountIdentifier?.identifier || "",
-      tokenHandler,
-    );
-  } else if (message.contentType.typeId === "transactionReference") {
+  if (message.contentType?.typeId === "transactionReference") {
     console.log("🧾 Detected transaction reference message");
     console.log(
       "📋 Raw message content:",
@@ -78,7 +118,7 @@ agent.on("message", async (ctx) => {
       senderAddress,
       tokenHandler,
     );
-  } else {
+  } else if (message.contentType?.typeId === "intent") {
     // This must be an intent message since we filtered for text, transactionReference, and intent
     console.log("🎯 Detected intent message");
     console.log(
@@ -92,7 +132,16 @@ agent.on("message", async (ctx) => {
       agent.client.accountIdentifier?.identifier || "",
       tokenHandler,
     );
+  } else {
+    await ctx.conversation.send("👋 Type '/help' to see available options!");
   }
+});
+
+agent.on("start", () => {
+  const address = agent.client.accountIdentifier?.identifier;
+  const env = agent.client.options?.env;
+  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`We are online\nAddress: ${address}\nURL: ${url}`);
 });
 
 void agent.start();
