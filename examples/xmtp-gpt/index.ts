@@ -1,6 +1,8 @@
 import { Agent } from "@xmtp/agent-sdk";
 import OpenAI from "openai";
 
+process.loadEnvFile(".env");
+
 /* Initialize the OpenAI client */
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
