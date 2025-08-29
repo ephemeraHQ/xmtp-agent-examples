@@ -3,28 +3,9 @@ import { Agent, filter as f, withFilter } from "@xmtp/agent-sdk";
 const agent = await Agent.create();
 
 agent.on("message", (ctx) => {
-  void ctx.conversation.send("First message!");
-});
-
-agent.on(
-  "message",
-  withFilter(f.and(f.notFromSelf, f.textOnly), (ctx) => {
-    void ctx.conversation.send("Goodbye!");
-    agent.stop();
-  }),
-);
-
-agent.on("message", (ctx) => {
   console.log("Got message:", ctx.message.content);
+  void ctx.conversation.send("gm");
 });
-
-const errorHandler = (error: unknown) => {
-  console.log("Caught error", error);
-};
-
-agent.on("error", errorHandler);
-
-agent.off("error", errorHandler);
 
 agent.on("start", () => {
   const address = agent.client.accountIdentifier?.identifier;
