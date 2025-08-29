@@ -64,7 +64,7 @@ agent.on(
   "message",
   withFilter(filter.startsWith("/send"), async (ctx) => {
     await handleSendCommand(
-      ctx.conversation,
+      ctx,
       ctx.message.content as string,
       ctx.message.senderInboxId,
       agent.client.accountIdentifier?.identifier || "",
@@ -77,7 +77,7 @@ agent.on(
   "message",
   withFilter(filter.startsWith("/balance"), async (ctx) => {
     await handleBalanceCommand(
-      ctx.conversation,
+      ctx,
       ctx.message.content as string,
       agent.client.accountIdentifier?.identifier || "",
       tokenHandler,
@@ -88,7 +88,7 @@ agent.on(
 agent.on(
   "message",
   withFilter(filter.startsWith("/info"), async (ctx) => {
-    await handleInfoCommand(ctx.conversation, tokenHandler);
+    await handleInfoCommand(ctx, tokenHandler);
   }),
 );
 
@@ -113,7 +113,7 @@ agent.on("message", async (ctx) => {
       JSON.stringify(message.content, null, 2),
     );
     await handleTransactionReference(
-      ctx.conversation,
+      ctx,
       message.content as ExtendedTransactionReference,
       senderAddress,
       tokenHandler,
@@ -126,7 +126,7 @@ agent.on("message", async (ctx) => {
       JSON.stringify(message.content, null, 2),
     );
     await handleIntentMessage(
-      ctx.conversation,
+      ctx,
       message.content as IntentContent,
       senderAddress,
       agent.client.accountIdentifier?.identifier || "",

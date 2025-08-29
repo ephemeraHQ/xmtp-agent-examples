@@ -49,7 +49,7 @@ async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
     );
     const members = await ctx.conversation.members();
     const wasMemberBefore = members.some(
-      (member: GroupMember) =>
+      (member: { inboxId: string; installationIds: string[] }) =>
         member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
         member.installationIds.length > 1,
     );

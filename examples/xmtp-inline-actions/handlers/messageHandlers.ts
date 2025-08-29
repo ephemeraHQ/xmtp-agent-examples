@@ -5,7 +5,7 @@ import {
   handleActionsCommand,
   handleActionsWithImagesCommand,
 } from "./actionHandlers";
-import type { TokenHandler } from "./tokenHandler";
+import { getAvailableNetworks, type TokenHandler } from "./tokenHandler";
 
 export async function handleSendCommand(
   ctx: AgentContext,
@@ -140,13 +140,13 @@ export async function handleInfoCommand(
   tokenHandler: TokenHandler,
 ) {
   const networkInfo = tokenHandler.getNetworkInfo();
-  const availableNetworks = tokenHandler.getAvailableNetworks();
+  const availableNetworks = getAvailableNetworks();
 
   const infoMessage = `ℹ️ Network Information
 
 CURRENT NETWORK:
 • Name: ${networkInfo.name}
-• ID: ${networkInfo.id}
+• ID: ${networkInfo.id} 
 • Chain ID: ${networkInfo.chainId}
 
 SUPPORTED TOKENS:
