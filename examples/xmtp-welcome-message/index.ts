@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { Agent, filter, withFilter, type AgentContext } from "@xmtp/agent-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
