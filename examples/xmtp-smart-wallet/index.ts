@@ -1,37 +1,26 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 
 const WALLET_PATH = "wallet.json";
-
-const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 const CDP_API_KEY_NAME = process.env.CDP_API_KEY_NAME || "";
 const CDP_API_KEY_PRIVATE_KEY = process.env.CDP_API_KEY_PRIVATE_KEY || "";
+const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
-  const walletData = await initializeWallet(WALLET_PATH);
-  
-    const agent = await Agent.create(undefined, {
-    walletKey: walletData.seed,
-    dbEncryptionKey: process.env.XMTP_DB_ENCRYPTION_KEY,
-  });
+const walletData = await initializeWallet(WALLET_PATH);
+/* Create the signer using viem and parse the encryption key for the local db */
+const user = createUser(walletData.seed as `0x${string}`);
+const signer = createSigner(user);
+const agent = await Agent.create(signer);
 
-  agent.on("message", async (ctx) => {
-    const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
-      ctx.message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0]?.identifiers[0]?.identifier;
-    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    await ctx.conversation.send("gm");
-  });
+agent.on("message", async (ctx) => {
+  const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
+    ctx.message.senderInboxId,
+  ]);
+  const addressFromInboxId = inboxState[0].identifiers[0].identifier;
 
-  agent.on("start", () => {
-    const address = agent.client.accountIdentifier?.identifier;
-    const env = agent.client.options?.env;
-    const url = `http://xmtp.chat/dm/${address}?env=${env}`;
-    console.log(`We are online: ${url}`);
-  });
-
-  await agent.start();
+  console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+  await ctx.conversation.send("gm");
 });
 
 /**
@@ -75,9 +64,3 @@ async function initializeWallet(walletPath: string): Promise<WalletData> {
     throw error;
   }
 }
-
-void main().catch((error) => {
-  console.error("Error starting agent:", error);
-  process.exit(1);
-    
-});   
