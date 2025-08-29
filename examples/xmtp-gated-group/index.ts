@@ -1,5 +1,6 @@
 import { Agent, type AgentContext } from "@xmtp/agent-sdk";
 
+process.loadEnvFile(".env");
 // Configuration for the secret word gated group
 const GROUP_CONFIG = {
   // The secret passphrase users must provide to join
