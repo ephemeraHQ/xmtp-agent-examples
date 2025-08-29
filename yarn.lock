@@ -935,6 +935,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@noble/curves@npm:1.9.6":
+  version: 1.9.6
+  resolution: "@noble/curves@npm:1.9.6"
+  dependencies:
+    "@noble/hashes": "npm:1.8.0"
+  checksum: 10/74b603bbf95cab1b6eb147d02febe55bc19cf57c324bf2ff04b44ff9be3f88affc1a57da0805c74803e27c25687079251f9c788f93f0e6fd1c5d02163996460c
+  languageName: node
+  linkType: hard
+
+"@noble/curves@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@noble/curves@npm:2.0.0"
+  dependencies:
+    "@noble/hashes": "npm:2.0.0"
+  checksum: 10/f0c42bebbde529bdee7dcf39eb145343f7ba1194d1fd5cc89f51e9b9a67821b389297d259055a07981f6b9fa2b18be702fa5ececa953b5f1ff481ca49b88761f
+  languageName: node
+  linkType: hard
+
 "@noble/hashes@npm:1.3.2":
   version: 1.3.2
   resolution: "@noble/hashes@npm:1.3.2"
@@ -946,6 +964,13 @@ __metadata:
   version: 1.8.0
   resolution: "@noble/hashes@npm:1.8.0"
   checksum: 10/474b7f56bc6fb2d5b3a42132561e221b0ea4f91e590f4655312ca13667840896b34195e2b53b7f097ec080a1fdd3b58d902c2a8d0fbdf51d2e238b53808a177e
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:2.0.0":
+  version: 2.0.0
+  resolution: "@noble/hashes@npm:2.0.0"
+  checksum: 10/cab9ec490c211a9baa54297d3f1ed4289408c54cd99d4a71bdce92038ef8c10f4a9b1230a72c92656e0ffdf9420d0d631d5f83d9f72883f77bd92214f5502c28
   languageName: node
   linkType: hard
 
@@ -1680,6 +1705,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xmtp/agent-sdk@npm:0.0.6":
+  version: 0.0.6
+  resolution: "@xmtp/agent-sdk@npm:0.0.6"
+  dependencies:
+    "@noble/curves": "npm:^2.0.0"
+    "@xmtp/content-type-reaction": "npm:^2.0.2"
+    "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
+    "@xmtp/content-type-reply": "npm:^2.0.2"
+    "@xmtp/content-type-text": "npm:^2.0.2"
+    "@xmtp/node-sdk": "npm:^4.1.0"
+    uint8arrays: "npm:^5.1.0"
+    viem: "npm:^2.31.7"
+  checksum: 10/8da61453b6f492f41ece5a2f4854a0d4784319b764a9238e24f443f73180b63cf87451fe248e1b98620db6bb5df4a5a5c35ba2cd46053af5916bc4bd125738d9
+  languageName: node
+  linkType: hard
+
 "@xmtp/content-type-group-updated@npm:^2.0.2":
   version: 2.0.2
   resolution: "@xmtp/content-type-group-updated@npm:2.0.2"
@@ -1716,6 +1757,16 @@ __metadata:
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/proto": "npm:^3.78.0"
   checksum: 10/7d4f89b595c42dbd3687edba41efd11cf225267419115f5cf05fa9ef4c02aadf29c9b5605681407063721e0ef421789f6a16d0d2f379416dfb726be83151571e
+  languageName: node
+  linkType: hard
+
+"@xmtp/content-type-reply@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@xmtp/content-type-reply@npm:2.0.2"
+  dependencies:
+    "@xmtp/content-type-primitives": "npm:^2.0.2"
+    "@xmtp/proto": "npm:^3.78.0"
+  checksum: 10/259bc342d1f92d5d8eb1ee19eee7a322b2f9888f6a7115c647aeb7ea4a6830b20441a780a031be284a43d73f6159d08b97395b5c2fa8727baa9f081183c71f2b
   languageName: node
   linkType: hard
 
@@ -4066,6 +4117,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ox@npm:0.9.1":
+  version: 0.9.1
+  resolution: "ox@npm:0.9.1"
+  dependencies:
+    "@adraffy/ens-normalize": "npm:^1.11.0"
+    "@noble/ciphers": "npm:^1.3.0"
+    "@noble/curves": "npm:^1.9.1"
+    "@noble/hashes": "npm:^1.8.0"
+    "@scure/bip32": "npm:^1.7.0"
+    "@scure/bip39": "npm:^1.6.0"
+    abitype: "npm:^1.0.8"
+    eventemitter3: "npm:5.0.1"
+  peerDependencies:
+    typescript: ">=5.4.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10/9b7b7e58b2af2ddde67ebbbf6d43765752378b5e160b181fbcbc6823035ba85e90f7fcc3d92e2aaaa3fc718b28478c3ff5286e9ee004f6f8da0585c80e5fbe29
+  languageName: node
+  linkType: hard
+
 "p-finally@npm:^1.0.0":
   version: 1.0.0
   resolution: "p-finally@npm:1.0.0"
@@ -5017,6 +5089,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"viem@npm:^2.31.7":
+  version: 2.36.0
+  resolution: "viem@npm:2.36.0"
+  dependencies:
+    "@noble/curves": "npm:1.9.6"
+    "@noble/hashes": "npm:1.8.0"
+    "@scure/bip32": "npm:1.7.0"
+    "@scure/bip39": "npm:1.6.0"
+    abitype: "npm:1.0.8"
+    isows: "npm:1.0.7"
+    ox: "npm:0.9.1"
+    ws: "npm:8.18.3"
+  peerDependencies:
+    typescript: ">=5.0.4"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10/738d1788898e047b7f9440e86e4a75e80dc77484635e85a2df4a99d886ec8889a7f481a98fda7fad7de4dc258e43763af52db9abbe8afe425493bc1be7244d15
+  languageName: node
+  linkType: hard
+
 "web-streams-polyfill@npm:4.0.0-beta.3":
   version: 4.0.0-beta.3
   resolution: "web-streams-polyfill@npm:4.0.0-beta.3"
@@ -5138,6 +5231,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ws@npm:8.18.3":
+  version: 8.18.3
+  resolution: "ws@npm:8.18.3"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10/725964438d752f0ab0de582cd48d6eeada58d1511c3f613485b5598a83680bedac6187c765b0fe082e2d8cc4341fc57707c813ae780feee82d0c5efe6a4c61b6
+  languageName: node
+  linkType: hard
+
 "ws@npm:^7.5.10":
   version: 7.5.10
   resolution: "ws@npm:7.5.10"
@@ -5162,6 +5270,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
+    "@xmtp/agent-sdk": "npm:0.0.6"
     "@xmtp/node-sdk": "npm:4.1.0"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"

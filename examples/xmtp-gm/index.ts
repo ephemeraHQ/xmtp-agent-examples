@@ -1,73 +1,36 @@
-import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
+import { Agent, filter as f, withFilter } from "@xmtp/agent-sdk";
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "DB_ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
+const agent = await Agent.create();
 
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+agent.on("message", (ctx) => {
+  void ctx.conversation.send("First message!");
+});
 
-async function main() {
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    loggingLevel: "warn" as LogLevel,
-    env: XMTP_ENV as XmtpEnv,
-  });
-  void logAgentDetails(client);
+agent.on(
+  "message",
+  withFilter(f.and(f.notFromSelf, f.textOnly), (ctx) => {
+    void ctx.conversation.send("Goodbye!");
+    agent.stop();
+  }),
+);
 
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
+agent.on("message", (ctx) => {
+  console.log("Got message:", ctx.message.content);
+});
 
-  console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
-  for await (const message of stream) {
-    // Skip if the message is from the agent
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      continue;
-    }
-    // Skip if the message is not a text message
-    if (message.contentType?.typeId !== "text") {
-      continue;
-    }
+const errorHandler = (error: unknown) => {
+  console.log("Caught error", error);
+};
 
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
+agent.on("error", errorHandler);
 
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
+agent.off("error", errorHandler);
 
-    // // Skip if the conversation is a group
-    // if (conversation instanceof Group) {
-    //   console.log("Conversation is a group, skipping");
-    //   continue;
-    // }
+agent.on("start", () => {
+  const address = agent.client.accountIdentifier?.identifier;
+  const env = agent.client.options?.env;
+  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`We are online: ${url}`);
+});
 
-    //Getting the address from the inbox id
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    await conversation.send("gm");
-  }
-
-  console.log("Message stream started");
-}
-
-main().catch(console.error);
+void agent.start();

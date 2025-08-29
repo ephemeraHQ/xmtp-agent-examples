@@ -21,9 +21,11 @@
     "typecheck": "tsc"
   },
   "resolutions": {
+    "@xmtp/agent-sdk": "0.0.6",
     "@xmtp/node-sdk": "4.1.0"
   },
   "dependencies": {
+    "@xmtp/agent-sdk": "0.0.6",
     "@xmtp/node-sdk": "4.1.0",
     "uint8arrays": "^5.1.0",
     "viem": "^2.22.17"
