@@ -1,55 +1,62 @@
-#!/usr/bin/env node
+import { getRandomValues } from "node:crypto";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { toString } from "uint8arrays";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 /**
- * Key generation script that uses the @xmtp/agent-sdk's generateKeys functionality
- * This script is referenced by all example package.json files
+ * Generate a random encryption key
+ * @returns The encryption key
  */
-import { execSync } from "node:child_process";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+export const generateEncryptionKeyHex = () => {
+  /* Generate a random encryption key */
+  const uint8Array = getRandomValues(new Uint8Array(32));
+  /* Convert the encryption key to a hex string */
+  return toString(uint8Array, "hex");
+};
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-async function main() {
-  try {
-    // Get the root directory (one level up from scripts/)
-    const rootDir = path.resolve(__dirname, "..");
-
-    // Path to the agent SDK's generateKeys script
-    const agentSdkKeysScript = path.join(
-      rootDir,
-      "node_modules",
-      "@xmtp",
-      "agent-sdk",
-      "dist",
-      "bin",
-      "generateKeys.js",
-    );
-
-    console.log("🔑 Generating XMTP keys using @xmtp/agent-sdk...");
-
-    // Set the INIT_CWD environment variable that the agent SDK script expects
-    const env = {
-      ...process.env,
-      INIT_CWD: rootDir,
-    };
-
-    // Execute the agent SDK's key generation script
-    execSync(`node "${agentSdkKeysScript}"`, {
-      stdio: "inherit",
-      env,
-      cwd: rootDir,
-    });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("❌ Error generating keys:", errorMessage);
-    process.exit(1);
-  }
+// Check Node.js version
+const nodeVersion = process.versions.node;
+const [major] = nodeVersion.split(".").map(Number);
+if (major < 20) {
+  console.error("Error: Node.js version 20 or higher is required");
+  process.exit(1);
 }
 
-main().catch((error: unknown) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  console.error("❌ Unexpected error:", errorMessage);
-  process.exit(1);
-});
+console.log("Generating keys for example...");
+
+const walletKey = generatePrivateKey();
+const account = privateKeyToAccount(walletKey);
+const encryptionKeyHex = generateEncryptionKeyHex();
+const publicKey = account.address;
+
+// Get the current working directory (should be the example directory)
+const exampleDir = process.cwd();
+const exampleName = exampleDir.split("/").pop() || "example";
+const filePath = join(exampleDir, ".env");
+
+console.log(`Creating .env file in: ${exampleDir}`);
+
+// Read existing .env file if it exists
+let existingEnv = "";
+try {
+  existingEnv = await readFile(filePath, "utf-8");
+  console.log("Found existing .env file");
+} catch {
+  // File doesn't exist, that's fine
+  console.log("No existing .env file found, creating new one");
+}
+
+// Check if XMTP_ENV is already set
+const xmtpEnvExists = existingEnv.includes("XMTP_ENV=");
+
+const envContent = `# keys for ${exampleName}
+XMTP_WALLET_KEY=${walletKey}
+XMTP_DB_ENCRYPTION_KEY=${encryptionKeyHex}
+${!xmtpEnvExists ? "XMTP_ENV=dev\n" : ""}# public key is ${publicKey}
+`;
+
+// Write the .env file to the example directory
+await writeFile(filePath, envContent, { flag: "a" });
+console.log(`Keys written to ${filePath}`);
+console.log(`Public key: ${publicKey}`);
