@@ -1,9 +1,3 @@
-import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
@@ -19,31 +13,17 @@ import {
 import { ActionsCodec } from "./types/ActionsContent";
 import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
-// Validate required environment variables
-const { XMTP_WALLET_KEY, XMTP_DB_ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
-  validateEnvironment([
-    "XMTP_WALLET_KEY",
-    "XMTP_DB_ENCRYPTION_KEY",
-    "XMTP_ENV",
-    "NETWORK_ID",
-  ]);
-
 async function main() {
   // Initialize token handler
-  const tokenHandler = new TokenHandler(NETWORK_ID);
+  const tokenHandler = new TokenHandler(
+    process.env.NETWORK_ID || "base-sepolia",
+  );
   console.log(`📡 Connected to network: ${tokenHandler.getNetworkInfo().name}`);
   console.log(
     `💰 Supported tokens: ${tokenHandler.getSupportedTokens().join(", ")}`,
   );
 
-  // Create XMTP client
-  const signer = createSigner(XMTP_WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
-
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
+  const client = await Client.create(undefined, {
     codecs: [
       new WalletSendCallsCodec(),
       new TransactionReferenceCodec(),
@@ -51,19 +31,6 @@ async function main() {
       new IntentCodec(),
     ],
   });
-
-  const identifier = await signer.getIdentifier();
-  const agentAddress = identifier.identifier;
-
-  void logAgentDetails(client as Client);
-
-  // Sync conversations
-  console.log("🔄 Syncing conversations...");
-  await client.conversations.sync();
-
-  console.log("👂 Listening for messages...");
-
-  const stream = await client.conversations.streamAllMessages();
 
   for await (const message of stream) {
     /* Ignore messages from the same agent or non-text messages */
@@ -82,17 +49,6 @@ async function main() {
     console.log(
       `Received message: ${message.content as string} by ${message.senderInboxId}`,
     );
-
-    /* Get the conversation from the local db */
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    /* If the conversation is not found, skip the message */
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
 
     // Get sender address
     const inboxState = await client.preferences.inboxStateFromInboxIds([

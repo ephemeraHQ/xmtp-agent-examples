@@ -5,14 +5,14 @@ import { Agent } from "@xmtp/agent-sdk";
 const WALLET_PATH = "wallet.json";
 
 const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
-const CDP_API_KEY_NAME = process.env.CDP_API_KEY_NAME;
-const CDP_API_KEY_PRIVATE_KEY = process.env.CDP_API_KEY_PRIVATE_KEY;
+const CDP_API_KEY_NAME = process.env.CDP_API_KEY_NAME || "";
+const CDP_API_KEY_PRIVATE_KEY = process.env.CDP_API_KEY_PRIVATE_KEY || "";
 
-async function main() {
   const walletData = await initializeWallet(WALLET_PATH);
-
-  const agent = await Agent.create({
+  
+    const agent = await Agent.create(undefined, {
     walletKey: walletData.seed,
+    dbEncryptionKey: process.env.XMTP_DB_ENCRYPTION_KEY,
   });
 
   agent.on("message", async (ctx) => {
@@ -32,7 +32,7 @@ async function main() {
   });
 
   await agent.start();
-}
+});
 
 /**
  * Generates a random Smart Contract Wallet
@@ -76,4 +76,8 @@ async function initializeWallet(walletPath: string): Promise<WalletData> {
   }
 }
 
-void main();
+void main().catch((error) => {
+  console.error("Error starting agent:", error);
+  process.exit(1);
+    
+});   

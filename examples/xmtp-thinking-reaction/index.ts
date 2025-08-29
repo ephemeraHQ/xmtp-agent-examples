@@ -8,7 +8,7 @@ import {
 // Helper function to sleep for a specified number of milliseconds
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const agent = await Agent.create({
+const agent = await Agent.create(undefined, {
   codecs: [new ReactionCodec()],
 });
 

@@ -1,16 +1,6 @@
-import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import {
-  Client,
-  type Conversation,
-  type DecodedMessage,
-  type GroupMember,
-  type XmtpEnv,
-} from "@xmtp/node-sdk";
+import "dotenv/config";
+import { Agent, type AgentContext } from "@xmtp/agent-sdk";
+import { type GroupMember } from "@xmtp/node-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
@@ -19,27 +9,10 @@ import {
 } from "./types/ActionsContent";
 import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const { XMTP_WALLET_KEY, XMTP_DB_ENCRYPTION_KEY, XMTP_ENV } =
-  validateEnvironment([
-    "XMTP_WALLET_KEY",
-    "XMTP_DB_ENCRYPTION_KEY",
-    "XMTP_ENV",
-  ]);
-
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(XMTP_WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
-
 /**
  * Send a welcome message with inline actions for ETH price
  */
-async function sendWelcomeWithActions(
-  conversation: Conversation,
-  _client: Client,
-) {
+async function sendWelcomeWithActions(ctx: AgentContext) {
   const welcomeActions: ActionsContent = {
     id: `welcome-${Date.now()}`,
     description: `👋 Welcome! I'm your ETH price agent.
@@ -60,25 +33,23 @@ I can help you stay updated with the latest Ethereum price information. Choose a
   };
 
   console.log(`✓ Sending welcome message with actions`);
-  await conversation.send(welcomeActions, ContentTypeActions);
+  await ctx.conversation.send(welcomeActions, ContentTypeActions);
 }
 
 /**
  * Check if this is the first interaction with a user
  */
-async function isFirstTimeInteraction(
-  conversation: Conversation,
-  client: Client,
-): Promise<boolean> {
+async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
   try {
-    const messages = await conversation.messages();
+    const messages = await ctx.conversation.messages();
     const hasSentBefore = messages.some(
-      (msg) => msg.senderInboxId.toLowerCase() === client.inboxId.toLowerCase(),
+      (msg) =>
+        msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
     );
-    const members = await conversation.members();
+    const members = await ctx.conversation.members();
     const wasMemberBefore = members.some(
       (member: GroupMember) =>
-        member.inboxId.toLowerCase() === client.inboxId.toLowerCase() &&
+        member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
         member.installationIds.length > 1,
     );
 
@@ -93,9 +64,8 @@ async function isFirstTimeInteraction(
  * Handle intent messages (when users click action buttons)
  */
 async function handleIntentMessage(
-  conversation: Conversation,
+  ctx: AgentContext,
   intentContent: IntentContent,
-  _client: Client,
 ) {
   console.log(
     `🎯 Processing intent: ${intentContent.actionId} for actions: ${intentContent.id}`,
@@ -105,58 +75,62 @@ async function handleIntentMessage(
     switch (intentContent.actionId) {
       case "get-current-price":
         console.log("💰 Processing current ETH price request");
-        await handleCurrentPrice(conversation);
+        await handleCurrentPrice(ctx);
         break;
 
       case "get-price-chart":
         console.log("📊 Processing ETH price with 24h change request");
-        await handlePriceWithChange(conversation);
+        await handlePriceWithChange(ctx);
         break;
 
       default:
-        await conversation.send(`❌ Unknown action: ${intentContent.actionId}`);
+        await ctx.conversation.send(
+          `❌ Unknown action: ${intentContent.actionId}`,
+        );
         console.log(`❌ Unknown action ID: ${intentContent.actionId}`);
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("❌ Error processing intent:", errorMessage);
-    await conversation.send(`❌ Error processing action: ${errorMessage}`);
+    await ctx.conversation.send(`❌ Error processing action: ${errorMessage}`);
   }
 }
 
 /**
  * Handle current ETH price request
  */
-async function handleCurrentPrice(conversation: Conversation) {
+async function handleCurrentPrice(ctx: AgentContext) {
   try {
-    await conversation.send("⏳ Fetching current ETH price...");
+    await ctx.conversation.send("⏳ Fetching current ETH price...");
 
     const { price } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
 
-    await conversation.send(`💰 **Current ETH Price**
+    await ctx.conversation.send(`💰 **Current ETH Price**
 
 ${formattedPrice}
 
 Data provided by CoinGecko 📈`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await conversation.send(`❌ Failed to fetch ETH price: ${errorMessage}`);
+    await ctx.conversation.send(
+      `❌ Failed to fetch ETH price: ${errorMessage}`,
+    );
   }
 }
 
 /**
  * Handle ETH price with 24h change request
  */
-async function handlePriceWithChange(conversation: Conversation) {
+async function handlePriceWithChange(ctx: AgentContext) {
   try {
-    await conversation.send("⏳ Fetching ETH price with 24h change...");
+    await ctx.conversation.send("⏳ Fetching ETH price with 24h change...");
 
     const { price, change24h } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
     const formattedChange = formatPriceChange(change24h);
 
-    await conversation.send(`📊 **ETH Price with 24h Change**
+    await ctx.conversation.send(`📊 **ETH Price with 24h Change**
 
 **Current Price:** ${formattedPrice}
 **24h Change:** ${formattedChange}
@@ -164,53 +138,39 @@ async function handlePriceWithChange(conversation: Conversation) {
 Data provided by CoinGecko 📈`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await conversation.send(`❌ Failed to fetch ETH price: ${errorMessage}`);
+    await ctx.conversation.send(
+      `❌ Failed to fetch ETH price: ${errorMessage}`,
+    );
   }
 }
 
 /**
  * Handle incoming messages with contextual responses
  */
-async function handleMessage(message: DecodedMessage, client: Client) {
+async function handleMessage(ctx: AgentContext) {
   try {
-    // Skip messages from the agent itself
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      return;
-    }
-
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Could not find conversation for message");
-      return;
-    }
-
     // Handle different message types
-    if (message.contentType?.typeId === "text") {
-      const isFirstTime = await isFirstTimeInteraction(conversation, client);
+    if (ctx.message.contentType?.typeId === "text") {
+      const isFirstTime = await isFirstTimeInteraction(ctx);
 
       // Handle first-time interactions with welcome actions
       if (isFirstTime) {
-        await sendWelcomeWithActions(conversation, client);
+        await sendWelcomeWithActions(ctx);
         return;
       }
 
       // Handle subsequent text messages
-      const messageContent = (message.content as string).toLowerCase().trim();
+      const messageContent = (ctx.message.content as string)
+        .toLowerCase()
+        .trim();
       if (messageContent === "help" || messageContent === "gm") {
-        await sendWelcomeWithActions(conversation, client);
+        await sendWelcomeWithActions(ctx);
       } else {
-        await conversation.send("👋 Type 'help' to see available options!");
+        await ctx.conversation.send("👋 Type 'help' to see available options!");
       }
-    } else if (message.contentType?.typeId === "intent") {
+    } else if (ctx.message.contentType?.typeId === "intent") {
       // Handle action button clicks
-      await handleIntentMessage(
-        conversation,
-        message.content as IntentContent,
-        client,
-      );
+      await handleIntentMessage(ctx, ctx.message.content as IntentContent);
     }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -218,26 +178,16 @@ async function handleMessage(message: DecodedMessage, client: Client) {
   }
 }
 
-async function main() {
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    codecs: [new ActionsCodec(), new IntentCodec()],
-  });
-
-  void logAgentDetails(client as Client);
-
-  // Handle all messages
-  const messageStream = await client.conversations.streamAllMessages();
-  console.log("🎧 Listening for messages...");
-
-  for await (const message of messageStream) {
-    await handleMessage(message as DecodedMessage<string>, client as Client);
-  }
-}
-
-main().catch((error: unknown) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  console.error("❌ Agent crashed:", errorMessage);
+const agent = await Agent.create(undefined, {
+  codecs: [new ActionsCodec(), new IntentCodec()],
 });
+
+agent.on("message", async (ctx) => {
+  await handleMessage(ctx);
+});
+
+agent.on("start", () => {
+  console.log("🚀 ETH Price Welcome Agent is online and ready!");
+});
+
+void agent.start();

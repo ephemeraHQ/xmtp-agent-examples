@@ -1,19 +1,4 @@
-import {
-  createSigner,
-  getDbPath,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
-
-const { XMTP_WALLET_KEY, XMTP_DB_ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
-  validateEnvironment([
-    "XMTP_WALLET_KEY",
-    "XMTP_DB_ENCRYPTION_KEY",
-    "XMTP_ENV",
-    "LOGGING_LEVEL",
-  ]);
+import { Agent, type AgentContext } from "@xmtp/agent-sdk";
 
 // Message queue interface
 interface QueuedMessage {
@@ -34,40 +19,17 @@ const SYNC_INTERVAL = 5;
 async function main(): Promise<void> {
   console.log("Starting XMTP Queue Dual Client Agent...");
 
-  // Create wallet signer and encryption key
-  const signer = createSigner(XMTP_WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
-
   // Create receiving client
-  const receivingClient = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    loggingLevel: LOGGING_LEVEL as LogLevel,
+  const receivingClient = await Agent.create(undefined, {
     dbPath: getDbPath(XMTP_ENV + "-receiving"),
   });
 
   console.log("XMTP receiving client created");
-  void logAgentDetails(receivingClient);
 
   // Create sending client
-  const sendingClient = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    loggingLevel: LOGGING_LEVEL as LogLevel,
+  const sendingClient = await Agent.create(undefined, {
     dbPath: getDbPath(XMTP_ENV + "-sending"),
   });
-
-  console.log("XMTP sending client created");
-  void logAgentDetails(sendingClient);
-
-  // Initial sync for both clients
-  console.log("Performing initial sync for receiving client...");
-  await receivingClient.conversations.sync();
-
-  console.log("Performing initial sync for sending client...");
-  await sendingClient.conversations.sync();
 
   // Start periodic sync for both clients
   startPeriodicSync(receivingClient, sendingClient);
@@ -85,8 +47,8 @@ async function main(): Promise<void> {
  * Start periodic sync for both clients
  */
 function startPeriodicSync(
-  receivingClient: Client,
-  sendingClient: Client,
+  receivingClient: AgentContext,
+  sendingClient: AgentContext,
 ): void {
   console.log(`Setting up periodic sync every ${SYNC_INTERVAL} minutes`);
 
@@ -94,11 +56,11 @@ function startPeriodicSync(
     () => {
       void (async () => {
         console.log("Syncing receiving client...");
-        await receivingClient.conversations.sync();
+        await receivingClient.client.conversations.sync();
         console.log("Receiving client synced successfully");
 
         console.log("Syncing sending client...");
-        await sendingClient.conversations.sync();
+        await sendingClient.client.conversations.sync();
         console.log("Sending client synced successfully");
       })();
     },
@@ -106,15 +68,18 @@ function startPeriodicSync(
   );
 }
 
-async function setupMessageStream(client: Client): Promise<void> {
+async function setupMessageStream(client: AgentContext): Promise<void> {
   console.log("Setting up message stream on receiving client...");
-  const stream = await client.conversations.streamAllMessages();
+  const stream = await client.client.conversations.streamAllMessages();
   console.log("Message stream started successfully");
 
   // Process incoming messages
   for await (const message of stream) {
     /* Ignore messages from the same agent or non-text messages */
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+    if (
+      message.senderInboxId.toLowerCase() ===
+      client.client.inboxId.toLowerCase()
+    ) {
       continue;
     }
 
@@ -139,7 +104,7 @@ async function setupMessageStream(client: Client): Promise<void> {
   }
 }
 
-function startMessageProcessor(client: Client): void {
+function startMessageProcessor(client: AgentContext): void {
   console.log("Starting message processor on sending client...");
   // Process message queue periodically
   setInterval(() => {
@@ -147,26 +112,17 @@ function startMessageProcessor(client: Client): void {
   }, PROCESS_INTERVAL);
 }
 
-async function processMessageQueue(client: Client): Promise<void> {
+async function processMessageQueue(ctx: AgentContext): Promise<void> {
   if (messageQueue.length === 0) return;
 
   // Process in FIFO order (oldest first)
   const message = messageQueue.shift();
   if (!message) return;
 
-  await client.conversations.sync();
-  // Get conversation
-  const conversation = await client.conversations.getConversationById(
-    message.conversationId,
-  );
-
-  if (!conversation) {
-    console.log("Conversation not found, discarding message");
-    return;
-  }
+  await ctx.conversation.sync();
 
   // Send message
-  await conversation.send(message.content);
+  await ctx.conversation.send(message.content);
   console.log(`Message sent successfully: "${message.content}"`);
 }
 

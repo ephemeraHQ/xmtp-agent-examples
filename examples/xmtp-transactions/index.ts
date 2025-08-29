@@ -10,7 +10,7 @@ const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
 const usdcHandler = new USDCHandler(NETWORK_ID);
 
-const agent = await Agent.create({
+const agent = await Agent.create(undefined, {
   codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
 });
 
