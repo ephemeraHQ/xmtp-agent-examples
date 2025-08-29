@@ -13,7 +13,6 @@
   "dependencies": {
     "@xmtp/agent-sdk": "*",
     "@xmtp/content-type-primitives": "^2.0.2",
-    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "tsx": "*",

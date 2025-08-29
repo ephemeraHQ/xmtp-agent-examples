@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Agent, type AgentContext } from "@xmtp/agent-sdk";
+import { Agent, filter, withFilter, type AgentContext } from "@xmtp/agent-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
@@ -124,15 +124,20 @@ Data provided by CoinGecko 📈`);
 const agent = await Agent.create(undefined, {
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
+// Combination of filters
+const combined = filter.and(filter.textOnly);
 
-agent.on("message", async (ctx) => {
-  if (ctx.message.content === "help" || ctx.message.content === "gm") {
-    await sendWelcomeWithActions(ctx);
-  } else if (ctx.message.contentType?.typeId === "intent") {
-    // Handle action button clicks
-    await handleIntentMessage(ctx, ctx.message.content as IntentContent);
-  }
-});
+agent.on(
+  "message",
+  withFilter(combined, async (ctx) => {
+    if (ctx.message.contentType?.typeId === "intent") {
+      // Handle action button clicks
+      await handleIntentMessage(ctx, ctx.message.content as IntentContent);
+    } else {
+      await sendWelcomeWithActions(ctx);
+    }
+  }),
+);
 
 agent.on("start", () => {
   const address = agent.client.accountIdentifier?.identifier;

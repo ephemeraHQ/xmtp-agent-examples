@@ -3,8 +3,8 @@
 When someone first messages the agent, they receive an interactive welcome message with two buttons.
 
 <p align="center">
-  <img src="left.png" alt="Image 1" width="49%">
-  <img src="right.png" alt="Image 2" width="49%">
+  <img src="media/left.png" alt="Image 1" width="49%">
+  <img src="media/right.png" alt="Image 2" width="49%">
 </p>
 
 ## Usage
