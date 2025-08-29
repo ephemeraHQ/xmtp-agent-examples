@@ -11,15 +11,15 @@ import OpenAI from "openai";
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
 const {
-  WALLET_KEY,
-  DB_ENCRYPTION_KEY,
+  XMTP_WALLET_KEY,
+  XMTP_DB_ENCRYPTION_KEY,
   XMTP_ENV,
   GAIA_NODE_URL,
   GAIA_API_KEY,
   GAIA_MODEL_NAME,
 } = validateEnvironment([
-  "WALLET_KEY",
-  "DB_ENCRYPTION_KEY",
+  "XMTP_WALLET_KEY",
+  "XMTP_DB_ENCRYPTION_KEY",
   "XMTP_ENV",
   "GAIA_NODE_URL",
   "GAIA_API_KEY",
@@ -37,8 +37,8 @@ const openai = new OpenAI({
  */
 async function main() {
   /* Create the signer using viem and parse the encryption key for the local db */
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+  const signer = createSigner(XMTP_WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
 
   const client = await Client.create(signer, {
     dbEncryptionKey,

@@ -26,16 +26,16 @@ import {
 } from "@xmtp/node-sdk";
 
 const {
-  WALLET_KEY,
-  DB_ENCRYPTION_KEY,
+  XMTP_WALLET_KEY,
+  XMTP_DB_ENCRYPTION_KEY,
   XMTP_ENV,
   CDP_API_KEY_NAME,
   CDP_API_KEY_PRIVATE_KEY,
   NETWORK_ID,
   OPENAI_API_KEY,
 } = validateEnvironment([
-  "WALLET_KEY",
-  "DB_ENCRYPTION_KEY",
+  "XMTP_WALLET_KEY",
+  "XMTP_DB_ENCRYPTION_KEY",
   "XMTP_ENV",
   "CDP_API_KEY_NAME",
   "CDP_API_KEY_PRIVATE_KEY",
@@ -112,8 +112,8 @@ function getWalletData(userId: string): string | null {
  * @returns An initialized XMTP Client instance
  */
 async function initializeXmtpClient() {
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+  const signer = createSigner(XMTP_WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
 
   const identifier = await signer.getIdentifier();
   const address = identifier.identifier;

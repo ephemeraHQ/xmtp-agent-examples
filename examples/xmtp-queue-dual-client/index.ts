@@ -7,10 +7,10 @@ import {
 } from "@helpers/client";
 import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
 
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
+const { XMTP_WALLET_KEY, XMTP_DB_ENCRYPTION_KEY, XMTP_ENV, LOGGING_LEVEL } =
   validateEnvironment([
-    "WALLET_KEY",
-    "DB_ENCRYPTION_KEY",
+    "XMTP_WALLET_KEY",
+    "XMTP_DB_ENCRYPTION_KEY",
     "XMTP_ENV",
     "LOGGING_LEVEL",
   ]);
@@ -35,8 +35,8 @@ async function main(): Promise<void> {
   console.log("Starting XMTP Queue Dual Client Agent...");
 
   // Create wallet signer and encryption key
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+  const signer = createSigner(XMTP_WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
 
   // Create receiving client
   const receivingClient = await Client.create(signer, {

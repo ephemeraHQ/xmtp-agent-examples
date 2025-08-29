@@ -20,10 +20,10 @@ import { ActionsCodec } from "./types/ActionsContent";
 import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
 // Validate required environment variables
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
+const { XMTP_WALLET_KEY, XMTP_DB_ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
   validateEnvironment([
-    "WALLET_KEY",
-    "DB_ENCRYPTION_KEY",
+    "XMTP_WALLET_KEY",
+    "XMTP_DB_ENCRYPTION_KEY",
     "XMTP_ENV",
     "NETWORK_ID",
   ]);
@@ -37,8 +37,8 @@ async function main() {
   );
 
   // Create XMTP client
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+  const signer = createSigner(XMTP_WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
 
   const client = await Client.create(signer, {
     dbEncryptionKey,

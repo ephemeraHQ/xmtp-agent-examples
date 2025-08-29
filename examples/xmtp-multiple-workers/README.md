@@ -21,16 +21,16 @@ To run your XMTP agents, you must create a `.env` file with the following variab
 XMTP_ENV=dev # local, dev, production
 
 # keys for agent 1
-WALLET_KEY_AGENT1= # the private key of the wallet
-DB_ENCRYPTION_KEY_AGENT1= # encryption key for local db encryption
+XMTP_WALLET_KEY_AGENT1= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY_AGENT1= # encryption key for local db encryption
 
 # keys for agent 2
-WALLET_KEY_AGENT2= # the private key of the wallet
-DB_ENCRYPTION_KEY_AGENT2= # encryption key for local db encryption
+XMTP_WALLET_KEY_AGENT2= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY_AGENT2= # encryption key for local db encryption
 
 # keys for agent 3
-WALLET_KEY_AGENT3= # the private key of the wallet
-DB_ENCRYPTION_KEY_AGENT3= # encryption key for local db encryption
+XMTP_WALLET_KEY_AGENT3= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY_AGENT3= # encryption key for local db encryption
 ```
 
 You can generate random xmtp keys with the following command:
@@ -67,20 +67,20 @@ This example demonstrates how to run multiple XMTP clients simultaneously
 const workerConfigs: WorkerConfig[] = [
   {
     name: "agent1",
-    walletKey: WALLET_KEY_AGENT1,
-    encryptionKey: DB_ENCRYPTION_KEY_AGENT1,
+    walletKey: XMTP_WALLET_KEY_AGENT1,
+    encryptionKey: XMTP_DB_ENCRYPTION_KEY_AGENT1,
     xmtpEnv: XMTP_ENV as XmtpEnv,
   },
   {
     name: "agent2",
-    walletKey: WALLET_KEY_AGENT2,
-    encryptionKey: DB_ENCRYPTION_KEY_AGENT2,
+    walletKey: XMTP_WALLET_KEY_AGENT2,
+    encryptionKey: XMTP_DB_ENCRYPTION_KEY_AGENT2,
     xmtpEnv: XMTP_ENV as XmtpEnv,
   },
   {
     name: "agent3",
-    walletKey: WALLET_KEY_AGENT3,
-    encryptionKey: DB_ENCRYPTION_KEY_AGENT3,
+    walletKey: XMTP_WALLET_KEY_AGENT3,
+    encryptionKey: XMTP_DB_ENCRYPTION_KEY_AGENT3,
     xmtpEnv: XMTP_ENV as XmtpEnv,
   },
 ];

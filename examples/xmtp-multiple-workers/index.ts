@@ -9,20 +9,20 @@ import {
 // Validate environment variables for all agents
 const {
   XMTP_ENV,
-  WALLET_KEY_AGENT1,
-  DB_ENCRYPTION_KEY_AGENT1,
-  WALLET_KEY_AGENT2,
-  DB_ENCRYPTION_KEY_AGENT2,
-  WALLET_KEY_AGENT3,
-  DB_ENCRYPTION_KEY_AGENT3,
+  XMTP_WALLET_KEY_AGENT1,
+  XMTP_DB_ENCRYPTION_KEY_AGENT1,
+  XMTP_WALLET_KEY_AGENT2,
+  XMTP_DB_ENCRYPTION_KEY_AGENT2,
+  XMTP_WALLET_KEY_AGENT3,
+  XMTP_DB_ENCRYPTION_KEY_AGENT3,
 } = validateEnvironment([
   "XMTP_ENV",
-  "WALLET_KEY_AGENT1",
-  "DB_ENCRYPTION_KEY_AGENT1",
-  "WALLET_KEY_AGENT2",
-  "DB_ENCRYPTION_KEY_AGENT2",
-  "WALLET_KEY_AGENT3",
-  "DB_ENCRYPTION_KEY_AGENT3",
+  "XMTP_WALLET_KEY_AGENT1",
+  "XMTP_DB_ENCRYPTION_KEY_AGENT1",
+  "XMTP_WALLET_KEY_AGENT2",
+  "XMTP_DB_ENCRYPTION_KEY_AGENT2",
+  "XMTP_WALLET_KEY_AGENT3",
+  "XMTP_DB_ENCRYPTION_KEY_AGENT3",
 ]);
 
 /**
@@ -77,20 +77,20 @@ async function main(): Promise<void> {
   const workerConfigs: WorkerConfig[] = [
     {
       name: "agent1",
-      walletKey: WALLET_KEY_AGENT1,
-      encryptionKey: DB_ENCRYPTION_KEY_AGENT1,
+      walletKey: XMTP_WALLET_KEY_AGENT1,
+      encryptionKey: XMTP_DB_ENCRYPTION_KEY_AGENT1,
       xmtpEnv: XMTP_ENV as XmtpEnv,
     },
     {
       name: "agent2",
-      walletKey: WALLET_KEY_AGENT2,
-      encryptionKey: DB_ENCRYPTION_KEY_AGENT2,
+      walletKey: XMTP_WALLET_KEY_AGENT2,
+      encryptionKey: XMTP_DB_ENCRYPTION_KEY_AGENT2,
       xmtpEnv: XMTP_ENV as XmtpEnv,
     },
     {
       name: "agent3",
-      walletKey: WALLET_KEY_AGENT3,
-      encryptionKey: DB_ENCRYPTION_KEY_AGENT3,
+      walletKey: XMTP_WALLET_KEY_AGENT3,
+      encryptionKey: XMTP_DB_ENCRYPTION_KEY_AGENT3,
       xmtpEnv: XMTP_ENV as XmtpEnv,
     },
   ];

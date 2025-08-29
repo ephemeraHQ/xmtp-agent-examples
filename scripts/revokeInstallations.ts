@@ -92,7 +92,11 @@ async function main() {
   });
 
   // Validate required environment variables
-  const requiredVars = ["WALLET_KEY", "DB_ENCRYPTION_KEY", "XMTP_ENV"];
+  const requiredVars = [
+    "XMTP_WALLET_KEY",
+    "XMTP_DB_ENCRYPTION_KEY",
+    "XMTP_ENV",
+  ];
   const missingVars = requiredVars.filter((varName) => !envVars[varName]);
 
   if (missingVars.length > 0) {
@@ -114,7 +118,7 @@ async function main() {
 
   try {
     // Create signer and encryption key
-    const signer = createSigner(envVars.WALLET_KEY as `0x${string}`);
+    const signer = createSigner(envVars.XMTP_WALLET_KEY as `0x${string}`);
 
     // Get current inbox state
     const inboxState = await Client.inboxStateFromInboxIds(

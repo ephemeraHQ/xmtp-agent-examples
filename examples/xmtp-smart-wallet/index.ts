@@ -15,13 +15,13 @@ const WALLET_PATH = "wallet.json";
  * that stores your agent's messages */
 const {
   XMTP_ENV,
-  DB_ENCRYPTION_KEY,
+  XMTP_DB_ENCRYPTION_KEY,
   NETWORK_ID,
   CDP_API_KEY_NAME,
   CDP_API_KEY_PRIVATE_KEY,
 } = validateEnvironment([
   "XMTP_ENV",
-  "DB_ENCRYPTION_KEY",
+  "XMTP_DB_ENCRYPTION_KEY",
   "NETWORK_ID",
   "CDP_API_KEY_NAME",
   "CDP_API_KEY_PRIVATE_KEY",
@@ -31,7 +31,7 @@ const main = async () => {
   const walletData = await initializeWallet(WALLET_PATH);
   /* Create the signer using viem and parse the encryption key for the local db */
   const signer = createSigner(walletData.seed);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(XMTP_DB_ENCRYPTION_KEY);
 
   const client = await Client.create(signer, {
     dbEncryptionKey,

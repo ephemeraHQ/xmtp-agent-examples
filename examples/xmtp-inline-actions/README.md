@@ -74,8 +74,8 @@ export async function handleActionsCommand(conversation: any) {
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # encryption key for the local database
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 NETWORK_ID=base-sepolia # base-mainnet or others
 ```
