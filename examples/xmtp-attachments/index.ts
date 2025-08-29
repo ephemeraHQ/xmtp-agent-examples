@@ -10,6 +10,7 @@ import {
 } from "@xmtp/content-type-remote-attachment";
 import { uploadToPinata } from "./upload";
 
+process.loadEnvFile(".env");
 // Check this path is correct in your case of errors
 const DEFAULT_IMAGE_PATH = "./logo.png";
 

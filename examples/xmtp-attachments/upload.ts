@@ -1,6 +1,7 @@
 import axios from "axios";
 import FormData from "form-data";
 
+process.loadEnvFile(".env");
 const PINATA_API_KEY = process.env.PINATA_API_KEY || "";
 const PINATA_SECRET_KEY = process.env.PINATA_SECRET_KEY || "";
 
