@@ -1696,9 +1696,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/agent-sdk@npm:0.0.6":
-  version: 0.0.6
-  resolution: "@xmtp/agent-sdk@npm:0.0.6"
+"@xmtp/agent-sdk@npm:0.0.7":
+  version: 0.0.7
+  resolution: "@xmtp/agent-sdk@npm:0.0.7"
   dependencies:
     "@noble/curves": "npm:^2.0.0"
     "@xmtp/content-type-reaction": "npm:^2.0.2"
@@ -1708,7 +1708,7 @@ __metadata:
     "@xmtp/node-sdk": "npm:^4.1.0"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.31.7"
-  checksum: 10/8da61453b6f492f41ece5a2f4854a0d4784319b764a9238e24f443f73180b63cf87451fe248e1b98620db6bb5df4a5a5c35ba2cd46053af5916bc4bd125738d9
+  checksum: 10/d61f91cd2c28ddf282083a9f20b27a970366beccf9430984ed66242502e7fa603840f209270e5bf30620a3a03e70799cb960bee23964265365c5b0b4551f00c5
   languageName: node
   linkType: hard
 
@@ -5261,7 +5261,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/agent-sdk": "npm:0.0.6"
+    "@xmtp/agent-sdk": "npm:0.0.7"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"
