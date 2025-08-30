@@ -1,4 +1,4 @@
-import { Agent, filter, withFilter, type AgentContext } from "@xmtp/agent-sdk";
+import { Agent, filter, MessageFilter, withFilter, type AgentContext } from "@xmtp/agent-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
@@ -123,7 +123,32 @@ Data provided by CoinGecko 📈`);
 const agent = await Agent.create(undefined, {
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
+
+/**
+ * Check if this is the first interaction with a user
+ */
+const hasSentBefore = async (ctx: AgentContext) => {
+  const messages = await ctx.conversation.messages();
+  const hasSentBefore = messages.some(
+    (msg) =>
+      msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
+  );
+  return hasSentBefore;
+};
+
+const wasMemberBefore <ContentTypes>(): MessageFilter<ContentTypes> { 
+  const members = await ctx.conversation.members();}
+
+  const wasMemberBefore = members.some(
+    (member: { inboxId: string; installationIds: string[] }) =>
+      member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
+      member.installationIds.length > 1,
+  );}
+  return wasMemberBefore;
+};}
+
 // Combination of filters
+
 const combined = filter.and(filter.textOnly);
 
 agent.on(

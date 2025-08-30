@@ -1,0 +1,893 @@
+---
+alwaysApply: true
+---
+
+# Writing XMTP Agents
+
+You're an expert in writing TypeScript with Node.js. Generate **high-quality XMTP Agents** that adhere to the following best practices:
+
+## Guidelines
+
+1. Use modern TypeScript patterns and ESM modules. All examples should be structured as ES modules with `import` statements rather than CommonJS `require()`.
+
+2. Use the XMTP Agent SDK (@xmtp/agent-sdk) which provides an event-driven, middleware-powered approach to building messaging agents.
+
+3. Only import from @xmtp/agent-sdk for XMTP functionality. Do not import from any other XMTP-related packages or URLs. Specifically:
+   - Never use the deprecated @xmtp/xmtp-js library or @xmtp/node-sdk
+   - Always import directly from @xmtp/agent-sdk as shown below:
+
+   ```typescript
+   // CORRECT:
+   import {
+     Agent,
+     filter,
+     withFilter,
+     type AgentContext,
+   } from "@xmtp/agent-sdk";
+
+   // INCORRECT - DEPRECATED:
+   import { Client } from "@xmtp/xmtp-js";
+   import { Client } from "@xmtp/node-sdk";
+   ```
+
+4. Follow the consistent pattern for initializing XMTP agents using environment variables:
+
+   ```typescript
+   // Load environment variables from .env file
+   process.loadEnvFile(".env");
+
+   // Create agent using environment variables (simplest approach)
+   const agent = await Agent.create();
+
+   // Or with custom options
+   const agent = await Agent.create(undefined, {
+     env: "dev", // or 'production'
+     dbPath: null, // in-memory store; provide a path to persist
+     codecs: [new CustomCodec()], // optional custom content types
+   });
+   ```
+
+5. Use proper environment variable validation. The Agent SDK supports these environment variables:
+   - `XMTP_WALLET_KEY` - Private key for wallet
+   - `XMTP_ENV` - Network environment (dev, production)
+   - `XMTP_DB_ENCRYPTION_KEY` - Database encryption key
+   - `XMTP_FORCE_DEBUG` - Activate debugging logs
+   - `XMTP_FORCE_REVOKE_INSTALLATIONS` - Remove other installations
+
+6. Use event-driven architecture with the Agent's EventEmitter interface:
+
+   ```typescript
+   // Listen for incoming messages
+   agent.on("message", async (ctx) => {
+     await ctx.conversation.send("Hello from my XMTP Agent! 👋");
+   });
+
+   // Listen for lifecycle events
+   agent.on("start", () => {
+     console.log("Agent started successfully");
+   });
+
+   agent.on("error", (error) => {
+     console.error("Agent error", error);
+   });
+
+   // Start the agent
+   await agent.start();
+   ```
+
+7. Use built-in filters to handle specific message types efficiently:
+
+   ```typescript
+   import { filter, withFilter } from "@xmtp/agent-sdk";
+
+   // Using filter in message handler
+   agent.on(
+     "message",
+     withFilter(filter.startsWith("@agent"), async (ctx) => {
+       await ctx.conversation.send("How can I help you?");
+     }),
+   );
+
+   // Combination of filters
+   const combined = filter.and(filter.notFromSelf, filter.textOnly);
+
+   agent.on(
+     "message",
+     withFilter(combined, async (ctx) => {
+       await ctx.conversation.send("You sent a text message ✅");
+     }),
+   );
+   ```
+
+8. Leverage the rich AgentContext provided to every message handler:
+   - `ctx.message` – decoded message
+   - `ctx.conversation` – the active conversation object
+   - `ctx.client` – underlying XMTP client
+   - Helper methods like `ctx.sendText()` and `ctx.sendTextReply()`
+
+   ```typescript
+   agent.on("message", async (ctx) => {
+     // Access message content
+     console.log(ctx.message.content);
+
+     // Send replies using helpers
+     await ctx.sendTextReply("Reply using helper ✨");
+
+     // Or use conversation directly
+     await ctx.conversation.send("Direct conversation send");
+   });
+   ```
+
+9. Use middleware for cross-cutting concerns like routing, analytics, rate limiting:
+
+   ```typescript
+   import { CommandRouter } from "@xmtp/agent-sdk";
+
+   const router = new CommandRouter();
+
+   router.command("/version", async (ctx) => {
+     await ctx.conversation.send(`v${process.env.npm_package_version}`);
+   });
+
+   agent.use(router.middleware());
+   ```
+
+10. Handle custom content types by registering codecs during agent creation:
+
+    ```typescript
+    import { ReplyCodec } from "@xmtp/content-type-reply";
+
+    const agent = await Agent.create(undefined, {
+      env: "dev",
+      dbPath: null,
+      codecs: [new ReplyCodec()],
+    });
+    ```
+
+11. Use consistent error handling pattern with type narrowing for unknown errors:
+
+    ```typescript
+    // CORRECT:
+    try {
+      // code that might throw
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("Error:", errorMessage);
+    }
+
+    // INCORRECT:
+    try {
+      // code that might throw
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    ```
+
+12. Always use the built-in key generation command instead of creating your own script:
+
+    Environment variables
+
+    To run your XMTP agent, you must create a `.env` file with the following variables:
+
+    ```bash
+    XMTP_WALLET_KEY= # the private key of the wallet
+    XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
+    XMTP_ENV=dev # local, dev, production
+    ```
+
+    Generating XMTP Keys
+
+    Always use the built-in key generation command instead of creating your own script:
+
+    ```bash
+    # Generate generic keys
+    yarn gen:keys
+    ```
+
+    This command will:
+    1. Generate a secure wallet private key
+    2. Create an encryption key for the local database
+    3. Output the corresponding public key
+    4. Automatically append the keys to your `.env` file
+
+    Example output in `.env`:
+
+    ```bash
+    # Generic keys
+    XMTP_WALLET_KEY=0x...
+    XMTP_DB_ENCRYPTION_KEY=...
+    XMTP_ENV=dev
+    # public key is 0x...
+    ```
+
+    > [!IMPORTANT]
+    > Never create your own key generation script. The built-in command follows security best practices and uses the correct dependencies
+
+## Example: Simple XMTP Agent
+
+### Prompt:
+
+"Create a simple XMTP agent that responds 'gm' to any incoming message."
+
+### Solution:
+
+```typescript
+import { Agent } from "@xmtp/agent-sdk";
+
+// Load environment variables from .env file
+process.loadEnvFile(".env");
+
+// Create agent using environment variables
+const agent = await Agent.create();
+
+// Respond to any incoming message
+agent.on("message", async (ctx) => {
+  console.log(ctx.message.content);
+  await ctx.conversation.send("gm");
+});
+
+// Log when we're ready
+agent.on("start", () => {
+  const address = agent.client.accountIdentifier?.identifier;
+  const env = agent.client.options?.env;
+  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`We are online\nAddress: ${address}\nURL: ${url}`);
+});
+
+// Start the agent
+await agent.start();
+```
+
+## Example: Agent with Filters and Actions
+
+### Prompt:
+
+"Create an XMTP agent that sends a welcome message with inline actions for ETH price information."
+
+### Solution:
+
+```typescript
+import { Agent, filter, withFilter, type AgentContext } from "@xmtp/agent-sdk";
+import {
+  ActionsCodec,
+  ContentTypeActions,
+  type ActionsContent,
+} from "./types/ActionsContent";
+import { IntentCodec, type IntentContent } from "./types/IntentContent";
+
+process.loadEnvFile(".env");
+
+/**
+ * Send a welcome message with inline actions
+ */
+async function sendWelcomeWithActions(ctx: AgentContext) {
+  const welcomeActions: ActionsContent = {
+    id: `welcome-${Date.now()}`,
+    description: `👋 Welcome! I'm your ETH price agent.
+
+Choose an option below to get started:`,
+    actions: [
+      {
+        id: "get-current-price",
+        label: "💰 Get Current ETH Price",
+        style: "primary",
+      },
+      {
+        id: "get-price-chart",
+        label: "📊 Get Price with 24h Change",
+        style: "secondary",
+      },
+    ],
+  };
+
+  console.log(`✓ Sending welcome message with actions`);
+  await ctx.conversation.send(welcomeActions, ContentTypeActions);
+}
+
+/**
+ * Handle intent messages (when users click action buttons)
+ */
+async function handleIntentMessage(
+  ctx: AgentContext,
+  intentContent: IntentContent,
+) {
+  console.log(
+    `🎯 Processing intent: ${intentContent.actionId} for actions: ${intentContent.id}`,
+  );
+
+  try {
+    switch (intentContent.actionId) {
+      case "get-current-price":
+        await ctx.conversation.send("💰 Current ETH Price: $3,200");
+        break;
+
+      case "get-price-chart":
+        await ctx.conversation.send("📊 ETH: $3,200 (+2.5% 24h)");
+        break;
+
+      default:
+        await ctx.conversation.send(
+          `❌ Unknown action: ${intentContent.actionId}`,
+        );
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ Error processing intent:", errorMessage);
+    await ctx.conversation.send(`❌ Error processing action: ${errorMessage}`);
+  }
+}
+
+// Create agent with custom codecs
+const agent = await Agent.create(undefined, {
+  codecs: [new ActionsCodec(), new IntentCodec()],
+});
+
+// Filter for text-only messages (not from self)
+const combined = filter.and(filter.notFromSelf, filter.textOnly);
+
+agent.on(
+  "message",
+  withFilter(combined, async (ctx) => {
+    if (ctx.message.contentType?.typeId === "intent") {
+      // Handle action button clicks
+      await handleIntentMessage(ctx, ctx.message.content as IntentContent);
+    } else {
+      // Send welcome message with actions
+      await sendWelcomeWithActions(ctx);
+    }
+  }),
+);
+
+agent.on("start", () => {
+  const address = agent.client.accountIdentifier?.identifier;
+  const env = agent.client.options?.env;
+  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`We are online\nAddress: ${address}\nURL: ${url}`);
+});
+
+await agent.start();
+```
+
+## Core Concepts
+
+### 1. Event-Driven Architecture
+
+The Agent SDK uses Node's EventEmitter interface. Subscribe only to what you need:
+
+- `message` – a new incoming (non-self) message
+- `start` / `stop` – lifecycle events
+- `error` – surfaced errors
+
+### 2. Middleware Support
+
+Extend your agent with custom business logic using middlewares. Compose cross-cutting behavior like routing, telemetry, rate limiting, analytics, and feature flags.
+
+## Middleware Reference
+
+Middleware in the Agent SDK allows you to intercept and process messages before they reach your main event handlers. This enables powerful patterns like command routing, authentication, logging, and more.
+
+### Basic Middleware Pattern
+
+```typescript
+import type { AgentMiddleware } from "@xmtp/agent-sdk";
+
+// Basic middleware function
+const loggingMiddleware: AgentMiddleware = async (ctx, next) => {
+  console.log(`Received message: ${ctx.message.content}`);
+  await next(); // Continue to next middleware or handler
+};
+
+// Use middleware
+agent.use(loggingMiddleware);
+```
+
+### Command Router Middleware
+
+The built-in `CommandRouter` provides powerful command handling:
+
+```typescript
+import { CommandRouter } from "@xmtp/agent-sdk";
+
+const router = new CommandRouter();
+
+// Register commands
+router.command("/help", async (ctx) => {
+  await ctx.conversation.send(`Available commands:
+/help - Show this help message
+/status - Check agent status
+/version - Show version info`);
+});
+
+router.command("/status", async (ctx) => {
+  await ctx.conversation.send("🟢 Agent is running normally");
+});
+
+router.command("/version", async (ctx) => {
+  await ctx.conversation.send(`v${process.env.npm_package_version}`);
+});
+
+// Handle unrecognized commands
+router.default(async (ctx) => {
+  await ctx.conversation.send(
+    "Unknown command. Type /help for available commands.",
+  );
+});
+
+// Use the router middleware
+agent.use(router.middleware());
+```
+
+### Custom Middleware Examples
+
+```typescript
+// 1. Authentication middleware
+const authMiddleware: AgentMiddleware = async (ctx, next) => {
+  const authorizedUsers = ["admin-inbox-id", "user-inbox-id"];
+
+  if (!authorizedUsers.includes(ctx.message.senderInboxId)) {
+    await ctx.conversation.send("❌ Unauthorized access");
+    return; // Don't call next() to stop processing
+  }
+
+  await next(); // User is authorized, continue
+};
+
+// 2. Rate limiting middleware
+const rateLimitMap = new Map<string, number>();
+
+const rateLimitMiddleware: AgentMiddleware = async (ctx, next) => {
+  const senderId = ctx.message.senderInboxId;
+  const now = Date.now();
+  const lastMessage = rateLimitMap.get(senderId) || 0;
+
+  if (now - lastMessage < 1000) {
+    // 1 second rate limit
+    await ctx.conversation.send(
+      "⏰ Please wait before sending another message",
+    );
+    return;
+  }
+
+  rateLimitMap.set(senderId, now);
+  await next();
+};
+
+// 3. Message analytics middleware
+const analyticsMiddleware: AgentMiddleware = async (ctx, next) => {
+  // Log analytics data
+  console.log({
+    timestamp: new Date().toISOString(),
+    senderId: ctx.message.senderInboxId,
+    messageLength: (ctx.message.content as string).length,
+    conversationId: ctx.conversation.id,
+  });
+
+  await next();
+};
+
+// 4. Text-only filter middleware
+const textOnlyMiddleware: AgentMiddleware = async (ctx, next) => {
+  if (ctx.message.contentType?.typeId !== "text") {
+    await ctx.conversation.send("I can only process text messages");
+    return;
+  }
+
+  await next();
+};
+
+// 5. Profanity filter middleware
+const profanityWords = ["spam", "scam"]; // Add your words
+
+const profanityFilterMiddleware: AgentMiddleware = async (ctx, next) => {
+  const text = (ctx.message.content as string).toLowerCase();
+  const hasProfanity = profanityWords.some((word) => text.includes(word));
+
+  if (hasProfanity) {
+    await ctx.conversation.send("⚠️ Message contains inappropriate content");
+    return;
+  }
+
+  await next();
+};
+
+// Use multiple middlewares (they run in order)
+agent.use(textOnlyMiddleware);
+agent.use(rateLimitMiddleware);
+agent.use(authMiddleware);
+agent.use(analyticsMiddleware);
+agent.use(profanityFilterMiddleware);
+agent.use(router.middleware());
+```
+
+### Advanced Middleware Patterns
+
+```typescript
+// Conditional middleware factory
+const createConditionalMiddleware = (
+  condition: (ctx: AgentContext) => boolean,
+  middleware: AgentMiddleware,
+): AgentMiddleware => {
+  return async (ctx, next) => {
+    if (condition(ctx)) {
+      await middleware(ctx, next);
+    } else {
+      await next();
+    }
+  };
+};
+
+// Use conditional middleware
+const adminOnlyAuth = createConditionalMiddleware(
+  (ctx) => (ctx.message.content as string).startsWith("/admin"),
+  authMiddleware,
+);
+
+agent.use(adminOnlyAuth);
+
+// Error handling middleware
+const errorHandlingMiddleware: AgentMiddleware = async (ctx, next) => {
+  try {
+    await next();
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Middleware error:", errorMessage);
+    await ctx.conversation.send("❌ An error occurred processing your message");
+  }
+};
+
+// Context enrichment middleware
+const enrichContextMiddleware: AgentMiddleware = async (ctx, next) => {
+  // Add custom properties to context
+  (ctx as any).timestamp = Date.now();
+  (ctx as any).messageCount = await ctx.conversation
+    .messages()
+    .then((msgs) => msgs.length);
+
+  await next();
+};
+
+// Feature flag middleware
+const featureFlags = {
+  newFeatureEnabled: true,
+  betaFeatures: false,
+};
+
+const featureFlagMiddleware: AgentMiddleware = async (ctx, next) => {
+  (ctx as any).features = featureFlags;
+  await next();
+};
+```
+
+### Creating Custom Command Routers
+
+```typescript
+// Custom router with advanced features
+class AdvancedCommandRouter {
+  private commands = new Map<
+    string,
+    {
+      handler: (ctx: AgentContext) => Promise<void>;
+      description: string;
+      adminOnly?: boolean;
+    }
+  >();
+
+  command(
+    cmd: string,
+    description: string,
+    handler: (ctx: AgentContext) => Promise<void>,
+    options?: { adminOnly?: boolean },
+  ) {
+    this.commands.set(cmd.toLowerCase(), {
+      handler,
+      description,
+      ...options,
+    });
+    return this;
+  }
+
+  middleware(): AgentMiddleware {
+    return async (ctx, next) => {
+      const text = ctx.message.content as string;
+      const [command] = text.split(" ");
+
+      if (!command.startsWith("/")) {
+        await next();
+        return;
+      }
+
+      const commandInfo = this.commands.get(command.toLowerCase());
+      if (!commandInfo) {
+        await ctx.conversation.send(
+          "❌ Unknown command. Type /help for available commands.",
+        );
+        return;
+      }
+
+      // Check admin permissions
+      if (commandInfo.adminOnly) {
+        const adminUsers = ["admin-inbox-id"];
+        if (!adminUsers.includes(ctx.message.senderInboxId)) {
+          await ctx.conversation.send("❌ Admin access required");
+          return;
+        }
+      }
+
+      await commandInfo.handler(ctx);
+    };
+  }
+
+  getHelpText(): string {
+    const commands = Array.from(this.commands.entries())
+      .map(
+        ([cmd, info]) =>
+          `${cmd} - ${info.description}${info.adminOnly ? " (Admin only)" : ""}`,
+      )
+      .join("\n");
+
+    return `Available commands:\n${commands}`;
+  }
+}
+
+// Usage
+const advancedRouter = new AdvancedCommandRouter();
+
+advancedRouter
+  .command("/help", "Show available commands", async (ctx) => {
+    await ctx.conversation.send(advancedRouter.getHelpText());
+  })
+  .command(
+    "/restart",
+    "Restart the agent",
+    async (ctx) => {
+      await ctx.conversation.send("🔄 Restarting agent...");
+      // Restart logic here
+    },
+    { adminOnly: true },
+  );
+
+agent.use(advancedRouter.middleware());
+```
+
+### Middleware Best Practices
+
+1. **Order matters** - Middleware runs in the order you add it
+2. **Call `next()`** - Always call `next()` unless you want to stop processing
+3. **Handle errors** - Use try/catch blocks in middleware
+4. **Keep it focused** - Each middleware should have a single responsibility
+5. **Make it reusable** - Create factory functions for configurable middleware
+6. **Document behavior** - Clear comments about what each middleware does
+
+### 3. Built-in Filters
+
+Instead of manually checking every incoming message, use simple, reusable filters to handle specific message types efficiently.
+
+## Filters Reference
+
+The Agent SDK provides a comprehensive filter system for message processing. Filters can be combined using logical operators to create complex filtering logic.
+
+### Basic Filters
+
+```typescript
+import { filter, withFilter } from "@xmtp/agent-sdk";
+
+// Pre-configured filters (no function call needed)
+filter.notFromSelf; // Exclude messages from the agent itself
+filter.fromSelf; // Include only messages from the agent itself
+filter.textOnly; // Include only text messages
+```
+
+### Factory Function Filters
+
+```typescript
+// Messages from specific senders
+filter.fromSender("inbox-id-123"); // Single sender
+filter.fromSender(["inbox-1", "inbox-2", "inbox-3"]); // Multiple senders
+
+// Text content matching
+filter.startsWith("@agent"); // Messages starting with "@agent"
+filter.startsWith("/help"); // Command-style messages
+filter.startsWith("!"); // Messages starting with "!"
+```
+
+### Logical Combinators
+
+```typescript
+// AND - All filters must pass
+const strictFilter = filter.and(
+  filter.notFromSelf,
+  filter.textOnly,
+  filter.startsWith("/"),
+);
+
+// OR - At least one filter must pass
+const flexibleFilter = filter.or(
+  filter.startsWith("@agent"),
+  filter.startsWith("/help"),
+  filter.fromSender("admin-inbox-id"),
+);
+
+// NOT - Invert any filter
+const notTextFilter = filter.not(filter.textOnly);
+const notFromAdmin = filter.not(filter.fromSender("admin-inbox-id"));
+```
+
+### Practical Filter Examples
+
+```typescript
+// 1. Command handler - only process commands from users
+const commandFilter = filter.and(
+  filter.notFromSelf,
+  filter.textOnly,
+  filter.startsWith("/"),
+);
+
+agent.on(
+  "message",
+  withFilter(commandFilter, async (ctx) => {
+    const command = ctx.message.content as string;
+    console.log(`Processing command: ${command}`);
+    // Handle commands like /help, /status, etc.
+  }),
+);
+
+// 2. Admin-only messages
+const adminFilter = filter.and(
+  filter.notFromSelf,
+  filter.fromSender(["admin-inbox-1", "admin-inbox-2"]),
+);
+
+agent.on(
+  "message",
+  withFilter(adminFilter, async (ctx) => {
+    await ctx.conversation.send("Admin command received! 🔧");
+  }),
+);
+
+// 3. Public conversation filter (exclude self and commands)
+const publicFilter = filter.and(
+  filter.notFromSelf,
+  filter.textOnly,
+  filter.not(filter.startsWith("/")),
+);
+
+agent.on(
+  "message",
+  withFilter(publicFilter, async (ctx) => {
+    // Process regular conversation messages
+    await ctx.conversation.send("Thanks for your message! 💬");
+  }),
+);
+
+// 4. Multi-trigger filter
+const helpTriggers = filter.or(
+  filter.startsWith("/help"),
+  filter.startsWith("help"),
+  filter.startsWith("@agent help"),
+);
+
+agent.on(
+  "message",
+  withFilter(helpTriggers, async (ctx) => {
+    await ctx.conversation.send("How can I help you? 🤖");
+  }),
+);
+
+// 5. VIP user filter
+const vipUsers = ["vip-inbox-1", "vip-inbox-2"];
+const vipFilter = filter.and(filter.notFromSelf, filter.fromSender(vipUsers));
+
+agent.on(
+  "message",
+  withFilter(vipFilter, async (ctx) => {
+    await ctx.conversation.send(
+      "Hello VIP user! Priority support activated. ⭐",
+    );
+  }),
+);
+
+// 6. Debug filter - only self messages for testing
+const debugFilter = filter.and(filter.fromSelf, filter.startsWith("debug:"));
+
+agent.on(
+  "message",
+  withFilter(debugFilter, async (ctx) => {
+    console.log("Debug message received:", ctx.message.content);
+  }),
+);
+```
+
+### Custom Filter Creation
+
+You can create your own custom filters by implementing the `MessageFilter` type:
+
+```typescript
+import type { MessageFilter } from "@xmtp/agent-sdk";
+
+// Custom filter for messages containing specific keywords
+const containsKeyword = (keyword: string): MessageFilter<any> => {
+  return (message, client) => {
+    if (message.contentType?.sameAs(ContentTypeText)) {
+      const text = message.content as string;
+      return text.toLowerCase().includes(keyword.toLowerCase());
+    }
+    return false;
+  };
+};
+
+// Custom filter for message length
+const minLength = (length: number): MessageFilter<any> => {
+  return (message, client) => {
+    if (message.contentType?.sameAs(ContentTypeText)) {
+      const text = message.content as string;
+      return text.length >= length;
+    }
+    return false;
+  };
+};
+
+// Use custom filters
+const customFilter = filter.and(
+  filter.notFromSelf,
+  containsKeyword("urgent"),
+  minLength(10),
+);
+
+agent.on(
+  "message",
+  withFilter(customFilter, async (ctx) => {
+    await ctx.conversation.send("Urgent message received! 🚨");
+  }),
+);
+```
+
+### Filter Shortcuts
+
+For convenience, you can import `f` as a shorter alias:
+
+```typescript
+import { f, withFilter } from "@xmtp/agent-sdk";
+
+// Same functionality, shorter syntax
+const quickFilter = f.and(f.notFromSelf, f.textOnly);
+```
+
+### 4. Rich Context
+
+Every message handler receives an AgentContext with helpful properties and methods for easy interaction.
+
+## Available Utilities
+
+The Agent SDK provides several utility functions:
+
+```typescript
+import { createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
+
+// Create a local user + signer (for testing)
+const user = createUser();
+const signer = createSigner(user);
+
+// Get a test URL for easy testing
+const testUrl = getTestUrl(agent);
+```
+
+## FAQ (Quick Hits)
+
+| Question                               | Answer                                                     |
+| -------------------------------------- | ---------------------------------------------------------- |
+| Does middleware run for every message? | Yes, in the order added.                                   |
+| How do I reject a message early?       | Don't call `next()` in middleware.                         |
+| How do I filter messages?              | Use `withFilter(...)` around an event listener.            |
+| Can I send custom content types?       | Yes, register codecs during agent creation.                |
+| How do I handle action button clicks?  | Listen for messages with `contentType.typeId === "intent"` |
+
+## Best Practices
+
+1. **Always use environment variables** for configuration with `process.loadEnvFile(".env")`
+2. **Use filters** to avoid processing irrelevant messages
+3. **Handle errors gracefully** with proper try/catch blocks
+4. **Log important events** for debugging and monitoring
+5. **Use middleware** for cross-cutting concerns
+6. **Register codecs** during agent creation for custom content types
+7. **Test your agent** using the provided test URL utilities

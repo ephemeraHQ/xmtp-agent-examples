@@ -3,15 +3,10 @@ import { Agent, filter, withFilter } from "@xmtp/agent-sdk";
 process.loadEnvFile(".env");
 const agent = await Agent.create();
 
-// Combination of filters
-const combined = filter.and(filter.textOnly);
-
-agent.on(
-  "message",
-  withFilter(combined, async (ctx) => {
-    await ctx.conversation.send("gm");
-  }),
-);
+agent.on("message", async (ctx) => {
+  console.log(ctx.message.content);
+  await ctx.conversation.send("gm");
+});
 
 agent.on("start", () => {
   const address = agent.client.accountIdentifier?.identifier;
