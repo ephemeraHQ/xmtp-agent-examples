@@ -1,73 +1,31 @@
-import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import { Client, type LogLevel, type XmtpEnv } from "@xmtp/node-sdk";
+import fs from "fs";
+import { Agent } from "@xmtp/agent-sdk";
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "DB_ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
+//process.loadEnvFile(".env");
+const agent = await Agent.create(undefined, {
+  dbPath: getDbPath(),
+});
 
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+agent.on("message", async (ctx) => {
+  console.log(ctx.message.content);
+  await ctx.conversation.send("gm");
+});
 
-async function main() {
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    loggingLevel: "warn" as LogLevel,
-    env: XMTP_ENV as XmtpEnv,
-  });
-  void logAgentDetails(client);
+agent.on("start", () => {
+  const address = agent.client.accountIdentifier?.identifier;
+  const env = agent.client.options?.env;
+  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
+  console.log(`We are online\nAddress: ${address}\nURL: ${url}`);
+});
 
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
+void agent.start();
 
-  console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
-  for await (const message of stream) {
-    // Skip if the message is from the agent
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      continue;
-    }
-    // Skip if the message is not a text message
-    if (message.contentType?.typeId !== "text") {
-      continue;
-    }
-
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    // // Skip if the conversation is a group
-    // if (conversation instanceof Group) {
-    //   console.log("Conversation is a group, skipping");
-    //   continue;
-    // }
-
-    //Getting the address from the inbox id
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    await conversation.send("gm");
+function getDbPath(description: string = "xmtp") {
+  //Checks if the environment is a Railway deployment
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  // Create database directory if it doesn't exist
+  if (!fs.existsSync(volumePath)) {
+    fs.mkdirSync(volumePath, { recursive: true });
   }
-
-  console.log("Message stream started");
+  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
 }
-
-main().catch(console.error);

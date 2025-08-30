@@ -11,8 +11,8 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/content-type-reaction": "^2.0.2",
-    "@xmtp/node-sdk": "*"
+    "@xmtp/agent-sdk": "*",
+    "@xmtp/content-type-reaction": "^2.0.2"
   },
   "devDependencies": {
     "tsx": "*",

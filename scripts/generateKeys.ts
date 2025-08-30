@@ -1,7 +1,19 @@
+import { getRandomValues } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { generateEncryptionKeyHex } from "@helpers/client";
+import { toString } from "uint8arrays";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+
+/**
+ * Generate a random encryption key
+ * @returns The encryption key
+ */
+export const generateEncryptionKeyHex = () => {
+  /* Generate a random encryption key */
+  const uint8Array = getRandomValues(new Uint8Array(32));
+  /* Convert the encryption key to a hex string */
+  return toString(uint8Array, "hex");
+};
 
 // Check Node.js version
 const nodeVersion = process.versions.node;
@@ -39,8 +51,8 @@ try {
 const xmtpEnvExists = existingEnv.includes("XMTP_ENV=");
 
 const envContent = `# keys for ${exampleName}
-WALLET_KEY=${walletKey}
-DB_ENCRYPTION_KEY=${encryptionKeyHex}
+XMTP_WALLET_KEY=${walletKey}
+XMTP_DB_ENCRYPTION_KEY=${encryptionKeyHex}
 ${!xmtpEnvExists ? "XMTP_ENV=dev\n" : ""}# public key is ${publicKey}
 `;
 

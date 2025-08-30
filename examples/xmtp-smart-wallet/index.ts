@@ -1,83 +1,29 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+
+process.loadEnvFile(".env");
 
 const WALLET_PATH = "wallet.json";
+const CDP_API_KEY_NAME = process.env.CDP_API_KEY_NAME || "";
+const CDP_API_KEY_PRIVATE_KEY = process.env.CDP_API_KEY_PRIVATE_KEY || "";
+const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const {
-  XMTP_ENV,
-  DB_ENCRYPTION_KEY,
-  NETWORK_ID,
-  CDP_API_KEY_NAME,
-  CDP_API_KEY_PRIVATE_KEY,
-} = validateEnvironment([
-  "XMTP_ENV",
-  "DB_ENCRYPTION_KEY",
-  "NETWORK_ID",
-  "CDP_API_KEY_NAME",
-  "CDP_API_KEY_PRIVATE_KEY",
-]);
+const walletData = await initializeWallet(WALLET_PATH);
+/* Create the signer using viem and parse the encryption key for the local db */
+const user = createUser(walletData.seed as `0x${string}`);
+const signer = createSigner(user);
+const agent = await Agent.create(signer);
+void agent.start();
+agent.on("message", async (ctx) => {
+  const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
+    ctx.message.senderInboxId,
+  ]);
+  const addressFromInboxId = inboxState[0].identifiers[0].identifier;
 
-const main = async () => {
-  const walletData = await initializeWallet(WALLET_PATH);
-  /* Create the signer using viem and parse the encryption key for the local db */
-  const signer = createSigner(walletData.seed);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
-
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-  });
-
-  void logAgentDetails(client);
-
-  /* Sync the conversations from the network to update the local db */
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
-
-  console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
-
-  for await (const message of stream) {
-    /* Ignore messages from the same agent or non-text messages */
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      continue;
-    }
-
-    /* Ignore non-text messages */
-    if (message.contentType?.typeId !== "text") {
-      continue;
-    }
-
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0].identifiers[0].identifier;
-    console.log(`Sending "gm" response to ${addressFromInboxId}...`);
-    await conversation.send("gm");
-
-    console.log("Waiting for messages...");
-  }
-};
+  console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+  await ctx.conversation.send("gm");
+});
 
 /**
  * Generates a random Smart Contract Wallet
@@ -120,5 +66,3 @@ async function initializeWallet(walletPath: string): Promise<WalletData> {
     throw error;
   }
 }
-
-main().catch(console.error);

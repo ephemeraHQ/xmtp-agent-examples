@@ -61,6 +61,14 @@ export default tseslint.config(
           minimumDescriptionLength: 3,
         },
       ],
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        {
+          checksVoidReturn: {
+            arguments: false,
+          },
+        },
+      ],
     },
   },
   {

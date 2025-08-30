@@ -20,8 +20,8 @@ Using Gaia, you can also run your own [node](https://docs.gaianet.ai/getting-sta
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # a second random 32 bytes encryption key for local db encryption
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # a second random 32 bytes encryption key for local db encryption
 XMTP_ENV=dev # local, dev, production
 GAIA_API_KEY= # Your API key from https://gaianet.ai
 GAIA_NODE_URL= # Your custom Gaia node URL or a public node, ex: https://llama8b.gaia.domains/v1

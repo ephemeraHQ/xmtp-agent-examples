@@ -1,5 +1,5 @@
+import type { AgentContext } from "@xmtp/agent-sdk";
 import type { TransactionReference } from "@xmtp/content-type-transaction-reference";
-import type { Conversation } from "@xmtp/node-sdk";
 import type { TokenHandler } from "./tokenHandler";
 
 // Type definitions for the nested TransactionReference structure
@@ -24,7 +24,7 @@ export interface ExtendedTransactionReference extends TransactionReference {
 }
 
 export async function handleTransactionReference(
-  conversation: Conversation,
+  ctx: AgentContext,
   transactionRef: ExtendedTransactionReference,
   senderAddress: string,
   tokenHandler: TokenHandler,
@@ -93,7 +93,7 @@ TRANSACTION DETAILS:
   receiptMessage += `\n\n✅ Thank you for sharing the transaction details!`;
 
   console.log("📤 Sending transaction reference response to user");
-  await conversation.send(receiptMessage);
+  await ctx.conversation.send(receiptMessage);
   console.log("✅ Transaction reference processing completed successfully");
 }
 

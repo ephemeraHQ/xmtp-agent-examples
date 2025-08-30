@@ -1,14 +1,11 @@
-import type { Conversation } from "@xmtp/node-sdk";
+import { type AgentContext } from "@xmtp/agent-sdk";
 import {
   ContentTypeActions,
   type ActionsContent,
 } from "../types/ActionsContent";
 import type { TokenHandler } from "./tokenHandler";
 
-export async function handleActionsCommand(
-  conversation: Conversation,
-  _tokenHandler: TokenHandler,
-) {
+export async function handleActionsCommand(ctx: AgentContext) {
   const actionsContent: ActionsContent = {
     id: `help-${Date.now()}`,
     description: "Glad to help you out! Here are some actions you can take:",
@@ -32,13 +29,10 @@ export async function handleActionsCommand(
   };
 
   console.log("🎯 Sending inline actions help message");
-  await conversation.send(actionsContent, ContentTypeActions);
+  await ctx.conversation.send(actionsContent, ContentTypeActions);
 }
 
-export async function handleActionsWithImagesCommand(
-  conversation: Conversation,
-  _tokenHandler: TokenHandler,
-) {
+export async function handleActionsWithImagesCommand(ctx: AgentContext) {
   const actionsContent: ActionsContent = {
     id: `help-${Date.now()}`,
     description:
@@ -66,11 +60,11 @@ export async function handleActionsWithImagesCommand(
   };
 
   console.log("🎯 Sending inline actions help message");
-  await conversation.send(actionsContent, ContentTypeActions);
+  await ctx.conversation.send(actionsContent, ContentTypeActions);
 }
 
 export async function handleHelpCommand(
-  conversation: Conversation,
+  ctx: AgentContext,
   _tokenHandler: TokenHandler,
 ) {
   const networkInfo = _tokenHandler.getNetworkInfo();
@@ -117,5 +111,5 @@ I'm here to help you interact with ${networkInfo.name} blockchain. I can help yo
   };
 
   console.log("🆘 Sending help message with welcome actions");
-  await conversation.send(helpContent, ContentTypeActions);
+  await ctx.conversation.send(helpContent, ContentTypeActions);
 }

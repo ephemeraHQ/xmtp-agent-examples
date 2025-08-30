@@ -1,11 +1,9 @@
-import { validateEnvironment } from "@helpers/client";
 import axios from "axios";
 import FormData from "form-data";
 
-const { PINATA_API_KEY, PINATA_SECRET_KEY } = validateEnvironment([
-  "PINATA_API_KEY",
-  "PINATA_SECRET_KEY",
-]);
+process.loadEnvFile(".env");
+const PINATA_API_KEY = process.env.PINATA_API_KEY || "";
+const PINATA_SECRET_KEY = process.env.PINATA_SECRET_KEY || "";
 
 export async function uploadToPinata(
   fileData: Uint8Array,

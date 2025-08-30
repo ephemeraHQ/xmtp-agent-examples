@@ -1,6 +1,6 @@
 # XMTP agent examples
 
-This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk).
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
@@ -25,7 +25,6 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - [xmtp-inline-actions](/examples/xmtp-inline-actions/): An example using inline actions (dynamic buttons)
 - [xmtp-thinking-reaction](/examples/xmtp-thinking-reaction/): Agent that reacts to messages with a thinking emoji
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
-- [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-welcome-message](/examples/xmtp-welcome-message/): Agent that sends a welcome message when its added and to new members
 
 ## Run example agents
@@ -47,8 +46,8 @@ See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best p
 To run an example XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # encryption key for the local database
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
 
@@ -61,12 +60,19 @@ yarn gen:keys
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
 
-You can revoke old installations by running:
+You can revoke old installations by adding the following to your `.env` file:
 
 ```bash
-# you can get your values from terminal logs
-yarn revoke <inbox-id> <installations-to-exclude>
+XMTP_FORCE_REVOKE_INSTALLATIONS=true
 ```
+
+You can enable debug mode by adding the following to your `.env` file:
+
+```bash
+XMTP_FORCE_DEBUG=true
+```
+
+> This will print additional information to the console.
 
 ### Run an example agent
 
@@ -107,4 +113,4 @@ yarn dev
 
 ## Build your own agent
 
-To learn how to build and [deploy](https://docs.xmtp.org/agents/build-an-agent#deploy-an-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/build-an-agent).
+To learn how to build and [deploy](https://docs.xmtp.org/agents/deploy-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/get-started/build-an-agent).

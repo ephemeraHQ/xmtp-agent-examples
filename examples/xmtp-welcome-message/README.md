@@ -3,8 +3,8 @@
 When someone first messages the agent, they receive an interactive welcome message with two buttons.
 
 <p align="center">
-  <img src="left.png" alt="Image 1" width="49%">
-  <img src="right.png" alt="Image 2" width="49%">
+  <img src="media/left.png" alt="Image 1" width="49%">
+  <img src="media/right.png" alt="Image 2" width="49%">
 </p>
 
 ## Usage
@@ -108,8 +108,8 @@ const client = await Client.create(signer, {
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # encryption key for the local database
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
 
