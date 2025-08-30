@@ -1,4 +1,4 @@
-import { Agent, filter, MessageFilter, withFilter, type AgentContext } from "@xmtp/agent-sdk";
+import { Agent, type AgentContext } from "@xmtp/agent-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
@@ -120,48 +120,50 @@ Data provided by CoinGecko 📈`);
   }
 }
 
+/**
+ * Check if this is the first interaction with a user
+ */
+async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
+  try {
+    const messages = await ctx.conversation.messages();
+    const hasSentBefore = messages.some(
+      (msg) =>
+        msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
+    );
+    const members = await ctx.conversation.members();
+    const wasMemberBefore = members.some(
+      (member: { inboxId: string; installationIds: string[] }) =>
+        member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
+        member.installationIds.length > 1,
+    );
+
+    return !hasSentBefore && !wasMemberBefore;
+  } catch (error) {
+    console.error("Error checking message history:", error);
+    return false;
+  }
+}
 const agent = await Agent.create(undefined, {
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
 
-/**
- * Check if this is the first interaction with a user
- */
-const hasSentBefore = async (ctx: AgentContext) => {
-  const messages = await ctx.conversation.messages();
-  const hasSentBefore = messages.some(
-    (msg) =>
-      msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
-  );
-  return hasSentBefore;
-};
+// Handle first-time user messages - send welcome with actions
+agent.on("message", async (ctx) => {
+  if (await isFirstTimeInteraction(ctx)) {
+    await sendWelcomeWithActions(ctx);
+  } else {
+    await ctx.conversation.send(
+      "Hey, we already talked before, so, no welcome message for you",
+    );
+  }
+});
 
-const wasMemberBefore <ContentTypes>(): MessageFilter<ContentTypes> { 
-  const members = await ctx.conversation.members();}
-
-  const wasMemberBefore = members.some(
-    (member: { inboxId: string; installationIds: string[] }) =>
-      member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
-      member.installationIds.length > 1,
-  );}
-  return wasMemberBefore;
-};}
-
-// Combination of filters
-
-const combined = filter.and(filter.textOnly);
-
-agent.on(
-  "message",
-  withFilter(combined, async (ctx) => {
-    if (ctx.message.contentType?.typeId === "intent") {
-      // Handle action button clicks
-      await handleIntentMessage(ctx, ctx.message.content as IntentContent);
-    } else {
-      await sendWelcomeWithActions(ctx);
-    }
-  }),
-);
+// Handle intent messages (action button clicks) - no filtering needed
+agent.on("message", async (ctx) => {
+  if (ctx.message.contentType?.typeId === "intent") {
+    await handleIntentMessage(ctx, ctx.message.content as IntentContent);
+  }
+});
 
 agent.on("start", () => {
   const address = agent.client.accountIdentifier?.identifier;
