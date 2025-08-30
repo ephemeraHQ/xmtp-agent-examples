@@ -1,4 +1,4 @@
-import { Agent, filter, withFilter } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 const agent = await Agent.create();

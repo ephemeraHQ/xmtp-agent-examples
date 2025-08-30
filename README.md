@@ -1,6 +1,6 @@
 # XMTP agent examples
 
-This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk).
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
@@ -60,12 +60,19 @@ yarn gen:keys
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
 
-You can revoke old installations by running:
+You can revoke old installations by adding the following to your `.env` file:
 
 ```bash
-# you can get your values from terminal logs
-yarn revoke <inbox-id> <installations-to-exclude>
+XMTP_FORCE_REVOKE_INSTALLATIONS=true
 ```
+
+You can enable debug mode by adding the following to your `.env` file:
+
+```bash
+XMTP_FORCE_DEBUG=true
+```
+
+> This will print additional information to the console.
 
 ### Run an example agent
 

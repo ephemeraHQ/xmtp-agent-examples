@@ -659,6 +659,448 @@ agent.use(advancedRouter.middleware());
 5. **Make it reusable** - Create factory functions for configurable middleware
 6. **Document behavior** - Clear comments about what each middleware does
 
+## Building Custom Middleware
+
+This section covers how to build your own middleware from scratch, including the architecture and implementation patterns used in the Agent SDK.
+
+### Middleware Architecture
+
+Middleware in the Agent SDK follows a simple but powerful pattern:
+
+```typescript
+import {
+  type AgentContext,
+  type AgentEventHandler,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
+
+// Basic middleware signature
+type AgentMiddleware<ContentTypes = any> = (
+  ctx: AgentContext,
+  next: () => Promise<void>,
+) => Promise<void>;
+
+// Event handler signature
+type AgentEventHandler = (ctx: AgentContext) => Promise<void>;
+```
+
+### Step-by-Step Middleware Implementation
+
+#### 1. Simple Function-Based Middleware
+
+Start with the simplest approach - a function that takes context and next:
+
+```typescript
+import { type AgentMiddleware } from "@xmtp/agent-sdk";
+
+// Simple logging middleware
+const simpleLogger: AgentMiddleware = async (ctx, next) => {
+  console.log(`📨 Message received: ${ctx.message.content}`);
+  await next(); // Continue to next middleware
+  console.log(`✅ Message processed`);
+};
+
+// Use it
+agent.use(simpleLogger);
+```
+
+#### 2. Configurable Middleware Factory
+
+Create reusable middleware by using factory functions:
+
+```typescript
+// Factory function that returns configured middleware
+const createLogger = (
+  prefix: string,
+  includeMetadata = false,
+): AgentMiddleware => {
+  return async (ctx, next) => {
+    const message = includeMetadata
+      ? `${prefix} [${ctx.message.senderInboxId}]: ${ctx.message.content}`
+      : `${prefix} ${ctx.message.content}`;
+
+    console.log(message);
+    await next();
+  };
+};
+
+// Use with different configurations
+agent.use(createLogger("🔍 DEBUG:", true));
+agent.use(createLogger("📝 LOG:", false));
+```
+
+#### 3. Class-Based Middleware with State
+
+For complex middleware that needs to maintain state:
+
+```typescript
+class RateLimitMiddleware {
+  private limits = new Map<string, { count: number; resetTime: number }>();
+  private maxRequests: number;
+  private windowMs: number;
+
+  constructor(maxRequests = 10, windowMs = 60000) {
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+  }
+
+  middleware(): AgentMiddleware {
+    return async (ctx, next) => {
+      const senderId = ctx.message.senderInboxId;
+      const now = Date.now();
+
+      // Get or create limit info for this sender
+      let limitInfo = this.limits.get(senderId);
+      if (!limitInfo || now > limitInfo.resetTime) {
+        limitInfo = { count: 0, resetTime: now + this.windowMs };
+        this.limits.set(senderId, limitInfo);
+      }
+
+      // Check if limit exceeded
+      if (limitInfo.count >= this.maxRequests) {
+        const resetIn = Math.ceil((limitInfo.resetTime - now) / 1000);
+        await ctx.conversation.send(
+          `⏰ Rate limit exceeded. Try again in ${resetIn} seconds.`,
+        );
+        return; // Don't call next() to stop processing
+      }
+
+      // Increment counter and continue
+      limitInfo.count++;
+      await next();
+    };
+  }
+
+  // Helper method to check current limits
+  getStats(senderId: string): { count: number; remaining: number } {
+    const limitInfo = this.limits.get(senderId);
+    if (!limitInfo || Date.now() > limitInfo.resetTime) {
+      return { count: 0, remaining: this.maxRequests };
+    }
+    return {
+      count: limitInfo.count,
+      remaining: Math.max(0, this.maxRequests - limitInfo.count),
+    };
+  }
+}
+
+// Usage
+const rateLimiter = new RateLimitMiddleware(5, 30000); // 5 requests per 30 seconds
+agent.use(rateLimiter.middleware());
+```
+
+#### 4. Advanced Command Router Implementation
+
+Here's how to build a sophisticated command router like the one in the Agent SDK:
+
+```typescript
+import {
+  isText,
+  type AgentContext,
+  type AgentEventHandler,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
+
+// Utility to check if message is text
+
+export class CommandRouter<ContentTypes = any> {
+  private commandMap = new Map<string, AgentEventHandler>();
+  private defaultHandler: AgentEventHandler | null = null;
+
+  /**
+   * Register a command handler
+   * @param command - Command string (must start with "/")
+   * @param handler - Function to handle the command
+   */
+  command(command: string, handler: AgentEventHandler): this {
+    if (!command.startsWith("/")) {
+      throw new Error('Command must start with "/"');
+    }
+    this.commandMap.set(command.toLowerCase(), handler);
+    return this; // Return this for method chaining
+  }
+
+  /**
+   * Set a default handler for unrecognized commands
+   * @param handler - Default handler function
+   */
+  default(handler: AgentEventHandler): this {
+    this.defaultHandler = handler;
+    return this;
+  }
+
+  /**
+   * Handle a message and determine if it was processed
+   * @param ctx - Agent context
+   * @returns true if message was handled, false otherwise
+   */
+  async handle(ctx: AgentContext): Promise<boolean> {
+    // Only process text messages
+    if (!isText(ctx.message)) {
+      return false;
+    }
+
+    const messageText = ctx.message.content;
+    const parts = messageText.split(" ");
+    const command = parts[0].toLowerCase();
+
+    // Check if this is a command message
+    if (command.startsWith("/")) {
+      const handler = this.commandMap.get(command);
+      if (handler) {
+        await handler(ctx);
+        return true;
+      }
+    }
+
+    // If no command matched and there's a default handler, use it
+    if (this.defaultHandler) {
+      await this.defaultHandler(ctx);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Create middleware function that can be used with agent.use()
+   */
+  middleware(): AgentMiddleware<ContentTypes> {
+    return async (ctx, next) => {
+      const handled = await this.handle(ctx);
+      if (!handled) {
+        await next(); // Continue to next middleware if not handled
+      }
+    };
+  }
+
+  /**
+   * Get list of registered commands (useful for help messages)
+   */
+  getCommands(): string[] {
+    return Array.from(this.commandMap.keys());
+  }
+}
+
+// Usage example with method chaining
+const router = new CommandRouter();
+
+router
+  .command("/help", async (ctx) => {
+    const commands = router.getCommands().join(", ");
+    await ctx.conversation.send(`Available commands: ${commands}`);
+  })
+  .command("/ping", async (ctx) => {
+    await ctx.conversation.send("🏓 Pong!");
+  })
+  .command("/time", async (ctx) => {
+    await ctx.conversation.send(`⏰ Current time: ${new Date().toISOString()}`);
+  })
+  .default(async (ctx) => {
+    await ctx.conversation.send(
+      "❓ Unknown command. Type /help for available commands.",
+    );
+  });
+
+agent.use(router.middleware());
+```
+
+#### 5. Middleware with Dependency Injection
+
+For complex applications, you might want middleware that depends on external services:
+
+```typescript
+interface DatabaseService {
+  logMessage(senderId: string, content: string): Promise<void>;
+  getUserPreferences(
+    senderId: string,
+  ): Promise<{ language: string; timezone: string }>;
+}
+
+interface NotificationService {
+  sendAlert(message: string): Promise<void>;
+}
+
+class ServiceAwareMiddleware {
+  constructor(
+    private db: DatabaseService,
+    private notifications: NotificationService,
+  ) {}
+
+  middleware(): AgentMiddleware {
+    return async (ctx, next) => {
+      try {
+        // Log the message
+        await this.db.logMessage(
+          ctx.message.senderInboxId,
+          ctx.message.content as string,
+        );
+
+        // Get user preferences and add to context
+        const preferences = await this.db.getUserPreferences(
+          ctx.message.senderInboxId,
+        );
+        (ctx as any).userPreferences = preferences;
+
+        await next();
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        await this.notifications.sendAlert(`Middleware error: ${errorMessage}`);
+
+        // Still continue processing
+        await next();
+      }
+    };
+  }
+}
+
+// Usage with dependency injection
+const dbService: DatabaseService = new MyDatabaseService();
+const notificationService: NotificationService = new MyNotificationService();
+
+const serviceMiddleware = new ServiceAwareMiddleware(
+  dbService,
+  notificationService,
+);
+agent.use(serviceMiddleware.middleware());
+```
+
+#### 6. Middleware Composition Patterns
+
+Combine multiple middleware into reusable compositions:
+
+```typescript
+// Middleware composer utility
+class MiddlewareComposer {
+  private middlewares: AgentMiddleware[] = [];
+
+  add(middleware: AgentMiddleware): this {
+    this.middlewares.push(middleware);
+    return this;
+  }
+
+  compose(): AgentMiddleware {
+    return async (ctx, next) => {
+      let index = 0;
+
+      const dispatch = async (): Promise<void> => {
+        if (index >= this.middlewares.length) {
+          await next();
+          return;
+        }
+
+        const middleware = this.middlewares[index++];
+        await middleware(ctx, dispatch);
+      };
+
+      await dispatch();
+    };
+  }
+}
+
+// Pre-built middleware combinations
+const createSecureMiddleware = () => {
+  return new MiddlewareComposer()
+    .add(rateLimitMiddleware)
+    .add(authMiddleware)
+    .add(textOnlyMiddleware)
+    .compose();
+};
+
+const createLoggingMiddleware = () => {
+  return new MiddlewareComposer()
+    .add(analyticsMiddleware)
+    .add(createLogger("🔍", true))
+    .compose();
+};
+
+// Use composed middleware
+agent.use(createSecureMiddleware());
+agent.use(createLoggingMiddleware());
+```
+
+### Middleware Testing Patterns
+
+Test your middleware in isolation:
+
+```typescript
+// Mock context for testing
+const createMockContext = (
+  content: string,
+  senderInboxId = "test-sender",
+): AgentContext =>
+  ({
+    message: {
+      content,
+      senderInboxId,
+      contentType: { typeId: "text" },
+    },
+    conversation: {
+      send: jest.fn(),
+      id: "test-conversation",
+    },
+    client: {},
+  }) as any;
+
+// Test middleware
+describe("RateLimitMiddleware", () => {
+  it("should allow messages under limit", async () => {
+    const middleware = new RateLimitMiddleware(2, 60000);
+    const ctx = createMockContext("test message");
+    const next = jest.fn();
+
+    await middleware.middleware()(ctx, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(ctx.conversation.send).not.toHaveBeenCalled();
+  });
+
+  it("should block messages over limit", async () => {
+    const middleware = new RateLimitMiddleware(1, 60000);
+    const ctx = createMockContext("test message");
+    const next = jest.fn();
+
+    // First message should pass
+    await middleware.middleware()(ctx, next);
+    expect(next).toHaveBeenCalledTimes(1);
+
+    // Second message should be blocked
+    next.mockClear();
+    await middleware.middleware()(ctx, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(ctx.conversation.send).toHaveBeenCalledWith(
+      expect.stringContaining("Rate limit exceeded"),
+    );
+  });
+});
+```
+
+### Middleware Performance Considerations
+
+1. **Async Operations**: Always use `await` with async operations
+2. **Error Handling**: Wrap middleware logic in try/catch blocks
+3. **Memory Management**: Clean up resources and avoid memory leaks in stateful middleware
+4. **Performance Monitoring**: Add timing and metrics to critical middleware
+
+```typescript
+const performanceMiddleware: AgentMiddleware = async (ctx, next) => {
+  const start = Date.now();
+
+  try {
+    await next();
+  } finally {
+    const duration = Date.now() - start;
+    console.log(`⏱️ Message processing took ${duration}ms`);
+
+    // Alert on slow processing
+    if (duration > 5000) {
+      console.warn(`🐌 Slow message processing: ${duration}ms`);
+    }
+  }
+};
+```
+
 ### 3. Built-in Filters
 
 Instead of manually checking every incoming message, use simple, reusable filters to handle specific message types efficiently.
@@ -851,6 +1293,654 @@ import { f, withFilter } from "@xmtp/agent-sdk";
 
 // Same functionality, shorter syntax
 const quickFilter = f.and(f.notFromSelf, f.textOnly);
+```
+
+## Building Custom Filters
+
+This section covers how to create your own custom filters from scratch, including the architecture and implementation patterns used in the Agent SDK's filter system.
+
+### Filter Architecture
+
+Filters in the Agent SDK follow a simple functional pattern:
+
+```typescript
+import type { Client, DecodedMessage } from "@xmtp/agent-sdk";
+
+/**
+ * Function type for filtering messages based on content and client state.
+ */
+export type MessageFilter<ContentTypes> = (
+  message: DecodedMessage,
+  client: Client<ContentTypes>,
+) => boolean;
+```
+
+### Step-by-Step Filter Implementation
+
+#### 1. Simple Content-Based Filters
+
+Start with filters that examine message content:
+
+```typescript
+import type { MessageFilter } from "@xmtp/agent-sdk";
+import { ContentTypeText } from "@xmtp/content-type-text";
+
+/**
+ * Filter for messages containing specific keywords
+ */
+function containsKeyword<ContentTypes>(
+  keyword: string,
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    if (message.contentType?.sameAs(ContentTypeText)) {
+      const text = message.content as string;
+      return text.toLowerCase().includes(keyword.toLowerCase());
+    }
+    return false;
+  };
+}
+
+/**
+ * Filter for messages with minimum length
+ */
+function minLength<ContentTypes>(length: number): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    if (message.contentType?.sameAs(ContentTypeText)) {
+      const text = message.content as string;
+      return text.length >= length;
+    }
+    return false;
+  };
+}
+
+/**
+ * Filter for messages matching regex pattern
+ */
+function matchesPattern<ContentTypes>(
+  pattern: RegExp,
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    if (message.contentType?.sameAs(ContentTypeText)) {
+      const text = message.content as string;
+      return pattern.test(text);
+    }
+    return false;
+  };
+}
+
+// Usage examples
+const urgentFilter = containsKeyword("urgent");
+const longMessageFilter = minLength(100);
+const emailFilter = matchesPattern(
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+);
+```
+
+#### 2. Sender-Based Filters
+
+Create filters based on message sender information:
+
+```typescript
+/**
+ * Filter for messages from specific senders
+ */
+function fromSender<ContentTypes>(
+  senderInboxId: string | string[],
+): MessageFilter<ContentTypes> {
+  const senderIds = Array.isArray(senderInboxId)
+    ? senderInboxId
+    : [senderInboxId];
+
+  return (message: DecodedMessage) => {
+    return senderIds.includes(message.senderInboxId);
+  };
+}
+
+/**
+ * Filter for messages from verified senders (example with external verification)
+ */
+function fromVerifiedSender<ContentTypes>(
+  verifiedSenders: Set<string>,
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return verifiedSenders.has(message.senderInboxId);
+  };
+}
+
+/**
+ * Filter for messages excluding blocked senders
+ */
+function notFromBlocked<ContentTypes>(
+  blockedSenders: string[],
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return !blockedSenders.includes(message.senderInboxId);
+  };
+}
+
+// Usage
+const adminFilter = fromSender(["admin-1", "admin-2"]);
+const verifiedUsers = new Set(["verified-user-1", "verified-user-2"]);
+const verifiedFilter = fromVerifiedSender(verifiedUsers);
+const notBlockedFilter = notFromBlocked(["spam-user", "blocked-user"]);
+```
+
+#### 3. Time-Based Filters
+
+Create filters that consider message timing:
+
+```typescript
+/**
+ * Filter for recent messages (within specified milliseconds)
+ */
+function isRecent<ContentTypes>(maxAgeMs: number): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    const messageTime = message.sent?.getTime() || 0;
+    const now = Date.now();
+    return now - messageTime <= maxAgeMs;
+  };
+}
+
+/**
+ * Filter for messages sent during business hours
+ */
+function duringBusinessHours<ContentTypes>(
+  timezone = "UTC",
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    if (!message.sent) return false;
+
+    const messageTime = new Date(
+      message.sent.toLocaleString("en-US", { timeZone: timezone }),
+    );
+    const hour = messageTime.getHours();
+    const day = messageTime.getDay();
+
+    // Monday-Friday, 9 AM - 5 PM
+    return day >= 1 && day <= 5 && hour >= 9 && hour < 17;
+  };
+}
+
+/**
+ * Filter for messages sent on weekends
+ */
+function onWeekend<ContentTypes>(): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    if (!message.sent) return false;
+    const day = message.sent.getDay();
+    return day === 0 || day === 6; // Sunday or Saturday
+  };
+}
+
+// Usage
+const recentFilter = isRecent(5 * 60 * 1000); // Last 5 minutes
+const businessHoursFilter = duringBusinessHours("America/New_York");
+const weekendFilter = onWeekend();
+```
+
+#### 4. Content Type Filters
+
+Create filters for different message content types:
+
+```typescript
+import { ContentTypeAttachment } from "@xmtp/content-type-remote-attachment";
+import { ContentTypeText } from "@xmtp/content-type-text";
+
+/**
+ * Filter for text-only messages
+ */
+function textOnly<ContentTypes>(): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return !!message.contentType?.sameAs(ContentTypeText);
+  };
+}
+
+/**
+ * Filter for attachment messages
+ */
+function hasAttachment<ContentTypes>(): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return !!message.contentType?.sameAs(ContentTypeAttachment);
+  };
+}
+
+/**
+ * Filter for specific content types
+ */
+function hasContentType<ContentTypes>(
+  contentType: any,
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return !!message.contentType?.sameAs(contentType);
+  };
+}
+
+/**
+ * Filter for custom content types by type ID
+ */
+function hasContentTypeId<ContentTypes>(
+  typeId: string,
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return message.contentType?.typeId === typeId;
+  };
+}
+
+// Usage
+const textFilter = textOnly();
+const attachmentFilter = hasAttachment();
+const replyFilter = hasContentTypeId("reply");
+const actionFilter = hasContentTypeId("intent");
+```
+
+#### 5. Advanced Logical Combinators
+
+Build complex filters using logical operations:
+
+```typescript
+/**
+ * Creates a filter that requires all provided filters to pass
+ */
+function and<ContentTypes>(
+  ...filters: MessageFilter<ContentTypes>[]
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage, client: Client<ContentTypes>) => {
+    for (const filter of filters) {
+      const result = filter(message, client);
+      if (!result) return false;
+    }
+    return true;
+  };
+}
+
+/**
+ * Creates a filter that requires at least one provided filter to pass
+ */
+function or<ContentTypes>(
+  ...filters: MessageFilter<ContentTypes>[]
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage, client: Client<ContentTypes>) => {
+    for (const filter of filters) {
+      const result = filter(message, client);
+      if (result) return true;
+    }
+    return false;
+  };
+}
+
+/**
+ * Creates a filter that inverts another filter
+ */
+function not<ContentTypes>(
+  filter: MessageFilter<ContentTypes>,
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage, client: Client<ContentTypes>) => {
+    return !filter(message, client);
+  };
+}
+
+/**
+ * Creates a conditional filter that only applies when condition is met
+ */
+function when<ContentTypes>(
+  condition: MessageFilter<ContentTypes>,
+  thenFilter: MessageFilter<ContentTypes>,
+  elseFilter?: MessageFilter<ContentTypes>,
+): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage, client: Client<ContentTypes>) => {
+    if (condition(message, client)) {
+      return thenFilter(message, client);
+    }
+    return elseFilter ? elseFilter(message, client) : true;
+  };
+}
+
+// Complex filter combinations
+const complexFilter = and(
+  not(fromSelf()),
+  textOnly(),
+  or(
+    containsKeyword("urgent"),
+    fromSender(["admin-1", "admin-2"]),
+    and(duringBusinessHours(), minLength(10)),
+  ),
+);
+```
+
+#### 6. Stateful Filters
+
+Create filters that maintain state across messages:
+
+```typescript
+/**
+ * Filter that tracks message frequency per sender
+ */
+function rateLimited<ContentTypes>(
+  maxMessages: number,
+  windowMs: number,
+): MessageFilter<ContentTypes> {
+  const senderCounts = new Map<string, { count: number; resetTime: number }>();
+
+  return (message: DecodedMessage) => {
+    const senderId = message.senderInboxId;
+    const now = Date.now();
+
+    let senderData = senderCounts.get(senderId);
+    if (!senderData || now > senderData.resetTime) {
+      senderData = { count: 0, resetTime: now + windowMs };
+      senderCounts.set(senderId, senderData);
+    }
+
+    senderData.count++;
+    return senderData.count <= maxMessages;
+  };
+}
+
+/**
+ * Filter that remembers previously seen messages
+ */
+function notDuplicate<ContentTypes>(): MessageFilter<ContentTypes> {
+  const seenMessages = new Set<string>();
+
+  return (message: DecodedMessage) => {
+    const messageKey = `${message.senderInboxId}-${message.content}`;
+    if (seenMessages.has(messageKey)) {
+      return false;
+    }
+    seenMessages.add(messageKey);
+    return true;
+  };
+}
+
+/**
+ * Filter with conversation history awareness
+ */
+function conversationAware<ContentTypes>(
+  minMessages: number,
+): MessageFilter<ContentTypes> {
+  const conversationCounts = new Map<string, number>();
+
+  return (message: DecodedMessage) => {
+    const conversationId = message.conversation?.id || "unknown";
+    const currentCount = conversationCounts.get(conversationId) || 0;
+    conversationCounts.set(conversationId, currentCount + 1);
+    return currentCount >= minMessages;
+  };
+}
+
+// Usage
+const rateLimitFilter = rateLimited(5, 60000); // 5 messages per minute
+const noDuplicatesFilter = notDuplicate();
+const establishedConversationFilter = conversationAware(3);
+```
+
+#### 7. Context-Aware Filters
+
+Create filters that use client state and context:
+
+```typescript
+/**
+ * Filter that excludes messages from self
+ */
+function notFromSelf<ContentTypes>(): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage, client: Client<ContentTypes>) => {
+    return message.senderInboxId !== client.inboxId;
+  };
+}
+
+/**
+ * Filter for messages from contacts
+ */
+function fromContacts<ContentTypes>(): MessageFilter<ContentTypes> {
+  return async (message: DecodedMessage, client: Client<ContentTypes>) => {
+    // This would require async support in the filter system
+    // For now, we'll use a synchronous approach with pre-loaded contacts
+    const contacts = await client.contacts.list();
+    const contactIds = contacts.map((c) => c.inboxId);
+    return contactIds.includes(message.senderInboxId);
+  };
+}
+
+/**
+ * Filter for messages in specific conversation types
+ */
+function inGroupConversation<ContentTypes>(): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return message.conversation?.conversationType === "group";
+  };
+}
+
+/**
+ * Filter for direct messages only
+ */
+function directMessagesOnly<ContentTypes>(): MessageFilter<ContentTypes> {
+  return (message: DecodedMessage) => {
+    return message.conversation?.conversationType === "dm";
+  };
+}
+
+// Usage
+const notSelfFilter = notFromSelf();
+const groupFilter = inGroupConversation();
+const dmFilter = directMessagesOnly();
+```
+
+### Complete Filter System Implementation
+
+Here's how to build a complete custom filter system:
+
+```typescript
+import type { AgentContext, Client, DecodedMessage } from "@xmtp/agent-sdk";
+import { ContentTypeText } from "@xmtp/content-type-text";
+
+/**
+ * Function type for filtering messages
+ */
+export type MessageFilter<ContentTypes> = (
+  message: DecodedMessage,
+  client: Client<ContentTypes>,
+) => boolean;
+
+/**
+ * Utility function to get text content safely
+ */
+function getTextContent(message: DecodedMessage): string | null {
+  if (message.contentType?.sameAs(ContentTypeText)) {
+    return message.content as string;
+  }
+  return null;
+}
+
+/**
+ * Pre-configured filter instances and factory functions
+ */
+export const customFilter = {
+  // Basic filters
+  notFromSelf: notFromSelf(),
+  fromSelf: fromSelf(),
+  textOnly: textOnly(),
+
+  // Factory functions
+  fromSender,
+  startsWith,
+  containsKeyword,
+  minLength,
+  maxLength: (length: number) => (message: DecodedMessage) => {
+    const text = getTextContent(message);
+    return !!(text && text.length <= length);
+  },
+  matchesPattern,
+  isRecent,
+  duringBusinessHours,
+  onWeekend,
+  hasAttachment,
+  hasContentType,
+  hasContentTypeId,
+
+  // Stateful filters
+  rateLimited,
+  notDuplicate,
+  conversationAware,
+
+  // Combinators
+  and,
+  or,
+  not,
+  when,
+};
+
+/**
+ * Enhanced withFilter that supports async filters
+ */
+export const withCustomFilter =
+  <ContentTypes>(
+    filter: MessageFilter<ContentTypes>,
+    listener: (ctx: AgentContext<ContentTypes>) => void | Promise<void>,
+  ) =>
+  async (ctx: AgentContext<ContentTypes>) => {
+    if (filter(ctx.message, ctx.client)) {
+      await listener(ctx);
+    }
+  };
+
+// Usage examples
+const complexBusinessLogic = customFilter.and(
+  customFilter.notFromSelf,
+  customFilter.textOnly,
+  customFilter.or(
+    customFilter.fromSender(["admin-1", "admin-2"]),
+    customFilter.and(
+      customFilter.containsKeyword("urgent"),
+      customFilter.duringBusinessHours("America/New_York"),
+    ),
+    customFilter.and(
+      customFilter.minLength(50),
+      customFilter.not(customFilter.containsKeyword("spam")),
+    ),
+  ),
+);
+
+// Use in agent
+agent.on(
+  "message",
+  withCustomFilter(complexBusinessLogic, async (ctx) => {
+    await ctx.conversation.send("Processing your important message!");
+  }),
+);
+```
+
+### Filter Testing Patterns
+
+Test your custom filters thoroughly:
+
+```typescript
+// Mock message for testing
+const createMockMessage = (
+  content: string,
+  senderInboxId = "test-sender",
+  sent = new Date(),
+): DecodedMessage =>
+  ({
+    content,
+    senderInboxId,
+    sent,
+    contentType: {
+      sameAs: (type: any) => type === ContentTypeText,
+      typeId: "text",
+    },
+    conversation: { id: "test-conversation", conversationType: "dm" },
+  }) as any;
+
+// Mock client for testing
+const createMockClient = (inboxId = "agent-inbox"): Client<any> =>
+  ({
+    inboxId,
+    contacts: { list: async () => [] },
+  }) as any;
+
+// Test filters
+describe("Custom Filters", () => {
+  describe("containsKeyword", () => {
+    it("should match messages with keyword", () => {
+      const filter = containsKeyword("urgent");
+      const message = createMockMessage("This is urgent!");
+      const client = createMockClient();
+
+      expect(filter(message, client)).toBe(true);
+    });
+
+    it("should be case insensitive", () => {
+      const filter = containsKeyword("URGENT");
+      const message = createMockMessage("This is urgent!");
+      const client = createMockClient();
+
+      expect(filter(message, client)).toBe(true);
+    });
+  });
+
+  describe("rateLimited", () => {
+    it("should allow messages under limit", () => {
+      const filter = rateLimited(2, 60000);
+      const message1 = createMockMessage("Message 1", "sender-1");
+      const message2 = createMockMessage("Message 2", "sender-1");
+      const client = createMockClient();
+
+      expect(filter(message1, client)).toBe(true);
+      expect(filter(message2, client)).toBe(true);
+    });
+
+    it("should block messages over limit", () => {
+      const filter = rateLimited(1, 60000);
+      const message1 = createMockMessage("Message 1", "sender-1");
+      const message2 = createMockMessage("Message 2", "sender-1");
+      const client = createMockClient();
+
+      expect(filter(message1, client)).toBe(true);
+      expect(filter(message2, client)).toBe(false);
+    });
+  });
+});
+```
+
+### Filter Performance Best Practices
+
+1. **Early Exit**: Place the most selective filters first in `and()` combinations
+2. **Cache Results**: For expensive operations, cache results when possible
+3. **Minimize State**: Keep stateful filters lightweight
+4. **Memory Management**: Clean up old entries in stateful filters
+
+```typescript
+// Optimized filter with cleanup
+function optimizedRateLimit<ContentTypes>(
+  maxMessages: number,
+  windowMs: number,
+): MessageFilter<ContentTypes> {
+  const senderCounts = new Map<string, { count: number; resetTime: number }>();
+
+  // Cleanup old entries periodically
+  setInterval(() => {
+    const now = Date.now();
+    for (const [senderId, data] of senderCounts.entries()) {
+      if (now > data.resetTime) {
+        senderCounts.delete(senderId);
+      }
+    }
+  }, windowMs);
+
+  return (message: DecodedMessage) => {
+    const senderId = message.senderInboxId;
+    const now = Date.now();
+
+    let senderData = senderCounts.get(senderId);
+    if (!senderData || now > senderData.resetTime) {
+      senderData = { count: 0, resetTime: now + windowMs };
+      senderCounts.set(senderId, senderData);
+    }
+
+    senderData.count++;
+    return senderData.count <= maxMessages;
+  };
+}
 ```
 
 ### 4. Rich Context
