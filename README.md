@@ -113,4 +113,4 @@ yarn dev
 
 ## Build your own agent
 
-To learn how to build and [deploy](https://docs.xmtp.org/agents/build-an-agent#deploy-an-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/build-an-agent).
+To learn how to build and [deploy](https://docs.xmtp.org/agents/deploy-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/get-started/build-an-agent).
