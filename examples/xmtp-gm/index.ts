@@ -1,7 +1,10 @@
+import fs from "fs";
 import { Agent } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
-const agent = await Agent.create();
+const agent = await Agent.create(undefined, {
+  dbPath: getDbPath(),
+});
 
 agent.on("message", async (ctx) => {
   console.log(ctx.message.content);
@@ -16,3 +19,13 @@ agent.on("start", () => {
 });
 
 void agent.start();
+
+function getDbPath(description: string = "xmtp") {
+  //Checks if the environment is a Railway deployment
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  // Create database directory if it doesn't exist
+  if (!fs.existsSync(volumePath)) {
+    fs.mkdirSync(volumePath, { recursive: true });
+  }
+  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
+}
