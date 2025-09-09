@@ -12,7 +12,7 @@ Choose your package manager:
 
 ```bash
 # No other libraries should be needed
-npm/pnpm/yarn install @xmtp/agent-sdk
+npm/pnpm/yarn/bun install @xmtp/agent-sdk
 ```
 
 ## Quick Start
@@ -243,38 +243,17 @@ function parseAndMultiply(message: string): string {
 
 ## Identifiers Reference
 
-When working with XMTP, you'll encounter several types of identifiers:
+### XMTP Identifiers
 
-### Ethereum Addresses
+**Ethereum Address**: `0x` + 40 hex chars (e.g., `0xfb55CB623f2aB58Da17D8696501054a2ACeD1944`)
 
-- Format: `0x` followed by 40 hexadecimal characters
-- Example: `0xfb55CB623f2aB58Da17D8696501054a2ACeD1944`
-- Usage: Identifies blockchain wallets associated with XMTP users
+**Private Key**: `0x` + 64 hex chars (e.g., `0x11567776b95bdbed513330f503741e19877bf7fe73e7957bf6f0ecf3e267fdb8`)
 
-### Private Key
+**Encryption Key**: 64 hex chars, no prefix (e.g., `11973168e34839f9d31749ad77204359c5c39c404e1154eacb7f35a867ee47de`)
 
-- Format: `0x` followed by 64 hexadecimal characters
-- Example: `0x11567776b95bdbed513330f503741e19877bf7fe73e7957bf6f0ecf3e267fdb8`
-- Usage: Used to create the signer for authenticating with XMTP
+**Inbox ID**: 64 hex chars, no prefix (e.g., `1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179`)
 
-### Encryption Key
-
-- Format: 64 hexadecimal characters (without "0x" prefix)
-- Example: `11973168e34839f9d31749ad77204359c5c39c404e1154eacb7f35a867ee47de`
-- Usage: Used for encrypting the local database
-
-### Inbox ID
-
-- Format: 64 hexadecimal characters (without "0x" prefix)
-- Example: `1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179`
-- Usage: Primary identifier for XMTP conversations
-
-### Installation ID
-
-- Format: 64 hexadecimal characters (without "0x" prefix)
-- Example: `a83166f3ab057f28d634cc04df5587356063dba11bf7d6bcc08b21a8802f4028`
-- Usage: Identifies a specific XMTP client installation
-- Access via `member.installationIds` array on GroupMember objects
+**Installation ID**: 64 hex chars, no prefix (e.g., `a83166f3ab057f28d634cc04df5587356063dba11bf7d6bcc08b21a8802f4028`)
 
 ### Example User Credentials Set
 
@@ -365,38 +344,6 @@ await group.addAdmin("memberInboxId");
 await group.addSuperAdmin("memberInboxId");
 ```
 
-## Group Creation Options
-
-When creating a new group, use the correct options interface:
-
-```typescript
-export declare const enum PermissionUpdateType {
-  AddMember = 0,
-  RemoveMember = 1,
-  AddAdmin = 2,
-  RemoveAdmin = 3,
-  UpdateMetadata = 4,
-}
-
-export declare const enum PermissionPolicy {
-  Allow = 0,
-  Deny = 1,
-  Admin = 2,
-  SuperAdmin = 3,
-  DoesNotExist = 4,
-  Other = 5,
-}
-
-export interface CreateGroupOptions {
-  permissions?: GroupPermissionsOptions;
-  groupName?: string;
-  groupImageUrlSquare?: string;
-  groupDescription?: string;
-  customPermissionPolicySet?: PermissionPolicySet;
-  messageDisappearingSettings?: MessageDisappearingSettings;
-}
-```
-
 Example usage:
 
 ```typescript
@@ -412,24 +359,6 @@ await group.updateName("Updated Project Name");
 await group.updateDescription("Our awesome project discussion");
 await group.updateImageUrl("https://example.com/new-image.jpg");
 ```
-
-## Fetching Messages
-
-There are two ways to retrieve messages from conversations:
-
-### 1. Streaming Messages (Recommended for Agents)
-
-Stream all messages to process them in real-time:
-
-```typescript
-const stream = await client.conversations.streamAllMessages();
-for await (const message of stream) {
-  // Process each message as it arrives
-  console.log(`Received message: ${message.content as string}`);
-}
-```
-
-### 2. Polling Messages
 
 Retrieve all messages at once from the local database:
 
@@ -567,103 +496,63 @@ export interface CreateGroupOptions {
 }
 ```
 
-### Common Usage Patterns
-
-When working with these classes:
-
-1. **Client**
-   - Gateway to all XMTP functionality
-   - Contains the conversations, contacts, and content types registries
-
-2. **Conversations**
-   - Central interface for managing all conversations
-   - Use `sync()` before accessing local conversation data
-   - Use `streamAllMessages()` to listen for new messages in real-time
-   - Create conversations with `newDm()`, `newGroup()`, etc.
-
-3. **Dm**
-   - Access the peer using `conversation.peerInboxId`
-   - Create new DMs with `client.conversations.newDm(inboxId)`
-   - Send messages with `dm.send(content)`
-
-4. **Group**
-   - Get members with `await group.members();` (this works for DMs too)
-   - Manage group metadata with `updateName()`, `updateDescription()`, etc.
-   - Add/remove members with `addMembers()` and `removeMembers()`
-   - Manage permissions with admin methods: `addAdmin()`, `addSuperAdmin()`, etc.
-   - Check permissions with `isAdmin()` and `isSuperAdmin()`
-
-5. **GroupMember**
-   - Use `member.inboxId` to identify members
-   - Access Ethereum addresses through `member.accountIdentifiers`
-   - Access installation IDs through `member.installationIds`
-   - Check permission level with `member.permissionLevel`
-   - consent state with `member.consentState`
-
 ## Group Permissions System
 
-XMTP provides a robust group permissions system that allows fine-grained control over who can perform specific actions within a group.
+XMTP provides fine-grained control over group actions through a permissions system with configurable policies and member roles.
 
-### Permission Types
-
-There are 5 main permission types that can be configured:
+### Core Types
 
 ```typescript
 export declare const enum PermissionUpdateType {
-  AddMember = 0, // Who can add new members to the group
-  RemoveMember = 1, // Who can remove members from the group
-  AddAdmin = 2, // Who can grant admin status to members
-  RemoveAdmin = 3, // Who can remove admin status from members
-  UpdateMetadata = 4, // Who can update group name, description, image
+  AddMember = 0, // Who can add new members
+  RemoveMember = 1, // Who can remove members
+  AddAdmin = 2, // Who can grant admin status
+  RemoveAdmin = 3, // Who can remove admin status
+  UpdateMetadata = 4, // Who can update group info
 }
-```
 
-### Permission Policies
-
-Each permission can be assigned one of 6 different policies:
-
-```typescript
 export declare const enum PermissionPolicy {
-  Allow = 0, // All members can perform this action
-  Deny = 1, // No one can perform this action
-  Admin = 2, // Only admins can perform this action
-  SuperAdmin = 3, // Only super admins can perform this action
-  DoesNotExist = 4, // Permission doesn't exist (legacy)
-  Other = 5, // Custom policy (reserved for future use)
+  Allow = 0, // All members can perform action
+  Deny = 1, // No one can perform action
+  Admin = 2, // Only admins can perform action
+  SuperAdmin = 3, // Only super admins can perform action
+  DoesNotExist = 4, // Legacy - permission doesn't exist
+  Other = 5, // Reserved for custom policies
+}
+
+export interface CreateGroupOptions {
+  permissions?: GroupPermissionsOptions;
+  groupName?: string;
+  groupImageUrlSquare?: string;
+  groupDescription?: string;
+  customPermissionPolicySet?: PermissionPolicySet;
+  messageDisappearingSettings?: MessageDisappearingSettings;
 }
 ```
 
 ### Member Roles
 
-Group members can have different roles with varying levels of permissions:
-
 - **Member**: Basic group participant
-- **Admin**: Can perform admin-level actions (depends on group settings)
-- **Super Admin**: Has all permissions and can manage other admins
+- **Admin**: Can perform admin-level actions based on group settings
+- **Super Admin**: Has all permissions, can manage other admins
 
-### Default Permission Set
+### Default Permissions
 
-When a group is created, it uses the `All_Members` policy set by default:
+New groups use the `All_Members` policy set:
 
-```typescript
-// Default permissions for new groups
-const defaultPermissions = {
-  AddMember: PermissionPolicy.Allow, // All members can add others
-  RemoveMember: PermissionPolicy.Admin, // Only admins can remove members
-  AddAdmin: PermissionPolicy.SuperAdmin, // Only super admins can add admins
-  RemoveAdmin: PermissionPolicy.SuperAdmin, // Only super admins can remove admins
-  UpdateMetadata: PermissionPolicy.Allow, // All members can update metadata
-};
-```
+- `AddMember`: Allow (all members)
+- `RemoveMember`: Admin only
+- `AddAdmin/RemoveAdmin`: Super Admin only
+- `UpdateMetadata`: Allow (all members)
 
-### Managing Group Permissions
+### Managing Permissions
 
 ```typescript
-// Check if a member is an admin
+// Check roles
 const isAdmin = group.isAdmin(inboxId);
 const isSuperAdmin = group.isSuperAdmin(inboxId);
 
-// Get all admins and super admins
+// Get role lists
 const admins = group.admins;
 const superAdmins = group.superAdmins;
 
@@ -674,54 +563,46 @@ await group.addSuperAdmin(inboxId);
 await group.removeSuperAdmin(inboxId);
 ```
 
-### Custom Permission Sets
-
-You can create custom permission sets for specific use cases:
+### Custom Permission Examples
 
 ```typescript
-// Example: Admin-only group
+// Admin-controlled group
 const adminOnlyPermissions = {
   AddMember: PermissionPolicy.Admin,
   RemoveMember: PermissionPolicy.Admin,
+  UpdateMetadata: PermissionPolicy.Admin,
   AddAdmin: PermissionPolicy.SuperAdmin,
   RemoveAdmin: PermissionPolicy.SuperAdmin,
-  UpdateMetadata: PermissionPolicy.Admin,
 };
 
-// Read-only group - only super admin can make changes
-const readOnlyGroup = {
+// Locked group (super admin only)
+const lockedPermissions = {
   AddMember: PermissionPolicy.SuperAdmin,
   RemoveMember: PermissionPolicy.SuperAdmin,
+  UpdateMetadata: PermissionPolicy.SuperAdmin,
   AddAdmin: PermissionPolicy.SuperAdmin,
   RemoveAdmin: PermissionPolicy.SuperAdmin,
-  UpdateMetadata: PermissionPolicy.SuperAdmin,
 };
 ```
 
-For more detailed information about XMTP group permissions, see the [official documentation](https://docs.xmtp.org/inboxes/group-permissions).
-
 ## Other Notes
-
-### Handling local database paths
 
 If no `dbPath` is provided, the client will use the current working directory. You can also specify a custom path for the database.
 
 ```jsx
-// Railway deployment support
-let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
-
-// Create database directory if it doesn't exist
-if (!fs.existsSync(dbPath)) {
-  fs.mkdirSync(dbPath, { recursive: true });
+function getDbPath(description: string = "xmtp") {
+  //Checks if the environment is a Railway deployment
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+  // Create database directory if it doesn't exist
+  if (!fs.existsSync(volumePath)) {
+    fs.mkdirSync(volumePath, { recursive: true });
+  }
+  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
 }
 
 // Create a client with db path
 const client = await Client.create(signer, {
-  dbEncryptionKey,
-appVersion:"example-agent/1.0.0",
   env: XMTP_ENV as XmtpEnv,
-  // Use a unique DB directory
-  dbPath,
+  dbPath: getDbPath(),
 });
 ```
