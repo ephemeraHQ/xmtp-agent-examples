@@ -4,18 +4,10 @@ import OpenAI from "openai";
 
 process.loadEnvFile(".env");
 
-const getDbPath = (description = "xmtp") => {
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  if (!fs.existsSync(volumePath)) fs.mkdirSync(volumePath, { recursive: true });
-  return `${volumePath}/${description}.db3`;
-};
-
 /* Initialize the OpenAI client */
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const agent = await Agent.createFromEnv({
-  dbPath: getDbPath(),
-});
+const agent = await Agent.createFromEnv({});
 
 agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content;
