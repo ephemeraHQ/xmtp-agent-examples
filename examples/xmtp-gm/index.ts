@@ -4,7 +4,7 @@ import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 process.loadEnvFile(".env");
 
 const agent = await Agent.createFromEnv({
-  dbPath: getDbPath(),
+  dbPath: null,
 });
 
 agent.on("text", async (ctx) => {
