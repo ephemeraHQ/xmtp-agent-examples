@@ -3,24 +3,20 @@ import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 
-const agent = await Agent.createFromEnv({
-  dbPath: null,
-});
+const agent = await Agent.createFromEnv({});
 
 agent.on("text", async (ctx) => {
   await ctx.conversation.send("gm");
 });
 
 agent.on("dm", (ctx) => {
-  console.log("NEw conversation create d with id: ", ctx.conversation.id);
+  console.log("New conversation created with id: ", ctx.conversation.id);
 });
 
 agent.on("start", () => {
-  console.log(
-    `Waiting for messages...`,
-    `Address: ${agent.client.accountIdentifier?.identifier}
-    🔗${getTestUrl(agent)}`,
-  );
+  console.log(`Waiting for messages...`);
+  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗${getTestUrl(agent)}`);
 });
 
 void agent.start();
