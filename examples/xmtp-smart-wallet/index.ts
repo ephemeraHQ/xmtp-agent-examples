@@ -1,11 +1,6 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import {
-  Agent,
-  createSigner,
-  createUser,
-  type AgentContext,
-} from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 

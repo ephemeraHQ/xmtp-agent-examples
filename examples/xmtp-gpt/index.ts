@@ -1,4 +1,3 @@
-import fs from "fs";
 import { Agent } from "@xmtp/agent-sdk";
 import OpenAI from "openai";
 
