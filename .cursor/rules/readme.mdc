@@ -6,7 +6,17 @@ alwaysApply: false
 
 # Readme example format for new agents
 
-# GM agent
+Use this format for new agents readmes:
+
+- **Sentence-style capitalization** for headers
+- **No emojis** anywhere
+- **Concise** - brief and direct
+- **Code-heavy** - prioritize examples over explanations
+- **Practical** - focus on "how" not "why"
+
+# FULL EXAMPLE:
+
+# <NAME> agent
 
 This agent replies `gm`
 
