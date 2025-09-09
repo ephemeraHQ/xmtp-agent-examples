@@ -147,7 +147,7 @@ agent.on("start", () => {
   const address = agent.client.accountIdentifier?.identifier;
   const env = agent.client.options?.env;
   const url = `http://xmtp.chat/dm/${address}?env=${env}`;
-  console.log(`We are online\nAddress: ${address}\nURL: ${url}`);
+  console.log(`Waiting for messages...\nAddress: ${address}\nURL: ${url}`);
 });
 
 void agent.start();

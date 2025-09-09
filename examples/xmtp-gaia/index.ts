@@ -46,7 +46,7 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("start", () => {
-  console.log("We are online");
+  console.log("Waiting for messages...");
 });
 
 void agent.start();
