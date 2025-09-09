@@ -10,16 +10,14 @@ const agent = await Agent.createFromEnv({});
 
 agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content;
-
-  console.log(
-    `Received message: ${messageContent} by ${ctx.message.senderInboxId}`,
-  );
+  const senderAddress = await ctx.getSenderAddress();
+  console.log(`Received message: ${messageContent} by ${senderAddress}`);
 
   try {
     /* Get the AI response */
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: messageContent }],
-      model: "gpt-4o-mini",
+      model: "gpt-5-nano",
     });
 
     /* Get the AI response */

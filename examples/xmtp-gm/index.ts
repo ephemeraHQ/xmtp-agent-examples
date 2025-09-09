@@ -12,7 +12,9 @@ const agent = await Agent.create(
 );
 
 agent.on("text", async (ctx) => {
-  console.log("New message received: ", ctx.message.content);
+  const messageContent = ctx.message.content;
+  const senderAddress = await ctx.getSenderAddress();
+  console.log(`Received message: ${messageContent} by ${senderAddress}`);
   await ctx.conversation.send("gm");
 });
 
