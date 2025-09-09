@@ -12,6 +12,11 @@ agent.on("text", async (ctx) => {
   await ctx.conversation.send("gm");
 });
 
+agent.on("dm", async (ctx) => {
+  console.log(ctx.conversation.id);
+  await ctx.conversation.send("dm");
+});
+
 agent.on("start", () => {
   const address = agent.client.accountIdentifier?.identifier;
   const env = agent.client.options?.env;
