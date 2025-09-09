@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { createSigner } from "@xmtp/agent-sdk";
+import { createSigner, createUser } from "@xmtp/agent-sdk";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
 // Check Node.js version
@@ -57,7 +57,7 @@ async function main() {
         "Usage: Provide installation IDs separated by commas, or omit to keep only current installation.",
       );
       console.error(
-        'Example: yarn revoke-installations <inbox-id> "installation-id1,installation-id2"',
+        'Example: yarn revoke <inbox-id> "installation-id1,installation-id2"',
       );
       process.exit(1);
     }
@@ -116,7 +116,9 @@ async function main() {
 
   try {
     // Create signer and encryption key
-    const signer = createSigner(envVars.WALLET_KEY as `0x${string}`);
+    const signer = createSigner(
+      createUser(envVars.XMTP_WALLET_KEY as `0x${string}`),
+    );
 
     // Get current inbox state
     const inboxState = await Client.inboxStateFromInboxIds(
