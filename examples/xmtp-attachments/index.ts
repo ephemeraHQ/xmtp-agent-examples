@@ -92,6 +92,7 @@ async function createRemoteAttachmentFromData(
 
 const agent = await Agent.create(createSigner(createUser()), {
   codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
 });
 
 agent.on("text", async (ctx) => {
