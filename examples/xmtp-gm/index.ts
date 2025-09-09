@@ -2,8 +2,6 @@ import fs from "fs";
 import { Agent } from "@xmtp/agent-sdk";
 
 //process.loadEnvFile(".env");
-// Load variables from .env file
-process.loadEnvFile(".env");
 
 const agent = await Agent.createFromEnv({
   dbPath: getDbPath(),
