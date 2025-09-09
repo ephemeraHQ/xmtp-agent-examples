@@ -1,5 +1,5 @@
 import fs from "fs";
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 
@@ -32,7 +32,7 @@ const SYNC_INTERVAL = 5;
 console.log("Starting XMTP Queue Dual Client Agent...");
 
 // Create receiving client
-const receivingClient = await Agent.create(undefined, {
+const receivingClient = await Agent.create(createSigner(createUser()), {
   dbPath: getDbPath("receiving"),
 });
 
@@ -40,7 +40,7 @@ void receivingClient.start();
 console.log("XMTP receiving client created");
 
 // Create sending client
-const sendingClient = await Agent.create(undefined, {
+const sendingClient = await Agent.create(createSigner(createUser()), {
   dbPath: getDbPath("sending"),
 });
 
@@ -52,8 +52,8 @@ startPeriodicSync(receivingClient, sendingClient);
 // Start message processor with sending client
 startMessageProcessor(sendingClient);
 
-receivingClient.on("message", (ctx) => {
-  const content = ctx.message.content as string;
+receivingClient.on("text", (ctx) => {
+  const content = ctx.message.content;
   console.log(
     `Received: "${content}" in conversation ${ctx.message.conversationId}`,
   );

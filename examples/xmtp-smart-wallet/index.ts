@@ -1,6 +1,11 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import {
+  Agent,
+  createSigner,
+  createUser,
+  type AgentContext,
+} from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 
@@ -15,7 +20,7 @@ const user = createUser(walletData.seed as `0x${string}`);
 const signer = createSigner(user);
 const agent = await Agent.create(signer);
 void agent.start();
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
     ctx.message.senderInboxId,
   ]);

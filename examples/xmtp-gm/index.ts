@@ -1,12 +1,12 @@
 import fs from "fs";
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 
 //process.loadEnvFile(".env");
-const agent = await Agent.create(undefined, {
+const agent = await Agent.create(createSigner(createUser()), {
   dbPath: getDbPath(),
 });
 
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   console.log(ctx.message.content);
   await ctx.conversation.send("gm");
 });

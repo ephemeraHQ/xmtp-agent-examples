@@ -1,4 +1,4 @@
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 import OpenAI from "openai";
 
 process.loadEnvFile(".env");
@@ -19,13 +19,13 @@ const openai = new OpenAI({
   apiKey: process.env.GAIA_API_KEY,
 });
 
-const agent = await Agent.create();
+const agent = await Agent.create(createSigner(createUser()));
 
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   try {
     /* Get the AI response */
     const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: ctx.message.content as string }],
+      messages: [{ role: "user", content: ctx.message.content }],
       model: process.env.GAIA_MODEL_NAME as string,
     });
 

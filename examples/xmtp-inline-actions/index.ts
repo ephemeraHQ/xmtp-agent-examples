@@ -1,4 +1,10 @@
-import { filter, withFilter, Agent as XmtpAgent } from "@xmtp/agent-sdk";
+import {
+  createSigner,
+  createUser,
+  filter,
+  withFilter,
+  Agent as XmtpAgent,
+} from "@xmtp/agent-sdk";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
 import {
@@ -29,7 +35,7 @@ console.log(
   `💰 Supported tokens: ${tokenHandler.getSupportedTokens().join(", ")}`,
 );
 
-const agent = await XmtpAgent.create(undefined, {
+const agent = await XmtpAgent.create(createSigner(createUser()), {
   codecs: [
     new WalletSendCallsCodec(),
     new TransactionReferenceCodec(),
@@ -40,32 +46,32 @@ const agent = await XmtpAgent.create(undefined, {
 
 // Commands
 agent.on(
-  "message",
+  "text",
   withFilter(filter.startsWith("/help"), async (ctx) => {
     await handleHelpCommand(ctx, tokenHandler);
   }),
 );
 
 agent.on(
-  "message",
+  "text",
   withFilter(filter.startsWith("/actions"), async (ctx) => {
     await handleActionsCommand(ctx);
   }),
 );
 
 agent.on(
-  "message",
+  "text",
   withFilter(filter.startsWith("/actions-with-images"), async (ctx) => {
     await handleActionsWithImagesCommand(ctx);
   }),
 );
 
 agent.on(
-  "message",
+  "text",
   withFilter(filter.startsWith("/send"), async (ctx) => {
     await handleSendCommand(
       ctx,
-      ctx.message.content as string,
+      ctx.message.content,
       ctx.message.senderInboxId,
       agent.client.accountIdentifier?.identifier || "",
       tokenHandler,
@@ -74,11 +80,11 @@ agent.on(
 );
 
 agent.on(
-  "message",
+  "text",
   withFilter(filter.startsWith("/balance"), async (ctx) => {
     await handleBalanceCommand(
       ctx,
-      ctx.message.content as string,
+      ctx.message.content,
       agent.client.accountIdentifier?.identifier || "",
       tokenHandler,
     );
@@ -86,13 +92,13 @@ agent.on(
 );
 
 agent.on(
-  "message",
+  "text",
   withFilter(filter.startsWith("/info"), async (ctx) => {
     await handleInfoCommand(ctx, tokenHandler);
   }),
 );
 
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   const message = ctx.message;
 
   // Get sender address
@@ -114,7 +120,7 @@ agent.on("message", async (ctx) => {
     );
     await handleTransactionReference(
       ctx,
-      message.content as ExtendedTransactionReference,
+      message.content as unknown as ExtendedTransactionReference,
       senderAddress,
       tokenHandler,
     );
@@ -127,7 +133,7 @@ agent.on("message", async (ctx) => {
     );
     await handleIntentMessage(
       ctx,
-      message.content as IntentContent,
+      message.content as unknown as IntentContent,
       senderAddress,
       agent.client.accountIdentifier?.identifier || "",
       tokenHandler,

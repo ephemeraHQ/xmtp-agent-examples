@@ -1,4 +1,9 @@
-import { Agent, type AgentContext } from "@xmtp/agent-sdk";
+import {
+  Agent,
+  createSigner,
+  createUser,
+  type AgentContext,
+} from "@xmtp/agent-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
@@ -143,12 +148,12 @@ async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
     return false;
   }
 }
-const agent = await Agent.create(undefined, {
+const agent = await Agent.create(createSigner(createUser()), {
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
 
 // Handle first-time user messages - send welcome with actions
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   if (await isFirstTimeInteraction(ctx)) {
     await sendWelcomeWithActions(ctx);
   } else {
@@ -159,9 +164,10 @@ agent.on("message", async (ctx) => {
 });
 
 // Handle intent messages (action button clicks) - no filtering needed
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   if (ctx.message.contentType?.typeId === "intent") {
-    await handleIntentMessage(ctx, ctx.message.content as IntentContent);
+    const messageContent = ctx.message.content as unknown as IntentContent;
+    await handleIntentMessage(ctx, messageContent);
   }
 });
 

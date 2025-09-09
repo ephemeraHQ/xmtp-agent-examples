@@ -1,4 +1,4 @@
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 import OpenAI from "openai";
 
 process.loadEnvFile(".env");
@@ -6,10 +6,10 @@ process.loadEnvFile(".env");
 /* Initialize the OpenAI client */
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const agent = await Agent.create();
+const agent = await Agent.create(createSigner(createUser()));
 
-agent.on("message", async (ctx) => {
-  const messageContent = ctx.message.content as string;
+agent.on("text", async (ctx) => {
+  const messageContent = ctx.message.content;
 
   console.log(
     `Received message: ${messageContent} by ${ctx.message.senderInboxId}`,

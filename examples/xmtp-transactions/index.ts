@@ -1,4 +1,4 @@
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import {
   ContentTypeWalletSendCalls,
@@ -12,12 +12,12 @@ const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
 const usdcHandler = new USDCHandler(NETWORK_ID);
 
-const agent = await Agent.create(undefined, {
+const agent = await Agent.create(createSigner(createUser()), {
   codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
 });
 
-agent.on("message", async (ctx) => {
-  const messageContent = ctx.message.content as string;
+agent.on("text", async (ctx) => {
+  const messageContent = ctx.message.content;
   const command = messageContent.toLowerCase().trim();
 
   console.log(

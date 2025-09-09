@@ -1,4 +1,4 @@
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 import {
   ContentTypeReaction,
   ReactionCodec,
@@ -10,13 +10,13 @@ process.loadEnvFile(".env");
 // Helper function to sleep for a specified number of milliseconds
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const agent = await Agent.create(undefined, {
+const agent = await Agent.create(createSigner(createUser()), {
   codecs: [new ReactionCodec()],
 });
 
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   try {
-    const messageContent = ctx.message.content as string;
+    const messageContent = ctx.message.content;
     console.log(`Received message: ${messageContent}`);
 
     // Step 1: React with thinking emoji

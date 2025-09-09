@@ -1,4 +1,9 @@
-import { Agent, type AgentContext } from "@xmtp/agent-sdk";
+import {
+  Agent,
+  createSigner,
+  createUser,
+  type AgentContext,
+} from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 // Configuration for the secret word gated group
@@ -28,12 +33,12 @@ const GROUP_CONFIG = {
 // Store to track users who are already in the group
 const usersInGroup = new Set<string>();
 
-const agent = await Agent.create();
+const agent = await Agent.create(createSigner(createUser()));
 
-agent.on("message", (ctx) => {
+agent.on("text", (ctx) => {
   const senderInboxId = ctx.message.senderInboxId;
   const conversation = ctx.conversation;
-  const messageContent = ctx.message.content as string;
+  const messageContent = ctx.message.content;
   const secretWord = GROUP_CONFIG.secretWord || "";
 
   // Check if user is already in the group

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
 import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,
@@ -90,11 +90,11 @@ async function createRemoteAttachmentFromData(
   };
 }
 
-const agent = await Agent.create(undefined, {
+const agent = await Agent.create(createSigner(createUser()), {
   codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
 });
 
-agent.on("message", async (ctx) => {
+agent.on("text", async (ctx) => {
   const message = ctx.message;
 
   // Check if this is a remote attachment
@@ -104,7 +104,7 @@ agent.on("message", async (ctx) => {
     try {
       // Load and decode the received attachment
       const receivedAttachment = await RemoteAttachmentCodec.load(
-        message.content as RemoteAttachment,
+        message.content as unknown as RemoteAttachment,
         agent.client,
       );
 
@@ -152,7 +152,7 @@ agent.on("message", async (ctx) => {
   /* Handle text messages */
   if (message.contentType?.typeId === "text") {
     console.log(
-      `Received text message: ${message.content as string} by ${message.senderInboxId}`,
+      `Received text message: ${message.content} by ${message.senderInboxId}`,
     );
 
     const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
