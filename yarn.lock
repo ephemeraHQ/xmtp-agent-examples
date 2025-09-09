@@ -934,15 +934,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@noble/curves@npm:2.0.0"
-  dependencies:
-    "@noble/hashes": "npm:2.0.0"
-  checksum: 10/f0c42bebbde529bdee7dcf39eb145343f7ba1194d1fd5cc89f51e9b9a67821b389297d259055a07981f6b9fa2b18be702fa5ececa953b5f1ff481ca49b88761f
-  languageName: node
-  linkType: hard
-
 "@noble/hashes@npm:1.3.2":
   version: 1.3.2
   resolution: "@noble/hashes@npm:1.3.2"
@@ -954,13 +945,6 @@ __metadata:
   version: 1.8.0
   resolution: "@noble/hashes@npm:1.8.0"
   checksum: 10/474b7f56bc6fb2d5b3a42132561e221b0ea4f91e590f4655312ca13667840896b34195e2b53b7f097ec080a1fdd3b58d902c2a8d0fbdf51d2e238b53808a177e
-  languageName: node
-  linkType: hard
-
-"@noble/hashes@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@noble/hashes@npm:2.0.0"
-  checksum: 10/cab9ec490c211a9baa54297d3f1ed4289408c54cd99d4a71bdce92038ef8c10f4a9b1230a72c92656e0ffdf9420d0d631d5f83d9f72883f77bd92214f5502c28
   languageName: node
   linkType: hard
 
@@ -1695,11 +1679,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/agent-sdk@npm:0.0.7":
-  version: 0.0.7
-  resolution: "@xmtp/agent-sdk@npm:0.0.7"
+"@xmtp/agent-sdk@npm:0.0.9":
+  version: 0.0.9
+  resolution: "@xmtp/agent-sdk@npm:0.0.9"
   dependencies:
-    "@noble/curves": "npm:^2.0.0"
     "@xmtp/content-type-reaction": "npm:^2.0.2"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/content-type-reply": "npm:^2.0.2"
@@ -1707,7 +1690,7 @@ __metadata:
     "@xmtp/node-sdk": "npm:^4.1.0"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.31.7"
-  checksum: 10/d61f91cd2c28ddf282083a9f20b27a970366beccf9430984ed66242502e7fa603840f209270e5bf30620a3a03e70799cb960bee23964265365c5b0b4551f00c5
+  checksum: 10/0529612bd45f9dd5931608141a2cb66ae2013e40e711aa4842d9c0b797d963c7efad44baca0b85265360d9d09b5194993ceac6e635486a8661259232b403e3f4
   languageName: node
   linkType: hard
 
@@ -5058,7 +5041,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2, viem@npm:^2.21.26, viem@npm:^2.22.16, viem@npm:^2.22.17":
+"viem@npm:^2, viem@npm:^2.21.26, viem@npm:^2.22.16":
   version: 2.31.4
   resolution: "viem@npm:2.31.4"
   dependencies:
@@ -5260,7 +5243,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.4.1"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/agent-sdk": "npm:0.0.7"
+    "@xmtp/agent-sdk": "npm:0.0.9"
     eslint: "npm:^9.19.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.3"
@@ -5271,8 +5254,6 @@ __metadata:
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
     typescript-eslint: "npm:^8.22.0"
-    uint8arrays: "npm:^5.1.0"
-    viem: "npm:^2.22.17"
   languageName: unknown
   linkType: soft
 
