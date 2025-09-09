@@ -1,8 +1,11 @@
 import fs from "fs";
-import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
 
 //process.loadEnvFile(".env");
-const agent = await Agent.create(createSigner(createUser()), {
+// Load variables from .env file
+process.loadEnvFile(".env");
+
+const agent = await Agent.createFromEnv({
   dbPath: getDbPath(),
 });
 
