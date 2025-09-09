@@ -82,10 +82,7 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("start", () => {
-  const address = agent.client.accountIdentifier?.identifier;
-  const env = agent.client.options?.env;
-  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
-  console.log(`Waiting for messages...: ${url}`);
+  console.log(`Waiting for messages...\n🔗${getTestUrl(agent)}`);
 });
 
 void agent.start();

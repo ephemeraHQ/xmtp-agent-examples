@@ -1,4 +1,4 @@
-import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
 import OpenAI from "openai";
 
 process.loadEnvFile(".env");
@@ -46,7 +46,7 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("start", () => {
-  console.log("Waiting for messages...");
+  console.log(`Waiting for messages...\n🔗${getTestUrl(agent)}`);
 });
 
 void agent.start();

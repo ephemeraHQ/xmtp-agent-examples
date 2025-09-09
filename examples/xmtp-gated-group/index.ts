@@ -2,6 +2,7 @@ import {
   Agent,
   createSigner,
   createUser,
+  getTestUrl,
   type AgentContext,
 } from "@xmtp/agent-sdk";
 
@@ -57,10 +58,7 @@ agent.on("text", (ctx) => {
 });
 
 agent.on("start", () => {
-  const address = agent.client.accountIdentifier?.identifier;
-  const env = agent.client.options?.env;
-  const url = `http://xmtp.chat/dm/${address}?env=${env}`;
-  console.log(`Waiting for messages...: ${url}`);
+  console.log(`Waiting for messages...\n🔗${getTestUrl(agent)}`);
 });
 
 void agent.start();
