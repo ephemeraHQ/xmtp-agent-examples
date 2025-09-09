@@ -233,7 +233,6 @@ const agent = await Agent.create(
   createSigner(createUser(process.env.XMTP_WALLET_KEY as `0x${string}`)),
   {
     env: process.env.XMTP_ENV as "local" | "dev" | "production",
-    dbPath: getDbPath(),
   },
 );
 
@@ -261,66 +260,20 @@ agent.on("start", () => {
   console.log(`Multiplication Agent is running...`);
   console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
   console.log(`🔗${getTestUrl(agent)}`);
-  console.log(`Send me two numbers to multiply!`);
+  console.log(`Send a number to multiply!`);
 });
 
 await agent.start();
-
 function parseAndMultiply(message: string): string {
-  // Remove common words and clean the message
-  const cleanMessage = message
-    .toLowerCase()
-    .replace(/multiply|times|by|and|the|numbers?/g, "")
-    .trim();
+  // Extract the first number from the message
+  const match = message.match(/(\d+(?:\.\d+)?)/);
 
-  // Try different patterns to extract two numbers
-  let numbers: number[] = [];
-
-  // Pattern 1: "5 x 3" or "5x3"
-  let match = cleanMessage.match(/(\d+(?:\.\d+)?)\s*[x*×]\s*(\d+(?:\.\d+)?)/);
-  if (match) {
-    numbers = [parseFloat(match[1]), parseFloat(match[2])];
+  if (!match) {
+    throw new Error("Could not find a number to multiply");
   }
 
-  // Pattern 2: "5, 3" or "5,3"
-  if (numbers.length === 0) {
-    match = cleanMessage.match(/(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)/);
-    if (match) {
-      numbers = [parseFloat(match[1]), parseFloat(match[2])];
-    }
-  }
-
-  // Pattern 3: "5 3" (space separated)
-  if (numbers.length === 0) {
-    match = cleanMessage.match(/(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)/);
-    if (match) {
-      numbers = [parseFloat(match[1]), parseFloat(match[2])];
-    }
-  }
-
-  // Pattern 4: Extract any two numbers from the message
-  if (numbers.length === 0) {
-    const allNumbers = cleanMessage.match(/\d+(?:\.\d+)?/g);
-    if (allNumbers && allNumbers.length >= 2) {
-      numbers = [parseFloat(allNumbers[0]), parseFloat(allNumbers[1])];
-    }
-  }
-
-  if (numbers.length < 2) {
-    throw new Error("Could not find two numbers to multiply");
-  }
-
-  const result = numbers[0] * numbers[1];
-  return `${numbers[0]} × ${numbers[1]} = ${result}`;
-}
-
-function getDbPath(description: string = "xmtp") {
-  //Checks if the environment is a Railway deployment
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  // Create database directory if it doesn't exist
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
-  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
+  const number = parseFloat(match[1]);
+  const result = number * 2;
+  return `${number} × 2 = ${result}`;
 }
 ```
