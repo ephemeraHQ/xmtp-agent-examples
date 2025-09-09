@@ -8,6 +8,7 @@
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-multiplier",
+    "revoke": "tsx ../../scripts/revokeInstallations.ts",
     "start": "tsx index.ts"
   },
   "dependencies": {
