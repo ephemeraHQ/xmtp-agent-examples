@@ -8,13 +8,11 @@ const agent = await Agent.createFromEnv({
 });
 
 agent.on("text", async (ctx) => {
-  console.log(ctx.message.content);
   await ctx.conversation.send("gm");
 });
 
-agent.on("dm", async (ctx) => {
-  console.log(ctx.conversation.id);
-  await ctx.conversation.send("dm");
+agent.on("dm", (ctx) => {
+  console.log("NEw conversation create d with id: ", ctx.conversation.id);
 });
 
 agent.on("start", () => {
