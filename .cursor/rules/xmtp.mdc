@@ -216,18 +216,3 @@ const agent = await Agent.create(signer, {
   codecs: [new MyContentType()],
 });
 ```
-
-## Debugging
-
-- [Debug an agent](https://docs.xmtp.org/agents/debug-agents)
-- [Further debugging info](https://docs.xmtp.org/inboxes/debug-your-app#debug-your-inbox-app)
-
-## Contributing / Feedback
-
-We’d love your feedback: [open an issue](https://github.com/xmtp/xmtp-js/issues) or discussion. PRs welcome for docs, examples, and core improvements.
-
----
-
-Build something delightful. Then tell us what you wish was easier.
-
-Happy hacking 💫
