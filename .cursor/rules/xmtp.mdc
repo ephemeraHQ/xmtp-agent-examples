@@ -11,11 +11,8 @@ This SDK is based on familiar Node.js patterns: you register event listeners, co
 Choose your package manager:
 
 ```bash
-npm install @xmtp/agent-sdk
-# or
-pnpm add @xmtp/agent-sdk
-# or
-yarn add @xmtp/agent-sdk
+# No other libraries should be needed
+npm/pnpm/yarn install @xmtp/agent-sdk
 ```
 
 ## Quick Start
@@ -34,7 +31,10 @@ const agent = await Agent.create(signer, {
 
 // 3. Respond to text messages
 agent.on("text", async (ctx) => {
-  await ctx.conversation.send("Hello from my XMTP Agent! 👋");
+  const messageContent = ctx.message.content;
+  const senderAddress = await ctx.getSenderAddress();
+  console.log(`Received message: ${messageContent} by ${senderAddress}`);
+  await ctx.conversation.send("gm");
 });
 
 // 4. Log when we're ready
@@ -69,37 +69,11 @@ process.loadEnvFile(".env");
 const agent = await Agent.createFromEnv();
 ```
 
-Agents can also recognize the following environment variables:
-
-| Variable           | Purpose                                                              | Example                 |
-| ------------------ | -------------------------------------------------------------------- | ----------------------- |
-| `XMTP_FORCE_DEBUG` | [Activate debugging logs](https://docs.xmtp.org/agents/debug-agents) | `XMTP_FORCE_DEBUG=true` |
-
 ## Core Concepts
 
 ### 1. Event‑Driven Architecture
 
 Subscribe only to what you need using Node’s `EventEmitter` interface. Events you can listen for:
-
-**Message Events**
-
-- `text` – a new incoming text message
-- `reaction` – a new incoming reaction message
-- `reply` – a new incoming reply message
-- `attachment` – a new incoming remote attachment message
-- `unhandledMessage` – a message that doesn't match any specific type
-
-**Conversation Events**
-
-- `dm` – a new DM conversation
-- `group` – a new group conversation
-
-**Lifecycle Events**
-
-- `start` / `stop` – agent lifecycle events
-- `unhandledError` – unhandled errors
-
-**Example**
 
 ```ts
 // Handle different message types
@@ -186,25 +160,6 @@ import { f, filter } from "@xmtp/agent-sdk";
 const longVersion = filter.and(filter.notFromSelf, filter.isText);
 const shortVersion = f.and(f.notFromSelf, f.isText);
 ```
-
-You can find all available prebuilt filters [here](https://github.com/xmtp/xmtp-js/blob/main/sdks/agent-sdk/src/utils/filter.ts).
-
-### 4. Rich Context
-
-Every message event handler receives a `MessageContext` with:
-
-- `message` – the decoded message object
-- `conversation` – the active conversation object
-- `client` – underlying XMTP client
-- Helpers like `sendTextReply()`, `sendReaction()`, `getSenderAddress`, and more
-
-### 5. Helpers
-
-The `MessageContext` object provides several helpers to simplify message handling:
-
-- `sendTextReply(text: string)` – send a text reply to the conversation
-- `sendReaction(reaction: Reaction)` – send a reaction to the message
-- `getSenderAddress()` – get the sender's address from the message
 
 **Example**
 
