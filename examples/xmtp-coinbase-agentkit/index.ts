@@ -243,7 +243,9 @@ console.log("Initializing Agent on XMTP...");
 
 ensureLocalStorage();
 
-const agent = await XmtpAgent.create(createSigner(createUser()));
+const agent = await XmtpAgent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+});
 
 agent.on("text", (ctx) => {
   void handleMessage(ctx);

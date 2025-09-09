@@ -33,6 +33,7 @@ console.log("Starting XMTP Queue Dual Client Agent...");
 
 // Create receiving client
 const receivingClient = await Agent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath("receiving"),
 });
 
@@ -41,6 +42,7 @@ console.log("XMTP receiving client created");
 
 // Create sending client
 const sendingClient = await Agent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath("sending"),
 });
 

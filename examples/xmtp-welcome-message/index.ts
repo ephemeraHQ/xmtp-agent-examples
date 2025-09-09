@@ -150,6 +150,7 @@ async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
   }
 }
 const agent = await Agent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
 

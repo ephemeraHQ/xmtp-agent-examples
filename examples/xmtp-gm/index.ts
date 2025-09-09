@@ -1,5 +1,5 @@
 import fs from "fs";
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 
@@ -16,7 +16,11 @@ agent.on("dm", (ctx) => {
 });
 
 agent.on("start", () => {
-  console.log(`Waiting for messages...\n🔗${getTestUrl(agent)}`);
+  console.log(
+    `Waiting for messages...`,
+    `Address: ${agent.client.accountIdentifier?.identifier}
+    🔗${getTestUrl(agent)}`,
+  );
 });
 
 void agent.start();

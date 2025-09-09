@@ -1,4 +1,4 @@
-import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import { Agent, createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
 import {
   ContentTypeReaction,
   ReactionCodec,
@@ -11,6 +11,7 @@ process.loadEnvFile(".env");
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const agent = await Agent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [new ReactionCodec()],
 });
 

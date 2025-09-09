@@ -34,7 +34,9 @@ const GROUP_CONFIG = {
 // Store to track users who are already in the group
 const usersInGroup = new Set<string>();
 
-const agent = await Agent.create(createSigner(createUser()));
+const agent = await Agent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+});
 
 agent.on("text", (ctx) => {
   const senderInboxId = ctx.message.senderInboxId;

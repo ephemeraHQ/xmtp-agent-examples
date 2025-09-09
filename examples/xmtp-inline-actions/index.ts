@@ -37,6 +37,7 @@ console.log(
 );
 
 const agent = await XmtpAgent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [
     new WalletSendCallsCodec(),
     new TransactionReferenceCodec(),

@@ -19,7 +19,9 @@ const openai = new OpenAI({
   apiKey: process.env.GAIA_API_KEY,
 });
 
-const agent = await Agent.create(createSigner(createUser()));
+const agent = await Agent.create(createSigner(createUser()), {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+});
 
 agent.on("text", async (ctx) => {
   try {
