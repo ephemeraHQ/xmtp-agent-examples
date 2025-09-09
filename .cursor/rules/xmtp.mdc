@@ -198,6 +198,14 @@ Every message event handler receives a `MessageContext` with:
 - `client` – underlying XMTP client
 - Helpers like `sendTextReply()`, `sendReaction()`, `getSenderAddress`, and more
 
+### 5. Helpers
+
+The `MessageContext` object provides several helpers to simplify message handling:
+
+- `sendTextReply(text: string)` – send a text reply to the conversation
+- `sendReaction(reaction: Reaction)` – send a reaction to the message
+- `getSenderAddress()` – get the sender's address from the message
+
 **Example**
 
 ```ts
@@ -276,4 +284,489 @@ function parseAndMultiply(message: string): string {
   const result = number * 2;
   return `${number} × 2 = ${result}`;
 }
+```
+
+## Identifiers Reference
+
+When working with XMTP, you'll encounter several types of identifiers:
+
+### Ethereum Addresses
+
+- Format: `0x` followed by 40 hexadecimal characters
+- Example: `0xfb55CB623f2aB58Da17D8696501054a2ACeD1944`
+- Usage: Identifies blockchain wallets associated with XMTP users
+
+### Private Key
+
+- Format: `0x` followed by 64 hexadecimal characters
+- Example: `0x11567776b95bdbed513330f503741e19877bf7fe73e7957bf6f0ecf3e267fdb8`
+- Usage: Used to create the signer for authenticating with XMTP
+
+### Encryption Key
+
+- Format: 64 hexadecimal characters (without "0x" prefix)
+- Example: `11973168e34839f9d31749ad77204359c5c39c404e1154eacb7f35a867ee47de`
+- Usage: Used for encrypting the local database
+
+### Inbox ID
+
+- Format: 64 hexadecimal characters (without "0x" prefix)
+- Example: `1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179`
+- Usage: Primary identifier for XMTP conversations
+
+### Installation ID
+
+- Format: 64 hexadecimal characters (without "0x" prefix)
+- Example: `a83166f3ab057f28d634cc04df5587356063dba11bf7d6bcc08b21a8802f4028`
+- Usage: Identifies a specific XMTP client installation
+- Access via `member.installationIds` array on GroupMember objects
+
+### Example User Credentials Set
+
+```json
+{
+  "accountAddress": "0xfb55CB623f2aB58Da17D8696501054a2ACeD1944",
+  "privateKey": "0x11567776b95bdbed513330f503741e19877bf7fe73e7957bf6f0ecf3e267fdb8",
+  "encryptionKey": "11973168e34839f9d31749ad77204359c5c39c404e1154eacb7f35a867ee47de",
+  "inboxId": "1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179",
+  "installationId": "a83166f3ab057f28d634cc04df5587356063dba11bf7d6bcc08b21a8802f4028"
+}
+```
+
+## Working with Members
+
+All conversations, both Groups and DMs, have a members() method that returns an array of GroupMember objects:
+
+```typescript
+// Get members from any conversation type (DM or Group)
+const members = await conversation.members();
+
+// Find a specific member
+const member = members.find(
+  (member) => member.inboxId.toLowerCase() === targetInboxId.toLowerCase(),
+);
+
+// Get member's Ethereum address
+if (member) {
+  const ethIdentifier = member.accountIdentifiers.find(
+    (id) => id.identifierKind === IdentifierKind.Ethereum,
+  );
+
+  if (ethIdentifier) {
+    const ethereumAddress = ethIdentifier.identifier;
+    console.log(`Found Ethereum address: ${ethereumAddress}`);
+  }
+
+  // Get installation ID
+  if (member.installationIds.length > 0) {
+    const installationId = member.installationIds[0];
+    console.log(`Found installation ID: ${installationId}`);
+  }
+}
+```
+
+## Working with Conversations
+
+XMTP provides two main conversation types:
+
+### Direct Messages (DMs)
+
+```typescript
+// Create a new DM
+const dm = await client.conversations.newDm("inboxId123");
+
+// Or create using an Ethereum address
+const dmByAddress = await client.conversations.newDmWithIdentifier({
+  identifier: "0x7c40611372d354799d138542e77243c284e460b2",
+  identifierKind: IdentifierKind.Ethereum,
+});
+
+// Send a message
+await dm.send("Hello!");
+
+// Access peer's inbox ID
+const peerInboxId = dm.peerInboxId;
+```
+
+### Groups
+
+```typescript
+// Create a new group
+const group = await client.conversations.newGroup(["inboxId1", "inboxId2"], {
+  groupName: "My Group",
+  groupDescription: "Group description",
+});
+
+// Update group metadata
+await group.updateName("New Group Name");
+await group.updateDescription("Updated description");
+
+// Manage members
+await group.addMembers(["newMemberInboxId"]);
+await group.removeMembers(["memberToRemoveInboxId"]);
+
+// Manage permissions
+await group.addAdmin("memberInboxId");
+await group.addSuperAdmin("memberInboxId");
+```
+
+## Group Creation Options
+
+When creating a new group, use the correct options interface:
+
+```typescript
+export declare const enum PermissionUpdateType {
+  AddMember = 0,
+  RemoveMember = 1,
+  AddAdmin = 2,
+  RemoveAdmin = 3,
+  UpdateMetadata = 4,
+}
+
+export declare const enum PermissionPolicy {
+  Allow = 0,
+  Deny = 1,
+  Admin = 2,
+  SuperAdmin = 3,
+  DoesNotExist = 4,
+  Other = 5,
+}
+
+export interface CreateGroupOptions {
+  permissions?: GroupPermissionsOptions;
+  groupName?: string;
+  groupImageUrlSquare?: string;
+  groupDescription?: string;
+  customPermissionPolicySet?: PermissionPolicySet;
+  messageDisappearingSettings?: MessageDisappearingSettings;
+}
+```
+
+Example usage:
+
+```typescript
+// Create a group with some initial settings
+const group = await client.conversations.newGroup([inboxId1, inboxId2], {
+  groupName: "Project Discussion",
+  groupDescription: "A group for our project collaboration",
+  groupImageUrlSquare: "https://example.com/image.jpg",
+});
+
+// Update group settings later
+await group.updateName("Updated Project Name");
+await group.updateDescription("Our awesome project discussion");
+await group.updateImageUrl("https://example.com/new-image.jpg");
+```
+
+## Fetching Messages
+
+There are two ways to retrieve messages from conversations:
+
+### 1. Streaming Messages (Recommended for Agents)
+
+Stream all messages to process them in real-time:
+
+```typescript
+const stream = await client.conversations.streamAllMessages();
+for await (const message of stream) {
+  // Process each message as it arrives
+  console.log(`Received message: ${message.content as string}`);
+}
+```
+
+### 2. Polling Messages
+
+Retrieve all messages at once from the local database:
+
+```typescript
+// First sync the conversations from the network to update the local db
+await client.conversations.sync();
+
+// Then get all messages as an array
+const messages = await conversation.messages();
+```
+
+## Key Type References
+
+```tsx
+// Client Class
+declare class Client {
+  constructor(client: Client$1, signer: Signer, codecs: ContentCodec[]);
+  static create(
+    signer: Signer,
+    encryptionKey: Uint8Array,
+    options?: ClientOptions,
+  ): Promise<Client>;
+  get inboxId(): string;
+  get installationId(): string;
+  get conversations(): Conversations;
+  get preferences(): Preferences;
+}
+
+// Conversations Class
+declare class Conversations {
+  constructor(client: Client, conversations: Conversations$1);
+  getConversationById(id: string): Promise<Dm | Group | undefined>;
+  newGroupWithIdentifiers(
+    identifiers: Identifier[],
+    options?: CreateGroupOptions,
+  ): Promise<Group>;
+  newGroup(inboxIds: string[], options?: CreateGroupOptions): Promise<Group>;
+  newDmWithIdentifier(
+    identifier: Identifier,
+    options?: CreateDmOptions,
+  ): Promise<Dm>;
+  newDm(inboxId: string, options?: CreateDmOptions): Promise<Dm>;
+  sync(): Promise<void>;
+  streamAllMessages(
+    callback?: StreamCallback<DecodedMessage>,
+  ): Promise<AsyncStream<DecodedMessage<any>>>;
+}
+
+// Conversation Base Class
+declare class Conversation {
+  client: Client;
+  constructor(
+    client: Client,
+    conversation: Conversation$1,
+    lastMessage?: Message | null,
+  );
+  get id(): string;
+  send<T>(content: T, options?: SendOptions): Promise<string>;
+  messages<T>(options?: PaginationOptions): Promise<Array<DecodedMessage<T>>>;
+  members(): Promise<GroupMember[]>;
+}
+
+// Dm Class
+declare class Dm extends Conversation {
+  constructor(
+    client: Client,
+    conversation: Conversation$1,
+    lastMessage?: Message | null,
+  );
+  get peerInboxId(): string;
+}
+
+// Group Class
+declare class Group extends Conversation {
+  constructor(
+    client: Client,
+    conversation: Conversation$1,
+    lastMessage?: Message | null,
+  );
+  get name(): string;
+  updateName(name: string): Promise<void>;
+  get imageUrl(): string;
+  updateImageUrl(imageUrl: string): Promise<void>;
+  get description(): string;
+  updateDescription(description: string): Promise<void>;
+  get admins(): string[];
+  get superAdmins(): string[];
+  isAdmin(inboxId: string): boolean;
+  isSuperAdmin(inboxId: string): boolean;
+  addMembersByIdentifiers(identifiers: Identifier[]): Promise<void>;
+  addMembers(inboxIds: string[]): Promise<void>;
+  removeMembers(inboxIds: string[]): Promise<void>;
+  addAdmin(inboxId: string): Promise<void>;
+  removeAdmin(inboxId: string): Promise<void>;
+  addSuperAdmin(inboxId: string): Promise<void>;
+  removeSuperAdmin(inboxId: string): Promise<void>;
+}
+
+// GroupMember Class
+declare class GroupMember {
+  inboxId: string;
+  accountIdentifiers: Array<Identifier>;
+  installationIds: Array<string>;
+  permissionLevel: PermissionLevel;
+  consentState: ConsentState;
+}
+
+// DecodedMessage Class
+declare class DecodedMessage<T = any> {
+  content: T;
+  contentType: ContentTypeId | undefined;
+  conversationId: string;
+  id: string;
+  senderInboxId: string;
+  sentAt: Date;
+  constructor(client: Client, message: Message);
+}
+
+// Identifier Interface
+export interface Identifier {
+  identifier: string;
+  identifierKind: IdentifierKind;
+}
+
+export declare const enum IdentifierKind {
+  Ethereum = 0,
+  Passkey = 1,
+}
+
+// CreateGroupOptions Interface
+export interface CreateGroupOptions {
+  groupName?: string;
+  groupImageUrlSquare?: string;
+  groupDescription?: string;
+}
+```
+
+### Common Usage Patterns
+
+When working with these classes:
+
+1. **Client**
+   - Gateway to all XMTP functionality
+   - Contains the conversations, contacts, and content types registries
+
+2. **Conversations**
+   - Central interface for managing all conversations
+   - Use `sync()` before accessing local conversation data
+   - Use `streamAllMessages()` to listen for new messages in real-time
+   - Create conversations with `newDm()`, `newGroup()`, etc.
+
+3. **Dm**
+   - Access the peer using `conversation.peerInboxId`
+   - Create new DMs with `client.conversations.newDm(inboxId)`
+   - Send messages with `dm.send(content)`
+
+4. **Group**
+   - Get members with `await group.members();` (this works for DMs too)
+   - Manage group metadata with `updateName()`, `updateDescription()`, etc.
+   - Add/remove members with `addMembers()` and `removeMembers()`
+   - Manage permissions with admin methods: `addAdmin()`, `addSuperAdmin()`, etc.
+   - Check permissions with `isAdmin()` and `isSuperAdmin()`
+
+5. **GroupMember**
+   - Use `member.inboxId` to identify members
+   - Access Ethereum addresses through `member.accountIdentifiers`
+   - Access installation IDs through `member.installationIds`
+   - Check permission level with `member.permissionLevel`
+   - consent state with `member.consentState`
+
+## Group Permissions System
+
+XMTP provides a robust group permissions system that allows fine-grained control over who can perform specific actions within a group.
+
+### Permission Types
+
+There are 5 main permission types that can be configured:
+
+```typescript
+export declare const enum PermissionUpdateType {
+  AddMember = 0, // Who can add new members to the group
+  RemoveMember = 1, // Who can remove members from the group
+  AddAdmin = 2, // Who can grant admin status to members
+  RemoveAdmin = 3, // Who can remove admin status from members
+  UpdateMetadata = 4, // Who can update group name, description, image
+}
+```
+
+### Permission Policies
+
+Each permission can be assigned one of 6 different policies:
+
+```typescript
+export declare const enum PermissionPolicy {
+  Allow = 0, // All members can perform this action
+  Deny = 1, // No one can perform this action
+  Admin = 2, // Only admins can perform this action
+  SuperAdmin = 3, // Only super admins can perform this action
+  DoesNotExist = 4, // Permission doesn't exist (legacy)
+  Other = 5, // Custom policy (reserved for future use)
+}
+```
+
+### Member Roles
+
+Group members can have different roles with varying levels of permissions:
+
+- **Member**: Basic group participant
+- **Admin**: Can perform admin-level actions (depends on group settings)
+- **Super Admin**: Has all permissions and can manage other admins
+
+### Default Permission Set
+
+When a group is created, it uses the `All_Members` policy set by default:
+
+```typescript
+// Default permissions for new groups
+const defaultPermissions = {
+  AddMember: PermissionPolicy.Allow, // All members can add others
+  RemoveMember: PermissionPolicy.Admin, // Only admins can remove members
+  AddAdmin: PermissionPolicy.SuperAdmin, // Only super admins can add admins
+  RemoveAdmin: PermissionPolicy.SuperAdmin, // Only super admins can remove admins
+  UpdateMetadata: PermissionPolicy.Allow, // All members can update metadata
+};
+```
+
+### Managing Group Permissions
+
+```typescript
+// Check if a member is an admin
+const isAdmin = group.isAdmin(inboxId);
+const isSuperAdmin = group.isSuperAdmin(inboxId);
+
+// Get all admins and super admins
+const admins = group.admins;
+const superAdmins = group.superAdmins;
+
+// Manage admin status
+await group.addAdmin(inboxId);
+await group.removeAdmin(inboxId);
+await group.addSuperAdmin(inboxId);
+await group.removeSuperAdmin(inboxId);
+```
+
+### Custom Permission Sets
+
+You can create custom permission sets for specific use cases:
+
+```typescript
+// Example: Admin-only group
+const adminOnlyPermissions = {
+  AddMember: PermissionPolicy.Admin,
+  RemoveMember: PermissionPolicy.Admin,
+  AddAdmin: PermissionPolicy.SuperAdmin,
+  RemoveAdmin: PermissionPolicy.SuperAdmin,
+  UpdateMetadata: PermissionPolicy.Admin,
+};
+
+// Read-only group - only super admin can make changes
+const readOnlyGroup = {
+  AddMember: PermissionPolicy.SuperAdmin,
+  RemoveMember: PermissionPolicy.SuperAdmin,
+  AddAdmin: PermissionPolicy.SuperAdmin,
+  RemoveAdmin: PermissionPolicy.SuperAdmin,
+  UpdateMetadata: PermissionPolicy.SuperAdmin,
+};
+```
+
+For more detailed information about XMTP group permissions, see the [official documentation](https://docs.xmtp.org/inboxes/group-permissions).
+
+## Other Notes
+
+### Handling local database paths
+
+If no `dbPath` is provided, the client will use the current working directory. You can also specify a custom path for the database.
+
+```jsx
+// Railway deployment support
+let volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+const dbPath = `${volumePath}/${signer.getIdentifier()}-${XMTP_ENV}`;
+
+// Create database directory if it doesn't exist
+if (!fs.existsSync(dbPath)) {
+  fs.mkdirSync(dbPath, { recursive: true });
+}
+
+// Create a client with db path
+const client = await Client.create(signer, {
+  dbEncryptionKey,
+appVersion:"example-agent/1.0.0",
+  env: XMTP_ENV as XmtpEnv,
+  // Use a unique DB directory
+  dbPath,
+});
 ```
