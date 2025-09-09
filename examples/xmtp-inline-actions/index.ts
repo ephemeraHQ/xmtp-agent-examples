@@ -2,6 +2,7 @@ import {
   createSigner,
   createUser,
   filter,
+  getTestUrl,
   withFilter,
   Agent as XmtpAgent,
 } from "@xmtp/agent-sdk";
