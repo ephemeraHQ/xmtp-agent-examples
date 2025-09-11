@@ -1,94 +1,20 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,
   RemoteAttachmentCodec,
-  type Attachment,
-  type RemoteAttachment,
 } from "@xmtp/content-type-remote-attachment";
+import {
+  createRemoteAttachmentFromData,
+  createRemoteAttachmentFromFile,
+  encryptAttachment,
+  loadRemoteAttachment,
+} from "./attachmentUtils";
 import { uploadToPinata } from "./upload";
 
 process.loadEnvFile(".env");
 // Check this path is correct in your case of errors
 const DEFAULT_IMAGE_PATH = "./logo.png";
-
-async function createRemoteAttachment(
-  filePath: string,
-): Promise<RemoteAttachment> {
-  // Log the full path of the image
-  const fullPath = path.resolve(filePath);
-  console.log(`Full path of image: ${fullPath}`);
-
-  const fileData = await readFile(filePath);
-  const filename = path.basename(filePath);
-  const mimeType = filename.endsWith(".png")
-    ? "image/png"
-    : "application/octet-stream";
-
-  const attachment = {
-    filename,
-    mimeType,
-    data: new Uint8Array(fileData),
-  };
-
-  const encryptedEncoded = await RemoteAttachmentCodec.encodeEncrypted(
-    attachment,
-    new AttachmentCodec(),
-  );
-
-  const fileUrl = await uploadToPinata(
-    encryptedEncoded.payload,
-    attachment.filename,
-  );
-  const scheme = `${new URL(fileUrl).protocol}//`;
-
-  return {
-    url: fileUrl,
-    contentDigest: encryptedEncoded.digest,
-    salt: encryptedEncoded.salt,
-    nonce: encryptedEncoded.nonce,
-    secret: encryptedEncoded.secret,
-    scheme: scheme,
-    filename: attachment.filename,
-    contentLength: attachment.data.byteLength,
-  };
-}
-
-async function createRemoteAttachmentFromData(
-  data: Uint8Array,
-  filename: string,
-  mimeType: string,
-): Promise<RemoteAttachment> {
-  const attachment = {
-    filename,
-    mimeType,
-    data,
-  };
-
-  const encryptedEncoded = await RemoteAttachmentCodec.encodeEncrypted(
-    attachment,
-    new AttachmentCodec(),
-  );
-
-  const fileUrl = await uploadToPinata(
-    encryptedEncoded.payload,
-    attachment.filename,
-  );
-  const scheme = `${new URL(fileUrl).protocol}//`;
-
-  return {
-    url: fileUrl,
-    contentDigest: encryptedEncoded.digest,
-    salt: encryptedEncoded.salt,
-    nonce: encryptedEncoded.nonce,
-    secret: encryptedEncoded.secret,
-    scheme: scheme,
-    filename: attachment.filename,
-    contentLength: attachment.data.byteLength,
-  };
-}
 
 const agent = await Agent.createFromEnv({
   codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
@@ -108,22 +34,34 @@ agent.on("text", async (ctx) => {
   console.log(`Preparing attachment for ${addressFromInboxId}...`);
   await ctx.conversation.send(`I'll send you an attachment now...`);
 
-  const remoteAttachment = await createRemoteAttachment(DEFAULT_IMAGE_PATH);
+  // Developer handles upload and provides URL
+  // For this example, we'll use the old approach but developers can replace with their own logic
+  const fileData = await import("node:fs/promises").then(fs => fs.readFile(DEFAULT_IMAGE_PATH));
+  const encrypted = await encryptAttachment(
+    new Uint8Array(fileData),
+    "logo.png",
+    "image/png",
+  );
+  const fileUrl = await uploadToPinata(encrypted.encryptedData, encrypted.filename);
+  
+  const remoteAttachment = await createRemoteAttachmentFromFile(
+    DEFAULT_IMAGE_PATH,
+    fileUrl,
+  );
   await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
 
   console.log("Remote attachment sent successfully");
 });
 
 agent.on("attachment", async (ctx) => {
-  // Load and decode the received attachment
-  const receivedAttachment = await RemoteAttachmentCodec.load(
+  // Load and decode the received attachment using the utility function
+  const receivedAttachment = await loadRemoteAttachment(
     ctx.message.content,
     agent.client,
   );
 
-  const filename = (receivedAttachment as Attachment).filename || "unnamed";
-  const mimeType =
-    (receivedAttachment as Attachment).mimeType || "application/octet-stream";
+  const filename = receivedAttachment.filename || "unnamed";
+  const mimeType = receivedAttachment.mimeType || "application/octet-stream";
 
   console.log(`Processing attachment: ${filename} (${mimeType})`);
 
@@ -132,11 +70,20 @@ agent.on("attachment", async (ctx) => {
     `I received your attachment "${filename}"! Processing it now...`,
   );
 
-  // Create a new remote attachment from the decoded data
-  const reEncodedAttachment = await createRemoteAttachmentFromData(
-    (receivedAttachment as Attachment).data,
+  // Encrypt and upload the attachment data
+  const encrypted = await encryptAttachment(
+    receivedAttachment.data,
     filename,
     mimeType,
+  );
+  const fileUrl = await uploadToPinata(encrypted.encryptedData, encrypted.filename);
+
+  // Create a new remote attachment from the decoded data using the utility function
+  const reEncodedAttachment = await createRemoteAttachmentFromData(
+    receivedAttachment.data,
+    filename,
+    mimeType,
+    fileUrl,
   );
 
   // Send the re-encoded attachment back
