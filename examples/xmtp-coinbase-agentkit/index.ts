@@ -12,7 +12,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import { Agent, type AgentContext } from "@xmtp/agent-sdk";
+import { Agent as XMTPAgent, type AgentContext } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 // Storage constants
@@ -238,7 +238,7 @@ console.log("Initializing Agent on XMTP...");
 
 ensureLocalStorage();
 
-const agent = await Agent.createFromEnv({
+const agent = await XMTPAgent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
 });
 
