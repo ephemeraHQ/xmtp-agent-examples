@@ -114,10 +114,10 @@ agent.on("text", async (ctx) => {
   console.log("Remote attachment sent successfully");
 });
 
-agent.on("attachments", async (ctx) => {
+agent.on("attachment", async (ctx) => {
   // Load and decode the received attachment
   const receivedAttachment = await RemoteAttachmentCodec.load(
-    ctx.message.content as RemoteAttachment,
+    ctx.message.content,
     agent.client,
   );
 
