@@ -108,6 +108,24 @@ export class ActionBuilder {
     return builder;
   }
 
+  add(
+    id: string,
+    label: string,
+    style?: "primary" | "secondary" | "danger",
+    imageUrl?: string,
+    expiresAt?: string,
+  ): this {
+    this.actions.push({
+      id,
+      label,
+      style,
+      imageUrl,
+      expiresAt,
+    });
+    return this;
+  }
+
+  // Keep legacy methods for backward compatibility
   addAction(
     id: string,
     label: string,
@@ -123,18 +141,6 @@ export class ActionBuilder {
       ...options,
     });
     return this;
-  }
-
-  addPrimaryAction(id: string, label: string, imageUrl?: string): this {
-    return this.addAction(id, label, { style: "primary", imageUrl });
-  }
-
-  addSecondaryAction(id: string, label: string, imageUrl?: string): this {
-    return this.addAction(id, label, { style: "secondary", imageUrl });
-  }
-
-  addDangerAction(id: string, label: string, imageUrl?: string): this {
-    return this.addAction(id, label, { style: "danger", imageUrl });
   }
 
   build(): ActionsContent {
@@ -166,8 +172,8 @@ export async function sendConfirmation(
   noActionId: string = "confirm-no",
 ): Promise<void> {
   const actions = ActionBuilder.create(`confirmation-${Date.now()}`, message)
-    .addPrimaryAction(yesActionId, "✅ Yes")
-    .addSecondaryAction(noActionId, "❌ No")
+    .add(yesActionId, "✅ Yes")
+    .add(noActionId, "❌ No")
     .build();
 
   await sendActions(ctx, actions);
@@ -183,14 +189,20 @@ export async function sendSelection(
     id: string;
     label: string;
     style?: "primary" | "secondary" | "danger";
+    imageUrl?: string;
+    expiresAt?: string;
   }>,
 ): Promise<void> {
   const builder = ActionBuilder.create(`selection-${Date.now()}`, message);
 
   options.forEach((option) => {
-    builder.addAction(option.id, option.label, {
-      style: option.style || "primary",
-    });
+    builder.add(
+      option.id,
+      option.label,
+      option.style,
+      option.imageUrl,
+      option.expiresAt,
+    );
   });
 
   await sendActions(ctx, builder.build());

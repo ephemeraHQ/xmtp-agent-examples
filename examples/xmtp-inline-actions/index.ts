@@ -27,9 +27,9 @@ registerAction("show-menu", async (ctx) => {
     "main-menu",
     "🎯 What would you like to do?",
   )
-    .addPrimaryAction("send-money", "💸 Send Money")
-    .addPrimaryAction("check-balance", "💰 Check Balance")
-    .addSecondaryAction("get-help", "❓ Help")
+    .add("send-money", "💸 Send Money")
+    .add("check-balance", "💰 Check Balance")
+    .add("get-help", "❓ Help")
     .build();
 
   await sendActions(ctx, menu);
@@ -111,7 +111,7 @@ This bot demonstrates inline actions utilities! Here's what you can do:
 
 The utilities make it easy to create interactive experiences.`,
   )
-    .addSecondaryAction("show-menu", "🔙 Back to Menu")
+    .add("show-menu", "🔙 Back to Menu")
     .build();
 
   await sendActions(ctx, help);
@@ -127,7 +127,7 @@ agent.on("text", async (ctx) => {
       "welcome",
       "👋 Welcome! Let's get started.",
     )
-      .addPrimaryAction("show-menu", "🚀 Show Menu")
+      .add("show-menu", "🚀 Show Menu")
       .build();
 
     await sendActions(ctx, menuAction);
