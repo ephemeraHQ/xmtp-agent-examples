@@ -17,24 +17,6 @@ import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 process.loadEnvFile(".env");
 
 /**
- * Send a welcome message with inline actions for ETH price
- */
-async function sendWelcomeWithActions(ctx: AgentContext) {
-  const welcomeActions = ActionBuilder.create(
-    `welcome-${Date.now()}`,
-    `👋 Welcome! I'm your ETH price agent.
-
-I can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
-  )
-    .addPrimaryAction("get-current-price", "💰 Get Current ETH Price")
-    .addSecondaryAction("get-price-chart", "📊 Get Price with 24h Change")
-    .build();
-
-  console.log(`✓ Sending welcome message with actions`);
-  await sendActions(ctx, welcomeActions);
-}
-
-/**
  * Handle current ETH price request
  */
 async function handleCurrentPrice(ctx: AgentContext) {
@@ -103,7 +85,7 @@ const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
     console.warn("First time interaction");
   } else {
     console.warn("Not first time interaction");
-    return;
+    // return;
   }
 
   await next();
@@ -128,7 +110,16 @@ agent.on("unhandledError", (error) => {
 
 // Handle first-time user messages - send welcome with actions
 agent.on("text", async (ctx) => {
-  await sendWelcomeWithActions(ctx);
+  const welcomeActions = ActionBuilder.create(
+    `welcome-${Date.now()}`,
+    `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
+  )
+    .add("get-current-price", "💰 Get Current ETH Price")
+    .add("get-price-chart", "📊 Get Price with 24h Change")
+    .build();
+
+  console.log(`✓ Sending welcome message with actions`);
+  await sendActions(ctx, welcomeActions);
 });
 
 agent.on("start", () => {
