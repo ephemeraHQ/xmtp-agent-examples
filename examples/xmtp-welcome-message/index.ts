@@ -1,13 +1,13 @@
 import { Agent, getTestUrl, type AgentContext } from "@xmtp/agent-sdk";
-import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionBuilder,
   inlineActionsMiddleware,
   registerAction,
   sendActions,
-} from "./inlineActionsUtils";
-import { ActionsCodec } from "./types/ActionsContent";
-import { IntentCodec } from "./types/IntentContent";
+} from "../../utils/inline-actions/inline-actions";
+import { ActionsCodec } from "../../utils/inline-actions/types/ActionsContent";
+import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
+import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 
 process.loadEnvFile(".env");
 

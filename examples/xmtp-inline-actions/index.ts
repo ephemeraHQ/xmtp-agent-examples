@@ -6,9 +6,9 @@ import {
   sendActions,
   sendConfirmation,
   sendSelection,
-} from "./inlineActionsUtils";
-import { ActionsCodec } from "./types/ActionsContent";
-import { IntentCodec } from "./types/IntentContent";
+} from "../../utils/inline-actions/inline-actions";
+import { ActionsCodec } from "../../utils/inline-actions/types/ActionsContent";
+import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
 
 process.loadEnvFile(".env");
 

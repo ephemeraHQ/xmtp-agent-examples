@@ -1,15 +1,5 @@
-import fs from "node:fs";
 import { Agent } from "@xmtp/agent-sdk";
-
-const getDbPath = (description: string = "xmtp") => {
-  //Checks if the environment is a Railway deployment
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  // Create database directory if it doesn't exist
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
-  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
-};
+import { getDbPath } from "../../utils/general";
 
 process.loadEnvFile(".env");
 
@@ -82,10 +72,12 @@ function startPeriodicSync(
     () => {
       void (async () => {
         console.log("Syncing receiving client...");
+
         await receivingClient.client.conversations.sync();
         console.log("Receiving client synced successfully");
 
         console.log("Syncing sending client...");
+
         await sendingClient.client.conversations.sync();
         console.log("Sending client synced successfully");
       })();
@@ -111,6 +103,7 @@ async function processMessageQueue(client: Agent<any>): Promise<void> {
 
   try {
     // Get the conversation and send the message
+
     const conversation = await client.client.conversations.getConversationById(
       message.conversationId,
     );

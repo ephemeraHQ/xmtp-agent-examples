@@ -52,14 +52,13 @@ export const inlineActionsMiddleware: AgentMiddleware = async (ctx, next) => {
   // Check if this is an intent message
   if (message.contentType?.typeId === "intent") {
     console.log("🎯 Processing intent message via middleware");
-
     const intentContent = message.content as IntentContent;
     const handler = globalActionRegistry.get(intentContent.actionId);
 
     if (handler) {
       console.log(`🎯 Found handler for action: ${intentContent.actionId}`);
       try {
-        await handler(ctx, intentContent.metadata);
+        await handler(ctx, undefined);
       } catch (error) {
         console.error(
           `❌ Error in action handler for ${intentContent.actionId}:`,

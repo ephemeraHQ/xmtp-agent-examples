@@ -64,8 +64,8 @@ export async function createRemoteAttachmentFromData(
 
 export async function loadRemoteAttachment(
   remoteAttachment: RemoteAttachment,
-  client: any,
+  // Using unknown for client since we don't have the exact type imported
+  client: unknown,
 ): Promise<Attachment> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   return await RemoteAttachmentCodec.load(remoteAttachment, client);
 }
