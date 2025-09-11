@@ -85,7 +85,8 @@ const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
     console.warn("First time interaction");
   } else {
     console.warn("Not first time interaction");
-    // return;
+    // return; to break the middleware chain and prevent the inline actions middleware from being executed
+    return;
   }
 
   await next();

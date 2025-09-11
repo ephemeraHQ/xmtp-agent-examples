@@ -1,6 +1,6 @@
-# Inline-actions example
+# Inline Actions Example
 
-An XMTP agent demonstrating wallet send calls, transaction references, and interactive inline actions using EIP-5792 and XIP-67 standards.
+An XMTP agent demonstrating interactive inline actions using XIP-67 standards with a clean middleware and utilities approach.
 
 <p align="center">
   <img src="media/left.png" alt="Image 1" width="49%">
@@ -12,55 +12,84 @@ An XMTP agent demonstrating wallet send calls, transaction references, and inter
 > [!TIP]
 > See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
-## Commands
+## Features
 
-| Command                  | Description                      |
-| ------------------------ | -------------------------------- |
-| `/help`                  | Show interactive welcome actions |
-| `/send <AMOUNT> <TOKEN>` | Send tokens to bot               |
-| `/balance <TOKEN>`       | Check bot's balance              |
-| `/info`                  | Show network info                |
-| `/actions`               | Display action buttons           |
+This example showcases:
 
-### Features
+- **Interactive Menu System**: Hierarchical action menus with navigation
+- **Confirmation Flows**: Multi-step confirmation for sensitive actions
+- **Selection Menus**: Dynamic option selection with custom styling
+- **Middleware Architecture**: Clean separation of action handling logic
+- **Utility Functions**: Reusable components for common action patterns
 
-- Multi-token support (ETH, USDC)
-- Multi-network support (Base, Ethereum)
-- Wallet send calls (EIP-5792)
-- Transaction references with metadata
-- Interactive inline actions (XIP-67)
-- Intent handling for button responses
+### Available Actions
 
-#### Networks & Tokens
+| Action            | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `start` or `menu` | Display the main interactive menu              |
+| **Menu Options:** |                                                |
+| 💸 Send Money     | Show money transfer options with confirmations |
+| 💰 Check Balance  | Display mock account balance                   |
+| ❓ Help           | Show help information with navigation          |
 
-| Network          | Chain ID | Tokens    |
-| ---------------- | -------- | --------- |
-| Base Sepolia     | 84532    | ETH, USDC |
-| Base Mainnet     | 8453     | ETH, USDC |
-| Ethereum Sepolia | 11155111 | ETH       |
-| Ethereum Mainnet | 1        | ETH, USDC |
+## Technical Implementation
 
-- Faucets: [Circle](https://faucet.circle.com), [Base](https://portal.cdp.coinbase.com/products/faucet)
+### Middleware Usage
 
-## Usage
-
-Edit `handlers/actionHandlers.ts`:
+The agent uses the `inlineActionsMiddleware` to automatically handle intent messages:
 
 ```typescript
-export async function handleActionsCommand(conversation: any) {
-  const actionsContent: ActionsContent = {
-    id: `help-${Date.now()}`,
-    description: "Choose an action:",
-    actions: [
-      {
-        id: "my-action",
-        label: "My Action",
-        style: "primary",
-      },
-    ],
-  };
-  await conversation.send(actionsContent, ContentTypeActions);
-}
+import { inlineActionsMiddleware } from "../../utils/inline-actions/inline-actions";
+
+// Add middleware to agent
+agent.use(inlineActionsMiddleware);
+```
+
+### Action Registration
+
+Actions are registered using the utility functions:
+
+```typescript
+import {
+  ActionBuilder,
+  registerAction,
+  sendActions,
+} from "../../utils/inline-actions/inline-actions";
+
+// Register an action handler
+registerAction("show-menu", async (ctx) => {
+  const menu = ActionBuilder.create(
+    "main-menu",
+    "🎯 What would you like to do?",
+  )
+    .add("send-money", "💸 Send Money")
+    .add("check-balance", "💰 Check Balance")
+    .add("get-help", "❓ Help")
+    .build();
+
+  await sendActions(ctx, menu);
+});
+```
+
+### Utility Functions
+
+The example demonstrates various utility functions:
+
+```typescript
+// Send confirmation dialog
+await sendConfirmation(
+  ctx,
+  "Send 0.01 USDC to the bot?",
+  "confirm-send-small",
+  "cancel-send",
+);
+
+// Send selection menu
+await sendSelection(ctx, "💸 How much would you like to send?", [
+  { id: "send-small", label: "0.01 USDC" },
+  { id: "send-medium", label: "0.1 USDC" },
+  { id: "send-large", label: "1 USDC" },
+]);
 ```
 
 ### Requirements
