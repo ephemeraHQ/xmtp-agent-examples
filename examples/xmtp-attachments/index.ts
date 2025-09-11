@@ -96,79 +96,56 @@ const agent = await Agent.createFromEnv({
 });
 
 agent.on("text", async (ctx) => {
-  const message = ctx.message;
+  console.log(
+    `Received text message: ${ctx.message.content} by ${ctx.message.senderInboxId}`,
+  );
 
-  // Check if this is a remote attachment
-  if (message.contentType?.typeId === "remoteStaticAttachment") {
-    console.log("Received a remote attachment!");
+  const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
+    ctx.message.senderInboxId,
+  ]);
+  const addressFromInboxId = inboxState[0]?.identifiers[0]?.identifier;
 
-    try {
-      // Load and decode the received attachment
-      const receivedAttachment = await RemoteAttachmentCodec.load(
-        message.content as unknown as RemoteAttachment,
-        agent.client,
-      );
+  console.log(`Preparing attachment for ${addressFromInboxId}...`);
+  await ctx.conversation.send(`I'll send you an attachment now...`);
 
-      const filename = (receivedAttachment as Attachment).filename || "unnamed";
-      const mimeType =
-        (receivedAttachment as Attachment).mimeType ||
-        "application/octet-stream";
+  const remoteAttachment = await createRemoteAttachment(DEFAULT_IMAGE_PATH);
+  await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
 
-      console.log(`Processing attachment: ${filename} (${mimeType})`);
+  console.log("Remote attachment sent successfully");
+});
 
-      // Send acknowledgment message
-      await ctx.conversation.send(
-        `I received your attachment "${filename}"! Processing it now...`,
-      );
+agent.on("attachments", async (ctx) => {
+  // Load and decode the received attachment
+  const receivedAttachment = await RemoteAttachmentCodec.load(
+    ctx.message.content as RemoteAttachment,
+    agent.client,
+  );
 
-      // Create a new remote attachment from the decoded data
-      const reEncodedAttachment = await createRemoteAttachmentFromData(
-        (receivedAttachment as Attachment).data,
-        filename,
-        mimeType,
-      );
+  const filename = (receivedAttachment as Attachment).filename || "unnamed";
+  const mimeType =
+    (receivedAttachment as Attachment).mimeType || "application/octet-stream";
 
-      // Send the re-encoded attachment back
-      await ctx.conversation.send(
-        reEncodedAttachment,
-        ContentTypeRemoteAttachment,
-      );
+  console.log(`Processing attachment: ${filename} (${mimeType})`);
 
-      console.log(`Successfully sent back attachment: ${filename}`);
+  // Send acknowledgment message
+  await ctx.conversation.send(
+    `I received your attachment "${filename}"! Processing it now...`,
+  );
 
-      // Send confirmation message
-      await ctx.conversation.send(`Here's your attachment back: ${filename}`);
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error("Error processing attachment:", errorMessage);
-      await ctx.conversation.send(
-        "Sorry, I encountered an error processing your attachment.",
-      );
-    }
+  // Create a new remote attachment from the decoded data
+  const reEncodedAttachment = await createRemoteAttachmentFromData(
+    (receivedAttachment as Attachment).data,
+    filename,
+    mimeType,
+  );
 
-    return;
-  }
+  // Send the re-encoded attachment back
+  await ctx.conversation.send(reEncodedAttachment, ContentTypeRemoteAttachment);
 
-  /* Handle text messages */
-  if (message.contentType?.typeId === "text") {
-    console.log(
-      `Received text message: ${message.content} by ${message.senderInboxId}`,
-    );
+  console.log(`Successfully sent back attachment: ${filename}`);
 
-    const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const addressFromInboxId = inboxState[0]?.identifiers[0]?.identifier;
-
-    console.log(`Preparing attachment for ${addressFromInboxId}...`);
-    await ctx.conversation.send(`I'll send you an attachment now...`);
-
-    const remoteAttachment = await createRemoteAttachment(DEFAULT_IMAGE_PATH);
-    await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
-
-    console.log("Remote attachment sent successfully");
-  }
+  // Send confirmation message
+  await ctx.conversation.send(`Here's your attachment back: ${filename}`);
 });
 
 agent.on("start", () => {
