@@ -1,10 +1,4 @@
-import {
-  Agent,
-  createSigner,
-  createUser,
-  getTestUrl,
-  type AgentContext,
-} from "@xmtp/agent-sdk";
+import { Agent, getTestUrl, type AgentContext } from "@xmtp/agent-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
   ActionsCodec,
@@ -149,7 +143,8 @@ async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
     return false;
   }
 }
-const agent = await Agent.create(createSigner(createUser()), {
+
+const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
@@ -168,7 +163,7 @@ agent.on("text", async (ctx) => {
 // Handle intent messages (action button clicks) - no filtering needed
 agent.on("text", async (ctx) => {
   if (ctx.message.contentType?.typeId === "intent") {
-    const messageContent = ctx.message.content as unknown as IntentContent;
+    const messageContent = ctx.message.content as IntentContent;
     await handleIntentMessage(ctx, messageContent);
   }
 });
