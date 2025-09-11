@@ -1,5 +1,5 @@
 import fs from "fs";
-import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 
