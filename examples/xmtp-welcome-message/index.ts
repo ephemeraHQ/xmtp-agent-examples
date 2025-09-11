@@ -1,11 +1,13 @@
 import { Agent, getTestUrl, type AgentContext } from "@xmtp/agent-sdk";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 import {
-  ActionsCodec,
-  ContentTypeActions,
-  type ActionsContent,
-} from "./types/ActionsContent";
-import { IntentCodec, type IntentContent } from "./types/IntentContent";
+  ActionBuilder,
+  inlineActionsMiddleware,
+  registerAction,
+  sendActions,
+} from "./inlineActionsUtils";
+import { ActionsCodec } from "./types/ActionsContent";
+import { IntentCodec } from "./types/IntentContent";
 
 process.loadEnvFile(".env");
 
@@ -13,27 +15,18 @@ process.loadEnvFile(".env");
  * Send a welcome message with inline actions for ETH price
  */
 async function sendWelcomeWithActions(ctx: AgentContext) {
-  const welcomeActions: ActionsContent = {
-    id: `welcome-${Date.now()}`,
-    description: `👋 Welcome! I'm your ETH price agent.
+  const welcomeActions = ActionBuilder.create(
+    `welcome-${Date.now()}`,
+    `👋 Welcome! I'm your ETH price agent.
 
 I can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
-    actions: [
-      {
-        id: "get-current-price",
-        label: "💰 Get Current ETH Price",
-        style: "primary",
-      },
-      {
-        id: "get-price-chart",
-        label: "📊 Get Price with 24h Change",
-        style: "secondary",
-      },
-    ],
-  };
+  )
+    .addPrimaryAction("get-current-price", "💰 Get Current ETH Price")
+    .addSecondaryAction("get-price-chart", "📊 Get Price with 24h Change")
+    .build();
 
   console.log(`✓ Sending welcome message with actions`);
-  await ctx.conversation.send(welcomeActions, ContentTypeActions);
+  await sendActions(ctx, welcomeActions);
 }
 
 /**
@@ -113,6 +106,13 @@ const agent = await Agent.createFromEnv({
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
 
+// Add inline actions middleware
+agent.use(inlineActionsMiddleware);
+
+// Register action handlers using the utilities
+registerAction("get-current-price", handleCurrentPrice);
+registerAction("get-price-chart", handlePriceWithChange);
+
 // Handle first-time user messages - send welcome with actions
 agent.on("text", async (ctx) => {
   if (await isFirstTimeInteraction(ctx)) {
@@ -121,29 +121,6 @@ agent.on("text", async (ctx) => {
     await ctx.conversation.send(
       "Hey, we already talked before, so, no welcome message for you",
     );
-  }
-});
-
-// Handle intent messages (action button clicks) - no filtering needed
-agent.on("unhandledMessage", async (ctx) => {
-  if (ctx.message.contentType?.typeId === "intent") {
-    const actionId = (ctx.message.content as IntentContent).actionId;
-    switch (actionId) {
-      case "get-current-price":
-        console.log("💰 Processing current ETH price request");
-        await handleCurrentPrice(ctx);
-        break;
-
-      case "get-price-chart":
-        console.log("📊 Processing ETH price with 24h change request");
-        await handlePriceWithChange(ctx);
-        break;
-
-      default:
-        await ctx.conversation.send(`❌ Unknown action: ${actionId}`);
-        await ctx.conversation.send(`❌ Unknown action ID: ${actionId}`);
-        console.log(`❌ Unknown action ID: ${actionId}`);
-    }
   }
 });
 
