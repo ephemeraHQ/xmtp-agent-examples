@@ -10,7 +10,7 @@ import {
   createRemoteAttachmentFromFile,
   encryptAttachment,
   loadRemoteAttachment,
-} from "../../scripts/utils";
+} from "./attachmentUtils";
 import { uploadToPinata } from "./upload";
 
 process.loadEnvFile(".env");

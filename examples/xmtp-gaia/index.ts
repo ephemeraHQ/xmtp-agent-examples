@@ -6,10 +6,11 @@ process.loadEnvFile(".env");
 if (
   !process.env.GAIA_NODE_URL ||
   !process.env.GAIA_API_KEY ||
+  !process.env.OPENAI_API_KEY ||
   !process.env.GAIA_MODEL_NAME
 ) {
   throw new Error(
-    "GAIA_NODE_URL, GAIA_API_KEY, and GAIA_MODEL_NAME must be set",
+    "GAIA_NODE_URL, GAIA_API_KEY, OPENAI_API_KEY, and GAIA_MODEL_NAME must be set",
   );
 }
 
