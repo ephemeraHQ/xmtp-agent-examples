@@ -1,4 +1,4 @@
-import { Agent, createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import OpenAI from "openai";
 
 process.loadEnvFile(".env");

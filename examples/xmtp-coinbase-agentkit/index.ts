@@ -12,12 +12,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import {
-  createSigner,
-  createUser,
-  Agent as XmtpAgent,
-  type AgentContext,
-} from "@xmtp/agent-sdk";
+import { Agent, type AgentContext } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 // Storage constants

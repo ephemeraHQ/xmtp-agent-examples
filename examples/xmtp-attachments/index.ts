@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { Agent, createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,

@@ -1,9 +1,4 @@
-import {
-  filter,
-  getTestUrl,
-  withFilter,
-  Agent as XmtpAgent,
-} from "@xmtp/agent-sdk";
+import { Agent, filter, getTestUrl, withFilter } from "@xmtp/agent-sdk";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
 import {

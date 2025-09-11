@@ -2,9 +2,9 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  Client,
   createSigner,
   createUser,
-  type Client,
   type XmtpEnv,
 } from "@xmtp/agent-sdk";
 
