@@ -16,11 +16,6 @@ import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 
 process.loadEnvFile(".env");
 
-// Extend the AgentContext type to include our custom property
-interface ExtendedAgentContext extends AgentContext {
-  isFirstTime?: boolean;
-}
-
 /**
  * Send a welcome message with inline actions for ETH price
  */
@@ -91,29 +86,24 @@ Data provided by CoinGecko 📈`);
  * Middleware to detect first-time interactions and add flag to context
  */
 const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
-  try {
-    const messages = await ctx.conversation.messages();
-    const hasSentBefore = messages.some(
-      (msg) =>
-        msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
-    );
-    const members = await ctx.conversation.members();
-    const wasMemberBefore = members.some(
-      (member: { inboxId: string; installationIds: string[] }) =>
-        member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
-        member.installationIds.length > 1,
-    );
+  const messages = await ctx.conversation.messages();
+  const hasSentBefore = messages.some(
+    (msg) =>
+      msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
+  );
+  const members = await ctx.conversation.members();
+  const wasMemberBefore = members.some(
+    (member: { inboxId: string; installationIds: string[] }) =>
+      member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
+      member.installationIds.length > 1,
+  );
 
-    // Add the first-time interaction flag to the context
-    if (!hasSentBefore && !wasMemberBefore) {
-      console.warn("First time interaction");
-    } else {
-      console.warn("Not first time interaction");
-      return;
-    }
-  } catch (error) {
-    console.error("Error checking message history:", error);
-    (ctx as ExtendedAgentContext).isFirstTime = false;
+  // Add the first-time interaction flag to the context
+  if (!hasSentBefore && !wasMemberBefore) {
+    console.warn("First time interaction");
+  } else {
+    console.warn("Not first time interaction");
+    return;
   }
 
   await next();
