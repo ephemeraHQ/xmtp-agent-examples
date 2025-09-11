@@ -60,12 +60,6 @@ yarn gen:keys
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
 
-You can revoke old installations by adding the following to your `.env` file:
-
-```bash
-XMTP_FORCE_REVOKE_INSTALLATIONS=true
-```
-
 You can enable debug mode by adding the following to your `.env` file:
 
 ```bash

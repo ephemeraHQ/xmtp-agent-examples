@@ -1,6 +1,4 @@
 import {
-  createSigner,
-  createUser,
   filter,
   getTestUrl,
   withFilter,
@@ -36,7 +34,7 @@ console.log(
   `💰 Supported tokens: ${tokenHandler.getSupportedTokens().join(", ")}`,
 );
 
-const agent = await XmtpAgent.create(createSigner(createUser()), {
+const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [
     new WalletSendCallsCodec(),

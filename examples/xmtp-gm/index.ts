@@ -3,13 +3,10 @@ import { Agent, createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 
-const agent = await Agent.create(
-  createSigner(createUser(process.env.XMTP_WALLET_KEY as `0x${string}`)),
-  {
-    env: process.env.XMTP_ENV as "local" | "dev" | "production",
-    dbPath: getDbPath(),
-  },
-);
+const agent = await Agent.createFromEnv({
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+  dbPath: getDbPath(),
+});
 
 agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content;

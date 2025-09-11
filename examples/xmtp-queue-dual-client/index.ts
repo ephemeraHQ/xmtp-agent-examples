@@ -32,7 +32,7 @@ const SYNC_INTERVAL = 5;
 console.log("Starting XMTP Queue Dual Client Agent...");
 
 // Create receiving client
-const receivingClient = await Agent.create(createSigner(createUser()), {
+const receivingClient = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath("receiving"),
 });
@@ -41,7 +41,7 @@ void receivingClient.start();
 console.log("XMTP receiving client created");
 
 // Create sending client
-const sendingClient = await Agent.create(createSigner(createUser()), {
+const sendingClient = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath("sending"),
 });

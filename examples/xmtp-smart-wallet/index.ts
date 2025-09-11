@@ -25,12 +25,6 @@ agent.on("text", async (ctx) => {
   await ctx.conversation.send("gm");
 });
 
-/**
- * Generates a random Smart Contract Wallet
- * @param networkId - The network ID (e.g., 'base-sepolia', 'base-mainnet')
- * @returns WalletData object containing all necessary wallet information
- */
-
 async function initializeWallet(walletPath: string): Promise<WalletData> {
   try {
     let walletData: WalletData | null = null;
