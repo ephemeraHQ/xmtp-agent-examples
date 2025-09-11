@@ -1,17 +1,7 @@
-import fs from "fs";
 import { Agent } from "@xmtp/agent-sdk";
+import { getDbPath } from "../../scripts/utils";
 
 process.loadEnvFile(".env");
-
-const getDbPath = (description: string = "xmtp") => {
-  //Checks if the environment is a Railway deployment
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  // Create database directory if it doesn't exist
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
-  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
-};
 
 // Message queue interface
 interface QueuedMessage {
