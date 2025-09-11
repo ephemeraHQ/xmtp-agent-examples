@@ -37,42 +37,6 @@ I can help you stay updated with the latest Ethereum price information. Choose a
 }
 
 /**
- * Handle intent messages (when users click action buttons)
- */
-async function handleIntentMessage(
-  ctx: AgentContext,
-  intentContent: IntentContent,
-) {
-  console.log(
-    `🎯 Processing intent: ${intentContent.actionId} for actions: ${intentContent.id}`,
-  );
-
-  try {
-    switch (intentContent.actionId) {
-      case "get-current-price":
-        console.log("💰 Processing current ETH price request");
-        await handleCurrentPrice(ctx);
-        break;
-
-      case "get-price-chart":
-        console.log("📊 Processing ETH price with 24h change request");
-        await handlePriceWithChange(ctx);
-        break;
-
-      default:
-        await ctx.conversation.send(
-          `❌ Unknown action: ${intentContent.actionId}`,
-        );
-        console.log(`❌ Unknown action ID: ${intentContent.actionId}`);
-    }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("❌ Error processing intent:", errorMessage);
-    await ctx.conversation.send(`❌ Error processing action: ${errorMessage}`);
-  }
-}
-
-/**
  * Handle current ETH price request
  */
 async function handleCurrentPrice(ctx: AgentContext) {
@@ -161,10 +125,25 @@ agent.on("text", async (ctx) => {
 });
 
 // Handle intent messages (action button clicks) - no filtering needed
-agent.on("text", async (ctx) => {
+agent.on("unhandledMessage", async (ctx) => {
   if (ctx.message.contentType?.typeId === "intent") {
-    const messageContent = ctx.message.content as IntentContent;
-    await handleIntentMessage(ctx, messageContent);
+    const actionId = (ctx.message.content as IntentContent).actionId;
+    switch (actionId) {
+      case "get-current-price":
+        console.log("💰 Processing current ETH price request");
+        await handleCurrentPrice(ctx);
+        break;
+
+      case "get-price-chart":
+        console.log("📊 Processing ETH price with 24h change request");
+        await handlePriceWithChange(ctx);
+        break;
+
+      default:
+        await ctx.conversation.send(`❌ Unknown action: ${actionId}`);
+        await ctx.conversation.send(`❌ Unknown action ID: ${actionId}`);
+        console.log(`❌ Unknown action ID: ${actionId}`);
+    }
   }
 });
 
