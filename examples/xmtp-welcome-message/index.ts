@@ -1,4 +1,9 @@
-import { Agent, getTestUrl, type AgentContext } from "@xmtp/agent-sdk";
+import {
+  Agent,
+  getTestUrl,
+  type AgentContext,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
 import {
   ActionBuilder,
   inlineActionsMiddleware,
@@ -10,6 +15,11 @@ import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
 
 process.loadEnvFile(".env");
+
+// Extend the AgentContext type to include our custom property
+interface ExtendedAgentContext extends AgentContext {
+  isFirstTime?: boolean;
+}
 
 /**
  * Send a welcome message with inline actions for ETH price
@@ -78,9 +88,9 @@ Data provided by CoinGecko 📈`);
 }
 
 /**
- * Check if this is the first interaction with a user
+ * Middleware to detect first-time interactions and add flag to context
  */
-async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
+const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
   try {
     const messages = await ctx.conversation.messages();
     const hasSentBefore = messages.some(
@@ -94,34 +104,41 @@ async function isFirstTimeInteraction(ctx: AgentContext): Promise<boolean> {
         member.installationIds.length > 1,
     );
 
-    return !hasSentBefore && !wasMemberBefore;
+    // Add the first-time interaction flag to the context
+    if (!hasSentBefore && !wasMemberBefore) {
+      console.warn("First time interaction");
+    } else {
+      console.warn("Not first time interaction");
+      return;
+    }
   } catch (error) {
     console.error("Error checking message history:", error);
-    return false;
+    (ctx as ExtendedAgentContext).isFirstTime = false;
   }
-}
+
+  await next();
+};
 
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
 
-// Add inline actions middleware
+// Add middleware
+agent.use(firstTimeInteractionMiddleware);
 agent.use(inlineActionsMiddleware);
 
 // Register action handlers using the utilities
 registerAction("get-current-price", handleCurrentPrice);
 registerAction("get-price-chart", handlePriceWithChange);
 
+agent.on("unhandledError", (error) => {
+  console.error("Agent error", error);
+});
+
 // Handle first-time user messages - send welcome with actions
 agent.on("text", async (ctx) => {
-  if (await isFirstTimeInteraction(ctx)) {
-    await sendWelcomeWithActions(ctx);
-  } else {
-    await ctx.conversation.send(
-      "Hey, we already talked before, so, no welcome message for you",
-    );
-  }
+  await sendWelcomeWithActions(ctx);
 });
 
 agent.on("start", () => {
