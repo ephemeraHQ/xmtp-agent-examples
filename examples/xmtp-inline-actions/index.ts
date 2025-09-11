@@ -1,138 +1,148 @@
-import { Agent, filter, getTestUrl, withFilter } from "@xmtp/agent-sdk";
-import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
-import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import {
-  handleActionsCommand,
-  handleActionsWithImagesCommand,
-  handleHelpCommand,
-} from "./handlers/actionHandlers";
-import {
-  handleBalanceCommand,
-  handleInfoCommand,
-  handleIntentMessage,
-  handleSendCommand,
-} from "./handlers/messageHandlers";
-import { TokenHandler } from "./handlers/tokenHandler";
-import {
-  handleTransactionReference,
-  type ExtendedTransactionReference,
-} from "./handlers/transactionHandlers";
+  ActionBuilder,
+  inlineActionsMiddleware,
+  registerAction,
+  sendActions,
+  sendConfirmation,
+  sendSelection,
+} from "./inlineActionsUtils";
 import { ActionsCodec } from "./types/ActionsContent";
-import { IntentCodec, type IntentContent } from "./types/IntentContent";
+import { IntentCodec } from "./types/IntentContent";
 
 process.loadEnvFile(".env");
 
-// Initialize token handler
-const tokenHandler = new TokenHandler(process.env.NETWORK_ID || "base-sepolia");
-console.log(`📡 Connected to network: ${tokenHandler.getNetworkInfo().name}`);
-console.log(
-  `💰 Supported tokens: ${tokenHandler.getSupportedTokens().join(", ")}`,
-);
-
+// Create agent with inline actions support
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
-  codecs: [
-    new WalletSendCallsCodec(),
-    new TransactionReferenceCodec(),
-    new ActionsCodec(),
-    new IntentCodec(),
-  ],
+  codecs: [new ActionsCodec(), new IntentCodec()],
 });
 
-// Commands
-agent.on(
-  "text",
-  withFilter(filter.startsWith("/help"), async (ctx) => {
-    await handleHelpCommand(ctx, tokenHandler);
-  }),
-);
+// Add the inline actions middleware
+agent.use(inlineActionsMiddleware);
 
-agent.on(
-  "text",
-  withFilter(filter.startsWith("/actions"), async (ctx) => {
-    await handleActionsCommand(ctx);
-  }),
-);
+// Register action handlers
+registerAction("show-menu", async (ctx) => {
+  const menu = ActionBuilder.create(
+    "main-menu",
+    "🎯 What would you like to do?",
+  )
+    .addPrimaryAction("send-money", "💸 Send Money")
+    .addPrimaryAction("check-balance", "💰 Check Balance")
+    .addSecondaryAction("get-help", "❓ Help")
+    .build();
 
-agent.on(
-  "text",
-  withFilter(filter.startsWith("/actions-with-images"), async (ctx) => {
-    await handleActionsWithImagesCommand(ctx);
-  }),
-);
+  await sendActions(ctx, menu);
+});
 
-agent.on(
-  "text",
-  withFilter(filter.startsWith("/send"), async (ctx) => {
-    await handleSendCommand(
-      ctx,
-      ctx.message.content,
-      ctx.message.senderInboxId,
-      agent.client.accountIdentifier?.identifier || "",
-      tokenHandler,
-    );
-  }),
-);
+registerAction("send-money", async (ctx) => {
+  await sendSelection(ctx, "💸 How much would you like to send?", [
+    { id: "send-small", label: "0.01 USDC" },
+    { id: "send-medium", label: "0.1 USDC" },
+    { id: "send-large", label: "1 USDC" },
+  ]);
+});
 
-agent.on(
-  "text",
-  withFilter(filter.startsWith("/balance"), async (ctx) => {
-    await handleBalanceCommand(
-      ctx,
-      ctx.message.content,
-      agent.client.accountIdentifier?.identifier || "",
-      tokenHandler,
-    );
-  }),
-);
+registerAction("send-small", async (ctx) => {
+  await sendConfirmation(
+    ctx,
+    "Send 0.01 USDC to the bot?",
+    "confirm-send-small",
+    "cancel-send",
+  );
+});
 
-agent.on(
-  "text",
-  withFilter(filter.startsWith("/info"), async (ctx) => {
-    await handleInfoCommand(ctx, tokenHandler);
-  }),
-);
+registerAction("send-medium", async (ctx) => {
+  await sendConfirmation(
+    ctx,
+    "Send 0.1 USDC to the bot?",
+    "confirm-send-medium",
+    "cancel-send",
+  );
+});
 
+registerAction("send-large", async (ctx) => {
+  await sendConfirmation(
+    ctx,
+    "Send 1 USDC to the bot?",
+    "confirm-send-large",
+    "cancel-send",
+  );
+});
+
+registerAction("confirm-send-small", async (ctx) => {
+  await ctx.conversation.send(
+    "✅ Small transaction confirmed! (This would create a transaction for 0.01 USDC)",
+  );
+});
+
+registerAction("confirm-send-medium", async (ctx) => {
+  await ctx.conversation.send(
+    "✅ Medium transaction confirmed! (This would create a transaction for 0.1 USDC)",
+  );
+});
+
+registerAction("confirm-send-large", async (ctx) => {
+  await ctx.conversation.send(
+    "✅ Large transaction confirmed! (This would create a transaction for 1 USDC)",
+  );
+});
+
+registerAction("cancel-send", async (ctx) => {
+  await ctx.conversation.send("❌ Transaction cancelled.");
+});
+
+registerAction("check-balance", async (ctx) => {
+  await ctx.conversation.send(
+    "💰 Bot Balance: 5.25 USDC\n(This is a mock balance)",
+  );
+});
+
+registerAction("get-help", async (ctx) => {
+  const help = ActionBuilder.create(
+    "help-menu",
+    `📚 Help Center
+
+This bot demonstrates inline actions utilities! Here's what you can do:
+
+• Send money with confirmation flows
+• Check balances  
+• Navigate through action menus
+
+The utilities make it easy to create interactive experiences.`,
+  )
+    .addSecondaryAction("show-menu", "🔙 Back to Menu")
+    .build();
+
+  await sendActions(ctx, help);
+});
+
+// Handle text messages
 agent.on("text", async (ctx) => {
-  const message = ctx.message;
+  const message = ctx.message.content.trim().toLowerCase();
 
-  const senderAddress = await ctx.getSenderAddress();
+  if (message === "/start" || message === "start" || message === "menu") {
+    // Trigger the main menu
+    const menuAction = ActionBuilder.create(
+      "welcome",
+      "👋 Welcome! Let's get started.",
+    )
+      .addPrimaryAction("show-menu", "🚀 Show Menu")
+      .build();
 
-  if (message.contentType?.typeId === "transactionReference") {
-    console.log("🧾 Detected transaction reference message");
-    console.log(
-      "📋 Raw message content:",
-      JSON.stringify(message.content, null, 2),
-    );
-    await handleTransactionReference(
-      ctx,
-      message.content as unknown as ExtendedTransactionReference,
-      senderAddress,
-      tokenHandler,
-    );
-  } else if (message.contentType?.typeId === "intent") {
-    // This must be an intent message since we filtered for text, transactionReference, and intent
-    console.log("🎯 Detected intent message");
-    console.log(
-      "📋 Raw intent content:",
-      JSON.stringify(message.content, null, 2),
-    );
-    await handleIntentMessage(
-      ctx,
-      message.content as unknown as IntentContent,
-      senderAddress,
-      agent.client.accountIdentifier?.identifier || "",
-      tokenHandler,
-    );
+    await sendActions(ctx, menuAction);
   } else {
-    await ctx.conversation.send("👋 Type '/help' to see available options!");
+    await ctx.conversation.send(
+      `👋 Hi there! Send "start" or "menu" to see what I can do!`,
+    );
   }
 });
 
 agent.on("start", () => {
-  console.log(`Waiting for messages...`);
-  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
-  console.log(`🔗${getTestUrl(agent)}`);
+  console.log("🤖 Inline Actions Example Bot Started");
+  console.log(`📱 Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗 Test URL: ${getTestUrl(agent)}`);
+  console.log("💡 Send 'start' or 'menu' to begin!");
 });
 
-void agent.start();
+await agent.start();
