@@ -27,21 +27,10 @@ agent.on("text", async (ctx) => {
   console.log("Network:", NETWORK_ID);
 
   // Get the agent's address
-  const agentAddress = agent.client.accountIdentifier?.identifier;
-  if (!agentAddress) {
-    console.log("Unable to get agent address, skipping");
-    return;
-  }
+  const agentAddress = agent.client.accountIdentifier?.identifier || "";
 
   // Get sender address from inbox ID
-  const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
-    ctx.message.senderInboxId,
-  ]);
-  const memberAddress = inboxState[0]?.identifiers[0]?.identifier;
-  if (!memberAddress) {
-    console.log("Unable to find member address, skipping");
-    return;
-  }
+  const senderAddress = await ctx.getSenderAddress();
 
   try {
     if (command === "/balance") {
@@ -60,7 +49,7 @@ agent.on("text", async (ctx) => {
       const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
 
       const walletSendCalls = usdcHandler.createUSDCTransferCalls(
-        memberAddress,
+        senderAddress,
         agentAddress,
         amountInDecimals,
       );

@@ -16,12 +16,9 @@ const signer = createSigner(user);
 const agent = await Agent.create(signer);
 void agent.start();
 agent.on("text", async (ctx) => {
-  const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
-    ctx.message.senderInboxId,
-  ]);
-  const addressFromInboxId = inboxState[0].identifiers[0].identifier;
+  const senderAddress = await ctx.getSenderAddress();
 
-  console.log(`Sending "gm" response to ${addressFromInboxId}...`);
+  console.log(`Sending "gm" response to ${senderAddress}...`);
   await ctx.conversation.send("gm");
 });
 

@@ -96,16 +96,7 @@ agent.on(
 agent.on("text", async (ctx) => {
   const message = ctx.message;
 
-  // Get sender address
-  const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
-    message.senderInboxId,
-  ]);
-  const senderAddress = inboxState[0]?.identifiers[0]?.identifier;
-
-  if (!senderAddress) {
-    console.log("❌ Unable to find sender address, skipping");
-    return;
-  }
+  const senderAddress = await ctx.getSenderAddress();
 
   if (message.contentType?.typeId === "transactionReference") {
     console.log("🧾 Detected transaction reference message");

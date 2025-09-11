@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import {
   AttachmentCodec,
@@ -26,24 +27,21 @@ agent.on("text", async (ctx) => {
     `Received text message: ${ctx.message.content} by ${ctx.message.senderInboxId}`,
   );
 
-  const inboxState = await agent.client.preferences.inboxStateFromInboxIds([
-    ctx.message.senderInboxId,
-  ]);
-  const addressFromInboxId = inboxState[0]?.identifiers[0]?.identifier;
+  const senderAddress = await ctx.getSenderAddress();
 
-  console.log(`Preparing attachment for ${addressFromInboxId}...`);
+  console.log(`Preparing attachment for ${senderAddress}...`);
   await ctx.conversation.send(`I'll send you an attachment now...`);
 
-  // Developer handles upload and provides URL
-  // For this example, we'll use the old approach but developers can replace with their own logic
-  const fileData = await import("node:fs/promises").then(fs => fs.readFile(DEFAULT_IMAGE_PATH));
   const encrypted = await encryptAttachment(
-    new Uint8Array(fileData),
+    new Uint8Array(await readFile(DEFAULT_IMAGE_PATH)),
     "logo.png",
     "image/png",
   );
-  const fileUrl = await uploadToPinata(encrypted.encryptedData, encrypted.filename);
-  
+  const fileUrl = await uploadToPinata(
+    encrypted.encryptedData,
+    encrypted.filename,
+  );
+
   const remoteAttachment = await createRemoteAttachmentFromFile(
     DEFAULT_IMAGE_PATH,
     fileUrl,
@@ -54,7 +52,7 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("attachment", async (ctx) => {
-  // Load and decode the received attachment using the utility function
+  // Load and decode the received attachment
   const receivedAttachment = await loadRemoteAttachment(
     ctx.message.content,
     agent.client,
@@ -76,9 +74,12 @@ agent.on("attachment", async (ctx) => {
     filename,
     mimeType,
   );
-  const fileUrl = await uploadToPinata(encrypted.encryptedData, encrypted.filename);
+  const fileUrl = await uploadToPinata(
+    encrypted.encryptedData,
+    encrypted.filename,
+  );
 
-  // Create a new remote attachment from the decoded data using the utility function
+  // Create a new remote attachment from the decoded data
   const reEncodedAttachment = await createRemoteAttachmentFromData(
     receivedAttachment.data,
     filename,
