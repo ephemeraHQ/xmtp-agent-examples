@@ -27,13 +27,10 @@ export async function encryptAttachment(
 export async function createRemoteAttachmentFromFile(
   filePath: string,
   fileUrl: string,
+  mimeType: string,
 ): Promise<RemoteAttachment> {
   const fileData = await readFile(filePath);
   const filename = path.basename(filePath);
-  const mimeType =
-    path.extname(filename) === ".png"
-      ? "image/png"
-      : "application/octet-stream";
   return createRemoteAttachmentFromData(
     new Uint8Array(fileData),
     filename,
@@ -69,5 +66,6 @@ export async function loadRemoteAttachment(
   remoteAttachment: RemoteAttachment,
   client: any,
 ): Promise<Attachment> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   return await RemoteAttachmentCodec.load(remoteAttachment, client);
 }

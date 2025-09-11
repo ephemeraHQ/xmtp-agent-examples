@@ -45,6 +45,7 @@ agent.on("text", async (ctx) => {
   const remoteAttachment = await createRemoteAttachmentFromFile(
     DEFAULT_IMAGE_PATH,
     fileUrl,
+    "image/png",
   );
   await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
 
