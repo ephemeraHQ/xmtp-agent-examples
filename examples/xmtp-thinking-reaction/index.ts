@@ -10,7 +10,7 @@ process.loadEnvFile(".env");
 // Helper function to sleep for a specified number of milliseconds
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const agent = await Agent.create(createSigner(createUser()), {
+const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [new ReactionCodec()],
 });
