@@ -58,10 +58,6 @@ const thinkingReactionMiddleware: AgentMiddleware = async (ctx, next) => {
 
     // Continue to next middleware/handler
     await next();
-
-    // Automatically remove thinking emoji after handler completes
-    await removeThinkingEmoji();
-    console.log("✅ Thinking emoji removed");
   } catch (error) {
     console.error("Error in thinking reaction middleware:", error);
     // Continue anyway
@@ -78,6 +74,8 @@ const agent = await Agent.createFromEnv({
 agent.use(thinkingReactionMiddleware);
 
 agent.on("text", async (ctx) => {
+  const thinkingCtx = ctx as ThinkingReactionContext;
+
   try {
     const messageContent = ctx.message.content;
     console.log(`Received message: ${messageContent}`);
@@ -86,16 +84,31 @@ agent.on("text", async (ctx) => {
     console.log("💤 Sleeping for 2 seconds...");
     await sleep(2000);
 
-    // Step 2: Send response (thinking emoji will be automatically removed by middleware)
+    // Step 2: Send response
     console.log("💭 Sending response...");
     await ctx.conversation.send(
       "I've been thinking about your message and here's my response!",
     );
 
+    // Step 3: Remove thinking emoji after sending the response
+    if (thinkingCtx.thinkingReaction?.removeThinkingEmoji) {
+      console.log("🗑️ Removing thinking emoji...");
+      await thinkingCtx.thinkingReaction.removeThinkingEmoji();
+    }
+
     console.log("✅ Response sent successfully");
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error processing message:", errorMessage);
+
+    // Still try to remove thinking emoji on error
+    if (thinkingCtx.thinkingReaction?.removeThinkingEmoji) {
+      try {
+        await thinkingCtx.thinkingReaction.removeThinkingEmoji();
+      } catch (removeError) {
+        console.error("Error removing thinking emoji:", removeError);
+      }
+    }
   }
 });
 

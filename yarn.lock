@@ -633,7 +633,6 @@ __metadata:
   resolution: "@examples/xmtp-welcome-message@workspace:examples/xmtp-welcome-message"
   dependencies:
     "@xmtp/agent-sdk": "npm:*"
-    "@xmtp/content-type-primitives": "npm:^2.0.2"
     tsx: "npm:*"
     typescript: "npm:*"
   languageName: unknown
