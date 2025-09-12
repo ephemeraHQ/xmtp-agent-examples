@@ -1,32 +1,26 @@
-import fs from "node:fs";
-import { Agent, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent, filter, getTestUrl, withFilter } from "@xmtp/agent-sdk";
+import { getDbPath } from "../../utils/general";
 
 process.loadEnvFile(".env");
 
-const getDbPath = (description: string = "xmtp") => {
-  //Checks if the environment is a Railway deployment
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  // Create database directory if it doesn't exist
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
-  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
-};
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath(),
 });
 
-agent.on("text", async (ctx) => {
-  const messageContent = ctx.message.content;
-  const senderAddress = await ctx.getSenderAddress();
-  console.log(`Received message: ${messageContent} by ${senderAddress}`);
-  await ctx.conversation.send("gm");
-});
-
-agent.on("dm", (ctx) => {
-  console.log("New conversation created with id: ", ctx.conversation.id);
-});
+agent.on(
+  "text",
+  withFilter(
+    filter.and(filter.isGroup, filter.startsWith("@agent")),
+    async (ctx) => {
+      const senderAddress = await ctx.getSenderAddress();
+      console.log(
+        `Received message in group: ${ctx.message.content} by ${senderAddress}`,
+      );
+      await ctx.conversation.send("gm");
+    },
+  ),
+);
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);

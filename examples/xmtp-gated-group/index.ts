@@ -20,7 +20,7 @@ const GROUP_CONFIG = {
       "Hi! I can add you to our exclusive group. What's the secret passphrase?",
     success: [
       "🎉 Correct! You've been added to the group.",
-      "Welcome to our exclusive community!",
+      "Welcome to our community!",
       "Please introduce yourself and follow our community guidelines.",
     ],
     alreadyInGroup: "You're already in the group!",

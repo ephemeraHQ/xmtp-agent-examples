@@ -1,4 +1,9 @@
-import { Agent, createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
+import {
+  Agent,
+  getTestUrl,
+  type AgentContext,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
 import {
   ContentTypeReaction,
   ReactionCodec,
@@ -10,18 +15,19 @@ process.loadEnvFile(".env");
 // Helper function to sleep for a specified number of milliseconds
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const agent = await Agent.createFromEnv({
-  env: process.env.XMTP_ENV as "local" | "dev" | "production",
-  codecs: [new ReactionCodec()],
-});
+// Extended context type to include thinking reaction helpers
+interface ThinkingReactionContext extends AgentContext {
+  thinkingReaction?: {
+    removeThinkingEmoji: () => Promise<void>;
+  };
+}
 
-agent.on("text", async (ctx) => {
+// Middleware for thinking reaction pattern
+const thinkingReactionMiddleware: AgentMiddleware = async (ctx, next) => {
   try {
-    const messageContent = ctx.message.content;
-    console.log(`Received message: ${messageContent}`);
-
-    // Step 1: React with thinking emoji
     console.log("🤔 Reacting with thinking emoji...");
+
+    // Step 1: Add thinking emoji reaction
     await ctx.conversation.send(
       {
         action: "added",
@@ -32,24 +38,60 @@ agent.on("text", async (ctx) => {
       ContentTypeReaction,
     );
 
-    // Step 2: Sleep for 2 seconds
+    // Step 2: Add helper function to remove the thinking emoji
+    const removeThinkingEmoji = async () => {
+      await ctx.conversation.send(
+        {
+          action: "removed",
+          content: "⏳",
+          reference: ctx.message.id,
+          schema: "shortcode",
+        } as Reaction,
+        ContentTypeReaction,
+      );
+    };
+
+    // Attach helper to context
+    (ctx as ThinkingReactionContext).thinkingReaction = {
+      removeThinkingEmoji,
+    };
+
+    // Continue to next middleware/handler
+    await next();
+
+    // Automatically remove thinking emoji after handler completes
+    await removeThinkingEmoji();
+    console.log("✅ Thinking emoji removed");
+  } catch (error) {
+    console.error("Error in thinking reaction middleware:", error);
+    // Continue anyway
+    await next();
+  }
+};
+
+const agent = await Agent.createFromEnv({
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+  codecs: [new ReactionCodec()],
+});
+
+// Apply the thinking reaction middleware
+agent.use(thinkingReactionMiddleware);
+
+agent.on("text", async (ctx) => {
+  try {
+    const messageContent = ctx.message.content;
+    console.log(`Received message: ${messageContent}`);
+
+    // Step 1: Sleep for 2 seconds (thinking emoji already shown by middleware)
     console.log("💤 Sleeping for 2 seconds...");
     await sleep(2000);
 
-    // Step 3: Send response
+    // Step 2: Send response (thinking emoji will be automatically removed by middleware)
     console.log("💭 Sending response...");
     await ctx.conversation.send(
       "I've been thinking about your message and here's my response!",
     );
-    await ctx.conversation.send(
-      {
-        action: "removed",
-        content: "⏳",
-        reference: ctx.message.id,
-        schema: "shortcode",
-      } as Reaction,
-      ContentTypeReaction,
-    );
+
     console.log("✅ Response sent successfully");
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
