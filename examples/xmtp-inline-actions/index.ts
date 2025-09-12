@@ -1,4 +1,4 @@
-import { Agent, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent, filter, getTestUrl, withFilter } from "@xmtp/agent-sdk";
 import {
   ActionBuilder,
   inlineActionsMiddleware,
@@ -117,11 +117,9 @@ The utilities make it easy to create interactive experiences.`,
   await sendActions(ctx, help);
 });
 
-// Handle text messages
-agent.on("text", async (ctx) => {
-  const message = ctx.message.content.trim().toLowerCase();
-
-  if (message === "/start" || message === "start" || message === "menu") {
+agent.on(
+  "text",
+  withFilter(filter.startsWith("/menu"), async (ctx) => {
     // Trigger the main menu
     const menuAction = ActionBuilder.create(
       "welcome",
@@ -131,18 +129,14 @@ agent.on("text", async (ctx) => {
       .build();
 
     await sendActions(ctx, menuAction);
-  } else {
-    await ctx.conversation.send(
-      `👋 Hi there! Send "start" or "menu" to see what I can do!`,
-    );
-  }
-});
+  }),
+);
 
 agent.on("start", () => {
-  console.log("🤖 Inline Actions Example Bot Started");
-  console.log(`📱 Address: ${agent.client.accountIdentifier?.identifier}`);
-  console.log(`🔗 Test URL: ${getTestUrl(agent)}`);
-  console.log("💡 Send 'start' or 'menu' to begin!");
+  console.log(`Waiting for messages...`);
+  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗${getTestUrl(agent)}`);
+  console.log("💡 Send 'menu' to begin!");
 });
 
 await agent.start();
