@@ -11,7 +11,7 @@ const agent = await Agent.createFromEnv({
 agent.on(
   "text",
   withFilter(
-    filter.and(filter.isGroup, filter.startsWith("@agent")),
+    filter.and(filter.isGroup, filter.startsWith("@gm")),
     async (ctx) => {
       const senderAddress = await ctx.getSenderAddress();
       console.log(
