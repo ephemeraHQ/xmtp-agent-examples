@@ -1,120 +1,61 @@
-import { Agent } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import { getDbPath } from "../../utils/general";
 
 process.loadEnvFile(".env");
 
-// Message queue interface
-interface QueuedMessage {
-  conversationId: string;
-  content: string;
-  timestamp: number;
-}
+const messageQueue: string[] = [];
 
-// Message queue
-const messageQueue: QueuedMessage[] = [];
+console.log("Starting XMTP Dual Client Agent...");
 
-// Queue processing interval in milliseconds (1 second)
-const PROCESS_INTERVAL = 1000;
-
-// Sync interval in minutes (5 minutes)
-const SYNC_INTERVAL = 5;
-
-console.log("Starting XMTP Queue Dual Client Agent...");
-
-// Create receiving client
+// Receiving client - listens for messages
 const receivingClient = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath("receiving"),
 });
 
-void receivingClient.start();
-console.log("XMTP receiving client created");
+receivingClient.on("text", async (ctx) => {
+  const message = ctx.message.content;
+  const sender = await ctx.getSenderAddress();
 
-// Create sending client
+  console.log(`📨 Received: "${message}" from ${sender}`);
+  messageQueue.push(message);
+});
+
+receivingClient.on("start", () => {
+  console.log(`🔗 Receiving client: ${getTestUrl(receivingClient)}`);
+});
+
+// Sending client - processes the queue
 const sendingClient = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath("sending"),
 });
 
-void sendingClient.start();
-
-// Start periodic sync for both clients
-startPeriodicSync(receivingClient, sendingClient);
-
-// Start message processor with sending client
-startMessageProcessor(sendingClient);
-
-receivingClient.on("text", (ctx) => {
-  const content = ctx.message.content;
-  console.log(
-    `Received: "${content}" in conversation ${ctx.message.conversationId}`,
-  );
-
-  // Queue response
-  const response = `Reply to: "${content}" at ${new Date().toISOString()}`;
-  messageQueue.push({
-    conversationId: ctx.message.conversationId,
-    content: response,
-    timestamp: Date.now(),
-  });
-});
-
-/**
- * Start periodic sync for both clients
- */
-function startPeriodicSync(
-  receivingClient: Agent<any>,
-  sendingClient: Agent<any>,
-): void {
-  console.log(`Setting up periodic sync every ${SYNC_INTERVAL} minutes`);
-
-  setInterval(
-    () => {
-      void (async () => {
-        console.log("Syncing receiving client...");
-
-        await receivingClient.client.conversations.sync();
-        console.log("Receiving client synced successfully");
-
-        console.log("Syncing sending client...");
-
-        await sendingClient.client.conversations.sync();
-        console.log("Sending client synced successfully");
-      })();
-    },
-    SYNC_INTERVAL * 60 * 1000, // 5 minutes in milliseconds
-  );
-}
-
-function startMessageProcessor(client: Agent<any>): void {
-  console.log("Starting message processor on sending client...");
-  // Process message queue periodically
-  setInterval(() => {
-    void processMessageQueue(client);
-  }, PROCESS_INTERVAL);
-}
-
-async function processMessageQueue(client: Agent<any>): Promise<void> {
+// Process queue every 2 seconds
+setInterval(async () => {
   if (messageQueue.length === 0) return;
 
-  // Process in FIFO order (oldest first)
   const message = messageQueue.shift();
   if (!message) return;
 
   try {
-    // Get the conversation and send the message
+    // Get all conversations and send to the most recent one
+    await sendingClient.client.conversations.sync();
+    const conversations = await sendingClient.client.conversations.list();
 
-    const conversation = await client.client.conversations.getConversationById(
-      message.conversationId,
-    );
-    if (conversation) {
-      await conversation.send(message.content);
-      console.log(`Message sent successfully: "${message.content}"`);
-    } else {
-      console.error(`Conversation not found for ID: ${message.conversationId}`);
+    if (conversations.length > 0) {
+      const latestConv = conversations[0];
+      await latestConv.send(
+        "Sending client: " + message + " at " + new Date().toISOString(),
+      );
+      console.log(`📤 Sent: "${message}"`);
     }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Error sending message: ${errorMessage}`);
+  } catch (error) {
+    console.error(`❌ Error sending message:`, error);
   }
-}
+}, 2000);
+
+// Start both clients
+await Promise.all([receivingClient.start(), sendingClient.start()]);
+
+console.log("✅ Both clients running!");

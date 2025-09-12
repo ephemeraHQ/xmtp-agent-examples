@@ -1,6 +1,6 @@
-# Dual client example
+# XMTP dual client queue example
 
-This agent demonstrates the use of dual clients in XMTP.
+A simple demonstration of using two separate XMTP clients: one for receiving messages and another for sending queued responses.
 
 ## Getting Started
 
