@@ -7,6 +7,15 @@ const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath(),
 });
+agent.on(
+  "text",
+  withFilter(filter.isDM, async (ctx) => {
+    const messageContent = ctx.message.content;
+    const senderAddress = await ctx.getSenderAddress();
+    console.log(`Received message: ${messageContent} by ${senderAddress}`);
+    await ctx.conversation.send("gm");
+  }),
+);
 
 agent.on(
   "text",

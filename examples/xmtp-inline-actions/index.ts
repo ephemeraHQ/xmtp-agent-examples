@@ -21,20 +21,6 @@ const agent = await Agent.createFromEnv({
 // Add the inline actions middleware
 agent.use(inlineActionsMiddleware);
 
-// Register action handlers
-registerAction("show-menu", async (ctx) => {
-  const menu = ActionBuilder.create(
-    "main-menu",
-    "🎯 What would you like to do?",
-  )
-    .add("send-money", "💸 Send Money")
-    .add("check-balance", "💰 Check Balance")
-    .add("get-help", "❓ Help")
-    .build();
-
-  await sendActions(ctx, menu);
-});
-
 registerAction("send-money", async (ctx) => {
   await sendSelection(ctx, "💸 How much would you like to send?", [
     { id: "send-small", label: "0.01 USDC" },
@@ -98,40 +84,24 @@ registerAction("check-balance", async (ctx) => {
   );
 });
 
-registerAction("get-help", async (ctx) => {
-  const help = ActionBuilder.create(
-    "help-menu",
-    `📚 Help Center
-
-This bot demonstrates inline actions utilities! Here's what you can do:
-
-• Send money with confirmation flows
-• Check balances  
-• Navigate through action menus
-
-The utilities make it easy to create interactive experiences.`,
-  )
-    .add("show-menu", "🔙 Back to Menu")
-    .build();
-
-  await sendActions(ctx, help);
-});
-
 agent.on(
   "text",
-  withFilter(filter.startsWith("/menu"), async (ctx) => {
-    // Trigger the main menu
-    const menuAction = ActionBuilder.create(
-      "welcome",
-      "👋 Welcome! Let's get started.",
+  withFilter(filter.startsWith("menu"), async (ctx) => {
+    const menu = ActionBuilder.create(
+      "main-menu",
+      "🎯 What would you like to do?",
     )
-      .add("show-menu", "🚀 Show Menu")
+      .add("send-money", "💸 Send Money")
+      .add("check-balance", "💰 Check Balance")
       .build();
 
-    await sendActions(ctx, menuAction);
+    await sendActions(ctx, menu);
   }),
 );
 
+agent.on("unhandledMessage", (ctx) => {
+  console.log(`Unhandled message: ${ctx.message.content}`);
+});
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
   console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
