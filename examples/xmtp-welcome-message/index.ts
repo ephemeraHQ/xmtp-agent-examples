@@ -28,11 +28,12 @@ async function handleCurrentPrice(ctx: AgentContext) {
     const { price } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
 
-    await ctx.conversation.send(`💰 **Current ETH Price**
+    await ctx.conversation.send(`
+    💰 **Current ETH Price**
 
-${formattedPrice}
+    ${formattedPrice}
 
-Data provided by CoinGecko 📈`);
+    Data provided by CoinGecko 📈`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     await ctx.conversation.send(
