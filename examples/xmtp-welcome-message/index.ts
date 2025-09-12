@@ -1,6 +1,8 @@
 import {
   Agent,
   getTestUrl,
+  withFilter,
+  filter,
   type AgentContext,
   type AgentMiddleware,
 } from "@xmtp/agent-sdk";
@@ -86,7 +88,7 @@ const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
   } else {
     console.warn("Not first time interaction");
     // return; to break the middleware chain and prevent the inline actions middleware from being executed
-    return;
+    //return;
   }
 
   await next();
@@ -110,18 +112,21 @@ agent.on("unhandledError", (error) => {
 });
 
 // Handle first-time user messages - send welcome with actions
-agent.on("text", async (ctx) => {
-  const welcomeActions = ActionBuilder.create(
-    `welcome-${Date.now()}`,
-    `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
-  )
-    .add("get-current-price", "💰 Get Current ETH Price")
-    .add("get-price-chart", "📊 Get Price with 24h Change")
-    .build();
+agent.on(
+  "text",
+  withFilter(filter.isDM, async (ctx) => {
+    const welcomeActions = ActionBuilder.create(
+      `welcome-${Date.now()}`,
+      `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
+    )
+      .add("get-current-price", "💰 Get Current ETH Price")
+      .add("get-price-chart", "📊 Get Price with 24h Change")
+      .build();
 
-  console.log(`✓ Sending welcome message with actions`);
-  await sendActions(ctx, welcomeActions);
-});
+    console.log(`✓ Sending welcome message with actions`);
+    await sendActions(ctx, welcomeActions);
+  }),
+);
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
