@@ -1,6 +1,9 @@
 import { Agent, getTestUrl, withFilter, f } from "@xmtp/agent-sdk";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
-import { ContentTypeWalletSendCalls, WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
+import {
+  ContentTypeWalletSendCalls,
+  WalletSendCallsCodec,
+} from "@xmtp/content-type-wallet-send-calls";
 import { USDCHandler } from "./usdc";
 
 process.loadEnvFile(".env");
@@ -26,7 +29,7 @@ agent.on(
 
 agent.on(
   "text",
-  withFilter(f.startsWith("/tx "), async (ctx) => {
+  withFilter(f.startsWith("/tx"), async (ctx) => {
     const agentAddress = agent.client.accountIdentifier?.identifier || "";
     const senderAddress = await ctx.getSenderAddress();
 
@@ -52,6 +55,7 @@ agent.on(
 );
 
 agent.on("unhandledMessage", async (ctx) => {
+  console.log(`Unhandled message: ${ctx.message.content}`);
   await ctx.conversation.send(
     "Available commands:\n" +
       "/balance - Check your USDC balance\n" +
