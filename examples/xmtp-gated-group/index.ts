@@ -1,4 +1,9 @@
-import { Agent, getTestUrl, type AgentContext } from "@xmtp/agent-sdk";
+import {
+  Agent,
+  getTestUrl,
+  type AgentContext,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 // Configuration for the secret word gated group
@@ -28,28 +33,79 @@ const GROUP_CONFIG = {
 // Store to track users who are already in the group
 const usersInGroup = new Set<string>();
 
+// Extended context type to include group validation results
+interface GroupValidationContext extends AgentContext {
+  groupValidation?: {
+    isValidPassphrase: boolean;
+    isAlreadyInGroup: boolean;
+    hasSecretWord: boolean;
+  };
+}
+
+// Middleware for group code parsing and validation
+const groupCodeParser: AgentMiddleware = async (ctx, next) => {
+  const senderInboxId = ctx.message.senderInboxId;
+  const messageContent = ctx.message.content;
+  const secretWord = GROUP_CONFIG.secretWord || "";
+
+  // Check if secret word is configured
+  const hasSecretWord = Boolean(secretWord);
+
+  // Check if user is already in the group
+  const isAlreadyInGroup = usersInGroup.has(senderInboxId);
+
+  // Check if the message matches the secret word (only for text messages)
+  const isValidPassphrase =
+    hasSecretWord &&
+    typeof messageContent === "string" &&
+    messageContent.trim().toLowerCase() === secretWord.toLowerCase();
+
+  // Attach validation results to context
+  (ctx as GroupValidationContext).groupValidation = {
+    isValidPassphrase,
+    isAlreadyInGroup,
+    hasSecretWord,
+  };
+
+  // Continue to next middleware/handler
+  await next();
+};
+
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
 });
 
+// Apply the group code parsing middleware
+agent.use(groupCodeParser);
+
 agent.on("text", (ctx) => {
-  const senderInboxId = ctx.message.senderInboxId;
-  const conversation = ctx.conversation;
-  const messageContent = ctx.message.content;
-  const secretWord = GROUP_CONFIG.secretWord || "";
+  const validationCtx = ctx as GroupValidationContext;
+  const validation = validationCtx.groupValidation;
+
+  // Check if validation data is available
+  if (!validation) {
+    void ctx.conversation.send(GROUP_CONFIG.messages.error);
+    return;
+  }
+
+  // Check if secret word is not configured
+  if (!validation.hasSecretWord) {
+    void ctx.conversation.send(GROUP_CONFIG.messages.error);
+    return;
+  }
 
   // Check if user is already in the group
-  if (!secretWord || usersInGroup.has(senderInboxId)) {
+  if (validation.isAlreadyInGroup) {
     void ctx.conversation.send(GROUP_CONFIG.messages.alreadyInGroup);
     return;
   }
 
-  // Check if the message is the correct secret word
-  if (messageContent.trim().toLowerCase() === secretWord.toLowerCase()) {
+  // Check if the passphrase is valid
+  if (validation.isValidPassphrase) {
     void handleSuccessfulPassphrase(ctx);
   } else {
     // Wrong passphrase
-    void conversation.send(GROUP_CONFIG.messages.invalid);
+    void ctx.conversation.send(GROUP_CONFIG.messages.invalid);
   }
 });
 
