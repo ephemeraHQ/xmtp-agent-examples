@@ -1,4 +1,4 @@
-import { Agent, getTestUrl, withFilter, f } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl, withFilter, f, filter } from "@xmtp/agent-sdk";
 import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
 import {
   ContentTypeWalletSendCalls,
@@ -54,14 +54,19 @@ agent.on(
   }),
 );
 
-agent.on("unhandledMessage", async (ctx) => {
-  console.log(`Unhandled message: ${ctx.message.content}`);
-  await ctx.conversation.send(
-    "Available commands:\n" +
-      "/balance - Check your USDC balance\n" +
-      "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
-  );
-});
+agent.on(
+  "text",
+  withFilter(filter.and(f.isDM, f.not(f.startsWith("/"))), async (ctx) => {
+    console.log(
+      `Unhandled message: ${ctx.message.content} by ${ctx.message.senderInboxId}`,
+    );
+    await ctx.conversation.send(
+      "Available commands:\n" +
+        "/balance - Check your USDC balance\n" +
+        "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
+    );
+  }),
+);
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
