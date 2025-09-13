@@ -1,112 +1,147 @@
-import { Agent, filter, getTestUrl, withFilter } from "@xmtp/agent-sdk";
 import {
-  ActionBuilder,
-  inlineActionsMiddleware,
-  registerAction,
-  sendActions,
-  sendConfirmation,
-  sendSelection,
-} from "../../utils/inline-actions/inline-actions";
-import { ActionsCodec } from "../../utils/inline-actions/types/ActionsContent";
-import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
+  createSigner,
+  getEncryptionKeyFromHex,
+  logAgentDetails,
+  validateEnvironment,
+} from "@helpers/client";
+import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
+import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
+import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import {
+  handleIntentMessage,
+  handleTextMessage,
+} from "./handlers/messageHandlers";
+import { TokenHandler } from "./handlers/tokenHandler";
+import {
+  handleTransactionReference,
+  type ExtendedTransactionReference,
+} from "./handlers/transactionHandlers";
+import { ActionsCodec } from "./types/ActionsContent";
+import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
-process.loadEnvFile(".env");
-
-// Create agent with inline actions support
-const agent = await Agent.createFromEnv({
-  env: process.env.XMTP_ENV as "local" | "dev" | "production",
-  codecs: [new ActionsCodec(), new IntentCodec()],
-});
-
-// Add the inline actions middleware
-agent.use(inlineActionsMiddleware);
-
-registerAction("send-money", async (ctx) => {
-  await sendSelection(ctx, "💸 How much would you like to send?", [
-    { id: "send-small", label: "0.01 USDC" },
-    { id: "send-medium", label: "0.1 USDC" },
-    { id: "send-large", label: "1 USDC" },
+// Validate required environment variables
+const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
+  validateEnvironment([
+    "WALLET_KEY",
+    "DB_ENCRYPTION_KEY",
+    "XMTP_ENV",
+    "NETWORK_ID",
   ]);
-});
 
-registerAction("send-small", async (ctx) => {
-  await sendConfirmation(
-    ctx,
-    "Send 0.01 USDC to the bot?",
-    "confirm-send-small",
-    "cancel-send",
+async function main() {
+  // Initialize token handler
+  const tokenHandler = new TokenHandler(NETWORK_ID);
+  console.log(`📡 Connected to network: ${tokenHandler.getNetworkInfo().name}`);
+  console.log(
+    `💰 Supported tokens: ${tokenHandler.getSupportedTokens().join(", ")}`,
   );
-});
 
-registerAction("send-medium", async (ctx) => {
-  await sendConfirmation(
-    ctx,
-    "Send 0.1 USDC to the bot?",
-    "confirm-send-medium",
-    "cancel-send",
-  );
-});
+  // Create XMTP client
+  const signer = createSigner(WALLET_KEY);
+  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
 
-registerAction("send-large", async (ctx) => {
-  await sendConfirmation(
-    ctx,
-    "Send 1 USDC to the bot?",
-    "confirm-send-large",
-    "cancel-send",
-  );
-});
+  const client = await Client.create(signer, {
+    dbEncryptionKey,
+    appVersion: "example-agent/1.0.0",
+    env: XMTP_ENV as XmtpEnv,
+    codecs: [
+      new WalletSendCallsCodec(),
+      new TransactionReferenceCodec(),
+      new ActionsCodec(),
+      new IntentCodec(),
+    ],
+  });
 
-registerAction("confirm-send-small", async (ctx) => {
-  await ctx.conversation.send(
-    "✅ Small transaction confirmed! (This would create a transaction for 0.01 USDC)",
-  );
-});
+  const identifier = await signer.getIdentifier();
+  const agentAddress = identifier.identifier;
 
-registerAction("confirm-send-medium", async (ctx) => {
-  await ctx.conversation.send(
-    "✅ Medium transaction confirmed! (This would create a transaction for 0.1 USDC)",
-  );
-});
+  void logAgentDetails(client as Client);
 
-registerAction("confirm-send-large", async (ctx) => {
-  await ctx.conversation.send(
-    "✅ Large transaction confirmed! (This would create a transaction for 1 USDC)",
-  );
-});
+  // Sync conversations
+  console.log("🔄 Syncing conversations...");
+  await client.conversations.sync();
 
-registerAction("cancel-send", async (ctx) => {
-  await ctx.conversation.send("❌ Transaction cancelled.");
-});
+  console.log("👂 Listening for messages...");
 
-registerAction("check-balance", async (ctx) => {
-  await ctx.conversation.send(
-    "💰 Bot Balance: 5.25 USDC\n(This is a mock balance)",
-  );
-});
+  const stream = await client.conversations.streamAllMessages();
 
-agent.on(
-  "text",
-  withFilter(filter.startsWith("menu"), async (ctx) => {
-    const menu = ActionBuilder.create(
-      "main-menu",
-      "🎯 What would you like to do?",
-    )
-      .add("send-money", "💸 Send Money")
-      .add("check-balance", "💰 Check Balance")
-      .build();
+  for await (const message of stream) {
+    /* Ignore messages from the same agent or non-text messages */
+    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
+      continue;
+    }
 
-    await sendActions(ctx, menu);
-  }),
-);
+    if (
+      message.contentType?.typeId !== "text" &&
+      message.contentType?.typeId !== "transactionReference" &&
+      message.contentType?.typeId !== "intent"
+    ) {
+      continue;
+    }
 
-agent.on("unhandledMessage", (ctx) => {
-  console.log(`Unhandled message: ${ctx.message.content}`);
-});
-agent.on("start", () => {
-  console.log(`Waiting for messages...`);
-  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
-  console.log(`🔗${getTestUrl(agent)}`);
-  console.log("💡 Send 'menu' to begin!");
-});
+    console.log(
+      `Received message: ${message.content as string} by ${message.senderInboxId}`,
+    );
 
-await agent.start();
+    /* Get the conversation from the local db */
+    const conversation = await client.conversations.getConversationById(
+      message.conversationId,
+    );
+
+    /* If the conversation is not found, skip the message */
+    if (!conversation) {
+      console.log("Unable to find conversation, skipping");
+      continue;
+    }
+
+    // Get sender address
+    const inboxState = await client.preferences.inboxStateFromInboxIds([
+      message.senderInboxId,
+    ]);
+    const senderAddress = inboxState[0]?.identifiers[0]?.identifier;
+
+    if (!senderAddress) {
+      console.log("❌ Unable to find sender address, skipping");
+      continue;
+    }
+
+    // Handle different message types
+    if (message.contentType.typeId === "text") {
+      await handleTextMessage(
+        conversation,
+        message.content as string,
+        senderAddress,
+        agentAddress,
+        tokenHandler,
+      );
+    } else if (message.contentType.typeId === "transactionReference") {
+      console.log("🧾 Detected transaction reference message");
+      console.log(
+        "📋 Raw message content:",
+        JSON.stringify(message.content, null, 2),
+      );
+      await handleTransactionReference(
+        conversation,
+        message.content as ExtendedTransactionReference,
+        senderAddress,
+        tokenHandler,
+      );
+    } else {
+      // This must be an intent message since we filtered for text, transactionReference, and intent
+      console.log("🎯 Detected intent message");
+      console.log(
+        "📋 Raw intent content:",
+        JSON.stringify(message.content, null, 2),
+      );
+      await handleIntentMessage(
+        conversation,
+        message.content as IntentContent,
+        senderAddress,
+        agentAddress,
+        tokenHandler,
+      );
+    }
+  }
+}
+
+main().catch(console.error);

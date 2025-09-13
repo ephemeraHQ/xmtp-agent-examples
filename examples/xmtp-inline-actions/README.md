@@ -1,10 +1,10 @@
-# Inline Actions Example
+# Inline-actions example
 
-An XMTP agent demonstrating interactive inline actions using XIP-67 standards with a clean middleware and utilities approach.
+An XMTP agent demonstrating wallet send calls, transaction references, and interactive inline actions using EIP-5792 and XIP-67 standards.
 
 <p align="center">
-  <img src="media/left.png" alt="Image 1" width="49%">
-  <img src="media/right.png" alt="Image 2" width="49%">
+  <img src="left.png" alt="Image 1" width="49%">
+  <img src="right.png" alt="Image 2" width="49%">
 </p>
 
 ## Getting started
@@ -12,84 +12,55 @@ An XMTP agent demonstrating interactive inline actions using XIP-67 standards wi
 > [!TIP]
 > See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
-## Features
+## Commands
 
-This example showcases:
+| Command                  | Description                      |
+| ------------------------ | -------------------------------- |
+| `/help`                  | Show interactive welcome actions |
+| `/send <AMOUNT> <TOKEN>` | Send tokens to bot               |
+| `/balance <TOKEN>`       | Check bot's balance              |
+| `/info`                  | Show network info                |
+| `/actions`               | Display action buttons           |
 
-- **Interactive Menu System**: Hierarchical action menus with navigation
-- **Confirmation Flows**: Multi-step confirmation for sensitive actions
-- **Selection Menus**: Dynamic option selection with custom styling
-- **Middleware Architecture**: Clean separation of action handling logic
-- **Utility Functions**: Reusable components for common action patterns
+### Features
 
-### Available Actions
+- Multi-token support (ETH, USDC)
+- Multi-network support (Base, Ethereum)
+- Wallet send calls (EIP-5792)
+- Transaction references with metadata
+- Interactive inline actions (XIP-67)
+- Intent handling for button responses
 
-| Action            | Description                                    |
-| ----------------- | ---------------------------------------------- |
-| `start` or `menu` | Display the main interactive menu              |
-| **Menu Options:** |                                                |
-| 💸 Send Money     | Show money transfer options with confirmations |
-| 💰 Check Balance  | Display mock account balance                   |
-| ❓ Help           | Show help information with navigation          |
+#### Networks & Tokens
 
-## Technical Implementation
+| Network          | Chain ID | Tokens    |
+| ---------------- | -------- | --------- |
+| Base Sepolia     | 84532    | ETH, USDC |
+| Base Mainnet     | 8453     | ETH, USDC |
+| Ethereum Sepolia | 11155111 | ETH       |
+| Ethereum Mainnet | 1        | ETH, USDC |
 
-### Middleware Usage
+- Faucets: [Circle](https://faucet.circle.com), [Base](https://portal.cdp.coinbase.com/products/faucet)
 
-The agent uses the `inlineActionsMiddleware` to automatically handle intent messages:
+## Usage
 
-```typescript
-import { inlineActionsMiddleware } from "../../utils/inline-actions/inline-actions";
-
-// Add middleware to agent
-agent.use(inlineActionsMiddleware);
-```
-
-### Action Registration
-
-Actions are registered using the utility functions:
+Edit `handlers/actionHandlers.ts`:
 
 ```typescript
-import {
-  ActionBuilder,
-  registerAction,
-  sendActions,
-} from "../../utils/inline-actions/inline-actions";
-
-// Register an action handler
-registerAction("show-menu", async (ctx) => {
-  const menu = ActionBuilder.create(
-    "main-menu",
-    "🎯 What would you like to do?",
-  )
-    .add("send-money", "💸 Send Money")
-    .add("check-balance", "💰 Check Balance")
-    .add("get-help", "❓ Help")
-    .build();
-
-  await sendActions(ctx, menu);
-});
-```
-
-### Utility Functions
-
-The example demonstrates various utility functions:
-
-```typescript
-// Send confirmation dialog
-await sendConfirmation(
-  ctx,
-  "Send 0.01 USDC to the bot?",
-  "confirm-send-small",
-  "cancel-send",
-);
-
-// Send selection menu
-await sendSelection(ctx, "💸 How much would you like to send?", [
-  { id: "send-small", label: "0.01 USDC" },
-  { id: "send-medium", label: "0.1 USDC" },
-  { id: "send-large", label: "1 USDC" },
-]);
+export async function handleActionsCommand(conversation: any) {
+  const actionsContent: ActionsContent = {
+    id: `help-${Date.now()}`,
+    description: "Choose an action:",
+    actions: [
+      {
+        id: "my-action",
+        label: "My Action",
+        style: "primary",
+      },
+    ],
+  };
+  await conversation.send(actionsContent, ContentTypeActions);
+}
 ```
 
 ### Requirements
@@ -103,8 +74,8 @@ await sendSelection(ctx, "💸 How much would you like to send?", [
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-XMTP_WALLET_KEY= # the private key of the wallet
-XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
+WALLET_KEY= # the private key of the wallet
+DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 NETWORK_ID=base-sepolia # base-mainnet or others
 ```
