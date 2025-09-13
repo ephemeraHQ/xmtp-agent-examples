@@ -11,34 +11,13 @@ A focused XMTP agent demonstrating inline actions UX/UI with interactive buttons
 
 - **Inline Actions**: Interactive buttons with different styles and images
 - **Token Transfers**: Send USDC using wallet send calls (EIP-5792)
+- **Rich Metadata**: Enhanced transaction information for wallets
 - **Balance Checking**: Check USDC balances on-chain
 - **Network Support**: Base Sepolia and Base Mainnet
 
-## Quick Start
-
-1. **Set up environment variables** in `.env`:
-
-```bash
-# Network: base-sepolia or base-mainnet
-NETWORK_ID=base-sepolia
-
-# XMTP Configuration
-XMTP_ENV=dev
-XMTP_WALLET_KEY=your_private_key_here
-XMTP_DB_ENCRYPTION_KEY=your_encryption_key_here
-```
-
-2. **Install and run**:
-
-```bash
-yarn install
-yarn gen:keys  # if you don't have keys
-yarn dev
-```
-
 ## Usage
 
-Send `/help` or `gm` to see the main menu:
+Send `/help` to see the main menu:
 
 ### **Main Menu Actions**
 
@@ -98,13 +77,49 @@ ActionBuilder.create("id", "description")
   .build();
 ```
 
-### **4. UX Features Demonstrated**
+## Getting started
 
-- **Button Styles**: `primary`, `secondary` button styles
-- **Action Images**: One button with image to show the capability
-- **Menu Navigation**: Main menu → sub-menu pattern
-- **Clean UX**: Focused on essential inline action patterns
+> [!TIP]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
-## Test
+### Requirements
 
-Visit [https://xmtp.chat](https://xmtp.chat) and start a conversation with your agent!
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
+- [OpenAI](https://platform.openai.com/api-keys) API key
+
+### Environment variables
+
+To run your XMTP agent, you must create a `.env` file with the following variables:
+
+```bash
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
+XMTP_ENV=dev # local, dev, production
+```
+
+You can generate random xmtp keys with the following command:
+
+```bash
+yarn gen:keys
+```
+
+> [!WARNING]
+> Running the `gen:keys` command will append keys to your existing `.env` file.
+
+### Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/xmtp-inline-actions
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```

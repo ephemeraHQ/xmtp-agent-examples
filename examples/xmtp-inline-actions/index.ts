@@ -1,4 +1,5 @@
-import { Agent, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl, withFilter } from "@xmtp/agent-sdk";
+import { f } from "@xmtp/agent-sdk";
 import {
   WalletSendCallsCodec,
   ContentTypeWalletSendCalls,
@@ -37,15 +38,37 @@ async function main() {
   }
 
   // Helper function to create simple USDC transfer
-  function createUSDCTransfer(fromAddress: string, amount: number) {
+  function createUSDCTransfer(
+    fromAddress: string,
+    amount: number,
+    withMetadata: boolean = false,
+  ) {
     const amountInDecimals = Math.floor(
       amount * Math.pow(10, networkConfig.decimals),
     );
-    return usdcHandler.createUSDCTransferCalls(
+    const calls = usdcHandler.createUSDCTransferCalls(
       fromAddress,
       agentAddress!,
       amountInDecimals,
     );
+
+    // Add rich metadata if requested
+    if (withMetadata) {
+      calls.calls[0].metadata = {
+        description: `Transfer ${amount} USDC`,
+        transactionType: "transfer",
+        currency: "USDC",
+        amount: amountInDecimals,
+        decimals: networkConfig.decimals,
+        networkId: networkConfig.networkId,
+        hostname: "tba.chat",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?sz=256&domain_url=https%3A%2F%2Fwww.coinbase.com%2Fwallet",
+        title: "TBA Chat Agent",
+      };
+    }
+
+    return calls;
   }
 
   // Register action handlers focused on inline actions UX
@@ -78,6 +101,17 @@ async function main() {
     );
   });
 
+  registerAction("send-with-metadata", async (ctx) => {
+    const senderAddress = await ctx.getSenderAddress();
+    if (!senderAddress) return;
+
+    const transfer = createUSDCTransfer(senderAddress, 0.005, true);
+    await ctx.conversation.send(transfer, ContentTypeWalletSendCalls);
+    await ctx.conversation.send(
+      "😉 Please approve the 0.005 USDC transfer with rich metadata!",
+    );
+  });
+
   registerAction("transaction-actions", async (ctx) => {
     const actions = ActionBuilder.create(
       "transaction-actions",
@@ -85,6 +119,7 @@ async function main() {
     )
       .add("send-small", "Send 0.005 USDC", "primary")
       .add("send-large", "Send 1 USDC", "primary")
+      .add("send-with-metadata", "Send with Metadata", "primary")
       .add("check-balance", "Check Balance", "secondary")
       .build();
 
@@ -113,10 +148,9 @@ FEATURES:
   agent.use(inlineActionsMiddleware);
 
   // Handle text messages with simple commands
-  agent.on("text", async (ctx) => {
-    const message = ctx.message.content.toLowerCase().trim();
-
-    if (message === "/help" || message === "gm") {
+  agent.on(
+    "text",
+    withFilter(f.startsWith("/"), async (ctx) => {
       const actions = ActionBuilder.create(
         "help",
         `👋 Welcome to Inline Actions Demo!
@@ -126,9 +160,10 @@ I can help you with USDC transactions on ${networkConfig.networkName}.
 Choose an action below:`,
       )
         .add("transaction-actions", "💸 Transaction Actions", "primary")
+        .add("send-with-metadata", "😉 Send with Metadata", "primary")
         .add(
           "check-balance",
-          "💰 Check Balance",
+          "Check Balance",
           "primary",
           "https://cataas.com/cat",
         )
@@ -136,12 +171,8 @@ Choose an action below:`,
         .build();
 
       await sendActions(ctx, actions);
-    } else if (message === "ping") {
-      await ctx.conversation.send("pong");
-    } else {
-      await ctx.conversation.send("🤖 Try `/help` or `gm` to get started!");
-    }
-  });
+    }),
+  );
 
   // Handle startup
   agent.on("start", () => {
