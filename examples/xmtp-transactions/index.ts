@@ -1,5 +1,16 @@
-import { Agent, getTestUrl, withFilter, f, filter } from "@xmtp/agent-sdk";
-import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
+import {
+  Agent,
+  getTestUrl,
+  withFilter,
+  f,
+  filter,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
+import {
+  TransactionReferenceCodec,
+  ContentTypeTransactionReference,
+  type TransactionReference,
+} from "@xmtp/content-type-transaction-reference";
 import {
   ContentTypeWalletSendCalls,
   WalletSendCallsCodec,
@@ -12,10 +23,35 @@ const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
 const usdcHandler = new USDCHandler(NETWORK_ID);
 
+// Transaction reference middleware
+const transactionReferenceMiddleware: AgentMiddleware = async (ctx, next) => {
+  // Check if this is a transaction reference message
+  if (ctx.message.contentType?.sameAs(ContentTypeTransactionReference)) {
+    const transactionRef = ctx.message.content as TransactionReference;
+    console.log("Received transaction reference:", transactionRef);
+
+    await ctx.conversation.send(
+      `✅ Transaction confirmed!\n` +
+        `🔗 Network: ${transactionRef.networkId}\n` +
+        `📄 Hash: ${transactionRef.reference}\n` +
+        `${transactionRef.metadata ? `📝 Transaction metadata received` : ""}`,
+    );
+
+    // Don't continue to other handlers since we handled this message
+    return;
+  }
+
+  // Continue to next middleware/handler
+  await next();
+};
+
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
 });
+
+// Apply the transaction reference middleware
+agent.use(transactionReferenceMiddleware);
 
 agent.on(
   "text",
@@ -51,6 +87,11 @@ agent.on(
     );
     console.log("Replied with wallet sendcall");
     await ctx.conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
+
+    // Send a follow-up message about transaction references
+    await ctx.conversation.send(
+      `💡 After completing the transaction, you can send a transaction reference message to confirm completion.`,
+    );
   }),
 );
 

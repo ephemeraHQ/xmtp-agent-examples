@@ -64,6 +64,13 @@ export class USDCHandler {
   }
 
   /**
+   * Get the network configuration
+   */
+  getNetworkConfig(): NetworkConfig {
+    return this.networkConfig;
+  }
+
+  /**
    * Get USDC balance for a given address
    */
   async getUSDCBalance(address: string): Promise<string> {

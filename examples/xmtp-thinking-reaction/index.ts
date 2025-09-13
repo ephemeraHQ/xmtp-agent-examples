@@ -1,7 +1,7 @@
 import {
   Agent,
   getTestUrl,
-  type AgentContext,
+  type MessageContext,
   type AgentMiddleware,
 } from "@xmtp/agent-sdk";
 import {
@@ -16,7 +16,7 @@ process.loadEnvFile(".env");
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Extended context type to include thinking reaction helpers
-interface ThinkingReactionContext extends AgentContext {
+interface ThinkingReactionContext extends MessageContext {
   thinkingReaction?: {
     removeThinkingEmoji: () => Promise<void>;
   };

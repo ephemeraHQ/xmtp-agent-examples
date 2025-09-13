@@ -1,7 +1,7 @@
 import {
   Agent,
   getTestUrl,
-  type AgentContext,
+  type MessageContext,
   type AgentMiddleware,
 } from "@xmtp/agent-sdk";
 
@@ -34,7 +34,7 @@ const GROUP_CONFIG = {
 const usersInGroup = new Set<string>();
 
 // Extended context type to include group validation results
-interface GroupValidationContext extends AgentContext {
+interface GroupValidationContext extends MessageContext {
   groupValidation?: {
     isValidPassphrase: boolean;
     isAlreadyInGroup: boolean;
@@ -117,7 +117,7 @@ agent.on("start", () => {
 
 void agent.start();
 
-async function handleSuccessfulPassphrase(ctx: AgentContext) {
+async function handleSuccessfulPassphrase(ctx: MessageContext) {
   try {
     // Check if we already have a group created
     // For simplicity, we'll create a new group each time

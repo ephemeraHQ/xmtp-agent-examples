@@ -12,7 +12,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import { Agent as XMTPAgent, type AgentContext } from "@xmtp/agent-sdk";
+import { Agent as XMTPAgent, type MessageContext } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 // Storage constants
@@ -215,7 +215,7 @@ async function processMessage(
  * @param message - The decoded XMTP message
  * @param client - The XMTP client instance
  */
-async function handleMessage(ctx: AgentContext) {
+async function handleMessage(ctx: MessageContext) {
   try {
     const { agent, config } = await initializeAgent(ctx.message.senderInboxId);
     const response = await processMessage(

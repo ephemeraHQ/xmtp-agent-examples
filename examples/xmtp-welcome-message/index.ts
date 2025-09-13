@@ -1,10 +1,10 @@
 import {
   Agent,
+  filter,
   getTestUrl,
   withFilter,
-  filter,
-  type AgentContext,
   type AgentMiddleware,
+  MessageContext,
 } from "@xmtp/agent-sdk";
 import {
   ActionBuilder,
@@ -21,7 +21,7 @@ process.loadEnvFile(".env");
 /**
  * Handle current ETH price request
  */
-async function handleCurrentPrice(ctx: AgentContext) {
+async function handleCurrentPrice(ctx: MessageContext) {
   try {
     await ctx.conversation.send("⏳ Fetching current ETH price...");
 
@@ -45,7 +45,7 @@ async function handleCurrentPrice(ctx: AgentContext) {
 /**
  * Handle ETH price with 24h change request
  */
-async function handlePriceWithChange(ctx: AgentContext) {
+async function handlePriceWithChange(ctx: MessageContext) {
   try {
     await ctx.conversation.send("⏳ Fetching ETH price with 24h change...");
 
@@ -101,8 +101,7 @@ const agent = await Agent.createFromEnv({
 });
 
 // Add middleware
-agent.use(firstTimeInteractionMiddleware);
-agent.use(inlineActionsMiddleware);
+agent.use(firstTimeInteractionMiddleware, inlineActionsMiddleware);
 
 // Register action handlers using the utilities
 registerAction("get-current-price", handleCurrentPrice);

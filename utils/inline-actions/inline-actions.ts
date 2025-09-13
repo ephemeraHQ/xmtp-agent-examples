@@ -1,4 +1,4 @@
-import type { AgentContext, AgentMiddleware } from "@xmtp/agent-sdk";
+import type { MessageContext, AgentMiddleware } from "@xmtp/agent-sdk";
 import {
   ContentTypeActions,
   type Action,
@@ -10,7 +10,7 @@ import { type IntentContent } from "./types/IntentContent";
  * Action handler function type
  */
 export type ActionHandler = (
-  ctx: AgentContext,
+  ctx: MessageContext,
   metadata?: Record<string, string | number | boolean | null>,
 ) => Promise<void>;
 
@@ -156,7 +156,7 @@ export class ActionBuilder {
  * Quick helper to send actions to a conversation
  */
 export async function sendActions(
-  ctx: AgentContext,
+  ctx: MessageContext,
   actionsContent: ActionsContent,
 ): Promise<void> {
   await ctx.conversation.send(actionsContent, ContentTypeActions);
@@ -166,7 +166,7 @@ export async function sendActions(
  * Quick helper to create and send simple yes/no confirmation
  */
 export async function sendConfirmation(
-  ctx: AgentContext,
+  ctx: MessageContext,
   message: string,
   yesActionId: string = "confirm-yes",
   noActionId: string = "confirm-no",
@@ -183,7 +183,7 @@ export async function sendConfirmation(
  * Quick helper to create and send a selection menu
  */
 export async function sendSelection(
-  ctx: AgentContext,
+  ctx: MessageContext,
   message: string,
   options: Array<{
     id: string;

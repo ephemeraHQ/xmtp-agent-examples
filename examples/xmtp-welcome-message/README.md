@@ -110,7 +110,7 @@ The agent fetches real-time ETH price data:
 
 ```typescript
 // Price fetching with error handling
-async function handleCurrentPrice(ctx: AgentContext) {
+async function handleCurrentPrice(ctx: MessageContext) {
   try {
     await ctx.conversation.send("⏳ Fetching current ETH price...");
     const { price } = await getCurrentPrice();

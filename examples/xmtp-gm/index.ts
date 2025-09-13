@@ -7,6 +7,7 @@ const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   dbPath: getDbPath(),
 });
+
 agent.on(
   "text",
   withFilter(filter.isDM, async (ctx) => {
