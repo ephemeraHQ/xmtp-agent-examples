@@ -1,110 +1,110 @@
-# Inline-actions example
+# XMTP Inline Actions Agent
 
-An XMTP agent demonstrating wallet send calls, transaction references, and interactive inline actions using EIP-5792 and XIP-67 standards.
+A focused XMTP agent demonstrating inline actions UX/UI with interactive buttons and USDC transactions.
 
 <p align="center">
-  <img src="left.png" alt="Image 1" width="49%">
-  <img src="right.png" alt="Image 2" width="49%">
+  <img src="media/left.png" alt="Image 1" width="49%">
+  <img src="media/right.png" alt="Image 2" width="49%">
 </p>
 
-## Getting started
+## Features
 
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+- **Inline Actions**: Interactive buttons with different styles and images
+- **Token Transfers**: Send USDC using wallet send calls (EIP-5792)
+- **Balance Checking**: Check USDC balances on-chain
+- **Network Support**: Base Sepolia and Base Mainnet
 
-## Commands
+## Quick Start
 
-| Command                  | Description                      |
-| ------------------------ | -------------------------------- |
-| `/help`                  | Show interactive welcome actions |
-| `/send <AMOUNT> <TOKEN>` | Send tokens to bot               |
-| `/balance <TOKEN>`       | Check bot's balance              |
-| `/info`                  | Show network info                |
-| `/actions`               | Display action buttons           |
-
-### Features
-
-- Multi-token support (ETH, USDC)
-- Multi-network support (Base, Ethereum)
-- Wallet send calls (EIP-5792)
-- Transaction references with metadata
-- Interactive inline actions (XIP-67)
-- Intent handling for button responses
-
-#### Networks & Tokens
-
-| Network          | Chain ID | Tokens    |
-| ---------------- | -------- | --------- |
-| Base Sepolia     | 84532    | ETH, USDC |
-| Base Mainnet     | 8453     | ETH, USDC |
-| Ethereum Sepolia | 11155111 | ETH       |
-| Ethereum Mainnet | 1        | ETH, USDC |
-
-- Faucets: [Circle](https://faucet.circle.com), [Base](https://portal.cdp.coinbase.com/products/faucet)
-
-## Usage
-
-Edit `handlers/actionHandlers.ts`:
-
-```typescript
-export async function handleActionsCommand(conversation: any) {
-  const actionsContent: ActionsContent = {
-    id: `help-${Date.now()}`,
-    description: "Choose an action:",
-    actions: [
-      {
-        id: "my-action",
-        label: "My Action",
-        style: "primary",
-      },
-    ],
-  };
-  await conversation.send(actionsContent, ContentTypeActions);
-}
-```
-
-### Requirements
-
-- Node.js v20 or higher
-- Yarn v4 or higher
-- Docker (optional, for local network)
-
-### Environment variables
-
-To run your XMTP agent, you must create a `.env` file with the following variables:
+1. **Set up environment variables** in `.env`:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV=dev # local, dev, production
-NETWORK_ID=base-sepolia # base-mainnet or others
+# Network: base-sepolia or base-mainnet
+NETWORK_ID=base-sepolia
+
+# XMTP Configuration
+XMTP_ENV=dev
+XMTP_WALLET_KEY=your_private_key_here
+XMTP_DB_ENCRYPTION_KEY=your_encryption_key_here
 ```
 
-You can generate random xmtp keys with the following command:
+2. **Install and run**:
 
 ```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> Running the `gen:keys` command will append keys to your existing `.env` file.
-
-### Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-cd examples/xmtp-inline-actions
-# install packages
-yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
+yarn install
+yarn gen:keys  # if you don't have keys
 yarn dev
 ```
 
-## Reference
+## Usage
 
-This example is based on the [TBA Chat Example Bot](https://github.com/siwan-cb/tba-chat-example-bot).
+Send `/help` or `gm` to see the main menu:
+
+### **Main Menu Actions**
+
+- **💸 Transaction Actions**: Opens transaction menu with send options
+- **💰 Check Balance** (with cat image): View bot's USDC balance
+- **ℹ️ More Info**: Network and feature information
+
+### **Transaction Actions Menu**
+
+- **Send 0.005 USDC**: Small transfer
+- **Send 1 USDC**: Larger transfer
+- **Check Balance**: View balance
+
+## How It Works
+
+This example showcases core inline action UX patterns:
+
+### **1. Using Inline Actions Utils**
+
+```typescript
+import {
+  inlineActionsMiddleware,
+  registerAction,
+  ActionBuilder,
+  sendActions,
+} from "../../utils/inline-actions/inline-actions";
+
+// Register action handlers
+registerAction("send-small", async (ctx) => {
+  // Handle the action
+});
+
+// Use the middleware
+agent.use(inlineActionsMiddleware);
+```
+
+### **2. USDC Handler Integration**
+
+```typescript
+import { USDCHandler } from "../../utils/usdc";
+
+const usdcHandler = new USDCHandler(NETWORK_ID);
+const balance = await usdcHandler.getUSDCBalance(address);
+```
+
+### **3. Action Builder Patterns**
+
+```typescript
+// Basic actions
+ActionBuilder.create("id", "description")
+  .add("action-id", "Button Label", "primary")
+  .build();
+
+// Actions with images
+ActionBuilder.create("id", "description")
+  .add("action-id", "Button Label", "primary", "https://cataas.com/cat")
+  .build();
+```
+
+### **4. UX Features Demonstrated**
+
+- **Button Styles**: `primary`, `secondary` button styles
+- **Action Images**: One button with image to show the capability
+- **Menu Navigation**: Main menu → sub-menu pattern
+- **Clean UX**: Focused on essential inline action patterns
+
+## Test
+
+Visit [https://xmtp.chat](https://xmtp.chat) and start a conversation with your agent!

@@ -15,7 +15,7 @@ import {
   ContentTypeWalletSendCalls,
   WalletSendCallsCodec,
 } from "@xmtp/content-type-wallet-send-calls";
-import { USDCHandler } from "./usdc";
+import { USDCHandler } from "../../utils/usdc";
 
 process.loadEnvFile(".env");
 
