@@ -246,6 +246,7 @@ async function main() {
     console.log(
       `✓ Final installations: ${finalInboxState[0].installations.length}`,
     );
+    process.exit(0);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error revoking installations:", errorMessage);
