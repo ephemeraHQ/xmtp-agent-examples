@@ -4,17 +4,6 @@ alwaysApply: true
 
 # Writing XMTP Agents
 
-# XMTP Agent SDK
-
-Build event‑driven, middleware‑powered messaging agents on the XMTP network. 🚀
-
-> [!CAUTION]
-> This SDK is in beta status and ready for you to build with in production. Software in this status may change based on feedback.
-
-## Documentation
-
-Full agent building guide: **[Build an XMTP Agent](https://docs.xmtp.org/agents/get-started/build-an-agent)**
-
 This SDK is based on familiar Node.js patterns: you register event listeners, compose middleware, and extend behavior just like you would in frameworks such as [Express](https://expressjs.com/). This makes it easy to bring existing JavaScript and TypeScript skills into building conversational agents.
 
 ## Installation
@@ -22,11 +11,8 @@ This SDK is based on familiar Node.js patterns: you register event listeners, co
 Choose your package manager:
 
 ```bash
-npm install @xmtp/agent-sdk
-# or
-pnpm add @xmtp/agent-sdk
-# or
-yarn add @xmtp/agent-sdk
+# No other libraries should be needed
+npm/pnpm/yarn/bun install @xmtp/agent-sdk
 ```
 
 ## Quick Start
@@ -40,18 +26,22 @@ const signer = createSigner(user);
 
 // 2. Spin up the agent
 const agent = await Agent.create(signer, {
-  env: "dev", // or 'production'
-  dbPath: null, // in-memory store; provide a path to persist
+  env: "production", // or 'production'
 });
 
 // 3. Respond to text messages
 agent.on("text", async (ctx) => {
-  await ctx.conversation.send("Hello from my XMTP Agent! 👋");
+  const messageContent = ctx.message.content;
+  const senderAddress = await ctx.getSenderAddress();
+  console.log(`Received message: ${messageContent} by ${senderAddress}`);
+  await ctx.conversation.send("gm");
 });
 
 // 4. Log when we're ready
 agent.on("start", () => {
-  console.log(`We are online: ${getTestUrl(agent)}`);
+  console.log(`Waiting for messages...`);
+  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗${getTestUrl(agent)}`);
 });
 
 await agent.start();
@@ -79,42 +69,16 @@ process.loadEnvFile(".env");
 const agent = await Agent.createFromEnv();
 ```
 
-Agents can also recognize the following environment variables:
-
-| Variable           | Purpose                                                              | Example                 |
-| ------------------ | -------------------------------------------------------------------- | ----------------------- |
-| `XMTP_FORCE_DEBUG` | [Activate debugging logs](https://docs.xmtp.org/agents/debug-agents) | `XMTP_FORCE_DEBUG=true` |
-
 ## Core Concepts
 
 ### 1. Event‑Driven Architecture
 
 Subscribe only to what you need using Node’s `EventEmitter` interface. Events you can listen for:
 
-**Message Events**
-
-- `text` – a new incoming text message
-- `reaction` – a new incoming reaction message
-- `reply` – a new incoming reply message
-- `attachment` – a new incoming remote attachment message
-- `unhandledMessage` – a message that doesn't match any specific type
-
-**Conversation Events**
-
-- `dm` – a new DM conversation
-- `group` – a new group conversation
-
-**Lifecycle Events**
-
-- `start` / `stop` – agent lifecycle events
-- `unhandledError` – unhandled errors
-
-**Example**
-
 ```ts
 // Handle different message types
 agent.on("text", async (ctx) => {
-  console.log(`Text message: ${ctx.message.content}`);
+  console.log(`Text message: ${ctx.text}`);
 });
 
 agent.on("reaction", async (ctx) => {
@@ -144,74 +108,18 @@ agent.on("unhandledError", (error) => {
 
 Extend your agent with custom business logic using middlewares. Compose cross-cutting behavior like routing, telemetry, rate limiting, analytics, and feature flags, or plug in your own.
 
-#### Standard Middleware
-
-Middlewares can be registered with `agent.use` either one at a time or as an array. They are executed in the order they were added.
-
-Middleware functions receive a `ctx` (context) object and a `next` function. Normally, a middleware calls `next()` to hand off control to the next one in the chain. However, a middleware can also alter the flow in the following ways:
-
-1. Use `next()` to continue the chain and pass control to the next middleware
-2. Use `return` to stop the chain and prevent events from firing
-3. Use `throw` to trigger the error-handling middleware chain
-
 **Example**
 
 ```ts
-import { Agent, AgentMiddleware } from "@xmtp/agent-sdk";
+import { CommandRouter } from "@xmtp/agent-sdk";
 
-const onlyText: AgentMiddleware = async (ctx, next) => {
-  if (typeof ctx.message.content === "string") {
-    // Continue to next middleware
-    await next();
-  }
-  // Break middleware chain
-  return;
-};
+const router = new CommandRouter();
 
-const agent = await Agent.createFromEnv();
-agent.use(onlyText);
-```
-
-#### Error-Handling Middleware
-
-Error middleware can be registered with `agent.errors.use` either one at a time or as an array. They are executed in the order they were added.
-
-Error middleware receives the `error`, `ctx`, and a `next` function. Just like regular middleware, the flow in error middleware depends on how to use `next`:
-
-1. Use `next()` to mark the error as handled and continue with the main middleware chain
-2. Use `next(error)` to forward the original (or transformed) error to the next error handler
-3. Use `return` to end error handling and stop the middleware chain
-4. Use `throw` to raise a new error to be caught by the error chain
-
-**Example**
-
-```ts
-import { Agent, AgentErrorMiddleware } from "@xmtp/agent-sdk";
-
-const errorHandler: AgentErrorMiddleware = async (error, ctx, next) => {
-  if (error instanceof Error) {
-    // Transform the error and pass it along
-    await next(`Validation failed: ${error.message}`);
-  } else {
-    // Let other error handlers deal with it
-    await next(error);
-  }
-};
-
-const agent = await Agent.createFromEnv();
-agent.errors.use(errorHandler);
-```
-
-#### Default Error Handler
-
-Any error not handled by custom error middleware is caught by the default error handler and published to the `unhandledError` topic, where it can be observed.
-
-**Example**
-
-```ts
-agent.on("unhandledError", (error) => {
-  console.log("Caught error", error);
+router.command("/version", async (ctx) => {
+  await ctx.conversation.send(`v${process.env.npm_package_version}`);
 });
+
+agent.use(router.middleware());
 ```
 
 ### 3. Built‑in Filters
@@ -253,17 +161,6 @@ const longVersion = filter.and(filter.notFromSelf, filter.isText);
 const shortVersion = f.and(f.notFromSelf, f.isText);
 ```
 
-You can find all available prebuilt filters [here](https://github.com/xmtp/xmtp-js/blob/main/sdks/agent-sdk/src/utils/filter.ts).
-
-### 4. Rich Context
-
-Every message event handler receives a `MessageContext` with:
-
-- `message` – the decoded message object
-- `conversation` – the active conversation object
-- `client` – underlying XMTP client
-- Helpers like `sendTextReply()`, `sendReaction()`, `getSenderAddress`, and more
-
 **Example**
 
 ```ts
@@ -279,7 +176,6 @@ Pass `codecs` when creating your agent to extend supported content:
 ```ts
 const agent = await Agent.create(signer, {
   env: "dev",
-  dbPath: null,
   codecs: [new MyContentType()],
 });
 ```
@@ -296,9 +192,12 @@ import { Agent, createSigner, createUser, getTestUrl } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 
-const agent = await Agent.createFromEnv({
-  env: process.env.XMTP_ENV as "local" | "dev" | "production",
-});
+const agent = await Agent.create(
+  createSigner(createUser(process.env.XMTP_WALLET_KEY as `0x${string}`)),
+  {
+    env: process.env.XMTP_ENV as "local" | "dev" | "production",
+  },
+);
 
 agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content.trim();
@@ -707,3 +606,134 @@ const client = await Client.create(signer, {
   dbPath: getDbPath(),
 });
 ```
+
+## Inline Actions
+
+Interactive button-based UI for XMTP agents following the XIP-67 specification. Users can tap buttons instead of typing commands.
+
+## Quick Start
+
+```typescript
+import {
+  ActionBuilder,
+  inlineActionsMiddleware,
+  registerAction,
+} from "./inline-actions";
+
+// 1. Add middleware to your agent
+agent.use(inlineActionsMiddleware);
+
+// 2. Register action handlers
+registerAction("my-action", async (ctx) => {
+  await ctx.conversation.send("Action executed!");
+});
+
+// 3. Send interactive buttons
+await ActionBuilder.create("my-menu", "Choose an option:")
+  .add("my-action", "Click Me", "primary")
+  .add("other-action", "Cancel", "secondary")
+  .send(ctx);
+```
+
+## Core Functions
+
+### ActionBuilder
+
+Create interactive button menus:
+
+```typescript
+await ActionBuilder.create("menu-id", "Description")
+  .add("action-id", "Button Label", "primary") // primary|secondary|danger
+  .add("action-id-2", "Another Button")
+  .send(ctx);
+```
+
+### Helper Functions
+
+**Confirmation dialogs:**
+
+```typescript
+await sendConfirmation(
+  ctx,
+  "Delete this item?",
+  async (ctx) => await ctx.conversation.send("Deleted!"),
+  async (ctx) => await ctx.conversation.send("Cancelled"),
+);
+```
+
+**Selection menus:**
+
+```typescript
+await sendSelection(ctx, "Pick a color:", [
+  {
+    id: "red",
+    label: "🔴 Red",
+    handler: async (ctx) => {
+      /* handle red */
+    },
+  },
+  {
+    id: "blue",
+    label: "🔵 Blue",
+    handler: async (ctx) => {
+      /* handle blue */
+    },
+  },
+]);
+```
+
+### App Configuration
+
+For complex bots with multiple menus:
+
+```typescript
+const config: AppConfig = {
+  name: "My Bot",
+  menus: {
+    "main-menu": {
+      id: "main-menu",
+      title: "Main Menu",
+      actions: [
+        { id: "sub-menu", label: "Go to Sub Menu" },
+        { id: "action-1", label: "Do Something", handler: myHandler },
+      ],
+    },
+  },
+};
+
+initializeAppFromConfig(config);
+```
+
+## Action Handlers
+
+Register handlers for button clicks:
+
+```typescript
+registerAction("my-action", async (ctx: MessageContext) => {
+  // Handle the action
+  await ctx.conversation.send("Action completed!");
+
+  // Optionally show navigation options
+  await showNavigationOptions(ctx, config, "What would you like to do next?");
+});
+```
+
+## Validation Helpers
+
+Built-in validators for common formats:
+
+```typescript
+import { validators } from "./inline-actions";
+
+const result = validators.inboxId("123abc...");
+if (!result.valid) {
+  await ctx.conversation.send(`Error: ${result.error}`);
+}
+```
+
+## Content Types
+
+- **ActionsContent**: Agent sends interactive buttons
+- **IntentContent**: User responds by tapping buttons
+
+Both follow XIP-67 specification with proper encoding/decoding and validation.
