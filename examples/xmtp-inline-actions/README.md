@@ -68,12 +68,12 @@ const balance = await usdcHandler.getUSDCBalance(address);
 ```typescript
 // Basic actions
 ActionBuilder.create("id", "description")
-  .add("action-id", "Button Label", "primary")
+  .add("action-id", "Button Label")
   .build();
 
 // Actions with images
 ActionBuilder.create("id", "description")
-  .add("action-id", "Button Label", "primary", "https://cataas.com/cat")
+  .add("action-id", "Button Label", "https://cataas.com/cat")
   .build();
 ```
 

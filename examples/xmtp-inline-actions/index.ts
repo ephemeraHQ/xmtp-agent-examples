@@ -117,10 +117,10 @@ async function main() {
       "transaction-actions",
       "Choose a transaction action:",
     )
-      .add("send-small", "Send 0.005 USDC", "primary")
-      .add("send-large", "Send 1 USDC", "primary")
-      .add("send-with-metadata", "Send with Metadata", "primary")
-      .add("check-balance", "Check Balance", "secondary")
+      .add("send-small", "Send 0.005 USDC")
+      .add("send-large", "Send 1 USDC")
+      .add("send-with-metadata", "Send with Metadata")
+      .add("check-balance", "Check Balance")
       .build();
 
     await sendActions(ctx, actions);

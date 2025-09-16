@@ -630,8 +630,8 @@ registerAction("my-action", async (ctx) => {
 
 // 3. Send interactive buttons
 await ActionBuilder.create("my-menu", "Choose an option:")
-  .add("my-action", "Click Me", "primary")
-  .add("other-action", "Cancel", "secondary")
+  .add("my-action", "Click Me")
+  .add("other-action", "Cancel")
   .send(ctx);
 ```
 
@@ -643,7 +643,7 @@ Create interactive button menus:
 
 ```typescript
 await ActionBuilder.create("menu-id", "Description")
-  .add("action-id", "Button Label", "primary") // primary|secondary|danger
+  .add("action-id", "Button Label") // primary|secondary|danger
   .add("action-id-2", "Another Button")
   .send(ctx);
 ```

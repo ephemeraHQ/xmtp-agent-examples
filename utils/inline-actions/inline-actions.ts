@@ -147,7 +147,7 @@ export async function sendConfirmation(
   );
 
   await ActionBuilder.create(`confirm-${timestamp}`, message)
-    .add(yesId, "✅ Yes", "primary")
+    .add(yesId, "✅ Yes")
     .add(noId, "❌ No", "danger")
     .send(ctx);
 }
