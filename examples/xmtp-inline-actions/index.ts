@@ -159,15 +159,10 @@ I can help you with USDC transactions on ${networkConfig.networkName}.
 
 Choose an action below:`,
       )
-        .add("transaction-actions", "💸 Transaction Actions", "primary")
-        .add("send-with-metadata", "😉 Send with Metadata", "primary")
-        .add(
-          "check-balance",
-          "Check Balance",
-          "primary",
-          "https://cataas.com/cat",
-        )
-        .add("more-info", "ℹ️ More Info", "secondary")
+        .add("transaction-actions", "💸 Transaction Actions")
+        .add("send-with-metadata", "😉 Send with Metadata")
+        .add("check-balance", "Check Balance")
+        .add("more-info", "ℹ️ More Info")
         .build();
 
       await sendActions(ctx, actions);

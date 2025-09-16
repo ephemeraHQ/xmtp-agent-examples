@@ -1,4 +1,4 @@
-import type { MessageContext, AgentMiddleware } from "@xmtp/agent-sdk";
+import type { AgentMiddleware, MessageContext } from "@xmtp/agent-sdk";
 import {
   ContentTypeActions,
   type Action,
@@ -6,100 +6,81 @@ import {
 } from "./types/ActionsContent";
 import { type IntentContent } from "./types/IntentContent";
 
-/**
- * Action handler function type
- */
-export type ActionHandler = (
-  ctx: MessageContext,
-  metadata?: Record<string, string | number | boolean | null>,
-) => Promise<void>;
+// Core types
+export type ActionHandler = (ctx: MessageContext) => Promise<void>;
 
-/**
- * Action registry to store action handlers
- */
-class ActionRegistry {
-  private handlers = new Map<string, ActionHandler>();
+// Action registry
+const actionHandlers = new Map<string, ActionHandler>();
 
-  register(actionId: string, handler: ActionHandler): void {
-    this.handlers.set(actionId, handler);
+// Track the last sent action message for reply functionality
+let lastSentActionMessage: any = null;
+
+// Track the last shown menu for automatic navigation
+let lastShownMenu: { config: AppConfig; menuId: string } | null = null;
+
+export function registerAction(actionId: string, handler: ActionHandler): void {
+  // Prevent overwriting existing handlers unless explicitly intended
+  if (actionHandlers.has(actionId)) {
+    console.warn(`⚠️ Action ${actionId} already registered, overwriting...`);
   }
+  actionHandlers.set(actionId, handler);
+}
 
-  get(actionId: string): ActionHandler | undefined {
-    return this.handlers.get(actionId);
-  }
+// Get the last sent action message for reply functionality
+export function getLastSentActionMessage(): any {
+  return lastSentActionMessage;
+}
 
-  has(actionId: string): boolean {
-    return this.handlers.has(actionId);
-  }
+// Clear all registered actions (useful for debugging)
+export function clearAllActions(): void {
+  actionHandlers.clear();
+  console.log("🧹 Cleared all registered actions");
+}
 
-  getAll(): string[] {
-    return Array.from(this.handlers.keys());
+// Show the last shown menu
+export async function showLastMenu(ctx: MessageContext): Promise<void> {
+  if (lastShownMenu) {
+    console.log(`🔄 Showing last menu: ${lastShownMenu.menuId}`);
+    await showMenu(ctx, lastShownMenu.config, lastShownMenu.menuId);
+  } else {
+    console.warn("⚠️ No last menu to show, falling back to main menu");
+    // Fallback to main menu if no last menu is tracked
+    await ctx.conversation.send("Returning to main menu...");
   }
 }
 
-/**
- * Global action registry instance
- */
-const globalActionRegistry = new ActionRegistry();
-
-/**
- * Inline Actions Middleware
- * Automatically handles intent messages and routes them to registered handlers
- */
+// Middleware
 export const inlineActionsMiddleware: AgentMiddleware = async (ctx, next) => {
-  const message = ctx.message;
+  if (ctx.message.contentType?.typeId === "intent") {
+    const intentContent = ctx.message.content as IntentContent;
+    const handler = actionHandlers.get(intentContent.actionId);
 
-  // Check if this is an intent message
-  if (message.contentType?.typeId === "intent") {
-    console.log("🎯 Processing intent message via middleware");
-    const intentContent = message.content as IntentContent;
-    const handler = globalActionRegistry.get(intentContent.actionId);
+    console.log("🎯 Processing intent:", intentContent.actionId);
 
     if (handler) {
-      console.log(`🎯 Found handler for action: ${intentContent.actionId}`);
       try {
-        await handler(ctx, undefined);
+        await handler(ctx);
       } catch (error) {
-        console.error(
-          `❌ Error in action handler for ${intentContent.actionId}:`,
-          error,
-        );
+        console.error(`❌ Error in action handler:`, error);
         await ctx.conversation.send(
-          `❌ Error processing action: ${error instanceof Error ? error.message : String(error)}`,
+          `❌ Error: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     } else {
-      console.log(
-        `❌ No handler registered for action: ${intentContent.actionId}`,
-      );
       await ctx.conversation.send(
         `❌ Unknown action: ${intentContent.actionId}`,
       );
     }
-
-    // Don't continue to other handlers for intent messages
     return;
   }
-
-  // Continue to next middleware for non-intent messages
   await next();
 };
 
-/**
- * Register an action handler
- */
-export function registerAction(actionId: string, handler: ActionHandler): void {
-  globalActionRegistry.register(actionId, handler);
-  console.log(`✅ Registered action handler: ${actionId}`);
-}
-
-/**
- * Action Builder - Fluent interface for creating actions
- */
+// Builder for creating actions
 export class ActionBuilder {
   private actions: Action[] = [];
-  private actionDescription = "";
   private actionId = "";
+  private actionDescription = "";
 
   static create(id: string, description: string): ActionBuilder {
     const builder = new ActionBuilder();
@@ -112,34 +93,8 @@ export class ActionBuilder {
     id: string,
     label: string,
     style?: "primary" | "secondary" | "danger",
-    imageUrl?: string,
-    expiresAt?: string,
   ): this {
-    this.actions.push({
-      id,
-      label,
-      style,
-      imageUrl,
-      expiresAt,
-    });
-    return this;
-  }
-
-  // Keep legacy methods for backward compatibility
-  addAction(
-    id: string,
-    label: string,
-    options?: {
-      style?: "primary" | "secondary" | "danger";
-      imageUrl?: string;
-      expiresAt?: string;
-    },
-  ): this {
-    this.actions.push({
-      id,
-      label,
-      ...options,
-    });
+    this.actions.push({ id, label, style });
     return this;
   }
 
@@ -150,38 +105,53 @@ export class ActionBuilder {
       actions: this.actions,
     };
   }
+
+  async send(ctx: MessageContext): Promise<void> {
+    const message = await ctx.conversation.send(
+      this.build(),
+      ContentTypeActions,
+    );
+    lastSentActionMessage = message;
+  }
 }
 
-/**
- * Quick helper to send actions to a conversation
- */
+// Helper functions
 export async function sendActions(
   ctx: MessageContext,
   actionsContent: ActionsContent,
 ): Promise<void> {
-  await ctx.conversation.send(actionsContent, ContentTypeActions);
+  const message = await ctx.conversation.send(
+    actionsContent,
+    ContentTypeActions,
+  );
+  lastSentActionMessage = message;
 }
 
-/**
- * Quick helper to create and send simple yes/no confirmation
- */
 export async function sendConfirmation(
   ctx: MessageContext,
   message: string,
-  yesActionId: string = "confirm-yes",
-  noActionId: string = "confirm-no",
+  onYes: ActionHandler,
+  onNo?: ActionHandler,
 ): Promise<void> {
-  const actions = ActionBuilder.create(`confirmation-${Date.now()}`, message)
-    .add(yesActionId, "✅ Yes")
-    .add(noActionId, "❌ No")
-    .build();
+  const timestamp = Date.now();
+  const yesId = `yes-${timestamp}`;
+  const noId = `no-${timestamp}`;
 
-  await sendActions(ctx, actions);
+  registerAction(yesId, onYes);
+  registerAction(
+    noId,
+    onNo ||
+      (async (ctx) => {
+        await ctx.conversation.send("❌ Cancelled");
+      }),
+  );
+
+  await ActionBuilder.create(`confirm-${timestamp}`, message)
+    .add(yesId, "✅ Yes", "primary")
+    .add(noId, "❌ No", "danger")
+    .send(ctx);
 }
 
-/**
- * Quick helper to create and send a selection menu
- */
 export async function sendSelection(
   ctx: MessageContext,
   message: string,
@@ -189,44 +159,203 @@ export async function sendSelection(
     id: string;
     label: string;
     style?: "primary" | "secondary" | "danger";
-    imageUrl?: string;
-    expiresAt?: string;
+    handler: ActionHandler;
   }>,
 ): Promise<void> {
   const builder = ActionBuilder.create(`selection-${Date.now()}`, message);
 
   options.forEach((option) => {
-    builder.add(
-      option.id,
-      option.label,
-      option.style,
-      option.imageUrl,
-      option.expiresAt,
-    );
+    registerAction(option.id, option.handler);
+    builder.add(option.id, option.label, option.style);
   });
 
-  await sendActions(ctx, builder.build());
+  await builder.send(ctx);
 }
 
-/**
- * Utility to check if all required actions are registered
- */
-export function validateRegisteredActions(requiredActions: string[]): {
-  valid: boolean;
-  missing: string[];
-} {
-  const missing = requiredActions.filter(
-    (actionId) => !globalActionRegistry.has(actionId),
-  );
-  return {
-    valid: missing.length === 0,
-    missing,
+// Validation helpers
+export const validators = {
+  inboxId: (input: string) => {
+    const pattern = /^[a-fA-F0-9]{64}$/;
+    return pattern.test(input.trim())
+      ? { valid: true }
+      : { valid: false, error: "Invalid Inbox ID format (64 hex chars)" };
+  },
+
+  ethereumAddress: (input: string) => {
+    const pattern = /^0x[a-fA-F0-9]{40}$/;
+    return pattern.test(input.trim())
+      ? { valid: true }
+      : {
+          valid: false,
+          error: "Invalid Ethereum address format (0x + 40 hex chars)",
+        };
+  },
+};
+
+// Common patterns
+export const patterns = {
+  inboxId: /^[a-fA-F0-9]{64}$/,
+  ethereumAddress: /^0x[a-fA-F0-9]{40}$/,
+};
+
+// Additional types needed by index.ts
+export type MenuAction = {
+  id: string;
+  label: string;
+  style?: "primary" | "secondary" | "danger";
+  handler?: ActionHandler;
+  showNavigationOptions?: boolean;
+};
+
+export type Menu = {
+  id: string;
+  title: string;
+  actions: MenuAction[];
+};
+
+export type AppConfig = {
+  name: string;
+  menus: Record<string, Menu>;
+  options?: {
+    autoShowMenuAfterAction?: boolean;
+    defaultNavigationMessage?: string;
   };
+};
+
+// Utility functions needed by index.ts
+export function getRegisteredActions(): string[] {
+  return Array.from(actionHandlers.keys());
 }
 
-/**
- * Get list of all registered actions (for debugging)
- */
-export function getRegisteredActions(): string[] {
-  return globalActionRegistry.getAll();
+export async function showMenu(
+  ctx: MessageContext,
+  config: AppConfig,
+  menuId: string,
+): Promise<void> {
+  const menu = config.menus[menuId];
+  if (!menu) {
+    console.error(`❌ Menu not found: ${menuId}`);
+    await ctx.conversation.send(`❌ Menu not found: ${menuId}`);
+    return;
+  }
+
+  // Track the last shown menu
+  lastShownMenu = { config, menuId };
+
+  // Use a stable action ID without timestamp to prevent conflicts
+  const builder = ActionBuilder.create(menuId, menu.title);
+
+  menu.actions.forEach((action) => {
+    builder.add(action.id, action.label, action.style);
+  });
+
+  await builder.send(ctx);
+}
+
+// Configurable navigation helper
+export async function showNavigationOptions(
+  ctx: MessageContext,
+  config: AppConfig,
+  message: string,
+  customActions?: Array<{
+    id: string;
+    label: string;
+    style?: "primary" | "secondary" | "danger";
+  }>,
+): Promise<void> {
+  // Check if auto-show menu is enabled (default: true for backward compatibility)
+  const autoShowMenu = config.options?.autoShowMenuAfterAction !== false;
+
+  if (!autoShowMenu) {
+    // If auto-show is disabled, just send the message without showing menu
+    await ctx.conversation.send(message);
+    return;
+  }
+
+  // Use a stable action ID to prevent conflicts
+  const navigationMenu = ActionBuilder.create("navigation-options", message);
+
+  // Add custom actions if provided
+  if (customActions) {
+    customActions.forEach((action) => {
+      navigationMenu.add(action.id, action.label, action.style);
+    });
+  } else {
+    // Default navigation options - show all main menu items
+    const mainMenu = config.menus["main-menu"];
+    if (mainMenu) {
+      mainMenu.actions.forEach((action) => {
+        navigationMenu.add(action.id, action.label, action.style);
+      });
+    }
+  }
+
+  await navigationMenu.send(ctx);
+}
+
+export function initializeAppFromConfig(
+  config: AppConfig,
+  options?: {
+    deferredHandlers?: Record<string, ActionHandler>;
+  },
+): void {
+  console.log(`🚀 Initializing app: ${config.name}`);
+
+  // Log configuration options
+  if (config.options) {
+    console.log(`📋 App options:`, config.options);
+  }
+
+  // Register all handlers from menu actions
+  Object.values(config.menus).forEach((menu) => {
+    menu.actions.forEach((action) => {
+      if (action.handler) {
+        // Wrap handler to automatically show last menu if showNavigationOptions is true
+        const wrappedHandler = async (ctx: MessageContext) => {
+          await action.handler?.(ctx);
+          if (action.showNavigationOptions) {
+            await showLastMenu(ctx);
+          }
+        };
+        registerAction(action.id, wrappedHandler);
+        console.log(
+          `✅ Registered handler for action: ${action.id}${action.showNavigationOptions ? " (with auto-navigation)" : ""}`,
+        );
+      }
+    });
+  });
+
+  // Register any deferred handlers
+  if (options?.deferredHandlers) {
+    Object.entries(options.deferredHandlers).forEach(([actionId, handler]) => {
+      registerAction(actionId, handler);
+      console.log(`✅ Registered deferred handler for action: ${actionId}`);
+    });
+  }
+
+  // Auto-register menu navigation actions (for actions without handlers that match menu IDs)
+  Object.values(config.menus).forEach((menu) => {
+    menu.actions.forEach((action) => {
+      if (!action.handler && config.menus[action.id]) {
+        // This action navigates to another menu
+        registerAction(action.id, async (ctx: MessageContext) => {
+          await showMenu(ctx, config, action.id);
+        });
+        console.log(`✅ Auto-registered navigation for menu: ${action.id}`);
+      }
+    });
+  });
+
+  // Auto-register common navigation actions
+  registerAction("main-menu", async (ctx: MessageContext) => {
+    await showMenu(ctx, config, "main-menu");
+  });
+
+  registerAction("help", async (ctx: MessageContext) => {
+    await showMenu(ctx, config, "main-menu");
+  });
+
+  registerAction("back-to-main", async (ctx: MessageContext) => {
+    await showMenu(ctx, config, "main-menu");
+  });
 }

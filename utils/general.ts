@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import fs from "fs";
 
 export function getDbPath(description: string = "xmtp") {
   //Checks if the environment is a Railway deployment

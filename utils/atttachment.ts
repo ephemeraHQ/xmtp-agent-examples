@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import type { CodecRegistry } from "@xmtp/content-type-primitives";
 import {
   AttachmentCodec,
   RemoteAttachmentCodec,
@@ -17,6 +18,7 @@ export async function encryptAttachment(
   filename: string,
   mimeType: string,
 ): Promise<EncryptedAttachment> {
+  // @eslint-disable-next-line TODO: fix this
   const encrypted = await RemoteAttachmentCodec.encodeEncrypted(
     { filename, mimeType, data },
     new AttachmentCodec(),
@@ -45,6 +47,7 @@ export async function createRemoteAttachmentFromData(
   mimeType: string,
   fileUrl: string,
 ): Promise<RemoteAttachment> {
+  // @eslint-disable-next-line TODO: fix this
   const encrypted = await RemoteAttachmentCodec.encodeEncrypted(
     { filename, mimeType, data },
     new AttachmentCodec(),
@@ -64,7 +67,11 @@ export async function createRemoteAttachmentFromData(
 
 export async function loadRemoteAttachment(
   remoteAttachment: RemoteAttachment,
-  client: unknown,
+  client: CodecRegistry,
 ): Promise<Attachment> {
-  return await RemoteAttachmentCodec.load(remoteAttachment, client as any);
+  // @eslint-disable-next-line TODO: fix this
+  return await RemoteAttachmentCodec.load(
+    remoteAttachment,
+    client as any as CodecRegistry,
+  );
 }
