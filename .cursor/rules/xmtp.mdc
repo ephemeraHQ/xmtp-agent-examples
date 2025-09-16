@@ -2,7 +2,7 @@
 alwaysApply: true
 ---
 
-# Writing XMTP Agents
+# Vibe coding XMTP Agents
 
 This SDK is based on familiar Node.js patterns: you register event listeners, compose middleware, and extend behavior just like you would in frameworks such as [Express](https://expressjs.com/). This makes it easy to bring existing JavaScript and TypeScript skills into building conversational agents.
 
