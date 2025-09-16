@@ -108,3 +108,7 @@ yarn dev
 ## Build your own agent
 
 To learn how to build and [deploy](https://docs.xmtp.org/agents/deploy-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/get-started/build-an-agent).
+
+## Agent SDK Branch
+
+This branch contains the latest updates to the XMTP Agent SDK examples and documentation.
