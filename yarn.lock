@@ -513,16 +513,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@examples/xmtp-auto-revoke@workspace:examples/xmtp-auto-revoke":
-  version: 0.0.0-use.local
-  resolution: "@examples/xmtp-auto-revoke@workspace:examples/xmtp-auto-revoke"
-  dependencies:
-    "@xmtp/agent-sdk": "npm:*"
-    tsx: "npm:*"
-    typescript: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@examples/xmtp-coinbase-agentkit@workspace:examples/xmtp-coinbase-agentkit":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-coinbase-agentkit@workspace:examples/xmtp-coinbase-agentkit"
