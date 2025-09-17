@@ -1,5 +1,4 @@
-import { Agent, getTestUrl, withFilter } from "@xmtp/agent-sdk";
-import { f } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import {
   WalletSendCallsCodec,
   ContentTypeWalletSendCalls,
@@ -148,26 +147,25 @@ FEATURES:
   agent.use(inlineActionsMiddleware);
 
   // Handle text messages with simple commands
-  agent.on(
-    "text",
-    withFilter(f.startsWith("/"), async (ctx) => {
-      const actions = ActionBuilder.create(
-        "help",
-        `👋 Welcome to Inline Actions Demo!
+  agent.on("text", async (ctx) => {
+    if (!ctx.message.content.startsWith("/")) return;
+
+    const actions = ActionBuilder.create(
+      "help",
+      `👋 Welcome to Inline Actions Demo!
 
 I can help you with USDC transactions on ${networkConfig.networkName}.
 
 Choose an action below:`,
-      )
-        .add("transaction-actions", "💸 Transaction Actions")
-        .add("send-with-metadata", "😉 Send with Metadata")
-        .add("check-balance", "Check Balance")
-        .add("more-info", "ℹ️ More Info")
-        .build();
+    )
+      .add("transaction-actions", "💸 Transaction Actions")
+      .add("send-with-metadata", "😉 Send with Metadata")
+      .add("check-balance", "Check Balance")
+      .add("more-info", "ℹ️ More Info")
+      .build();
 
-      await sendActions(ctx, actions);
-    }),
-  );
+    await sendActions(ctx, actions);
+  });
 
   // Handle startup
   agent.on("start", () => {

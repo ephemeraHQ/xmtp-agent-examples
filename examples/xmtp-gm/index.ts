@@ -1,36 +1,36 @@
-import { Agent, filter, getTestUrl, withFilter } from "@xmtp/agent-sdk";
-import { getDbPath } from "../../utils/general";
+import { Agent, filter, getTestUrl } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
+const path = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? "./";
 
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
-  dbPath: getDbPath(),
+  dbPath: (inboxId: string) =>
+    path + "/" + process.env.XMTP_ENV + "-" + inboxId.slice(0, 8),
 });
 
-agent.on(
-  "text",
-  withFilter(filter.isDM, async (ctx) => {
+agent.on("text", async (ctx) => {
+  if (filter.isDM(ctx.conversation)) {
     const messageContent = ctx.message.content;
     const senderAddress = await ctx.getSenderAddress();
     console.log(`Received message: ${messageContent} by ${senderAddress}`);
     await ctx.conversation.send("gm");
-  }),
-);
+  }
+});
 
-agent.on(
-  "text",
-  withFilter(
-    filter.and(filter.isGroup, filter.startsWith("@gm")),
-    async (ctx) => {
-      const senderAddress = await ctx.getSenderAddress();
-      console.log(
-        `Received message in group: ${ctx.message.content} by ${senderAddress}`,
-      );
-      await ctx.conversation.send("gm");
-    },
-  ),
-);
+agent.on("text", async (ctx) => {
+  if (
+    filter.isGroup(ctx.conversation) &&
+    filter.hasContent(ctx.message) &&
+    ctx.message.content.includes("@gm")
+  ) {
+    const senderAddress = await ctx.getSenderAddress();
+    console.log(
+      `Received message in group: ${ctx.message.content} by ${senderAddress}`,
+    );
+    await ctx.conversation.send("gm");
+  }
+});
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);

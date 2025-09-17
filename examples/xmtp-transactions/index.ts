@@ -1,8 +1,6 @@
 import {
   Agent,
   getTestUrl,
-  withFilter,
-  f,
   filter,
   type AgentMiddleware,
 } from "@xmtp/agent-sdk";
@@ -53,61 +51,54 @@ const agent = await Agent.createFromEnv({
 // Apply the transaction reference middleware
 agent.use(transactionReferenceMiddleware);
 
-agent.on(
-  "text",
-  withFilter(f.startsWith("/balance"), async (ctx) => {
-    const agentAddress = agent.client.accountIdentifier?.identifier || "";
+agent.on("text", async (ctx) => {
+  if (!ctx.message.content.startsWith("/balance")) return;
+  const agentAddress = agent.client.accountIdentifier?.identifier || "";
 
-    const result = await usdcHandler.getUSDCBalance(agentAddress);
-    await ctx.conversation.send(`Your USDC balance is: ${result} USDC`);
-  }),
-);
+  const result = await usdcHandler.getUSDCBalance(agentAddress);
+  await ctx.conversation.send(`Your USDC balance is: ${result} USDC`);
+});
 
-agent.on(
-  "text",
-  withFilter(f.startsWith("/tx"), async (ctx) => {
-    const agentAddress = agent.client.accountIdentifier?.identifier || "";
-    const senderAddress = await ctx.getSenderAddress();
+agent.on("text", async (ctx) => {
+  if (!ctx.message.content.startsWith("/tx")) return;
+  const agentAddress = agent.client.accountIdentifier?.identifier || "";
+  const senderAddress = await ctx.getSenderAddress();
 
-    const amount = parseFloat((ctx.message.content as string).split(" ")[1]);
-    if (isNaN(amount) || amount <= 0) {
-      await ctx.conversation.send(
-        "Please provide a valid amount. Usage: /tx <amount>",
-      );
-      return;
-    }
-
-    // Convert amount to USDC decimals (6 decimal places)
-    const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
-
-    const walletSendCalls = usdcHandler.createUSDCTransferCalls(
-      senderAddress,
-      agentAddress,
-      amountInDecimals,
-    );
-    console.log("Replied with wallet sendcall");
-    await ctx.conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
-
-    // Send a follow-up message about transaction references
+  const amount = parseFloat((ctx.message.content as string).split(" ")[1]);
+  if (isNaN(amount) || amount <= 0) {
     await ctx.conversation.send(
-      `💡 After completing the transaction, you can send a transaction reference message to confirm completion.`,
+      "Please provide a valid amount. Usage: /tx <amount>",
     );
-  }),
-);
+    return;
+  }
 
-agent.on(
-  "text",
-  withFilter(filter.and(f.isDM, f.not(f.startsWith("/"))), async (ctx) => {
-    console.log(
-      `Unhandled message: ${ctx.message.content} by ${ctx.message.senderInboxId}`,
-    );
-    await ctx.conversation.send(
-      "Available commands:\n" +
-        "/balance - Check your USDC balance\n" +
-        "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
-    );
-  }),
-);
+  // Convert amount to USDC decimals (6 decimal places)
+  const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
+
+  const walletSendCalls = usdcHandler.createUSDCTransferCalls(
+    senderAddress,
+    agentAddress,
+    amountInDecimals,
+  );
+  console.log("Replied with wallet sendcall");
+  await ctx.conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
+
+  // Send a follow-up message about transaction references
+  await ctx.conversation.send(
+    `💡 After completing the transaction, you can send a transaction reference message to confirm completion.`,
+  );
+});
+
+agent.on("text", async (ctx) => {
+  if (filter.isDM(ctx.conversation) && !ctx.message.content.startsWith("/"))
+    return;
+
+  await ctx.conversation.send(
+    "Available commands:\n" +
+      "/balance - Check your USDC balance\n" +
+      "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
+  );
+});
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);

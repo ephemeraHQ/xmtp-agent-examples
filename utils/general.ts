@@ -9,3 +9,7 @@ export function getDbPath(description: string = "xmtp") {
   }
   return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
 }
+
+// Simple dbPath callback using inboxId + env as identifier
+export const dbPathCallback = (inboxId: string) =>
+  getDbPath(inboxId.slice(0, 8));

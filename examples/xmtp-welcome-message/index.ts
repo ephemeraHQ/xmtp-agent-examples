@@ -2,7 +2,6 @@ import {
   Agent,
   filter,
   getTestUrl,
-  withFilter,
   type AgentMiddleware,
   MessageContext,
 } from "@xmtp/agent-sdk";
@@ -112,9 +111,8 @@ agent.on("unhandledError", (error) => {
 });
 
 // Handle first-time user messages - send welcome with actions
-agent.on(
-  "text",
-  withFilter(filter.isDM, async (ctx) => {
+agent.on("text", async (ctx) => {
+  if (filter.isDM(ctx.conversation)) {
     const welcomeActions = ActionBuilder.create(
       `welcome-${Date.now()}`,
       `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
@@ -125,8 +123,8 @@ agent.on(
 
     console.log(`✓ Sending welcome message with actions`);
     await sendActions(ctx, welcomeActions);
-  }),
-);
+  }
+});
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);

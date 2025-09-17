@@ -13,7 +13,7 @@ export type ActionHandler = (ctx: MessageContext) => Promise<void>;
 const actionHandlers = new Map<string, ActionHandler>();
 
 // Track the last sent action message for reply functionality
-let lastSentActionMessage: any = null;
+let lastSentActionMessage: unknown = null;
 
 // Track the last shown menu for automatic navigation
 let lastShownMenu: { config: AppConfig; menuId: string } | null = null;
@@ -27,7 +27,7 @@ export function registerAction(actionId: string, handler: ActionHandler): void {
 }
 
 // Get the last sent action message for reply functionality
-export function getLastSentActionMessage(): any {
+export function getLastSentActionMessage(): unknown {
   return lastSentActionMessage;
 }
 
