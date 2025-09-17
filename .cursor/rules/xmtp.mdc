@@ -731,9 +731,166 @@ if (!result.valid) {
 }
 ```
 
-## Content Types
+## Remote Attachments
 
-- **ActionsContent**: Agent sends interactive buttons
-- **IntentContent**: User responds by tapping buttons
+XMTP agents can handle file attachments through a secure, encrypted system using remote storage. The SDK provides utility functions to simplify attachment processing, encryption, and decryption.
 
-Both follow XIP-67 specification with proper encoding/decoding and validation.
+### Setup
+
+First, register the required codecs when creating your agent:
+
+```typescript
+import {
+  AttachmentCodec,
+  RemoteAttachmentCodec,
+} from "@xmtp/content-type-remote-attachment";
+
+const agent = await Agent.createFromEnv({
+  codecs: [new RemoteAttachmentCodec(), new AttachmentCodec()],
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+});
+```
+
+### Utility Functions
+
+Import attachment utilities from the shared utilities:
+
+```typescript
+import {
+  createRemoteAttachmentFromData,
+  createRemoteAttachmentFromFile,
+  encryptAttachment,
+  loadRemoteAttachment,
+} from "../../utils/atttachment";
+```
+
+### Core Functions
+
+**Encrypt attachment data:**
+
+```typescript
+const encrypted = await encryptAttachment(
+  new Uint8Array(fileData),
+  "filename.jpg",
+  "image/jpeg",
+);
+// Returns: { encryptedData: Uint8Array, filename: string }
+```
+
+**Create remote attachment from file:**
+
+```typescript
+const remoteAttachment = await createRemoteAttachmentFromFile(
+  "./path/to/file.jpg",
+  "https://ipfs.io/ipfs/hash",
+  "image/jpeg",
+);
+```
+
+**Create remote attachment from data:**
+
+```typescript
+const remoteAttachment = await createRemoteAttachmentFromData(
+  new Uint8Array(fileData),
+  "filename.jpg",
+  "image/jpeg",
+  "https://ipfs.io/ipfs/hash",
+);
+```
+
+**Load and decode received attachment:**
+
+```typescript
+const receivedAttachment = await loadRemoteAttachment(
+  ctx.message.content,
+  agent.client,
+);
+// Returns: { data: Uint8Array, filename: string, mimeType: string }
+```
+
+### Handling Attachments
+
+**Send attachments:**
+
+```typescript
+// For text messages - send default attachment
+agent.on("text", async (ctx) => {
+  const encrypted = await encryptAttachment(
+    new Uint8Array(await readFile("./logo.png")),
+    "logo.png",
+    "image/png",
+  );
+
+  const fileUrl = await uploadToPinata(
+    encrypted.encryptedData,
+    encrypted.filename,
+  );
+
+  const remoteAttachment = await createRemoteAttachmentFromFile(
+    "./logo.png",
+    fileUrl,
+    "image/png",
+  );
+
+  await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
+});
+```
+
+**Receive and process attachments:**
+
+```typescript
+agent.on("attachment", async (ctx) => {
+  // Load and decode the received attachment
+  const receivedAttachment = await loadRemoteAttachment(
+    ctx.message.content,
+    agent.client,
+  );
+
+  const filename = receivedAttachment.filename || "unnamed";
+  const mimeType = receivedAttachment.mimeType || "application/octet-stream";
+
+  console.log(`Processing attachment: ${filename} (${mimeType})`);
+
+  // Send acknowledgment
+  await ctx.conversation.send(
+    `I received your attachment "${filename}"! Processing it now...`,
+  );
+
+  // Re-encrypt and upload (optional)
+  const encrypted = await encryptAttachment(
+    receivedAttachment.data,
+    filename,
+    mimeType,
+  );
+
+  const fileUrl = await uploadToPinata(
+    encrypted.encryptedData,
+    encrypted.filename,
+  );
+
+  // Create and send new remote attachment
+  const reEncodedAttachment = await createRemoteAttachmentFromData(
+    receivedAttachment.data,
+    filename,
+    mimeType,
+    fileUrl,
+  );
+
+  await ctx.conversation.send(reEncodedAttachment, ContentTypeRemoteAttachment);
+});
+```
+
+### Storage Integration
+
+The examples use Pinata for IPFS storage, but you can integrate with any storage service:
+
+```typescript
+// Example upload function (implement based on your storage provider)
+async function uploadToPinata(
+  data: Uint8Array,
+  filename: string,
+): Promise<string> {
+  // Upload to IPFS/storage and return URL
+  return "https://ipfs.io/ipfs/your-hash";
+}
+```
