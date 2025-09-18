@@ -29,6 +29,21 @@ Prompt: lets create an example that gets a number and returns its 2x multiple (u
 
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
+### Run an example agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
+```
+
 ### Set environment variables
 
 To run an example XMTP agent, you must create a `.env` file with the following variables:
@@ -68,21 +83,6 @@ XMTP_FORCE_DEBUG=true
 ```
 
 > This will print additional information to the console.
-
-### Run an example agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-# install packages
-yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
-```
 
 ### Talk to your agent
 
