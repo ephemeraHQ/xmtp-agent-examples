@@ -1,6 +1,6 @@
 # XMTP agent examples
 
-These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
 ### Vibe coding
 
@@ -14,7 +14,7 @@ Prompt: lets create an example that gets a number and returns its 2x multiple (u
 
 ### Examples
 
-This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network.
+These example agents serve as a starting point for building your own agents.
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
