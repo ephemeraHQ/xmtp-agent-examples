@@ -4,14 +4,6 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
-## Why build agents with XMTP?
-
-- **End-to-end & compliant**: Data is encrypted in transit and at rest, meeting strict security and regulatory standards.
-- **Open-source & trustless**: Built on top of the [MLS](https://messaginglayersecurity.rocks/) protocol, it replaces trust in centralized certificate authorities with cryptographic proofs.
-- **Privacy & metadata protection**: Offers anonymous usage through SDKs and pseudonymous usage with nodes tracking minimum metadata.
-- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure and ensuring continued operation even if some nodes go offline.
-- **Multi-agent**: Allows confidential communication between multiple agents and humans through MLS group chats.
-
 ## Example agents
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
@@ -29,17 +21,12 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 ## Run example agents
 
-### Prerequisites
-
-- Node.js v20 or higher
-- Yarn v4 or higher
-- Docker (to run a local XMTP network, optional)
-
 ### Cursor rules
 
 See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
 
-> lets create an example that gets a number and returns its 2x multiple (use claude max)
+````bash
+Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
 
 ### Set environment variables
 
@@ -49,9 +36,11 @@ To run an example XMTP agent, you must create a `.env` file with the following v
 XMTP_WALLET_KEY= # the private key of the wallet
 XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
-```
+````
 
-You can generate random XMTP keys by running:
+# Generate random XMTP keys by running:
+
+Use this script to generate random XMTP keys:
 
 ```bash
 yarn gen:keys
@@ -59,6 +48,8 @@ yarn gen:keys
 
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
+
+### Enable debug mode
 
 You can enable debug mode by adding the following to your `.env` file:
 
@@ -108,7 +99,3 @@ yarn dev
 ## Build your own agent
 
 To learn how to build and [deploy](https://docs.xmtp.org/agents/deploy-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/get-started/build-an-agent).
-
-## Agent SDK Branch
-
-This branch contains the latest updates to the XMTP Agent SDK examples and documentation.
