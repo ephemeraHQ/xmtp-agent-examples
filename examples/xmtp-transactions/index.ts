@@ -90,8 +90,7 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("text", async (ctx) => {
-  if (filter.isDM(ctx.conversation) && !ctx.message.content.startsWith("/"))
-    return;
+  if (ctx.isDm() && !ctx.message.content.startsWith("/")) return;
 
   await ctx.conversation.send(
     "Available commands:\n" +

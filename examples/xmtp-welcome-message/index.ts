@@ -112,7 +112,7 @@ agent.on("unhandledError", (error) => {
 
 // Handle first-time user messages - send welcome with actions
 agent.on("text", async (ctx) => {
-  if (filter.isDM(ctx.conversation)) {
+  if (ctx.isDm()) {
     const welcomeActions = ActionBuilder.create(
       `welcome-${Date.now()}`,
       `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,

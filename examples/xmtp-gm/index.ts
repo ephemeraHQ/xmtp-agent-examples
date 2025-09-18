@@ -10,7 +10,7 @@ const agent = await Agent.createFromEnv({
 });
 
 agent.on("text", async (ctx) => {
-  if (filter.isDM(ctx.conversation)) {
+  if (ctx.isDm()) {
     const messageContent = ctx.message.content;
     const senderAddress = await ctx.getSenderAddress();
     console.log(`Received message: ${messageContent} by ${senderAddress}`);
@@ -19,7 +19,7 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("text", async (ctx) => {
-  if (filter.isGroup(ctx.conversation) && ctx.message.content.includes("@gm")) {
+  if (ctx.isGroup() && ctx.message.content.includes("@gm")) {
     const senderAddress = await ctx.getSenderAddress();
     console.log(
       `Received message in group: ${ctx.message.content} by ${senderAddress}`,
