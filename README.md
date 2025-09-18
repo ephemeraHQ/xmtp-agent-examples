@@ -51,9 +51,10 @@ yarn gen:keys
 
 You can revoke old installations by running:
 
+```bash
 # you can get your values from terminal logs
-
 yarn revoke <inbox-id> <installations-to-exclude>
+```
 
 ### Enable debug mode
 
@@ -98,9 +99,11 @@ yarn dev
    XMTP_ENV = local
    ```
 
-4. Try out the example agents using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+### Talk to your agent
 
-   ![](/examples/xmtp-gm/screenshot.png)
+Try out the example agents using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+
+![](/examples/xmtp-gm/screenshot.png)
 
 ## Build your own agent
 
