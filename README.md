@@ -1,6 +1,6 @@
 # XMTP agent examples
 
-This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
+These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
 ### Vibe coding
 
@@ -13,6 +13,8 @@ Prompt: lets create an example that gets a number and returns its 2x multiple (u
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
 ### Examples
+
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network.
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
@@ -82,7 +84,13 @@ yarn gen:keys
 yarn dev
 ```
 
-### Optional: Run a local XMTP network
+### Talk to your agent
+
+Try out the example agents using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+
+![](/examples/xmtp-gm/screenshot.png)
+
+### Run a local XMTP network (Optional)
 
 `dev` and `production` networks are hosted by XMTP, while you can run your own `local` network.
 
@@ -99,12 +107,6 @@ yarn dev
    ```bash
    XMTP_ENV = local
    ```
-
-### Talk to your agent
-
-Try out the example agents using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
-
-![](/examples/xmtp-gm/screenshot.png)
 
 ### Deploy your own agent
 
