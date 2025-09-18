@@ -23,8 +23,9 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 
 See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
 
-````bash
+```bash
 Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
+```
 
 ### Set environment variables
 
@@ -34,7 +35,7 @@ To run an example XMTP agent, you must create a `.env` file with the following v
 XMTP_WALLET_KEY= # the private key of the wallet
 XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
-````
+```
 
 ### Generate random XMTP keys
 
