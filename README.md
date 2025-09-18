@@ -86,7 +86,7 @@ yarn dev
 
 ### Talk to your agent
 
-Try out the example agents using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+Try out the example agents using [xmtp.chat](https://xmtp.chat), the official playground for agents.
 
 ![](/examples/xmtp-gm/screenshot.png)
 
