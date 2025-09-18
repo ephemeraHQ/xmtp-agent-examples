@@ -2,9 +2,17 @@
 
 This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
+### Vibe coding
+
+See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
+
+```bash
+Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
+```
+
 🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
-## Example agents
+### Examples
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
@@ -18,14 +26,6 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - [xmtp-thinking-reaction](/examples/xmtp-thinking-reaction/): Agent that reacts to messages with a thinking emoji
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-welcome-message](/examples/xmtp-welcome-message/): Agent that sends a welcome message when its added and to new members
-
-### Cursor rules
-
-See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
-
-```bash
-Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
-```
 
 ### Set environment variables
 
@@ -106,6 +106,6 @@ Try out the example agents using [xmtp.chat](https://xmtp.chat), the official we
 
 ![](/examples/xmtp-gm/screenshot.png)
 
-## Build your own agent
+### Deploy your own agent
 
-To learn how to build and [deploy](https://docs.xmtp.org/agents/deploy-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/get-started/build-an-agent).
+See how to build and deploy [your own production-grade agent](https://docs.xmtp.org/agents/deploy-agent) with XMTP.
