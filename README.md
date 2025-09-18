@@ -19,8 +19,6 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-welcome-message](/examples/xmtp-welcome-message/): Agent that sends a welcome message when its added and to new members
 
-## Run example agents
-
 ### Cursor rules
 
 See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
@@ -38,7 +36,7 @@ XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ````
 
-# Generate random XMTP keys by running:
+### Generate random XMTP keys
 
 Use this script to generate random XMTP keys:
 
@@ -48,6 +46,14 @@ yarn gen:keys
 
 > [!WARNING]
 > Running the `gen:keys` command will append keys to your existing `.env` file.
+
+### Revoke installations
+
+You can revoke old installations by running:
+
+# you can get your values from terminal logs
+
+yarn revoke <inbox-id> <installations-to-exclude>
 
 ### Enable debug mode
 
