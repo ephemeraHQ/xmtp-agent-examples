@@ -2,17 +2,7 @@
 
 This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
-### Vibe coding
-
-See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
-
-```bash
-Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
-```
-
-🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
-
-### Examples
+### Examples agents
 
 These example agents serve as a starting point for building your own agents.
 
@@ -28,6 +18,16 @@ These example agents serve as a starting point for building your own agents.
 - [xmtp-thinking-reaction](/examples/xmtp-thinking-reaction/): Agent that reacts to messages with a thinking emoji
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-welcome-message](/examples/xmtp-welcome-message/): Agent that sends a welcome message when its added and to new members
+
+### Vibe coding
+
+See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
+
+```bash
+Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
+```
+
+🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
 ### Set environment variables
 
