@@ -19,11 +19,7 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("text", async (ctx) => {
-  if (
-    filter.isGroup(ctx.conversation) &&
-    filter.hasContent(ctx.message) &&
-    ctx.message.content.includes("@gm")
-  ) {
+  if (filter.isGroup(ctx.conversation) && ctx.message.content.includes("@gm")) {
     const senderAddress = await ctx.getSenderAddress();
     console.log(
       `Received message in group: ${ctx.message.content} by ${senderAddress}`,
