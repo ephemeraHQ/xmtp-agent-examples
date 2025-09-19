@@ -4,8 +4,9 @@ import {
   type MessageContext,
   type AgentMiddleware,
 } from "@xmtp/agent-sdk";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 // Configuration for the secret word gated group
 const GROUP_CONFIG = {
   // The secret passphrase users must provide to join

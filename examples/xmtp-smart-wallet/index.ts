@@ -1,8 +1,9 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
 import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 
 const WALLET_PATH = "wallet.json";
 const CDP_API_KEY_NAME = process.env.CDP_API_KEY_NAME || "";

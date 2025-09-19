@@ -12,9 +12,9 @@ import {
 } from "../../utils/inline-actions/inline-actions";
 import { ActionsCodec } from "../../utils/inline-actions/types/ActionsContent";
 import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
+import { loadEnvFile } from "../../utils/general";
 
-// Load environment variables
-process.loadEnvFile(".env");
+loadEnvFile();
 
 const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 

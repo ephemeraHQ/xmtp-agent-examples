@@ -9,8 +9,9 @@ import {
   ReactionCodec,
   type Reaction,
 } from "@xmtp/content-type-reaction";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 
 // Helper function to sleep for a specified number of milliseconds
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

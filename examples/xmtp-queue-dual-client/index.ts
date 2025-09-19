@@ -1,7 +1,7 @@
 import { Agent, getTestUrl } from "@xmtp/agent-sdk";
-import { getDbPath } from "../../utils/general";
+import { getDbPath, loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 
 const messageQueue: string[] = [];
 

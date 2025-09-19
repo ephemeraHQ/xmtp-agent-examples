@@ -1,7 +1,8 @@
 import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import OpenAI from "openai";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 
 if (
   !process.env.GAIA_NODE_URL ||
