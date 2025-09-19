@@ -1,24 +1,15 @@
 import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import { Client, type Group, type XmtpEnv } from "@xmtp/node-sdk";
+  Agent,
+  getTestUrl,
+  type MessageContext,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
 
-// Validate required environment variables
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, SECRET_WORD } =
-  validateEnvironment([
-    "WALLET_KEY",
-    "DB_ENCRYPTION_KEY",
-    "XMTP_ENV",
-    "SECRET_WORD",
-  ]);
-
+process.loadEnvFile(".env");
 // Configuration for the secret word gated group
 const GROUP_CONFIG = {
   // The secret passphrase users must provide to join
-  secretWord: SECRET_WORD,
+  secretWord: process.env.SECRET_WORD,
   // Group details
   groupName: "Secret Word Gated Group",
   groupDescription: "A group that requires a secret passphrase to join",
@@ -29,7 +20,7 @@ const GROUP_CONFIG = {
       "Hi! I can add you to our exclusive group. What's the secret passphrase?",
     success: [
       "🎉 Correct! You've been added to the group.",
-      "Welcome to our exclusive community!",
+      "Welcome to our community!",
       "Please introduce yourself and follow our community guidelines.",
     ],
     alreadyInGroup: "You're already in the group!",
@@ -42,123 +33,123 @@ const GROUP_CONFIG = {
 // Store to track users who are already in the group
 const usersInGroup = new Set<string>();
 
-async function main() {
-  // Initialize XMTP client
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
-
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-  });
-
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
-
-  void logAgentDetails(client);
-
-  console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
-
-  for await (const message of stream) {
-    // Ignore messages from the same agent or non-text messages
-    if (
-      message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
-      message.contentType?.typeId !== "text"
-    ) {
-      continue;
-    }
-
-    const messageContent = message.content as string;
-    const senderInboxId = message.senderInboxId;
-
-    console.log(`Received message: "${messageContent}" from ${senderInboxId}`);
-
-    try {
-      const conversation = await client.conversations.getConversationById(
-        message.conversationId,
-      );
-
-      if (!conversation) {
-        console.log("Could not find conversation for message");
-        continue;
-      }
-
-      // Check if user is already in the group
-      if (usersInGroup.has(senderInboxId)) {
-        await conversation.send(GROUP_CONFIG.messages.alreadyInGroup);
-        continue;
-      }
-
-      // Check if the message is the correct secret word
-      if (
-        messageContent.trim().toLowerCase() ===
-        GROUP_CONFIG.secretWord.toLowerCase()
-      ) {
-        await handleSuccessfulPassphrase(
-          client,
-          conversation as Group,
-          senderInboxId,
-        );
-      } else {
-        // Wrong passphrase
-        await conversation.send(GROUP_CONFIG.messages.invalid);
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error("Error processing message:", errorMessage);
-
-      // Try to send error message
-      try {
-        const conversation = await client.conversations.getConversationById(
-          message.conversationId,
-        );
-        if (conversation) {
-          await conversation.send(GROUP_CONFIG.messages.error);
-        }
-      } catch (sendError) {
-        console.error("Failed to send error message:", sendError);
-      }
-    }
-  }
+// Extended context type to include group validation results
+interface GroupValidationContext extends MessageContext {
+  groupValidation?: {
+    isValidPassphrase: boolean;
+    isAlreadyInGroup: boolean;
+    hasSecretWord: boolean;
+  };
 }
 
-async function handleSuccessfulPassphrase(
-  client: Client,
-  conversation: Group,
-  senderInboxId: string,
-) {
+// Middleware for group code parsing and validation
+const groupCodeParser: AgentMiddleware = async (ctx, next) => {
+  const senderInboxId = ctx.message.senderInboxId;
+  const messageContent = ctx.message.content;
+  const secretWord = GROUP_CONFIG.secretWord || "";
+
+  // Check if secret word is configured
+  const hasSecretWord = Boolean(secretWord);
+
+  // Check if user is already in the group
+  const isAlreadyInGroup = usersInGroup.has(senderInboxId);
+
+  // Check if the message matches the secret word (only for text messages)
+  const isValidPassphrase =
+    hasSecretWord &&
+    typeof messageContent === "string" &&
+    messageContent.trim().toLowerCase() === secretWord.toLowerCase();
+
+  // Attach validation results to context
+  (ctx as GroupValidationContext).groupValidation = {
+    isValidPassphrase,
+    isAlreadyInGroup,
+    hasSecretWord,
+  };
+
+  // Continue to next middleware/handler
+  await next();
+};
+
+const agent = await Agent.createFromEnv({
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+});
+
+// Apply the group code parsing middleware
+agent.use(groupCodeParser);
+
+agent.on("text", (ctx) => {
+  const validationCtx = ctx as GroupValidationContext;
+  const validation = validationCtx.groupValidation;
+
+  // Check if validation data is available
+  if (!validation) {
+    void ctx.sendText(GROUP_CONFIG.messages.error);
+    return;
+  }
+
+  // Check if secret word is not configured
+  if (!validation.hasSecretWord) {
+    void ctx.sendText(GROUP_CONFIG.messages.error);
+    return;
+  }
+
+  // Check if user is already in the group
+  if (validation.isAlreadyInGroup) {
+    void ctx.sendText(GROUP_CONFIG.messages.alreadyInGroup);
+    return;
+  }
+
+  // Check if the passphrase is valid
+  if (validation.isValidPassphrase) {
+    void handleSuccessfulPassphrase(ctx);
+  } else {
+    // Wrong passphrase
+    void ctx.sendText(GROUP_CONFIG.messages.invalid);
+  }
+});
+
+agent.on("start", () => {
+  console.log(`Waiting for messages...`);
+  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗${getTestUrl(agent)}`);
+});
+
+void agent.start();
+
+async function handleSuccessfulPassphrase(ctx: MessageContext) {
   try {
     // Check if we already have a group created
     // For simplicity, we'll create a new group each time
     // In a production app, you'd want to store the group ID
-    const group = (await client.conversations.newGroup([senderInboxId], {
-      groupName: GROUP_CONFIG.groupName,
-      groupDescription: GROUP_CONFIG.groupDescription,
-    })) as Group;
+    const group = await ctx.client.conversations.newGroup(
+      [ctx.message.senderInboxId],
+      {
+        groupName: GROUP_CONFIG.groupName,
+        groupDescription: GROUP_CONFIG.groupDescription,
+      },
+    );
 
     // Add the user to the groupn
 
-    await group.addMembers([senderInboxId]);
+    await group.addMembers([ctx.message.senderInboxId]);
 
     // Send success messages
-    await conversation.send(GROUP_CONFIG.messages.success[0]);
+    await ctx.sendText(GROUP_CONFIG.messages.success[0]);
 
     // Send welcome message in the group
     await group.send(GROUP_CONFIG.messages.success[1]);
     await group.send(GROUP_CONFIG.messages.success[2]);
 
     // Mark user as in group
-    usersInGroup.add(senderInboxId);
+    usersInGroup.add(ctx.message.senderInboxId);
 
     console.log(
-      `✅ User ${senderInboxId} successfully added to group ${group.id}`,
+      `✅ User ${ctx.message.senderInboxId} successfully added to group ${group.id}`,
     );
 
     // Send group details
-    await conversation.send(
+    await ctx.sendText(
       `Group Details:\n` +
         `- Group ID: ${group.id}\n` +
         `- Group URL: https://xmtp.chat/conversations/${group.id}\n` +
@@ -167,8 +158,6 @@ async function handleSuccessfulPassphrase(
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error adding user to group:", errorMessage);
-    await conversation.send(GROUP_CONFIG.messages.error);
+    await ctx.sendText(GROUP_CONFIG.messages.error);
   }
 }
-
-main().catch(console.error);

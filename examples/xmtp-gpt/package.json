@@ -8,10 +8,11 @@
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-gpt",
+    "revoke": "tsx ../../scripts/revokeInstallations.ts",
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "*",
+    "@xmtp/agent-sdk": "*",
     "openai": "4.94.0"
   },
   "devDependencies": {

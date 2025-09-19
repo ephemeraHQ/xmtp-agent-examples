@@ -11,9 +11,10 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
+    "@xmtp/agent-sdk": "*",
     "@xmtp/content-type-transaction-reference": "^2.0.2",
     "@xmtp/content-type-wallet-send-calls": "^1.0.1",
-    "@xmtp/node-sdk": "*"
+    "viem": "^2.20.2"
   },
   "devDependencies": {
     "tsx": "*",

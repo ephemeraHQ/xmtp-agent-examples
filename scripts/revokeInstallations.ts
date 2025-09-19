@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { createSigner } from "@helpers/client";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+import { createSigner, createUser, type XmtpEnv } from "@xmtp/agent-sdk";
+import { Client } from "@xmtp/node-sdk";
 
 // Check Node.js version
 const nodeVersion = process.versions.node;
@@ -19,11 +19,9 @@ async function main() {
 
   if (!inboxId) {
     console.error("Error: Inbox ID is required as a command line argument");
+    console.error("Usage: yarn revoke <inbox-id> [installations-to-save]");
     console.error(
-      "Usage: yarn revoke-installations <inbox-id> [installations-to-save]",
-    );
-    console.error(
-      'Example: yarn revoke-installations 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64 "current-installation-id,another-installation-id"',
+      'Example: yarn revoke 743f3805fa9daaf879103bc26a2e79bb53db688088259c23cf18dcf1ea2aee64 "current-installation-id,another-installation-id"',
     );
     process.exit(1);
   }
@@ -59,7 +57,7 @@ async function main() {
         "Usage: Provide installation IDs separated by commas, or omit to keep only current installation.",
       );
       console.error(
-        'Example: yarn revoke-installations <inbox-id> "installation-id1,installation-id2"',
+        'Example: yarn revoke <inbox-id> "installation-id1,installation-id2"',
       );
       process.exit(1);
     }
@@ -92,7 +90,11 @@ async function main() {
   });
 
   // Validate required environment variables
-  const requiredVars = ["WALLET_KEY", "DB_ENCRYPTION_KEY", "XMTP_ENV"];
+  const requiredVars = [
+    "XMTP_WALLET_KEY",
+    "XMTP_DB_ENCRYPTION_KEY",
+    "XMTP_ENV",
+  ];
   const missingVars = requiredVars.filter((varName) => !envVars[varName]);
 
   if (missingVars.length > 0) {
@@ -114,7 +116,9 @@ async function main() {
 
   try {
     // Create signer and encryption key
-    const signer = createSigner(envVars.WALLET_KEY as `0x${string}`);
+    const signer = createSigner(
+      createUser(envVars.XMTP_WALLET_KEY as `0x${string}`),
+    );
 
     // Get current inbox state
     const inboxState = await Client.inboxStateFromInboxIds(
@@ -242,6 +246,7 @@ async function main() {
     console.log(
       `✓ Final installations: ${finalInboxState[0].installations.length}`,
     );
+    process.exit(0);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error revoking installations:", errorMessage);

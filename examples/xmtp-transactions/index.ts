@@ -1,131 +1,101 @@
+import { Agent, getTestUrl, type AgentMiddleware } from "@xmtp/agent-sdk";
 import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
+  TransactionReferenceCodec,
+  ContentTypeTransactionReference,
+  type TransactionReference,
+} from "@xmtp/content-type-transaction-reference";
 import {
   ContentTypeWalletSendCalls,
   WalletSendCallsCodec,
 } from "@xmtp/content-type-wallet-send-calls";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
-import { USDCHandler } from "./usdc";
+import { USDCHandler } from "../../utils/usdc";
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
-  validateEnvironment([
-    "WALLET_KEY",
-    "DB_ENCRYPTION_KEY",
-    "XMTP_ENV",
-    "NETWORK_ID",
-  ]);
+process.loadEnvFile(".env");
 
-async function main() {
-  const usdcHandler = new USDCHandler(NETWORK_ID);
-  /* Create the signer using viem and parse the encryption key for the local db */
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
-  /* Initialize the xmtp client */
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
-  });
+const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
-  const identifier = await signer.getIdentifier();
-  const agentAddress = identifier.identifier;
-  void logAgentDetails(client as Client);
+const usdcHandler = new USDCHandler(NETWORK_ID);
 
-  /* Sync the conversations from the network to update the local db */
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
+// Transaction reference middleware
+const transactionReferenceMiddleware: AgentMiddleware = async (ctx, next) => {
+  // Check if this is a transaction reference message
+  if (ctx.message.contentType?.sameAs(ContentTypeTransactionReference)) {
+    const transactionRef = ctx.message.content as TransactionReference;
+    console.log("Received transaction reference:", transactionRef);
 
-  console.log("Waiting for messages...");
-  console.log("Network:", NETWORK_ID);
-  /* Stream all messages from the network */
-  const stream = await client.conversations.streamAllMessages();
-
-  for await (const message of stream) {
-    /* Ignore messages from the same agent or non-text messages */
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      continue;
-    }
-
-    /* Ignore non-text messages */
-    if (message.contentType?.typeId !== "text") {
-      continue;
-    }
-
-    console.log(
-      `Received message: ${message.content as string} by ${message.senderInboxId}`,
+    await ctx.sendText(
+      `✅ Transaction confirmed!\n` +
+        `🔗 Network: ${transactionRef.networkId}\n` +
+        `📄 Hash: ${transactionRef.reference}\n` +
+        `${transactionRef.metadata ? `📝 Transaction metadata received` : ""}`,
     );
 
-    /* Get the conversation by id */
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const memberAddress = inboxState[0].identifiers[0].identifier;
-    if (!memberAddress) {
-      console.log("Unable to find member address, skipping");
-      continue;
-    }
-
-    const messageContent = message.content as string;
-    const command = messageContent.toLowerCase().trim();
-
-    try {
-      if (command === "/balance") {
-        const result = await usdcHandler.getUSDCBalance(agentAddress);
-
-        await conversation.send(`Your USDC balance is: ${result} USDC`);
-      } else if (command.startsWith("/tx ")) {
-        const amount = parseFloat(command.split(" ")[1]);
-        if (isNaN(amount) || amount <= 0) {
-          await conversation.send(
-            "Please provide a valid amount. Usage: /tx <amount>",
-          );
-          continue;
-        }
-
-        // Convert amount to USDC decimals (6 decimal places)
-        const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
-
-        const walletSendCalls = usdcHandler.createUSDCTransferCalls(
-          memberAddress,
-          agentAddress,
-          amountInDecimals,
-        );
-        console.log("Replied with wallet sendcall");
-        await conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
-      } else {
-        await conversation.send(
-          "Available commands:\n" +
-            "/balance - Check your USDC balance\n" +
-            "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
-        );
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error("Error processing command:", errorMessage);
-      await conversation.send(
-        "Sorry, I encountered an error processing your command.",
-      );
-    }
+    // Don't continue to other handlers since we handled this message
+    return;
   }
-}
 
-main().catch(console.error);
+  // Continue to next middleware/handler
+  await next();
+};
+
+const agent = await Agent.createFromEnv({
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+  codecs: [new WalletSendCallsCodec(), new TransactionReferenceCodec()],
+});
+
+// Apply the transaction reference middleware
+agent.use(transactionReferenceMiddleware);
+
+agent.on("text", async (ctx) => {
+  if (!ctx.message.content.startsWith("/balance")) return;
+  const agentAddress = agent.client.accountIdentifier?.identifier || "";
+
+  const result = await usdcHandler.getUSDCBalance(agentAddress);
+  await ctx.sendText(`Your USDC balance is: ${result} USDC`);
+});
+
+agent.on("text", async (ctx) => {
+  if (!ctx.message.content.startsWith("/tx")) return;
+  const agentAddress = agent.client.accountIdentifier?.identifier || "";
+  const senderAddress = await ctx.getSenderAddress();
+
+  const amount = parseFloat((ctx.message.content as string).split(" ")[1]);
+  if (isNaN(amount) || amount <= 0) {
+    await ctx.sendText("Please provide a valid amount. Usage: /tx <amount>");
+    return;
+  }
+
+  // Convert amount to USDC decimals (6 decimal places)
+  const amountInDecimals = Math.floor(amount * Math.pow(10, 6));
+
+  const walletSendCalls = usdcHandler.createUSDCTransferCalls(
+    senderAddress,
+    agentAddress,
+    amountInDecimals,
+  );
+  console.log("Replied with wallet sendcall");
+  await ctx.conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
+
+  // Send a follow-up message about transaction references
+  await ctx.sendText(
+    `💡 After completing the transaction, you can send a transaction reference message to confirm completion.`,
+  );
+});
+
+agent.on("text", async (ctx) => {
+  if (ctx.isDm() && !ctx.message.content.startsWith("/")) return;
+
+  await ctx.sendText(
+    "Available commands:\n" +
+      "/balance - Check your USDC balance\n" +
+      "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
+  );
+});
+
+agent.on("start", () => {
+  console.log(`Waiting for messages...`);
+  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗${getTestUrl(agent)}`);
+});
+
+void agent.start();

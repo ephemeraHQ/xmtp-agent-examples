@@ -64,6 +64,13 @@ export class USDCHandler {
   }
 
   /**
+   * Get the network configuration
+   */
+  getNetworkConfig(): NetworkConfig {
+    return this.networkConfig;
+  }
+
+  /**
    * Get USDC balance for a given address
    */
   async getUSDCBalance(address: string): Promise<string> {
@@ -104,8 +111,8 @@ export class USDCHandler {
             description: `Transfer ${amount / Math.pow(10, this.networkConfig.decimals)} USDC on ${this.networkConfig.networkName}`,
             transactionType: "transfer",
             currency: "USDC",
-            amount: amount,
-            decimals: this.networkConfig.decimals,
+            amount: amount.toString(),
+            decimals: this.networkConfig.decimals.toString(),
             networkId: this.networkConfig.networkId,
           },
         },

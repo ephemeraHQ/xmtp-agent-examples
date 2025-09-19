@@ -11,7 +11,7 @@
     "build:examples": "yarn workspaces foreach --all --include \"examples/*\" run build",
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
-    "dev": "cd examples/xmtp-gm && tsx --env-file ../../.env --watch index.ts",
+    "dev": "cd examples/xmtp-gm && tsx --watch index.ts",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
     "gen:keys": "tsx scripts/generateKeys.ts",
@@ -21,12 +21,10 @@
     "typecheck": "tsc"
   },
   "resolutions": {
-    "@xmtp/node-sdk": "4.1.0"
+    "@xmtp/agent-sdk": "0.0.14"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "4.1.0",
-    "uint8arrays": "^5.1.0",
-    "viem": "^2.22.17"
+    "@xmtp/agent-sdk": "0.0.14"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
@@ -34,6 +32,9 @@
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.13.0",
+    "@xmtp/content-type-primitives": "^2.0.2",
+    "@xmtp/content-type-remote-attachment": "^2.0.2",
+    "@xmtp/content-type-wallet-send-calls": "^1.0.1",
     "eslint": "^9.19.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",

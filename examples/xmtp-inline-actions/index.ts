@@ -1,147 +1,180 @@
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
-import { TransactionReferenceCodec } from "@xmtp/content-type-transaction-reference";
-import { WalletSendCallsCodec } from "@xmtp/content-type-wallet-send-calls";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
+  WalletSendCallsCodec,
+  ContentTypeWalletSendCalls,
+} from "@xmtp/content-type-wallet-send-calls";
+import { USDCHandler } from "../../utils/usdc";
 import {
-  handleIntentMessage,
-  handleTextMessage,
-} from "./handlers/messageHandlers";
-import { TokenHandler } from "./handlers/tokenHandler";
-import {
-  handleTransactionReference,
-  type ExtendedTransactionReference,
-} from "./handlers/transactionHandlers";
-import { ActionsCodec } from "./types/ActionsContent";
-import { IntentCodec, type IntentContent } from "./types/IntentContent";
+  inlineActionsMiddleware,
+  registerAction,
+  ActionBuilder,
+  sendActions,
+} from "../../utils/inline-actions/inline-actions";
+import { ActionsCodec } from "../../utils/inline-actions/types/ActionsContent";
+import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
 
-// Validate required environment variables
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV, NETWORK_ID } =
-  validateEnvironment([
-    "WALLET_KEY",
-    "DB_ENCRYPTION_KEY",
-    "XMTP_ENV",
-    "NETWORK_ID",
-  ]);
+// Load environment variables
+process.loadEnvFile(".env");
+
+const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 
 async function main() {
-  // Initialize token handler
-  const tokenHandler = new TokenHandler(NETWORK_ID);
-  console.log(`📡 Connected to network: ${tokenHandler.getNetworkInfo().name}`);
-  console.log(
-    `💰 Supported tokens: ${tokenHandler.getSupportedTokens().join(", ")}`,
-  );
+  // Initialize USDC handler
+  const usdcHandler = new USDCHandler(NETWORK_ID);
+  const networkConfig = usdcHandler.getNetworkConfig();
 
-  // Create XMTP client
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+  console.log(`📡 Connected to: ${networkConfig.networkName}`);
+  console.log(`💰 USDC Address: ${networkConfig.tokenAddress}`);
 
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    codecs: [
-      new WalletSendCallsCodec(),
-      new TransactionReferenceCodec(),
-      new ActionsCodec(),
-      new IntentCodec(),
-    ],
+  // Create agent using environment variables
+  const agent = await Agent.createFromEnv({
+    codecs: [new WalletSendCallsCodec(), new ActionsCodec(), new IntentCodec()],
   });
 
-  const identifier = await signer.getIdentifier();
-  const agentAddress = identifier.identifier;
-
-  void logAgentDetails(client as Client);
-
-  // Sync conversations
-  console.log("🔄 Syncing conversations...");
-  await client.conversations.sync();
-
-  console.log("👂 Listening for messages...");
-
-  const stream = await client.conversations.streamAllMessages();
-
-  for await (const message of stream) {
-    /* Ignore messages from the same agent or non-text messages */
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      continue;
-    }
-
-    if (
-      message.contentType?.typeId !== "text" &&
-      message.contentType?.typeId !== "transactionReference" &&
-      message.contentType?.typeId !== "intent"
-    ) {
-      continue;
-    }
-
-    console.log(
-      `Received message: ${message.content as string} by ${message.senderInboxId}`,
-    );
-
-    /* Get the conversation from the local db */
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    /* If the conversation is not found, skip the message */
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    // Get sender address
-    const inboxState = await client.preferences.inboxStateFromInboxIds([
-      message.senderInboxId,
-    ]);
-    const senderAddress = inboxState[0]?.identifiers[0]?.identifier;
-
-    if (!senderAddress) {
-      console.log("❌ Unable to find sender address, skipping");
-      continue;
-    }
-
-    // Handle different message types
-    if (message.contentType.typeId === "text") {
-      await handleTextMessage(
-        conversation,
-        message.content as string,
-        senderAddress,
-        agentAddress,
-        tokenHandler,
-      );
-    } else if (message.contentType.typeId === "transactionReference") {
-      console.log("🧾 Detected transaction reference message");
-      console.log(
-        "📋 Raw message content:",
-        JSON.stringify(message.content, null, 2),
-      );
-      await handleTransactionReference(
-        conversation,
-        message.content as ExtendedTransactionReference,
-        senderAddress,
-        tokenHandler,
-      );
-    } else {
-      // This must be an intent message since we filtered for text, transactionReference, and intent
-      console.log("🎯 Detected intent message");
-      console.log(
-        "📋 Raw intent content:",
-        JSON.stringify(message.content, null, 2),
-      );
-      await handleIntentMessage(
-        conversation,
-        message.content as IntentContent,
-        senderAddress,
-        agentAddress,
-        tokenHandler,
-      );
-    }
+  const agentAddress = agent.client.accountIdentifier?.identifier;
+  if (!agentAddress) {
+    throw new Error("Unable to get agent address");
   }
+
+  // Helper function to create simple USDC transfer
+  function createUSDCTransfer(
+    fromAddress: string,
+    amount: number,
+    withMetadata: boolean = false,
+  ) {
+    const amountInDecimals = Math.floor(
+      amount * Math.pow(10, networkConfig.decimals),
+    );
+    const calls = usdcHandler.createUSDCTransferCalls(
+      fromAddress,
+      agentAddress!,
+      amountInDecimals,
+    );
+
+    // Add rich metadata if requested
+    if (withMetadata) {
+      calls.calls[0].metadata = {
+        description: `Transfer ${amount} USDC`,
+        transactionType: "transfer",
+        currency: "USDC",
+        amount: amountInDecimals,
+        decimals: networkConfig.decimals,
+        networkId: networkConfig.networkId,
+        hostname: "tba.chat",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?sz=256&domain_url=https%3A%2F%2Fwww.coinbase.com%2Fwallet",
+        title: "TBA Chat Agent",
+      };
+    }
+
+    return calls;
+  }
+
+  // Register action handlers focused on inline actions UX
+  registerAction("send-small", async (ctx) => {
+    const senderAddress = await ctx.getSenderAddress();
+    if (!senderAddress) return;
+
+    const transfer = createUSDCTransfer(senderAddress, 0.005);
+    await ctx.conversation.send(transfer, ContentTypeWalletSendCalls);
+    await ctx.sendText(
+      "💸 Please approve the 0.005 USDC transfer in your wallet!",
+    );
+  });
+
+  registerAction("send-large", async (ctx) => {
+    const senderAddress = await ctx.getSenderAddress();
+    if (!senderAddress) return;
+
+    const transfer = createUSDCTransfer(senderAddress, 1);
+    await ctx.conversation.send(transfer, ContentTypeWalletSendCalls);
+    await ctx.sendText("💸 Please approve the 1 USDC transfer in your wallet!");
+  });
+
+  registerAction("check-balance", async (ctx) => {
+    const balance = await usdcHandler.getUSDCBalance(agentAddress!);
+    await ctx.sendText(
+      `💰 Bot Balance: ${balance} USDC on ${networkConfig.networkName}`,
+    );
+  });
+
+  registerAction("send-with-metadata", async (ctx) => {
+    const senderAddress = await ctx.getSenderAddress();
+    if (!senderAddress) return;
+
+    const transfer = createUSDCTransfer(senderAddress, 0.005, true);
+    await ctx.conversation.send(transfer, ContentTypeWalletSendCalls);
+    await ctx.sendText(
+      "😉 Please approve the 0.005 USDC transfer with rich metadata!",
+    );
+  });
+
+  registerAction("transaction-actions", async (ctx) => {
+    const actions = ActionBuilder.create(
+      "transaction-actions",
+      "Choose a transaction action:",
+    )
+      .add("send-small", "Send 0.005 USDC")
+      .add("send-large", "Send 1 USDC")
+      .add("send-with-metadata", "Send with Metadata")
+      .add("check-balance", "Check Balance")
+      .build();
+
+    await sendActions(ctx, actions);
+  });
+
+  registerAction("more-info", async (ctx) => {
+    const infoMessage = `ℹ️ Network Information
+
+CURRENT NETWORK:
+• Name: ${networkConfig.networkName}
+• Network ID: ${networkConfig.networkId}
+• Chain ID: ${networkConfig.chainId}
+• USDC Address: ${networkConfig.tokenAddress}
+
+FEATURES:
+• Wallet Send Calls (EIP-5792)
+• Inline Actions (XIP-67)
+
+🔗 Test at: https://xmtp.chat`;
+
+    await ctx.sendText(infoMessage);
+  });
+
+  // Use the inline actions middleware
+  agent.use(inlineActionsMiddleware);
+
+  // Handle text messages with simple commands
+  agent.on("text", async (ctx) => {
+    if (!ctx.message.content.startsWith("/")) return;
+
+    const actions = ActionBuilder.create(
+      "help",
+      `👋 Welcome to Inline Actions Demo!
+
+I can help you with USDC transactions on ${networkConfig.networkName}.
+
+Choose an action below:`,
+    )
+      .add("transaction-actions", "💸 Transaction Actions")
+      .add("send-with-metadata", "😉 Send with Metadata")
+      .add("check-balance", "Check Balance")
+      .add("more-info", "ℹ️ More Info")
+      .build();
+
+    await sendActions(ctx, actions);
+  });
+
+  // Handle startup
+  agent.on("start", () => {
+    console.log(`🤖 Inline Actions Agent is running...`);
+    console.log(`Address: ${agentAddress}`);
+    console.log(`🔗 ${getTestUrl(agent)}`);
+    console.log(`Send /help or gm to get started!`);
+  });
+
+  // Start the agent
+  await agent.start();
 }
 
 main().catch(console.error);

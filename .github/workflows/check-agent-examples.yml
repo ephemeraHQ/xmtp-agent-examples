@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".node-version"
+          node-version: "20.17.0"
           cache: "yarn"
           cache-dependency-path: "test-dir/yarn.lock"
 
@@ -32,14 +32,13 @@ jobs:
 
       - name: Generate keys and set env
         run: |
-          cd test-dir
+          cd test-dir/examples/xmtp-gm
           yarn gen:keys
-          echo "XMTP_ENV=dev" >> .env
 
       - name: Run agent
         run: |
-          cd test-dir
-          XMTP_ENV=dev timeout 20s yarn dev | tee output.log
+          cd test-dir/examples/xmtp-gm
+          timeout 20s yarn dev | tee output.log
           if grep -q "Waiting for messages..." output.log; then
             echo "Success: Agent started successfully and is waiting for messages"
             exit 0

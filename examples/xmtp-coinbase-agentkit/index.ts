@@ -8,41 +8,13 @@ import {
   walletActionProvider,
 } from "@coinbase/agentkit";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
-import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import {
-  Client,
-  type Conversation,
-  type DecodedMessage,
-  type XmtpEnv,
-} from "@xmtp/node-sdk";
+import { Agent as XMTPAgent, type MessageContext } from "@xmtp/agent-sdk";
 
-const {
-  WALLET_KEY,
-  DB_ENCRYPTION_KEY,
-  XMTP_ENV,
-  CDP_API_KEY_NAME,
-  CDP_API_KEY_PRIVATE_KEY,
-  NETWORK_ID,
-  OPENAI_API_KEY,
-} = validateEnvironment([
-  "WALLET_KEY",
-  "DB_ENCRYPTION_KEY",
-  "XMTP_ENV",
-  "CDP_API_KEY_NAME",
-  "CDP_API_KEY_PRIVATE_KEY",
-  "NETWORK_ID",
-  "OPENAI_API_KEY",
-]);
-
+process.loadEnvFile(".env");
 // Storage constants
 const XMTP_STORAGE_DIR = ".data/xmtp";
 const WALLET_STORAGE_DIR = ".data/wallet";
@@ -106,33 +78,6 @@ function getWalletData(userId: string): string | null {
   }
   return null;
 }
-/**
- * Initialize the XMTP client.
- *
- * @returns An initialized XMTP Client instance
- */
-async function initializeXmtpClient() {
-  const signer = createSigner(WALLET_KEY);
-  const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
-
-  const identifier = await signer.getIdentifier();
-  const address = identifier.identifier;
-
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    dbPath: XMTP_STORAGE_DIR + `/${XMTP_ENV}-${address}`,
-  });
-
-  void logAgentDetails(client);
-
-  /* Sync the conversations from the network to update the local db */
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
-
-  return client;
-}
 
 /**
  * Initialize the agent with CDP Agentkit.
@@ -146,19 +91,23 @@ async function initializeAgent(
   try {
     const llm = new ChatOpenAI({
       model: "gpt-4.1-mini",
-      apiKey: OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY || "",
     });
 
     const storedWalletData = getWalletData(userId);
+    const apiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY || "";
+    const apiKeyName = process.env.CDP_API_KEY_NAME || "";
+    const networkId = process.env.NETWORK_ID || "base-sepolia";
+
     console.log(
       `Wallet data for ${userId}: ${storedWalletData ? "Found" : "Not found"}`,
     );
 
     const config = {
-      apiKeyName: CDP_API_KEY_NAME,
-      apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      apiKeyName: apiKeyName,
+      apiKeyPrivateKey: apiKeyPrivateKey.replace(/\\n/g, "\n"),
       cdpWalletData: storedWalletData || undefined,
-      networkId: NETWORK_ID || "base-sepolia",
+      networkId: networkId,
     };
 
     const walletProvider = await CdpWalletProvider.configureWithWallet(config);
@@ -169,12 +118,12 @@ async function initializeAgent(
         walletActionProvider(),
         erc20ActionProvider(),
         cdpApiActionProvider({
-          apiKeyName: CDP_API_KEY_NAME,
-          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
+          apiKeyName: process.env.CDP_API_KEY_NAME || "",
+          apiKeyPrivateKey: apiKeyPrivateKey.replace(/\\n/g, "\n"),
         }),
         cdpWalletActionProvider({
-          apiKeyName: CDP_API_KEY_NAME,
-          apiKeyPrivateKey: CDP_API_KEY_PRIVATE_KEY.replace(/\\n/g, "\n"),
+          apiKeyName: process.env.CDP_API_KEY_NAME || "",
+          apiKeyPrivateKey: apiKeyPrivateKey.replace(/\\n/g, "\n"),
         }),
       ],
     });
@@ -266,73 +215,35 @@ async function processMessage(
  * @param message - The decoded XMTP message
  * @param client - The XMTP client instance
  */
-async function handleMessage(message: DecodedMessage, client: Client) {
-  let conversation: Conversation | null = null;
+async function handleMessage(ctx: MessageContext) {
   try {
-    const senderAddress = message.senderInboxId;
-    const botAddress = client.inboxId.toLowerCase();
-
-    // Ignore messages from the agent itself
-    if (senderAddress.toLowerCase() === botAddress) {
-      return;
-    }
-
-    console.log(
-      `Received message from ${senderAddress}: ${message.content as string}`,
-    );
-
-    const { agent, config } = await initializeAgent(senderAddress);
+    const { agent, config } = await initializeAgent(ctx.message.senderInboxId);
     const response = await processMessage(
       agent,
       config,
-      String(message.content),
+      String(ctx.message.content),
     );
 
-    // Get the conversation and send response
-    conversation = (await client.conversations.getConversationById(
-      message.conversationId,
-    )) as Conversation | null;
-    if (!conversation) {
-      throw new Error(
-        `Could not find conversation for ID: ${message.conversationId}`,
-      );
-    }
-    await conversation.send(response);
-    console.debug(`Sent response to ${senderAddress}: ${response}`);
+    await ctx.sendText(response);
+    console.debug(`Sent response to ${ctx.message.senderInboxId}: ${response}`);
   } catch (error) {
     console.error("Error handling message:", error);
-    if (conversation) {
-      await conversation.send(
-        "I encountered an error while processing your request. Please try again later.",
-      );
-    }
+    await ctx.sendText(
+      "I encountered an error while processing your request. Please try again later.",
+    );
   }
 }
 
-/**
- * Start listening for XMTP messages.
- *
- * @param client - The XMTP client instance
- */
-async function startMessageListener(client: Client) {
-  console.log("Starting message listener...");
-  const stream = await client.conversations.streamAllMessages();
-  for await (const message of stream) {
-    await handleMessage(message, client);
-  }
-}
+console.log("Initializing Agent on XMTP...");
 
-/**
- * Main function to start the chatbot.
- */
-async function main(): Promise<void> {
-  console.log("Initializing Agent on XMTP...");
+ensureLocalStorage();
 
-  ensureLocalStorage();
+const agent = await XMTPAgent.createFromEnv({
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+});
 
-  const xmtpClient = await initializeXmtpClient();
-  await startMessageListener(xmtpClient);
-}
+agent.on("text", (ctx) => {
+  void handleMessage(ctx);
+});
 
-// Start the chatbot
-main().catch(console.error);
+void agent.start();

@@ -29,10 +29,11 @@ When creating new agent examples in this monorepo, follow these guidelines for c
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
+    "revoke": "tsx ../../scripts/revokeInstallations.ts",
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/node-sdk": "*" // Inherit the version from the root package.json
+    "@xmtp/agent-sdk": "*" // Inherit the version from the root package.json
     /* other dependencies */
   },
   "devDependencies": {
@@ -56,8 +57,8 @@ Your agent will typically require these environment variables in a `.env` file:
 XMTP_ENV=dev
 
 # Private keys (generate with yarn gen:keys)
-WALLET_KEY=your_private_key_here
-DB_ENCRYPTION_KEY=your_encryption_key_here
+XMTP_WALLET_KEY=your_private_key_here
+XMTP_DB_ENCRYPTION_KEY=your_encryption_key_here
 ```
 
 ## Running an agent

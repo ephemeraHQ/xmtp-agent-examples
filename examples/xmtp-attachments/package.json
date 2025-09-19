@@ -11,8 +11,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/content-type-remote-attachment": "^2.0.2",
-    "@xmtp/node-sdk": "*",
+    "@xmtp/agent-sdk": "*",
     "axios": "^1.8.4",
     "form-data": "^4.0.2"
   },

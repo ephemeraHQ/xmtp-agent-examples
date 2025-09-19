@@ -26,8 +26,8 @@ https://github.com/user-attachments/assets/efb8006d-9758-483d-ad1b-9287ea4d426d
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key for the wallet
-DB_ENCRYPTION_KEY= # the encryption key for the wallet
+XMTP_WALLET_KEY= # the private key for the wallet
+XMTP_DB_ENCRYPTION_KEY= # the encryption key for the wallet
 # public key is
 
 NETWORK_ID=base-sepolia # base-mainnet or others
@@ -102,6 +102,47 @@ Once you have a transaction reference, you can send it as part of your conversat
 ```tsx
 await conversation.messages.send(walletSendCalls, ContentTypeWalletSendCalls);
 ```
+
+### Transaction References
+
+The agent automatically handles transaction reference messages through middleware. When a transaction reference is received, it will display confirmation details including the network, transaction hash, and metadata.
+
+#### Middleware Implementation
+
+```tsx
+import { type AgentMiddleware } from "@xmtp/agent-sdk";
+import {
+  TransactionReferenceCodec,
+  ContentTypeTransactionReference,
+  type TransactionReference,
+} from "@xmtp/content-type-transaction-reference";
+
+// Transaction reference middleware
+const transactionReferenceMiddleware: AgentMiddleware = async (ctx, next) => {
+  // Check if this is a transaction reference message
+  if (ctx.message.contentType?.sameAs(ContentTypeTransactionReference)) {
+    const transactionRef = ctx.message.content as TransactionReference;
+
+    await ctx.sendText(
+      `✅ Transaction confirmed!\n` +
+        `🔗 Network: ${transactionRef.networkId}\n` +
+        `📄 Hash: ${transactionRef.reference}\n` +
+        `${transactionRef.metadata ? `📝 Transaction metadata received` : ""}`,
+    );
+
+    // Don't continue to other handlers since we handled this message
+    return;
+  }
+
+  // Continue to next middleware/handler
+  await next();
+};
+
+// Apply the middleware
+agent.use(transactionReferenceMiddleware);
+```
+
+The middleware automatically detects and processes transaction reference messages without requiring any commands.
 
 ### Supported networks
 

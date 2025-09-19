@@ -1,161 +1,55 @@
 import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
+  Agent,
+  getTestUrl,
+  type AgentMiddleware,
+  MessageContext,
+} from "@xmtp/agent-sdk";
 import {
-  Client,
-  type Conversation,
-  type DecodedMessage,
-  type GroupMember,
-  type XmtpEnv,
-} from "@xmtp/node-sdk";
+  ActionBuilder,
+  inlineActionsMiddleware,
+  registerAction,
+  sendActions,
+} from "../../utils/inline-actions/inline-actions";
+import { ActionsCodec } from "../../utils/inline-actions/types/ActionsContent";
+import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
-import {
-  ActionsCodec,
-  ContentTypeActions,
-  type ActionsContent,
-} from "./types/ActionsContent";
-import { IntentCodec, type IntentContent } from "./types/IntentContent";
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "DB_ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
-
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
-
-/**
- * Send a welcome message with inline actions for ETH price
- */
-async function sendWelcomeWithActions(
-  conversation: Conversation,
-  _client: Client,
-) {
-  const welcomeActions: ActionsContent = {
-    id: `welcome-${Date.now()}`,
-    description: `👋 Welcome! I'm your ETH price agent.
-
-I can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
-    actions: [
-      {
-        id: "get-current-price",
-        label: "💰 Get Current ETH Price",
-        style: "primary",
-      },
-      {
-        id: "get-price-chart",
-        label: "📊 Get Price with 24h Change",
-        style: "secondary",
-      },
-    ],
-  };
-
-  console.log(`✓ Sending welcome message with actions`);
-  await conversation.send(welcomeActions, ContentTypeActions);
-}
-
-/**
- * Check if this is the first interaction with a user
- */
-async function isFirstTimeInteraction(
-  conversation: Conversation,
-  client: Client,
-): Promise<boolean> {
-  try {
-    const messages = await conversation.messages();
-    const hasSentBefore = messages.some(
-      (msg) => msg.senderInboxId.toLowerCase() === client.inboxId.toLowerCase(),
-    );
-    const members = await conversation.members();
-    const wasMemberBefore = members.some(
-      (member: GroupMember) =>
-        member.inboxId.toLowerCase() === client.inboxId.toLowerCase() &&
-        member.installationIds.length > 1,
-    );
-
-    return !hasSentBefore && !wasMemberBefore;
-  } catch (error) {
-    console.error("Error checking message history:", error);
-    return false;
-  }
-}
-
-/**
- * Handle intent messages (when users click action buttons)
- */
-async function handleIntentMessage(
-  conversation: Conversation,
-  intentContent: IntentContent,
-  _client: Client,
-) {
-  console.log(
-    `🎯 Processing intent: ${intentContent.actionId} for actions: ${intentContent.id}`,
-  );
-
-  try {
-    switch (intentContent.actionId) {
-      case "get-current-price":
-        console.log("💰 Processing current ETH price request");
-        await handleCurrentPrice(conversation);
-        break;
-
-      case "get-price-chart":
-        console.log("📊 Processing ETH price with 24h change request");
-        await handlePriceWithChange(conversation);
-        break;
-
-      default:
-        await conversation.send(`❌ Unknown action: ${intentContent.actionId}`);
-        console.log(`❌ Unknown action ID: ${intentContent.actionId}`);
-    }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("❌ Error processing intent:", errorMessage);
-    await conversation.send(`❌ Error processing action: ${errorMessage}`);
-  }
-}
+process.loadEnvFile(".env");
 
 /**
  * Handle current ETH price request
  */
-async function handleCurrentPrice(conversation: Conversation) {
+async function handleCurrentPrice(ctx: MessageContext) {
   try {
-    await conversation.send("⏳ Fetching current ETH price...");
+    await ctx.sendText("⏳ Fetching current ETH price...");
 
     const { price } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
 
-    await conversation.send(`💰 **Current ETH Price**
+    await ctx.sendText(`
+    💰 **Current ETH Price**
 
-${formattedPrice}
+    ${formattedPrice}
 
-Data provided by CoinGecko 📈`);
+    Data provided by CoinGecko 📈`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await conversation.send(`❌ Failed to fetch ETH price: ${errorMessage}`);
+    await ctx.sendText(`❌ Failed to fetch ETH price: ${errorMessage}`);
   }
 }
 
 /**
  * Handle ETH price with 24h change request
  */
-async function handlePriceWithChange(conversation: Conversation) {
+async function handlePriceWithChange(ctx: MessageContext) {
   try {
-    await conversation.send("⏳ Fetching ETH price with 24h change...");
+    await ctx.sendText("⏳ Fetching ETH price with 24h change...");
 
     const { price, change24h } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
     const formattedChange = formatPriceChange(change24h);
 
-    await conversation.send(`📊 **ETH Price with 24h Change**
+    await ctx.sendText(`📊 **ETH Price with 24h Change**
 
 **Current Price:** ${formattedPrice}
 **24h Change:** ${formattedChange}
@@ -163,80 +57,74 @@ async function handlePriceWithChange(conversation: Conversation) {
 Data provided by CoinGecko 📈`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await conversation.send(`❌ Failed to fetch ETH price: ${errorMessage}`);
+    await ctx.sendText(`❌ Failed to fetch ETH price: ${errorMessage}`);
   }
 }
 
 /**
- * Handle incoming messages with contextual responses
+ * Middleware to detect first-time interactions and add flag to context
  */
-async function handleMessage(message: DecodedMessage, client: Client) {
-  try {
-    // Skip messages from the agent itself
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      return;
-    }
+const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
+  const messages = await ctx.conversation.messages();
+  const hasSentBefore = messages.some(
+    (msg) =>
+      msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
+  );
+  const members = await ctx.conversation.members();
+  const wasMemberBefore = members.some(
+    (member: { inboxId: string; installationIds: string[] }) =>
+      member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
+      member.installationIds.length > 1,
+  );
 
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
-    );
-
-    if (!conversation) {
-      console.log("Could not find conversation for message");
-      return;
-    }
-
-    // Handle different message types
-    if (message.contentType?.typeId === "text") {
-      const isFirstTime = await isFirstTimeInteraction(conversation, client);
-
-      // Handle first-time interactions with welcome actions
-      if (isFirstTime) {
-        await sendWelcomeWithActions(conversation, client);
-        return;
-      }
-
-      // Handle subsequent text messages
-      const messageContent = (message.content as string).toLowerCase().trim();
-      if (messageContent === "help" || messageContent === "gm") {
-        await sendWelcomeWithActions(conversation, client);
-      } else {
-        await conversation.send("👋 Type 'help' to see available options!");
-      }
-    } else if (message.contentType?.typeId === "intent") {
-      // Handle action button clicks
-      await handleIntentMessage(
-        conversation,
-        message.content as IntentContent,
-        client,
-      );
-    }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error handling message:", errorMessage);
+  // Add the first-time interaction flag to the context
+  if (!hasSentBefore && !wasMemberBefore) {
+    console.warn("First time interaction");
+  } else {
+    console.warn("Not first time interaction");
+    // return; to break the middleware chain and prevent the inline actions middleware from being executed
+    //return;
   }
-}
 
-async function main() {
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    codecs: [new ActionsCodec(), new IntentCodec()],
-  });
+  await next();
+};
 
-  void logAgentDetails(client as Client);
-
-  // Handle all messages
-  const messageStream = await client.conversations.streamAllMessages();
-  console.log("🎧 Listening for messages...");
-
-  for await (const message of messageStream) {
-    await handleMessage(message as DecodedMessage<string>, client as Client);
-  }
-}
-
-main().catch((error: unknown) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  console.error("❌ Agent crashed:", errorMessage);
+const agent = await Agent.createFromEnv({
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+  codecs: [new ActionsCodec(), new IntentCodec()],
 });
+
+// Add middleware
+agent.use(firstTimeInteractionMiddleware, inlineActionsMiddleware);
+
+// Register action handlers using the utilities
+registerAction("get-current-price", handleCurrentPrice);
+registerAction("get-price-chart", handlePriceWithChange);
+
+agent.on("unhandledError", (error) => {
+  console.error("Agent error", error);
+});
+
+// Handle first-time user messages - send welcome with actions
+agent.on("text", async (ctx) => {
+  if (ctx.isDm()) {
+    const welcomeActions = ActionBuilder.create(
+      `welcome-${Date.now()}`,
+      `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
+    )
+      .add("get-current-price", "💰 Get Current ETH Price")
+      .add("get-price-chart", "📊 Get Price with 24h Change")
+      .build();
+
+    console.log(`✓ Sending welcome message with actions`);
+    await sendActions(ctx, welcomeActions);
+  }
+});
+
+agent.on("start", () => {
+  console.log(`Waiting for messages...`);
+  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗${getTestUrl(agent)}`);
+});
+
+void agent.start();

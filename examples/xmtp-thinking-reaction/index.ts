@@ -1,108 +1,121 @@
 import {
-  createSigner,
-  getEncryptionKeyFromHex,
-  logAgentDetails,
-  validateEnvironment,
-} from "@helpers/client";
+  Agent,
+  getTestUrl,
+  type MessageContext,
+  type AgentMiddleware,
+} from "@xmtp/agent-sdk";
 import {
   ContentTypeReaction,
   ReactionCodec,
   type Reaction,
 } from "@xmtp/content-type-reaction";
-import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 
-/* Get the wallet key associated to the public key of
- * the agent and the encryption key for the local db
- * that stores your agent's messages */
-const { WALLET_KEY, DB_ENCRYPTION_KEY, XMTP_ENV } = validateEnvironment([
-  "WALLET_KEY",
-  "DB_ENCRYPTION_KEY",
-  "XMTP_ENV",
-]);
-
-/* Create the signer using viem and parse the encryption key for the local db */
-const signer = createSigner(WALLET_KEY);
-const dbEncryptionKey = getEncryptionKeyFromHex(DB_ENCRYPTION_KEY);
+process.loadEnvFile(".env");
 
 // Helper function to sleep for a specified number of milliseconds
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function main() {
-  const client = await Client.create(signer, {
-    dbEncryptionKey,
-    appVersion: "example-agent/1.0.0",
-    env: XMTP_ENV as XmtpEnv,
-    codecs: [new ReactionCodec()],
-  });
-  void logAgentDetails(client as Client);
+// Extended context type to include thinking reaction helpers
+interface ThinkingReactionContext extends MessageContext {
+  thinkingReaction?: {
+    removeThinkingEmoji: () => Promise<void>;
+  };
+}
 
-  console.log("✓ Syncing conversations...");
-  await client.conversations.sync();
+// Middleware for thinking reaction pattern
+const thinkingReactionMiddleware: AgentMiddleware = async (ctx, next) => {
+  try {
+    console.log("🤔 Reacting with thinking emoji...");
 
-  console.log("Waiting for messages...");
-  const stream = await client.conversations.streamAllMessages();
-  for await (const message of stream) {
-    // Skip if the message is from the agent
-    if (message.senderInboxId.toLowerCase() === client.inboxId.toLowerCase()) {
-      continue;
-    }
-    // Skip if the message is not a text message
-    if (message.contentType?.typeId !== "text") {
-      continue;
-    }
-
-    const conversation = await client.conversations.getConversationById(
-      message.conversationId,
+    // Step 1: Add thinking emoji reaction
+    await ctx.conversation.send(
+      {
+        action: "added",
+        content: "⏳",
+        reference: ctx.message.id,
+        schema: "shortcode",
+      } as Reaction,
+      ContentTypeReaction,
     );
 
-    if (!conversation) {
-      console.log("Unable to find conversation, skipping");
-      continue;
-    }
-
-    try {
-      const messageContent = message.content as string;
-      console.log(`Received message: ${messageContent}`);
-
-      // Step 1: React with thinking emoji
-      console.log("🤔 Reacting with thinking emoji...");
-      await conversation.send(
-        {
-          action: "added",
-          content: "⏳",
-          reference: message.id,
-          schema: "shortcode",
-        } as Reaction,
-        ContentTypeReaction,
-      );
-
-      // Step 2: Sleep for 2 seconds
-      console.log("💤 Sleeping for 2 seconds...");
-      await sleep(2000);
-
-      // Step 3: Send response
-      console.log("💭 Sending response...");
-      await conversation.send(
-        "I've been thinking about your message and here's my response!",
-      );
-      await conversation.send(
+    // Step 2: Add helper function to remove the thinking emoji
+    const removeThinkingEmoji = async () => {
+      await ctx.conversation.send(
         {
           action: "removed",
           content: "⏳",
-          reference: message.id,
+          reference: ctx.message.id,
           schema: "shortcode",
         } as Reaction,
         ContentTypeReaction,
       );
-      console.log("✅ Response sent successfully");
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error("Error processing message:", errorMessage);
+    };
+
+    // Attach helper to context
+    (ctx as ThinkingReactionContext).thinkingReaction = {
+      removeThinkingEmoji,
+    };
+
+    // Continue to next middleware/handler
+    await next();
+  } catch (error) {
+    console.error("Error in thinking reaction middleware:", error);
+    // Continue anyway
+    await next();
+  }
+};
+
+const agent = await Agent.createFromEnv({
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+  codecs: [new ReactionCodec()],
+});
+
+// Apply the thinking reaction middleware
+agent.use(thinkingReactionMiddleware);
+
+agent.on("text", async (ctx) => {
+  const thinkingCtx = ctx as ThinkingReactionContext;
+
+  try {
+    const messageContent = ctx.message.content;
+    console.log(`Received message: ${messageContent}`);
+
+    // Step 1: Sleep for 2 seconds (thinking emoji already shown by middleware)
+    console.log("💤 Sleeping for 2 seconds...");
+    await sleep(2000);
+
+    // Step 2: Send response
+    console.log("💭 Sending response...");
+    await ctx.sendText(
+      "I've been thinking about your message and here's my response!",
+    );
+
+    // Step 3: Remove thinking emoji after sending the response
+    if (thinkingCtx.thinkingReaction?.removeThinkingEmoji) {
+      console.log("🗑️ Removing thinking emoji...");
+      await thinkingCtx.thinkingReaction.removeThinkingEmoji();
+    }
+
+    console.log("✅ Response sent successfully");
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error processing message:", errorMessage);
+
+    // Still try to remove thinking emoji on error
+    if (thinkingCtx.thinkingReaction?.removeThinkingEmoji) {
+      try {
+        await thinkingCtx.thinkingReaction.removeThinkingEmoji();
+      } catch (removeError) {
+        console.error("Error removing thinking emoji:", removeError);
+      }
     }
   }
+});
 
-  console.log("Message stream started");
-}
+agent.on("start", () => {
+  console.log(`Waiting for messages...`);
+  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`🔗${getTestUrl(agent)}`);
+});
 
-main().catch(console.error);
+void agent.start();

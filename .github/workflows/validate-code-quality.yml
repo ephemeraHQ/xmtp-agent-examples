@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version-file: ".node-version"
+          node-version: "20.17.0"
           cache: "yarn"
         env:
           SKIP_YARN_COREPACK_CHECK: "1"

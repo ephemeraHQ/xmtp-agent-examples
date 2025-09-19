@@ -135,10 +135,7 @@ export class ActionsCodec implements ContentCodec<ActionsContent> {
         throw new Error(`Action[${index}].label cannot exceed 50 characters`);
       }
 
-      if (
-        action.style &&
-        !["primary", "secondary", "danger"].includes(action.style)
-      ) {
+      if (action.style && !["primary", "danger"].includes(action.style)) {
         throw new Error(
           `Action[${index}].style must be one of: primary, secondary, danger`,
         );

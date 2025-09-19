@@ -1,6 +1,6 @@
-# Dual client example
+# XMTP dual client queue example
 
-This agent demonstrates the use of dual clients in XMTP.
+A simple demonstration of using two separate XMTP clients: one for receiving messages and another for sending queued responses.
 
 ## Getting Started
 
@@ -18,8 +18,8 @@ This agent demonstrates the use of dual clients in XMTP.
 To run your XMTP agent, create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # encryption key for the local database
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
 

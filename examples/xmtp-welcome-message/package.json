@@ -11,8 +11,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/content-type-primitives": "^2.0.2",
-    "@xmtp/node-sdk": "*"
+    "@xmtp/agent-sdk": "*"
   },
   "devDependencies": {
     "tsx": "*",

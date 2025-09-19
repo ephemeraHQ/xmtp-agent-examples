@@ -1,18 +1,12 @@
 # XMTP agent examples
 
-This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Node SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/node-sdk).
+> 🚀 **Now with the latest XMTP Agent SDK!** These examples have been updated to use the newest version of the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk), featuring improved developer expiernce. Want to go back to legacy? try out the [legacy branch](https://github.com/ephemeraHQ/xmtp-agent-examples/tree/legacy).
 
-🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
+This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
-## Why build agents with XMTP?
+### Examples agents
 
-- **End-to-end & compliant**: Data is encrypted in transit and at rest, meeting strict security and regulatory standards.
-- **Open-source & trustless**: Built on top of the [MLS](https://messaginglayersecurity.rocks/) protocol, it replaces trust in centralized certificate authorities with cryptographic proofs.
-- **Privacy & metadata protection**: Offers anonymous usage through SDKs and pseudonymous usage with nodes tracking minimum metadata.
-- **Decentralized**: Operates on a peer-to-peer network, eliminating single points of failure and ensuring continued operation even if some nodes go offline.
-- **Multi-agent**: Allows confidential communication between multiple agents and humans through MLS group chats.
-
-## Example agents
+These example agents serve as a starting point for building your own agents.
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
@@ -25,48 +19,17 @@ This repository provides examples of agents that use the [XMTP](https://docs.xmt
 - [xmtp-inline-actions](/examples/xmtp-inline-actions/): An example using inline actions (dynamic buttons)
 - [xmtp-thinking-reaction](/examples/xmtp-thinking-reaction/): Agent that reacts to messages with a thinking emoji
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
-- [xmtp-multiple-workers](/examples/xmtp-multiple-workers/): Agent that uses multiple workers to send and receive messages
 - [xmtp-welcome-message](/examples/xmtp-welcome-message/): Agent that sends a welcome message when its added and to new members
 
-## Run example agents
-
-### Prerequisites
-
-- Node.js v20 or higher
-- Yarn v4 or higher
-- Docker (to run a local XMTP network, optional)
-
-### Cursor rules
+### Vibe coding
 
 See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
 
-> lets create an example that gets a number and returns its 2x multiple (use claude max)
-
-### Set environment variables
-
-To run an example XMTP agent, you must create a `.env` file with the following variables:
-
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV=dev # local, dev, production
+Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
 ```
 
-You can generate random XMTP keys by running:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> Running the `gen:keys` command will append keys to your existing `.env` file.
-
-You can revoke old installations by running:
-
-```bash
-# you can get your values from terminal logs
-yarn revoke <inbox-id> <installations-to-exclude>
-```
+🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
 ### Run an example agent
 
@@ -83,7 +46,53 @@ yarn gen:keys
 yarn dev
 ```
 
-### Optional: Run a local XMTP network
+### Set environment variables
+
+To run an example XMTP agent, you must create a `.env` file with the following variables:
+
+```bash
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
+XMTP_ENV=dev # local, dev, production
+```
+
+### Generate random XMTP keys
+
+Use this script to generate random XMTP keys:
+
+```bash
+yarn gen:keys
+```
+
+> [!WARNING]
+> Running the `gen:keys` command will append keys to your existing `.env` file.
+
+### Revoke installations
+
+You can revoke old installations by running:
+
+```bash
+# you can get your values from terminal logs
+yarn revoke <inbox-id> <installations-to-exclude>
+```
+
+### Enable debug mode
+
+You can enable debug mode by adding the following to your `.env` file:
+
+```bash
+XMTP_FORCE_DEBUG=true
+```
+
+> This will print additional information to the console.
+
+### Talk to your agent
+
+Try out the example agents using [xmtp.chat](https://xmtp.chat), the official playground for agents.
+
+![](/examples/xmtp-gm/screenshot.png)
+
+### Run a local XMTP network (Optional)
 
 `dev` and `production` networks are hosted by XMTP, while you can run your own `local` network.
 
@@ -101,10 +110,6 @@ yarn dev
    XMTP_ENV = local
    ```
 
-4. Try out the example agents using [xmtp.chat](https://xmtp.chat), the official web inbox for developers.
+### Deploy your own agent
 
-   ![](/examples/xmtp-gm/screenshot.png)
-
-## Build your own agent
-
-To learn how to build and [deploy](https://docs.xmtp.org/agents/build-an-agent#deploy-an-agent) your own production-grade agent with XMTP, see [Tutorial: Build an agent](https://docs.xmtp.org/agents/build-an-agent).
+See how to build and deploy [your own production-grade agent](https://docs.xmtp.org/agents/deploy-agent) with XMTP.

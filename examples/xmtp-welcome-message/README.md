@@ -1,23 +1,31 @@
-# XMTP welcome message example
+# XMTP Welcome Message Example
 
-When someone first messages the agent, they receive an interactive welcome message with two buttons.
+An ETH price agent that demonstrates welcome messages with interactive buttons and middleware architecture.
 
 <p align="center">
-  <img src="left.png" alt="Image 1" width="49%">
-  <img src="right.png" alt="Image 2" width="49%">
+  <img src="media/left.png" alt="Image 1" width="49%">
+  <img src="media/right.png" alt="Image 2" width="49%">
 </p>
+
+## Features
+
+- **Welcome Message**: Interactive onboarding with action buttons
+- **ETH Price Data**: Real-time price fetching from CoinGecko API
+- **Middleware Architecture**: Clean separation of concerns with custom middleware
+- **First-time Detection**: Identifies first-time interactions
+- **Error Handling**: Graceful API failure handling
 
 ## Usage
 
-This UX is meant to help onboard the users to the agent on the right and first step to engage with the agent.
+When users message the agent, they receive an interactive welcome message:
 
-**Message Text:**
+**Welcome Message:**
 
 > 👋 Welcome! I'm your ETH price agent.
 >
 > I can help you stay updated with the latest Ethereum price information. Choose an option below to get started:
 
-**Interactive Buttons:**
+**Interactive Actions:**
 
 - 💰 **Get Current ETH Price** - Shows current ETH price in USD
 - 📊 **Get Price with 24h Change** - Shows price with trend indicators
@@ -41,55 +49,77 @@ This UX is meant to help onboard the users to the agent on the right and first s
 >
 > Data provided by CoinGecko 📈
 
-## Available Actions
+## Technical Implementation
 
-| Action Button                | Description                          |
-| ---------------------------- | ------------------------------------ |
-| 💰 Get Current ETH Price     | Fetches current ETH price in USD     |
-| 📊 Get Price with 24h Change | Shows price with 24-hour change data |
+### Middleware Architecture
 
-**Commands:**
-
-- Type `help` or `gm` to show the welcome message again
-
-## Technical Features
-
-The agent demonstrates:
-
-- **Inline Actions**: XIP-67 compliant interactive buttons
-- **Content Types**: Custom ActionsContent and IntentContent codecs
-- **First-time detection**: Shows welcome message only on first interaction
-- **External API**: Fetches real-time data from CoinGecko
-- **Error handling**: Graceful fallbacks for API failures
-
-## Implementation Highlights
+The agent uses multiple middleware layers:
 
 ```typescript
-// Inline Actions Content
-const welcomeActions: ActionsContent = {
-  id: `welcome-${Date.now()}`,
-  description: "👋 Welcome! I'm your ETH price agent...",
-  actions: [
-    {
-      id: "get-current-price",
-      label: "💰 Get Current ETH Price",
-      style: "primary",
-    },
-    {
-      id: "get-price-chart",
-      label: "📊 Get Price with 24h Change",
-      style: "secondary",
-    },
-  ],
+import {
+  inlineActionsMiddleware,
+  registerAction,
+} from "../../utils/inline-actions/inline-actions";
+
+// Custom middleware for first-time detection
+const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
+  const messages = await ctx.conversation.messages();
+  const hasSentBefore = messages.some(
+    (msg) =>
+      msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
+  );
+  // Add first-time interaction logic
+  await next();
 };
 
-// Register codecs
-const client = await Client.create(signer, {
-  dbEncryptionKey,
-  appVersion: "example-agent/1.0.0",
-  env: XMTP_ENV as XmtpEnv,
-  codecs: [new ActionsCodec(), new IntentCodec()],
-});
+// Add middleware to agent
+agent.use(firstTimeInteractionMiddleware);
+agent.use(inlineActionsMiddleware);
+```
+
+### Action Registration
+
+Actions are registered using the inline actions utilities:
+
+```typescript
+import {
+  ActionBuilder,
+  registerAction,
+  sendActions,
+} from "../../utils/inline-actions/inline-actions";
+
+// Register action handlers
+registerAction("get-current-price", handleCurrentPrice);
+registerAction("get-price-chart", handlePriceWithChange);
+
+// Send welcome actions
+const welcomeActions = ActionBuilder.create(
+  `welcome-${Date.now()}`,
+  `👋 Welcome! I'm your ETH price agent...`,
+)
+  .add("get-current-price", "💰 Get Current ETH Price")
+  .add("get-price-chart", "📊 Get Price with 24h Change")
+  .build();
+
+await sendActions(ctx, welcomeActions);
+```
+
+### External API Integration
+
+The agent fetches real-time ETH price data:
+
+```typescript
+// Price fetching with error handling
+async function handleCurrentPrice(ctx: MessageContext) {
+  try {
+    await ctx.sendText("⏳ Fetching current ETH price...");
+    const { price } = await getCurrentPrice();
+    const formattedPrice = formatPrice(price);
+    await ctx.sendText(`💰 **Current ETH Price**\n\n${formattedPrice}`);
+  } catch (error) {
+    await ctx.sendText(`❌ Failed to fetch ETH price: ${error.message}`);
+  }
+}
 ```
 
 ## Getting started
@@ -108,8 +138,8 @@ const client = await Client.create(signer, {
 To run your XMTP agent, you must create a `.env` file with the following variables:
 
 ```bash
-WALLET_KEY= # the private key of the wallet
-DB_ENCRYPTION_KEY= # encryption key for the local database
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
 
