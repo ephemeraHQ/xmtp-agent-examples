@@ -16,7 +16,7 @@ agent.use(inlineActionsMiddleware);
 
 // 2. Register action handlers
 registerAction("my-action", async (ctx) => {
-  await ctx.conversation.send("Action executed!");
+  await ctx.sendText("Action executed!");
 });
 
 // 3. Send interactive buttons
@@ -47,8 +47,8 @@ await ActionBuilder.create("menu-id", "Description")
 await sendConfirmation(
   ctx,
   "Delete this item?",
-  async (ctx) => await ctx.conversation.send("Deleted!"),
-  async (ctx) => await ctx.conversation.send("Cancelled"),
+  async (ctx) => await ctx.sendText("Deleted!"),
+  async (ctx) => await ctx.sendText("Cancelled"),
 );
 ```
 
@@ -102,7 +102,7 @@ Register handlers for button clicks:
 ```typescript
 registerAction("my-action", async (ctx: MessageContext) => {
   // Handle the action
-  await ctx.conversation.send("Action completed!");
+  await ctx.sendText("Action completed!");
 
   // Optionally show navigation options
   await showNavigationOptions(ctx, config, "What would you like to do next?");
@@ -118,7 +118,7 @@ import { validators } from "./inline-actions";
 
 const result = validators.inboxId("123abc...");
 if (!result.valid) {
-  await ctx.conversation.send(`Error: ${result.error}`);
+  await ctx.sendText(`Error: ${result.error}`);
 }
 ```
 

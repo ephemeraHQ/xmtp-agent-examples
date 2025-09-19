@@ -86,7 +86,7 @@ agent.on("text", async (ctx) => {
 
     // Step 2: Send response
     console.log("💭 Sending response...");
-    await ctx.conversation.send(
+    await ctx.sendText(
       "I've been thinking about your message and here's my response!",
     );
 

@@ -22,12 +22,12 @@ process.loadEnvFile(".env");
  */
 async function handleCurrentPrice(ctx: MessageContext) {
   try {
-    await ctx.conversation.send("⏳ Fetching current ETH price...");
+    await ctx.sendText("⏳ Fetching current ETH price...");
 
     const { price } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
 
-    await ctx.conversation.send(`
+    await ctx.sendText(`
     💰 **Current ETH Price**
 
     ${formattedPrice}
@@ -35,9 +35,7 @@ async function handleCurrentPrice(ctx: MessageContext) {
     Data provided by CoinGecko 📈`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await ctx.conversation.send(
-      `❌ Failed to fetch ETH price: ${errorMessage}`,
-    );
+    await ctx.sendText(`❌ Failed to fetch ETH price: ${errorMessage}`);
   }
 }
 
@@ -46,13 +44,13 @@ async function handleCurrentPrice(ctx: MessageContext) {
  */
 async function handlePriceWithChange(ctx: MessageContext) {
   try {
-    await ctx.conversation.send("⏳ Fetching ETH price with 24h change...");
+    await ctx.sendText("⏳ Fetching ETH price with 24h change...");
 
     const { price, change24h } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
     const formattedChange = formatPriceChange(change24h);
 
-    await ctx.conversation.send(`📊 **ETH Price with 24h Change**
+    await ctx.sendText(`📊 **ETH Price with 24h Change**
 
 **Current Price:** ${formattedPrice}
 **24h Change:** ${formattedChange}
@@ -60,9 +58,7 @@ async function handlePriceWithChange(ctx: MessageContext) {
 Data provided by CoinGecko 📈`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await ctx.conversation.send(
-      `❌ Failed to fetch ETH price: ${errorMessage}`,
-    );
+    await ctx.sendText(`❌ Failed to fetch ETH price: ${errorMessage}`);
   }
 }
 

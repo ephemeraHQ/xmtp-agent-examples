@@ -14,7 +14,7 @@ agent.on("text", async (ctx) => {
     const messageContent = ctx.message.content;
     const senderAddress = await ctx.getSenderAddress();
     console.log(`Received message: ${messageContent} by ${senderAddress}`);
-    await ctx.conversation.send("gm");
+    await ctx.sendText("gm");
   }
 });
 
@@ -24,7 +24,7 @@ agent.on("text", async (ctx) => {
     console.log(
       `Received message in group: ${ctx.message.content} by ${senderAddress}`,
     );
-    await ctx.conversation.send("gm");
+    await ctx.sendText("gm");
   }
 });
 

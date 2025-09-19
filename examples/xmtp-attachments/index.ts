@@ -30,7 +30,7 @@ agent.on("text", async (ctx) => {
   const senderAddress = await ctx.getSenderAddress();
 
   console.log(`Preparing attachment for ${senderAddress}...`);
-  await ctx.conversation.send(`I'll send you an attachment now...`);
+  await ctx.sendText(`I'll send you an attachment now...`);
 
   const encrypted = await encryptAttachment(
     new Uint8Array(await readFile(DEFAULT_IMAGE_PATH)),
@@ -65,7 +65,7 @@ agent.on("attachment", async (ctx) => {
   console.log(`Processing attachment: ${filename} (${mimeType})`);
 
   // Send acknowledgment message
-  await ctx.conversation.send(
+  await ctx.sendText(
     `I received your attachment "${filename}"! Processing it now...`,
   );
 
@@ -94,7 +94,7 @@ agent.on("attachment", async (ctx) => {
   console.log(`Successfully sent back attachment: ${filename}`);
 
   // Send confirmation message
-  await ctx.conversation.send(`Here's your attachment back: ${filename}`);
+  await ctx.sendText(`Here's your attachment back: ${filename}`);
 });
 
 agent.on("start", () => {

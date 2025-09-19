@@ -28,7 +28,7 @@ const transactionReferenceMiddleware: AgentMiddleware = async (ctx, next) => {
     const transactionRef = ctx.message.content as TransactionReference;
     console.log("Received transaction reference:", transactionRef);
 
-    await ctx.conversation.send(
+    await ctx.sendText(
       `✅ Transaction confirmed!\n` +
         `🔗 Network: ${transactionRef.networkId}\n` +
         `📄 Hash: ${transactionRef.reference}\n` +
@@ -56,7 +56,7 @@ agent.on("text", async (ctx) => {
   const agentAddress = agent.client.accountIdentifier?.identifier || "";
 
   const result = await usdcHandler.getUSDCBalance(agentAddress);
-  await ctx.conversation.send(`Your USDC balance is: ${result} USDC`);
+  await ctx.sendText(`Your USDC balance is: ${result} USDC`);
 });
 
 agent.on("text", async (ctx) => {
@@ -66,9 +66,7 @@ agent.on("text", async (ctx) => {
 
   const amount = parseFloat((ctx.message.content as string).split(" ")[1]);
   if (isNaN(amount) || amount <= 0) {
-    await ctx.conversation.send(
-      "Please provide a valid amount. Usage: /tx <amount>",
-    );
+    await ctx.sendText("Please provide a valid amount. Usage: /tx <amount>");
     return;
   }
 
@@ -84,7 +82,7 @@ agent.on("text", async (ctx) => {
   await ctx.conversation.send(walletSendCalls, ContentTypeWalletSendCalls);
 
   // Send a follow-up message about transaction references
-  await ctx.conversation.send(
+  await ctx.sendText(
     `💡 After completing the transaction, you can send a transaction reference message to confirm completion.`,
   );
 });
@@ -92,7 +90,7 @@ agent.on("text", async (ctx) => {
 agent.on("text", async (ctx) => {
   if (ctx.isDm() && !ctx.message.content.startsWith("/")) return;
 
-  await ctx.conversation.send(
+  await ctx.sendText(
     "Available commands:\n" +
       "/balance - Check your USDC balance\n" +
       "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",

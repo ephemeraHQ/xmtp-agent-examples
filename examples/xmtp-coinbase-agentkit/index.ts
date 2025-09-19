@@ -224,11 +224,11 @@ async function handleMessage(ctx: MessageContext) {
       String(ctx.message.content),
     );
 
-    await ctx.conversation.send(response);
+    await ctx.sendText(response);
     console.debug(`Sent response to ${ctx.message.senderInboxId}: ${response}`);
   } catch (error) {
     console.error("Error handling message:", error);
-    await ctx.conversation.send(
+    await ctx.sendText(
       "I encountered an error while processing your request. Please try again later.",
     );
   }

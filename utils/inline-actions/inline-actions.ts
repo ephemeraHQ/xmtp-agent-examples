@@ -45,7 +45,7 @@ export async function showLastMenu(ctx: MessageContext): Promise<void> {
   } else {
     console.warn("⚠️ No last menu to show, falling back to main menu");
     // Fallback to main menu if no last menu is tracked
-    await ctx.conversation.send("Returning to main menu...");
+    await ctx.sendText("Returning to main menu...");
   }
 }
 
@@ -62,14 +62,12 @@ export const inlineActionsMiddleware: AgentMiddleware = async (ctx, next) => {
         await handler(ctx);
       } catch (error) {
         console.error(`❌ Error in action handler:`, error);
-        await ctx.conversation.send(
+        await ctx.sendText(
           `❌ Error: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     } else {
-      await ctx.conversation.send(
-        `❌ Unknown action: ${intentContent.actionId}`,
-      );
+      await ctx.sendText(`❌ Unknown action: ${intentContent.actionId}`);
     }
     return;
   }
@@ -142,7 +140,7 @@ export async function sendConfirmation(
     noId,
     onNo ||
       (async (ctx) => {
-        await ctx.conversation.send("❌ Cancelled");
+        await ctx.sendText("❌ Cancelled");
       }),
   );
 
@@ -235,7 +233,7 @@ export async function showMenu(
   const menu = config.menus[menuId];
   if (!menu) {
     console.error(`❌ Menu not found: ${menuId}`);
-    await ctx.conversation.send(`❌ Menu not found: ${menuId}`);
+    await ctx.sendText(`❌ Menu not found: ${menuId}`);
     return;
   }
 
@@ -268,7 +266,7 @@ export async function showNavigationOptions(
 
   if (!autoShowMenu) {
     // If auto-show is disabled, just send the message without showing menu
-    await ctx.conversation.send(message);
+    await ctx.sendText(message);
     return;
   }
 

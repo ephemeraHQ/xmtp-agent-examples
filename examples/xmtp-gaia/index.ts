@@ -39,10 +39,10 @@ agent.on("text", async (ctx) => {
 
     console.log(`Sending AI response: ${response}`);
     /* Send the AI response to the conversation */
-    await ctx.conversation.send(response);
+    await ctx.sendText(response);
   } catch (error) {
     console.error("Error getting AI response:", error);
-    await ctx.conversation.send(
+    await ctx.sendText(
       "Sorry, I encountered an error processing your message.",
     );
   }

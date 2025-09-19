@@ -112,16 +112,12 @@ The agent fetches real-time ETH price data:
 // Price fetching with error handling
 async function handleCurrentPrice(ctx: MessageContext) {
   try {
-    await ctx.conversation.send("⏳ Fetching current ETH price...");
+    await ctx.sendText("⏳ Fetching current ETH price...");
     const { price } = await getCurrentPrice();
     const formattedPrice = formatPrice(price);
-    await ctx.conversation.send(
-      `💰 **Current ETH Price**\n\n${formattedPrice}`,
-    );
+    await ctx.sendText(`💰 **Current ETH Price**\n\n${formattedPrice}`);
   } catch (error) {
-    await ctx.conversation.send(
-      `❌ Failed to fetch ETH price: ${error.message}`,
-    );
+    await ctx.sendText(`❌ Failed to fetch ETH price: ${error.message}`);
   }
 }
 ```

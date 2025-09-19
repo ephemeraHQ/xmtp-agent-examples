@@ -123,7 +123,7 @@ const transactionReferenceMiddleware: AgentMiddleware = async (ctx, next) => {
   if (ctx.message.contentType?.sameAs(ContentTypeTransactionReference)) {
     const transactionRef = ctx.message.content as TransactionReference;
 
-    await ctx.conversation.send(
+    await ctx.sendText(
       `✅ Transaction confirmed!\n` +
         `🔗 Network: ${transactionRef.networkId}\n` +
         `📄 Hash: ${transactionRef.reference}\n` +

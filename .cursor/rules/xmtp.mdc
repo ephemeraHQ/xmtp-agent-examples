@@ -46,7 +46,7 @@ const agent = await Agent.create(signer, {
 
 // 3. Respond to text messages
 agent.on("text", async (ctx) => {
-  await ctx.conversation.send("Hello from my XMTP Agent! 👋");
+  await ctx.sendText("Hello from my XMTP Agent! 👋");
 });
 
 // 4. Log when we're ready
@@ -128,11 +128,11 @@ agent.on("reply", async (ctx) => {
 
 // Listen to new conversations
 agent.on("dm", async (ctx) => {
-  await ctx.conversation.send("Welcome to our DM!");
+  await ctx.sendText("Welcome to our DM!");
 });
 
 agent.on("group", async (ctx) => {
-  await ctx.conversation.send("Hello group!");
+  await ctx.sendText("Hello group!");
 });
 
 // Listen to unhandled events
@@ -155,7 +155,7 @@ import { filter } from "@xmtp/agent-sdk";
 agent.on("message", async (ctx) => {
   // Filter for specific message types
   if (filter.isText(ctx.message)) {
-    await ctx.conversation.send(`Echo: ${ctx.message.content}`);
+    await ctx.sendText(`Echo: ${ctx.message.content}`);
   }
 });
 ```
@@ -246,7 +246,7 @@ import { filter } from "@xmtp/agent-sdk";
 // Using filter in message handler
 agent.on("text", async (ctx) => {
   if (filter.isText(ctx.message)) {
-    await ctx.conversation.send("You sent a text message!");
+    await ctx.sendText("You sent a text message!");
   }
 });
 
@@ -257,7 +257,7 @@ agent.on("text", async (ctx) => {
     !filter.fromSelf(ctx.message, ctx.client) &&
     filter.isText(ctx.message)
   ) {
-    await ctx.conversation.send("Valid text message received ✅");
+    await ctx.sendText("Valid text message received ✅");
   }
 });
 ```
@@ -333,10 +333,10 @@ agent.on("text", async (ctx) => {
   try {
     // Parse the message to extract two numbers
     const result = parseAndMultiply(messageContent);
-    await ctx.conversation.send(result);
+    await ctx.sendText(result);
   } catch (error) {
     console.error("Error processing message:", error);
-    await ctx.conversation.send(
+    await ctx.sendText(
       "Please send two numbers separated by space, comma, or 'x'. Examples: '5 3', '5,3', '5 x 3', 'multiply 5 and 3'",
     );
   }
@@ -748,7 +748,7 @@ agent.use(inlineActionsMiddleware);
 
 // 2. Register action handlers
 registerAction("my-action", async (ctx) => {
-  await ctx.conversation.send("Action executed!");
+  await ctx.sendText("Action executed!");
 });
 
 // 3. Send interactive buttons
@@ -779,8 +779,8 @@ await ActionBuilder.create("menu-id", "Description")
 await sendConfirmation(
   ctx,
   "Delete this item?",
-  async (ctx) => await ctx.conversation.send("Deleted!"),
-  async (ctx) => await ctx.conversation.send("Cancelled"),
+  async (ctx) => await ctx.sendText("Deleted!"),
+  async (ctx) => await ctx.sendText("Cancelled"),
 );
 ```
 
@@ -834,7 +834,7 @@ Register handlers for button clicks:
 ```typescript
 registerAction("my-action", async (ctx: MessageContext) => {
   // Handle the action
-  await ctx.conversation.send("Action completed!");
+  await ctx.sendText("Action completed!");
 
   // Optionally show navigation options
   await showNavigationOptions(ctx, config, "What would you like to do next?");
@@ -850,7 +850,7 @@ import { validators } from "./inline-actions";
 
 const result = validators.inboxId("123abc...");
 if (!result.valid) {
-  await ctx.conversation.send(`Error: ${result.error}`);
+  await ctx.sendText(`Error: ${result.error}`);
 }
 ```
 
@@ -955,7 +955,7 @@ agent.on("text", async (ctx) => {
     "image/png",
   );
 
-  await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
+  await ctx.sendText(remoteAttachment, ContentTypeRemoteAttachment);
 });
 ```
 
@@ -975,7 +975,7 @@ agent.on("attachment", async (ctx) => {
   console.log(`Processing attachment: ${filename} (${mimeType})`);
 
   // Send acknowledgment
-  await ctx.conversation.send(
+  await ctx.sendText(
     `I received your attachment "${filename}"! Processing it now...`,
   );
 
@@ -999,7 +999,7 @@ agent.on("attachment", async (ctx) => {
     fileUrl,
   );
 
-  await ctx.conversation.send(reEncodedAttachment, ContentTypeRemoteAttachment);
+  await ctx.sendText(reEncodedAttachment, ContentTypeRemoteAttachment);
 });
 ```
 

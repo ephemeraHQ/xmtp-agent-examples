@@ -77,7 +77,7 @@ async function main() {
 
     const transfer = createUSDCTransfer(senderAddress, 0.005);
     await ctx.conversation.send(transfer, ContentTypeWalletSendCalls);
-    await ctx.conversation.send(
+    await ctx.sendText(
       "💸 Please approve the 0.005 USDC transfer in your wallet!",
     );
   });
@@ -88,14 +88,12 @@ async function main() {
 
     const transfer = createUSDCTransfer(senderAddress, 1);
     await ctx.conversation.send(transfer, ContentTypeWalletSendCalls);
-    await ctx.conversation.send(
-      "💸 Please approve the 1 USDC transfer in your wallet!",
-    );
+    await ctx.sendText("💸 Please approve the 1 USDC transfer in your wallet!");
   });
 
   registerAction("check-balance", async (ctx) => {
     const balance = await usdcHandler.getUSDCBalance(agentAddress!);
-    await ctx.conversation.send(
+    await ctx.sendText(
       `💰 Bot Balance: ${balance} USDC on ${networkConfig.networkName}`,
     );
   });
@@ -106,7 +104,7 @@ async function main() {
 
     const transfer = createUSDCTransfer(senderAddress, 0.005, true);
     await ctx.conversation.send(transfer, ContentTypeWalletSendCalls);
-    await ctx.conversation.send(
+    await ctx.sendText(
       "😉 Please approve the 0.005 USDC transfer with rich metadata!",
     );
   });
@@ -140,7 +138,7 @@ FEATURES:
 
 🔗 Test at: https://xmtp.chat`;
 
-    await ctx.conversation.send(infoMessage);
+    await ctx.sendText(infoMessage);
   });
 
   // Use the inline actions middleware

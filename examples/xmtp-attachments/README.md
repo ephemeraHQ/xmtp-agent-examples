@@ -108,7 +108,7 @@ agent.on("attachment", async (ctx) => {
     fileUrl,
   );
 
-  await ctx.conversation.send(reEncodedAttachment, ContentTypeRemoteAttachment);
+  await ctx.sendText(reEncodedAttachment, ContentTypeRemoteAttachment);
 });
 ```
 

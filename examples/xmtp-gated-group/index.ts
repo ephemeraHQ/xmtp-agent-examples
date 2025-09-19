@@ -84,19 +84,19 @@ agent.on("text", (ctx) => {
 
   // Check if validation data is available
   if (!validation) {
-    void ctx.conversation.send(GROUP_CONFIG.messages.error);
+    void ctx.sendText(GROUP_CONFIG.messages.error);
     return;
   }
 
   // Check if secret word is not configured
   if (!validation.hasSecretWord) {
-    void ctx.conversation.send(GROUP_CONFIG.messages.error);
+    void ctx.sendText(GROUP_CONFIG.messages.error);
     return;
   }
 
   // Check if user is already in the group
   if (validation.isAlreadyInGroup) {
-    void ctx.conversation.send(GROUP_CONFIG.messages.alreadyInGroup);
+    void ctx.sendText(GROUP_CONFIG.messages.alreadyInGroup);
     return;
   }
 
@@ -105,7 +105,7 @@ agent.on("text", (ctx) => {
     void handleSuccessfulPassphrase(ctx);
   } else {
     // Wrong passphrase
-    void ctx.conversation.send(GROUP_CONFIG.messages.invalid);
+    void ctx.sendText(GROUP_CONFIG.messages.invalid);
   }
 });
 
@@ -135,7 +135,7 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
     await group.addMembers([ctx.message.senderInboxId]);
 
     // Send success messages
-    await ctx.conversation.send(GROUP_CONFIG.messages.success[0]);
+    await ctx.sendText(GROUP_CONFIG.messages.success[0]);
 
     // Send welcome message in the group
     await group.send(GROUP_CONFIG.messages.success[1]);
@@ -149,7 +149,7 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
     );
 
     // Send group details
-    await ctx.conversation.send(
+    await ctx.sendText(
       `Group Details:\n` +
         `- Group ID: ${group.id}\n` +
         `- Group URL: https://xmtp.chat/conversations/${group.id}\n` +
@@ -158,6 +158,6 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error adding user to group:", errorMessage);
-    await ctx.conversation.send(GROUP_CONFIG.messages.error);
+    await ctx.sendText(GROUP_CONFIG.messages.error);
   }
 }
