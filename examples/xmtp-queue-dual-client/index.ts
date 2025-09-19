@@ -1,5 +1,5 @@
 import { Agent, getTestUrl } from "@xmtp/agent-sdk";
-import { getDbPath, loadEnvFile } from "../../utils/general";
+import { loadEnvFile } from "../../utils/general";
 
 loadEnvFile();
 
@@ -10,7 +10,9 @@ console.log("Starting XMTP Dual Client Agent...");
 // Receiving client - listens for messages
 const receivingClient = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
-  dbPath: getDbPath("receiving"),
+  dbPath: (inboxId) =>
+    process.env.RAILWAY_VOLUME_MOUNT_PATH ??
+    "." + `/${process.env.XMTP_ENV}-${inboxId.slice(0, 8)}-receiving.db3`,
 });
 
 receivingClient.on("text", async (ctx) => {
@@ -28,7 +30,9 @@ receivingClient.on("start", () => {
 // Sending client - processes the queue
 const sendingClient = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
-  dbPath: getDbPath("sending"),
+  dbPath: (inboxId) =>
+    process.env.RAILWAY_VOLUME_MOUNT_PATH ??
+    "." + `/${process.env.XMTP_ENV}-${inboxId.slice(0, 8)}-sending.db3`,
 });
 
 // Process queue every 2 seconds
