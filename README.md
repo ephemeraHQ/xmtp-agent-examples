@@ -1,6 +1,6 @@
-> 🚀 **Now with the latest XMTP Agent SDK!** These examples have been updated to use the newest version of the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk), featuring improved performance, enhanced security, and streamlined development experience. Want to go back to legacy? try out the [legacy branch](https://github.com/ephemeraHQ/xmtp-agent-examples/tree/legacy).
-
 # XMTP agent examples
+
+> 🚀 **Now with the latest XMTP Agent SDK!** These examples have been updated to use the newest version of the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk), featuring improved developer expiernce. Want to go back to legacy? try out the [legacy branch](https://github.com/ephemeraHQ/xmtp-agent-examples/tree/legacy).
 
 This repository provides examples of agents that use the [XMTP](https://docs.xmtp.org/) network. These agents are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk).
 
