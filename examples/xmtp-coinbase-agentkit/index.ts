@@ -13,8 +13,9 @@ import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { Agent as XMTPAgent, type MessageContext } from "@xmtp/agent-sdk";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 // Storage constants
 const XMTP_STORAGE_DIR = ".data/xmtp";
 const WALLET_STORAGE_DIR = ".data/wallet";

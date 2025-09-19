@@ -9,8 +9,9 @@ import {
   WalletSendCallsCodec,
 } from "@xmtp/content-type-wallet-send-calls";
 import { USDCHandler } from "../../utils/usdc";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 
 const NETWORK_ID = process.env.NETWORK_ID || "base-sepolia";
 

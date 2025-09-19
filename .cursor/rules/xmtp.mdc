@@ -72,7 +72,6 @@ The XMTP Agent SDK allows you to use environment variables (`process.env`) for e
 Using the environment variables, you can setup your agent in just a few lines of code:
 
 ```ts
-// Load variables from .env file
 process.loadEnvFile(".env");
 
 // Create agent using environment variables
@@ -713,20 +712,13 @@ const lockedPermissions = {
 If no `dbPath` is provided, the client will use the current working directory. You can also specify a custom path for the database.
 
 ```jsx
-function getDbPath(description: string = "xmtp") {
-  //Checks if the environment is a Railway deployment
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  // Create database directory if it doesn't exist
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
-  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
-}
 
 // Create a client with db path
 const client = await Client.create(signer, {
   env: XMTP_ENV as XmtpEnv,
-  dbPath: getDbPath(),
+  dbPath: dbPath: (inboxId) =>
+    process.env.RAILWAY_VOLUME_MOUNT_PATH ??
+    "." + `/${process.env.XMTP_ENV}-${inboxId.slice(0, 8)}.db3`,
 });
 ```
 

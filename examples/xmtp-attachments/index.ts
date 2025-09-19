@@ -13,7 +13,9 @@ import {
 } from "../../utils/atttachment";
 import { uploadToPinata } from "./upload";
 
-process.loadEnvFile(".env");
+import { loadEnvFile } from "../../utils/general";
+
+loadEnvFile();
 // Check this path is correct in your case of errors
 const DEFAULT_IMAGE_PATH = "./logo.png";
 

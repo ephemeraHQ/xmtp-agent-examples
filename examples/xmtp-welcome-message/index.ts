@@ -13,8 +13,9 @@ import {
 import { ActionsCodec } from "../../utils/inline-actions/types/ActionsContent";
 import { IntentCodec } from "../../utils/inline-actions/types/IntentContent";
 import { formatPrice, formatPriceChange, getCurrentPrice } from "./ethPrice";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 
 /**
  * Handle current ETH price request

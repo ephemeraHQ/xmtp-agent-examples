@@ -1,8 +1,9 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
 import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
+loadEnvFile();
 
 const WALLET_PATH = "wallet.json";
 const CDP_API_KEY_NAME = process.env.CDP_API_KEY_NAME || "";
@@ -13,7 +14,9 @@ const walletData = await initializeWallet(WALLET_PATH);
 /* Create the signer using viem and parse the encryption key for the local db */
 const user = createUser(walletData.seed as `0x${string}`);
 const signer = createSigner(user);
-const agent = await Agent.create(signer);
+const agent = await Agent.create(signer, {
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
+});
 void agent.start();
 agent.on("text", async (ctx) => {
   const senderAddress = await ctx.getSenderAddress();
