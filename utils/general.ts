@@ -1,20 +1,10 @@
-import fs, { existsSync } from "fs";
-
-export function getDbPath(description: string = "xmtp") {
-  //Checks if the environment is a Railway deployment
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
-  // Create database directory if it doesn't exist
-  if (!fs.existsSync(volumePath)) {
-    fs.mkdirSync(volumePath, { recursive: true });
-  }
-  return `${volumePath}/${process.env.XMTP_ENV}-${description}.db3`;
-}
+import { existsSync } from "fs";
 
 export function loadEnvFile() {
-  const filePath = ".env";
-  if (existsSync(filePath)) {
-    process.loadEnvFile(filePath);
-  } else if (existsSync(`../../${filePath}`)) {
-    process.loadEnvFile(`../../${filePath}`);
+  // Ionly do this in the gm example because it's call from the root
+  if (existsSync(".env")) {
+    process.loadEnvFile(".env");
+  } else if (existsSync(`../../.env`)) {
+    process.loadEnvFile(`../../.env`);
   }
 }
