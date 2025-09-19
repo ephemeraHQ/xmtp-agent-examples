@@ -1,6 +1,5 @@
 import {
   Agent,
-  filter,
   getTestUrl,
   type AgentMiddleware,
   MessageContext,

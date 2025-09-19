@@ -1,4 +1,4 @@
-import { Agent, filter, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent, getTestUrl } from "@xmtp/agent-sdk";
 
 process.loadEnvFile(".env");
 const path = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? "./";

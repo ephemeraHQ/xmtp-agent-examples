@@ -1,9 +1,4 @@
-import {
-  Agent,
-  getTestUrl,
-  filter,
-  type AgentMiddleware,
-} from "@xmtp/agent-sdk";
+import { Agent, getTestUrl, type AgentMiddleware } from "@xmtp/agent-sdk";
 import {
   TransactionReferenceCodec,
   ContentTypeTransactionReference,

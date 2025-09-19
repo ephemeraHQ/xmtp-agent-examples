@@ -21,10 +21,10 @@
     "typecheck": "tsc"
   },
   "resolutions": {
-    "@xmtp/agent-sdk": "0.0.13"
+    "@xmtp/agent-sdk": "0.0.14"
   },
   "dependencies": {
-    "@xmtp/agent-sdk": "0.0.13"
+    "@xmtp/agent-sdk": "0.0.14"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
