@@ -1,12 +1,10 @@
 import { Agent, getTestUrl } from "@xmtp/agent-sdk";
+import { loadEnvFile } from "../../utils/general";
 
-process.loadEnvFile(".env");
-const path = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? "./";
+loadEnvFile();
 
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
-  dbPath: (inboxId: string) =>
-    path + "/" + process.env.XMTP_ENV + "-" + inboxId.slice(0, 8),
 });
 
 agent.on("text", async (ctx) => {
