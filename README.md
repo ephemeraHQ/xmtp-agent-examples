@@ -19,13 +19,13 @@ These example agents serve as a starting point for building your own agents. The
 
 ### Vibe coding
 
-See these [Cursor rules](/.cursor) for vibe coding agents with XMTP using best practices.
+See these [Cursor rules](/.cursor) for vibe coding with XMTP using best practices.
 
 ```bash
 Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
 ```
 
-🎥 Watch [Vibe coding secure agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
+🎥 Watch [Vibe coding agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
 
 ### Run an example agent
 
@@ -44,7 +44,7 @@ yarn dev
 
 ### Set environment variables
 
-To run an example XMTP agent, you must create a `.env` file with the following variables:
+To run an example, you must create a `.env` file with the following variables:
 
 ```bash
 XMTP_WALLET_KEY= # the private key of the wallet
@@ -84,7 +84,7 @@ XMTP_FORCE_DEBUG=true
 
 ### Talk to your agent
 
-Try out the example agents using [xmtp.chat](https://xmtp.chat), the official playground for agents.
+Try out the examples using [xmtp.chat](https://xmtp.chat), the official playground for agents.
 
 ![](/examples/xmtp-gm/screenshot.png)
 
