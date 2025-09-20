@@ -1,4 +1,3 @@
-> [!IMPORTANT]
 > 🚀 **Now with the latest XMTP Agent SDK!** These examples have been updated to use the newest version of the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk). Want to go back to legacy? try out the [node-sdk branch](https://github.com/ephemeraHQ/xmtp-agent-examples/tree/node-sdk).
 
 # XMTP agent examples
