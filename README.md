@@ -2,7 +2,7 @@
 
 # XMTP agent examples
 
-These example agents serve as a starting point for building your own agents. They are built with the [XMTP Agent SDK](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk) and run on the [XMTP](https://docs.xmtp.org/) network.
+These example agents serve as a starting point for building your own agents. They are built with the [`agent-sdk`](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk) and run on the [XMTP](https://docs.xmtp.org/) network.
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
