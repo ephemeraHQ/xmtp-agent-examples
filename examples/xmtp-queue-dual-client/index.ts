@@ -29,7 +29,7 @@ receivingClient.on("start", () => {
   console.log(
     `Address: ${receivingClient.client.accountIdentifier?.identifier}`,
   );
-  console.log(`🔗${getTestUrl(receivingClient)}`);
+  console.log(`🔗${getTestUrl(receivingClient.client)}`);
 });
 
 // Sending client - processes the queue
