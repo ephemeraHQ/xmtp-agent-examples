@@ -1,9 +1,9 @@
 import {
   Agent,
-  getTestUrl,
   type MessageContext,
   type AgentMiddleware,
 } from "@xmtp/agent-sdk";
+import { getTestUrl } from "@xmtp/agent-sdk/debug";
 
 import { loadEnvFile } from "../../utils/general";
 
@@ -114,7 +114,7 @@ agent.on("text", (ctx) => {
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
   console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
-  console.log(`🔗${getTestUrl(agent)}`);
+  console.log(`🔗${getTestUrl(agent.client)}`);
 });
 
 void agent.start();

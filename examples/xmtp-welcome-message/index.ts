@@ -1,9 +1,6 @@
-import {
-  Agent,
-  getTestUrl,
-  type AgentMiddleware,
-  MessageContext,
-} from "@xmtp/agent-sdk";
+import { Agent, type AgentMiddleware, MessageContext } from "@xmtp/agent-sdk";
+import { getTestUrl } from "@xmtp/agent-sdk/debug";
+
 import {
   ActionBuilder,
   inlineActionsMiddleware,
@@ -125,7 +122,7 @@ agent.on("text", async (ctx) => {
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
   console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
-  console.log(`🔗${getTestUrl(agent)}`);
+  console.log(`🔗${getTestUrl(agent.client)}`);
 });
 
 void agent.start();

@@ -1,4 +1,5 @@
-import { Agent, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
+import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import {
   WalletSendCallsCodec,
   ContentTypeWalletSendCalls,
@@ -169,7 +170,7 @@ Choose an action below:`,
   agent.on("start", () => {
     console.log(`🤖 Inline Actions Agent is running...`);
     console.log(`Address: ${agentAddress}`);
-    console.log(`🔗 ${getTestUrl(agent)}`);
+    console.log(`🔗 ${getTestUrl(agent.client)}`);
     console.log(`Send /help or gm to get started!`);
   });
 

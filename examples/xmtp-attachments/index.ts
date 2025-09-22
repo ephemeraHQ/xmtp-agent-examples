@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { Agent, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
+import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,
@@ -102,7 +103,7 @@ agent.on("attachment", async (ctx) => {
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
   console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
-  console.log(`🔗${getTestUrl(agent)}`);
+  console.log(`🔗${getTestUrl(agent.client)}`);
 });
 
 void agent.start();
