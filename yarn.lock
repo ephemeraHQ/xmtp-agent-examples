@@ -1507,18 +1507,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/agent-sdk@npm:0.0.14":
-  version: 0.0.14
-  resolution: "@xmtp/agent-sdk@npm:0.0.14"
+"@xmtp/agent-sdk@npm:0.0.16":
+  version: 0.0.16
+  resolution: "@xmtp/agent-sdk@npm:0.0.16"
   dependencies:
     "@xmtp/content-type-reaction": "npm:^2.0.2"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/content-type-reply": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
-    "@xmtp/node-sdk": "npm:^4.1.1"
+    "@xmtp/node-sdk": "npm:^4.1.2"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.37.6"
-  checksum: 10c0/a434036d03fe8a5bfc657d609d4a788f1d70b1f403acbd24728bcfb45fed16183bdc32dfd76106f8cffb23eea3c140ab9c3c5fb47f2759c251d1f8c30fe805d0
+  checksum: 10c0/313b91f0426454241182c31e9ee9a567792e17e75c9d73754b2a25b057a26e2690f2cac9670e292069ecfd8cdf33bab092aec25799d9bb888c281dcc4320845a
   languageName: node
   linkType: hard
 
@@ -1614,15 +1614,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:^4.1.1":
-  version: 4.1.1
-  resolution: "@xmtp/node-sdk@npm:4.1.1"
+"@xmtp/node-sdk@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "@xmtp/node-sdk@npm:4.1.2"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
     "@xmtp/node-bindings": "npm:1.4.0"
-  checksum: 10c0/b2f8cb54ea49477ce276d142aaf95199334b25bfd60ced26ee6edcaae1656f89bc068c7197b36f0d648fbb8b50b2a9d1ba005d60bfa74b14542212883c5ea017
+  checksum: 10c0/fc0b41ca01b869f7205362f299eb1f4dc7cdb0b6850231549cb579c97a79767cac55b85aa130197934e5cb5b7cf6528901121b90402ee7ffaefbd86dfccfcdd7
   languageName: node
   linkType: hard
 
@@ -5127,7 +5127,7 @@ __metadata:
     "@eslint/compat": "npm:^1.2.6"
     "@eslint/js": "npm:^9.19.0"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/agent-sdk": "npm:0.0.14"
+    "@xmtp/agent-sdk": "npm:0.0.16"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"

@@ -1,6 +1,7 @@
 import fs from "fs";
 import { Coinbase, Wallet, type WalletData } from "@coinbase/coinbase-sdk";
-import { Agent, createSigner, createUser } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
+import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { loadEnvFile } from "../../utils/general";
 
 loadEnvFile();

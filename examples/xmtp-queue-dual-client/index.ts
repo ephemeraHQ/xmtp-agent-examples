@@ -1,4 +1,5 @@
-import { Agent, getTestUrl } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
+import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { loadEnvFile } from "../../utils/general";
 
 loadEnvFile();
@@ -28,7 +29,7 @@ receivingClient.on("start", () => {
   console.log(
     `Address: ${receivingClient.client.accountIdentifier?.identifier}`,
   );
-  console.log(`🔗${getTestUrl(receivingClient)}`);
+  console.log(`🔗${getTestUrl(receivingClient.client)}`);
 });
 
 // Sending client - processes the queue
