@@ -448,7 +448,7 @@ const peerInboxId = dm.peerInboxId;
 
 ```typescript
 // Create a new group
-const group = await client.conversations.newGroup(["inboxId1", "inboxId2"], {
+const group = await agent.createGroupWithAddresses(addresses, {
   groupName: "My Group",
   groupDescription: "Group description",
 });
@@ -470,7 +470,7 @@ Example usage:
 
 ```typescript
 // Create a group with some initial settings
-const group = await client.conversations.newGroup([inboxId1, inboxId2], {
+const group = await agent.createGroupWithAddresses(addresses, {
   groupName: "Project Discussion",
   groupDescription: "A group for our project collaboration",
   groupImageUrlSquare: "https://example.com/image.jpg",
