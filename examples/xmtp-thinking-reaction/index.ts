@@ -115,7 +115,7 @@ agent.on("text", async (ctx) => {
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
-  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`Address: ${agent.address}`);
   console.log(`🔗${getTestUrl(agent.client)}`);
 });
 

@@ -32,7 +32,7 @@ async function main() {
     codecs: [new WalletSendCallsCodec(), new ActionsCodec(), new IntentCodec()],
   });
 
-  const agentAddress = agent.client.accountIdentifier?.identifier;
+  const agentAddress = agent.address;
   if (!agentAddress) {
     throw new Error("Unable to get agent address");
   }

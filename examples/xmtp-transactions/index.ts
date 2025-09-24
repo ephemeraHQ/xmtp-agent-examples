@@ -50,7 +50,7 @@ agent.use(transactionReferenceMiddleware);
 
 agent.on("text", async (ctx) => {
   if (!ctx.message.content.startsWith("/balance")) return;
-  const agentAddress = agent.client.accountIdentifier?.identifier || "";
+  const agentAddress = agent.address || "";
 
   const result = await usdcHandler.getUSDCBalance(agentAddress);
   await ctx.sendText(`Your USDC balance is: ${result} USDC`);
@@ -58,7 +58,7 @@ agent.on("text", async (ctx) => {
 
 agent.on("text", async (ctx) => {
   if (!ctx.message.content.startsWith("/tx")) return;
-  const agentAddress = agent.client.accountIdentifier?.identifier || "";
+  const agentAddress = agent.address || "";
   const senderAddress = await ctx.getSenderAddress();
 
   const amount = parseFloat((ctx.message.content as string).split(" ")[1]);
@@ -96,7 +96,7 @@ agent.on("text", async (ctx) => {
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
-  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`Address: ${agent.address}`);
   console.log(`🔗${getTestUrl(agent.client)}`);
 });
 
