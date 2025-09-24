@@ -26,9 +26,7 @@ receivingClient.on("text", async (ctx) => {
 
 receivingClient.on("start", () => {
   console.log(`Waiting for messages...`);
-  console.log(
-    `Address: ${receivingClient.client.accountIdentifier?.identifier}`,
-  );
+  console.log(`Address: ${receivingClient.address}`);
   console.log(`🔗${getTestUrl(receivingClient.client)}`);
 });
 

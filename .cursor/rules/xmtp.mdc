@@ -343,7 +343,7 @@ agent.on("text", async (ctx) => {
 
 agent.on("start", () => {
   console.log(`Multiplication Agent is running...`);
-  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`Address: ${agent.address}`);
   console.log(`🔗${getTestUrl(agent)}`);
   console.log(`Send a number to multiply!`);
 });
@@ -428,11 +428,11 @@ XMTP provides two main conversation types:
 ### Direct Messages (DMs)
 
 ```typescript
-// Create a new DM
+// Create a new DM via Inboxid
 const dm = await client.conversations.newDm("inboxId123");
 
 // Or create using an Ethereum address
-const dmByAddress = await client.conversations.newDmWithIdentifier({
+const dmByAddress = await agent.createDmWithIdentifier({
   identifier: "0x7c40611372d354799d138542e77243c284e460b2",
   identifierKind: IdentifierKind.Ethereum,
 });
@@ -448,7 +448,7 @@ const peerInboxId = dm.peerInboxId;
 
 ```typescript
 // Create a new group
-const group = await client.conversations.newGroup(["inboxId1", "inboxId2"], {
+const group = await agent.createGroupWithAddresses(addresses, {
   groupName: "My Group",
   groupDescription: "Group description",
 });
@@ -470,7 +470,7 @@ Example usage:
 
 ```typescript
 // Create a group with some initial settings
-const group = await client.conversations.newGroup([inboxId1, inboxId2], {
+const group = await agent.createGroupWithAddresses(addresses, {
   groupName: "Project Discussion",
   groupDescription: "A group for our project collaboration",
   groupImageUrlSquare: "https://example.com/image.jpg",

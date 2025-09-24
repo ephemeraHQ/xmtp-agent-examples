@@ -113,7 +113,7 @@ agent.on("text", (ctx) => {
 
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
-  console.log(`Address: ${agent.client.accountIdentifier?.identifier}`);
+  console.log(`Address: ${agent.address}`);
   console.log(`🔗${getTestUrl(agent.client)}`);
 });
 
@@ -124,8 +124,8 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
     // Check if we already have a group created
     // For simplicity, we'll create a new group each time
     // In a production app, you'd want to store the group ID
-    const group = await ctx.client.conversations.newGroup(
-      [ctx.message.senderInboxId],
+    const group = await agent.createGroupWithAddresses(
+      [(await ctx.getSenderAddress()) as `0x${string}`],
       {
         groupName: GROUP_CONFIG.groupName,
         groupDescription: GROUP_CONFIG.groupDescription,
@@ -134,7 +134,7 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
 
     // Add the user to the groupn
 
-    await group.addMembers([ctx.message.senderInboxId]);
+    await group.addMembers([(await ctx.getSenderAddress()) as `0x${string}`]);
 
     // Send success messages
     await ctx.sendText(GROUP_CONFIG.messages.success[0]);
@@ -144,7 +144,7 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
     await group.send(GROUP_CONFIG.messages.success[2]);
 
     // Mark user as in group
-    usersInGroup.add(ctx.message.senderInboxId);
+    usersInGroup.add(await ctx.getSenderAddress());
 
     console.log(
       `✅ User ${ctx.message.senderInboxId} successfully added to group ${group.id}`,
