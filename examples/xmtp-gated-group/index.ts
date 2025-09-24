@@ -124,16 +124,12 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
     // Check if we already have a group created
     // For simplicity, we'll create a new group each time
     // In a production app, you'd want to store the group ID
-    const group = await agent.createGroupWithAddresses(
-      [(await ctx.getSenderAddress()) as `0x${string}`],
-      {
-        groupName: GROUP_CONFIG.groupName,
-        groupDescription: GROUP_CONFIG.groupDescription,
-      },
-    );
+    const group = await agent.createGroupWithAddresses([], {
+      groupName: GROUP_CONFIG.groupName,
+      groupDescription: GROUP_CONFIG.groupDescription,
+    });
 
     // Add the user to the groupn
-
     await group.addMembers([(await ctx.getSenderAddress()) as `0x${string}`]);
 
     // Send success messages
