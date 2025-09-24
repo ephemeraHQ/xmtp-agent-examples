@@ -1,5 +1,3 @@
-> 🚀 **Now with the latest XMTP Agent SDK!** These examples have been updated to use the newest version of the [`agent-sdk`](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk). Want to go back to legacy? try out the [node-sdk branch](https://github.com/ephemeraHQ/xmtp-agent-examples/tree/node-sdk).
-
 # XMTP agent examples
 
 These example agents serve as a starting point for building your own agents. They are built with the [`agent-sdk`](https://github.com/xmtp/xmtp-js/tree/main/sdks/agent-sdk) and run on the [XMTP](https://docs.xmtp.org/) network.
