@@ -106,4 +106,4 @@ Try out the examples using [xmtp.chat](https://xmtp.chat), the official playgrou
 
 ### Deploy your own agent
 
-See how to build and deploy [your own production-grade agent](https://docs.xmtp.org/agents/deploy-agent) with XMTP.
+See how to build and deploy [your own production-grade agent](https://docs.xmtp.org/agents/deploy/deploy-agent) with XMTP.
