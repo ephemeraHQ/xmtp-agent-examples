@@ -10,6 +10,15 @@ An XMTP agent that performs reverse resolution of Ethereum addresses to Web3 ide
 
 Send an Ethereum address and the agent will look up associated domain names across various Web3 platforms:
 
+```tsx
+on("text", async (ctx) => {
+  const input = ctx.getSenderAddress();
+  const results = await fetchFromWeb3Bio(input);
+  const names = results.map((result) => result.identity).join("\n");
+  await ctx.sendText(names);
+});
+```
+
 - **ENS** (e.g., `vitalik.eth`)
 - **Farcaster** (e.g., `dwr.eth`)
 - **Lens Protocol** (e.g., `stani.lens`)

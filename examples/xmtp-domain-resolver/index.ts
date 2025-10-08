@@ -8,11 +8,6 @@ const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
 });
 
-// Helper function to detect if input is an Ethereum address
-const isEthereumAddress = (input: string): boolean => {
-  return /^0x[a-fA-F0-9]{40}$/.test(input.trim());
-};
-
 // Web3.bio API response type
 interface Web3BioProfile {
   address: string | null;
@@ -53,46 +48,16 @@ const fetchFromWeb3Bio = async (
 };
 
 agent.on("text", async (ctx) => {
-  console.log(`Received message: ${ctx.message.content}`);
-  const input = isEthereumAddress(ctx.message.content.trim())
-    ? ctx.message.content.trim()
-    : await ctx.getSenderAddress();
-
-  try {
-    // Reverse resolution: address → name
-    const results = await fetchFromWeb3Bio(
-      input,
-      process.env.WEB3_BIO_API_KEY as string,
-    );
-    console.log(`Resolved address ${input}:`, results);
-
-    if (results.length > 0) {
-      // Prioritize Farcaster, then other platforms, exclude generic ethereum addresses
-      const sortedResults = results
-        .filter((profile) => profile.platform !== "ethereum")
-        .sort((a, b) => {
-          if (a.platform === "farcaster") return -1;
-          if (b.platform === "farcaster") return 1;
-          return 0;
-        });
-
-      if (sortedResults.length > 0) {
-        const names = sortedResults
-          .map((profile) => `${profile.identity} (${profile.platform})`)
-          .join("\n");
-        await ctx.sendText(`Address: ${input}\n\nResolved names:\n${names}`);
-      } else {
-        await ctx.sendText(`No names found for address: ${input}`);
-      }
-    } else {
-      await ctx.sendText(`No names found for address: ${input}`);
-    }
-  } catch (error) {
-    console.error("Resolution error:", error);
-    await ctx.sendText(
-      `Sorry, I couldn't resolve the address. Please check the format and try again.`,
-    );
-  }
+  const input = await ctx.getSenderAddress();
+  const results = await fetchFromWeb3Bio(input);
+  // Prioritize Farcaster, then other platforms, exclude generic ethereum addresses
+  const farcasterResults = results
+    .filter((profile) => profile.platform === "farcaster")
+    .sort((a, b) => {
+      return a.displayName.localeCompare(b.displayName);
+    });
+  const names = farcasterResults.map((result) => result.identity).join("\n");
+  await ctx.sendText(names);
 });
 
 agent.on("start", () => {
