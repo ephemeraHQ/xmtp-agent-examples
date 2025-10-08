@@ -1,10 +1,8 @@
-# ENS resolver example
+# Domain resolver example
 
 An XMTP agent that performs reverse resolution of Ethereum addresses to Web3 identities using the [Web3.bio API](https://api.web3.bio/).
 
 ![](./screenshot.png)
-
-## Usage
 
 ## Usage
 
