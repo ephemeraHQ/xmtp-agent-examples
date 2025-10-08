@@ -120,7 +120,7 @@ import {
 // Transaction reference middleware
 const transactionReferenceMiddleware: AgentMiddleware = async (ctx, next) => {
   // Check if this is a transaction reference message
-  if (ctx.message.contentType?.sameAs(ContentTypeTransactionReference)) {
+  if (ctx.useCodec(ContentTypeTransactionReference)) {
     const transactionRef = ctx.message.content as TransactionReference;
 
     await ctx.sendText(

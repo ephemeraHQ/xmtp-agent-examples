@@ -2,7 +2,6 @@ import { Agent, type AgentMiddleware } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import {
   TransactionReferenceCodec,
-  ContentTypeTransactionReference,
   type TransactionReference,
 } from "@xmtp/content-type-transaction-reference";
 import {
@@ -21,7 +20,7 @@ const usdcHandler = new USDCHandler(NETWORK_ID);
 // Transaction reference middleware
 const transactionReferenceMiddleware: AgentMiddleware = async (ctx, next) => {
   // Check if this is a transaction reference message
-  if (ctx.message.contentType?.sameAs(ContentTypeTransactionReference)) {
+  if (ctx.usesCodec(TransactionReferenceCodec)) {
     const transactionRef = ctx.message.content as TransactionReference;
     console.log("Received transaction reference:", transactionRef);
 
