@@ -2,9 +2,10 @@ import * as fs from "fs";
 import {
   AgentKit,
   cdpApiActionProvider,
-  cdpWalletActionProvider,
-  CdpWalletProvider,
+  cdpEvmWalletActionProvider,
+  CdpEvmWalletProvider,
   erc20ActionProvider,
+  pythActionProvider,
   walletActionProvider,
 } from "@coinbase/agentkit";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
@@ -13,6 +14,7 @@ import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { Agent as XMTPAgent, type MessageContext } from "@xmtp/agent-sdk";
+import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { loadEnvFile } from "../../utils/general";
 
 loadEnvFile();
@@ -28,6 +30,11 @@ interface AgentConfig {
   configurable: {
     thread_id: string;
   };
+}
+
+interface WalletData {
+  name?: string;
+  address: `0x${string}`;
 }
 
 type Agent = ReturnType<typeof createReactAgent>;
@@ -50,13 +57,12 @@ function ensureLocalStorage() {
  * @param userId - The unique identifier for the user
  * @param walletData - The wallet data to be saved
  */
-function saveWalletData(userId: string, walletData: string) {
+function saveWalletData(userId: string, walletData: WalletData): void {
   const localFilePath = `${WALLET_STORAGE_DIR}/${userId}.json`;
+  if (fs.existsSync(localFilePath)) return;
   try {
-    if (!fs.existsSync(localFilePath)) {
-      console.log(`Wallet data saved for user ${userId}`);
-      fs.writeFileSync(localFilePath, walletData);
-    }
+    fs.writeFileSync(localFilePath, JSON.stringify(walletData, null, 2));
+    console.log(`Wallet data saved for user ${userId}`);
   } catch (error) {
     console.error(`Failed to save wallet data to file: ${error as string}`);
   }
@@ -66,13 +72,13 @@ function saveWalletData(userId: string, walletData: string) {
  * Get wallet data from storage.
  *
  * @param userId - The unique identifier for the user
- * @returns The wallet data as a string, or null if not found
+ * @returns The wallet data, or null if not found
  */
-function getWalletData(userId: string): string | null {
+function getWalletData(userId: string): WalletData | null {
   const localFilePath = `${WALLET_STORAGE_DIR}/${userId}.json`;
   try {
     if (fs.existsSync(localFilePath)) {
-      return fs.readFileSync(localFilePath, "utf8");
+      return JSON.parse(fs.readFileSync(localFilePath, "utf8"));
     }
   } catch (error) {
     console.warn(`Could not read wallet data from file: ${error as string}`);
@@ -90,81 +96,80 @@ async function initializeAgent(
   userId: string,
 ): Promise<{ agent: Agent; config: AgentConfig }> {
   try {
+    if (agentStore[userId]) {
+      const agentConfig = {
+        configurable: { thread_id: userId },
+      };
+      return { agent: agentStore[userId], config: agentConfig };
+    }
+
     const llm = new ChatOpenAI({
       model: "gpt-4.1-mini",
       apiKey: process.env.OPENAI_API_KEY || "",
     });
 
     const storedWalletData = getWalletData(userId);
-    const apiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY || "";
-    const apiKeyName = process.env.CDP_API_KEY_NAME || "";
-    const networkId = process.env.NETWORK_ID || "base-sepolia";
 
     console.log(
-      `Wallet data for ${userId}: ${storedWalletData ? "Found" : "Not found"}`,
+      `Creating new agent for user: ${userId}, wallet data: ${storedWalletData ? "Found" : "Not found"}`,
     );
 
-    const config = {
-      apiKeyName: apiKeyName,
-      apiKeyPrivateKey: apiKeyPrivateKey.replace(/\\n/g, "\n"),
-      cdpWalletData: storedWalletData || undefined,
-      networkId: networkId,
-    };
-
-    const walletProvider = await CdpWalletProvider.configureWithWallet(config);
+    // Configure CDP Wallet Provider with CDP v2
+    const walletProvider = await CdpEvmWalletProvider.configureWithWallet({
+      apiKeyId: process.env.CDP_API_KEY_ID,
+      apiKeySecret: process.env.CDP_API_KEY_SECRET,
+      walletSecret: process.env.CDP_WALLET_SECRET,
+      idempotencyKey: process.env.IDEMPOTENCY_KEY,
+      address: storedWalletData?.address,
+      networkId: process.env.NETWORK_ID || "base-sepolia",
+      rpcUrl: process.env.RPC_URL,
+    });
 
     const agentkit = await AgentKit.from({
       walletProvider,
       actionProviders: [
         walletActionProvider(),
         erc20ActionProvider(),
-        cdpApiActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME || "",
-          apiKeyPrivateKey: apiKeyPrivateKey.replace(/\\n/g, "\n"),
-        }),
-        cdpWalletActionProvider({
-          apiKeyName: process.env.CDP_API_KEY_NAME || "",
-          apiKeyPrivateKey: apiKeyPrivateKey.replace(/\\n/g, "\n"),
-        }),
+        cdpApiActionProvider(),
+        cdpEvmWalletActionProvider(),
+        pythActionProvider(),
       ],
     });
 
     const tools = await getLangChainTools(agentkit);
 
-    memoryStore[userId] = new MemorySaver();
+    if (!memoryStore[userId]) {
+      memoryStore[userId] = new MemorySaver();
+    }
 
     const agentConfig: AgentConfig = {
       configurable: { thread_id: userId },
     };
+
+    const canUseFaucet = walletProvider.getNetwork().networkId == "base-sepolia";
+    const faucetMessage = `If you ever need funds, you can request them from the faucet.`;
+    const cantUseFaucetMessage = `If you need funds, you can provide your wallet details and request funds from the user.`;
 
     const agent = createReactAgent({
       llm,
       tools,
       checkpointSaver: memoryStore[userId],
       messageModifier: `
-        You are a DeFi Payment Agent that assists users with sending payments and managing their crypto assets.
-        You can interact with the blockchain using Coinbase Developer Platform AgentKit.
-
-        When a user asks you to make a payment or check their balance:
-        1. Always check the wallet details first to see what network you're on
-        2. If on base-sepolia testnet, you can request funds from the faucet if needed
-        3. For mainnet operations, provide wallet details and request funds from the user
-        4. If the user doesn't have any funds, ask them to deposit on your wallet address
-
-        IMPORTANT:
-        Your default network is Base Sepolia testnet. Your main and only token for transactions is USDC. Token address is 0x036CbD53842c5426634e7929541eC2318f3dCF7e. USDC is gasless on Base.
-
-
-        Be concise, helpful, and security-focused in all your interactions. You can only perform payment and wallet-related tasks. For other requests, politely explain that you're
-        specialized in processing payments and can't assist with other tasks.
+        You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit. You are 
+        empowered to interact onchain using your tools. 
+        Before executing your first action, get the wallet details to see your address and what network you're on. 
+        ${canUseFaucet ? faucetMessage : cantUseFaucetMessage}.
+        If someone asks you to do something you can't do with your currently available tools, you must say so, and 
+        encourage them to implement it themselves using the CDP SDK + Agentkit, recommend they go to 
+        docs.cdp.coinbase.com for more information. Be concise and helpful with your responses. Refrain from 
+        restating your tools' descriptions unless it is explicitly requested.
       `,
     });
 
     agentStore[userId] = agent;
 
     const exportedWallet = await walletProvider.exportWallet();
-    const walletDataJson = JSON.stringify(exportedWallet);
-    saveWalletData(userId, walletDataJson);
+    saveWalletData(userId, exportedWallet);
 
     return { agent, config: agentConfig };
   } catch (error) {
@@ -218,7 +223,10 @@ async function processMessage(
  */
 async function handleMessage(ctx: MessageContext) {
   try {
-    const { agent, config } = await initializeAgent(ctx.message.senderInboxId);
+    const userId = ctx.message.senderInboxId;
+    console.log(`Received message from ${userId}: ${ctx.message.content}`);
+
+    const { agent, config } = await initializeAgent(userId);
     const response = await processMessage(
       agent,
       config,
@@ -226,7 +234,7 @@ async function handleMessage(ctx: MessageContext) {
     );
 
     await ctx.sendText(response);
-    console.debug(`Sent response to ${ctx.message.senderInboxId}: ${response}`);
+    console.debug(`Sent response to ${ctx.message.senderInboxId}: ${response} \n`);
   } catch (error) {
     console.error("Error handling message:", error);
     await ctx.sendText(
@@ -245,6 +253,12 @@ const agent = await XMTPAgent.createFromEnv({
 
 agent.on("text", (ctx) => {
   void handleMessage(ctx);
+});
+
+agent.on("start", () => {
+  console.log(`Address: ${agent.address}`);
+  console.log(`Start a conversation at 🔗${getTestUrl(agent.client)}`);
+  console.log(`Waiting for messages... \n`);
 });
 
 void agent.start();
