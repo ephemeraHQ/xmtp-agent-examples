@@ -3654,18 +3654,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/agent-sdk@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@xmtp/agent-sdk@npm:1.0.0"
+"@xmtp/agent-sdk@npm:1.1.5":
+  version: 1.1.5
+  resolution: "@xmtp/agent-sdk@npm:1.1.5"
   dependencies:
     "@xmtp/content-type-reaction": "npm:^2.0.2"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/content-type-reply": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
-    "@xmtp/node-sdk": "npm:^4.1.2"
+    "@xmtp/node-sdk": "npm:^4.2.2"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.37.6"
-  checksum: 10c0/c369de5b604c83485a0b138cfe94c8ab9c32215e934ae8694915dc845d5a238c3e71082125e234cb31ca1e2d660a66ddf7e3a17e976d9c9322f16396f45a04f1
+  checksum: 10c0/44c7482d718e47bab443c41f1cf5c9a372fc3947d6e6abc69270286f0591a603463c217a1d033e73900dfa108968ff9d378b6884a87c38a4f15ff4c0689f30b3
   languageName: node
   linkType: hard
 
@@ -3754,22 +3754,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-bindings@npm:1.5.3":
-  version: 1.5.3
-  resolution: "@xmtp/node-bindings@npm:1.5.3"
-  checksum: 10c0/b57461ba807a7ef06701b6d8faf99a907cb723cfd08548e5f6a96acd1e18583140f80e24c4633ac37ba4831cad3156c1afc959d6e162258f9279c68ec855c798
+"@xmtp/node-bindings@npm:1.5.4":
+  version: 1.5.4
+  resolution: "@xmtp/node-bindings@npm:1.5.4"
+  checksum: 10c0/0d8d53aeb7b5b4f3c8882857302e8a40a7556ecb825df9bc36f01cc3b527bf920de038e3c31d9e2a22e52bdf06a480e74f347a27166f5a7db450feaf3d463834
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:^4.1.2":
-  version: 4.2.2
-  resolution: "@xmtp/node-sdk@npm:4.2.2"
+"@xmtp/node-sdk@npm:^4.2.2":
+  version: 4.2.3
+  resolution: "@xmtp/node-sdk@npm:4.2.3"
   dependencies:
     "@xmtp/content-type-group-updated": "npm:^2.0.2"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
-    "@xmtp/node-bindings": "npm:1.5.3"
-  checksum: 10c0/bab056d9f4917a732b0fc61d9589f64649e4cbd761ff6fa2f803f8767d048ab7f4bc44df31818463aa3953db9a122cbe405cef9a5e354f514262c286dd5c8a78
+    "@xmtp/node-bindings": "npm:1.5.4"
+  checksum: 10c0/19cf3657f4aec9ff3f7d1f9ccb0dd585f9c6290a123365c3a35f4d87d840160418b8461f5f7f93cb281a6dbb99dca85f51a0fde6fcac871ea91ddceb0c114301
   languageName: node
   linkType: hard
 
@@ -9291,7 +9291,7 @@ __metadata:
     "@eslint/compat": "npm:^1.2.6"
     "@eslint/js": "npm:^9.19.0"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/agent-sdk": "npm:1.0.0"
+    "@xmtp/agent-sdk": "npm:1.1.5"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"
@@ -9305,6 +9305,7 @@ __metadata:
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
     typescript-eslint: "npm:^8.22.0"
+    uint8arrays: "npm:^5.1.0"
   languageName: unknown
   linkType: soft
 

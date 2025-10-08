@@ -28,6 +28,21 @@ agent.on("text", async (ctx) => {
   }
 });
 
+agent.on("text", async (ctx) => {
+  if (ctx.isGroup() && ctx.message.content.includes("@gm")) {
+    const senderAddress = await ctx.getSenderAddress();
+    console.log(
+      `Received message in group: ${ctx.message.content} by ${senderAddress}`,
+    );
+    await ctx.sendText("gm");
+  }
+});
+
+agent.on("group", async (ctx) => {
+  // received when you create a new group
+  console.log("Added to group:", ctx.conversation.id);
+});
+
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
   console.log(`Address: ${agent.address}`);

@@ -76,6 +76,7 @@ You can enable debug mode by adding the following to your `.env` file:
 
 ```bash
 XMTP_FORCE_DEBUG=true
+XMTP_FORCE_DEBUG_LEVEL=warn # debug, info, warn, error
 ```
 
 > This will print additional information to the console.
