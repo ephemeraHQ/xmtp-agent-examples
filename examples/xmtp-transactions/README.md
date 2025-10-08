@@ -4,61 +4,6 @@ This example allows users to send tokens like USDC to an agent.
 
 https://github.com/user-attachments/assets/efb8006d-9758-483d-ad1b-9287ea4d426d
 
-## Getting started
-
-> [!NOTE]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
-### Requirements
-
-- Node.js v20 or higher
-- Yarn v4 or higher
-- This example works on `Base` Sepolia
-- You'll need some `ETH` in your wallet to pay for the transaction
-- Connect with a wallet extension like [MetaMask](https://metamask.io/) or Coinbase Wallet
-- Docker (optional, for `local` network)
-- Faucets: [Circle](https://faucet.circle.com), [Base](https://portal.cdp.coinbase.com/products/faucet)
-- [@xmtp/content-type-transaction-reference](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-transaction-reference)
-- [@xmtp/content-type-wallet-send-calls](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-wallet-send-calls)
-
-### Environment variables
-
-To run your XMTP agent, you must create a `.env` file with the following variables:
-
-```bash
-XMTP_WALLET_KEY= # the private key for the wallet
-XMTP_DB_ENCRYPTION_KEY= # the encryption key for the wallet
-# public key is
-
-NETWORK_ID=base-sepolia # base-mainnet or others
-XMTP_ENV=dev # local, dev, production
-```
-
-You can generate random xmtp keys with the following command:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> Running the `gen:keys` command will append keys to your existing `.env` file.
-
-### Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-cd examples/xmtp-transactions
-# install packages
-yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
-yarn dev
-```
-
 ## Usage
 
 ### Commands
@@ -166,4 +111,50 @@ const networks = [
     networkId: "base-mainnet",
   },
 ];
+```
+
+## Getting started
+
+> [!NOTE]
+> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- This example works on `Base` Sepolia
+- You'll need some `ETH` in your wallet to pay for the transaction
+- Connect with a wallet extension like [MetaMask](https://metamask.io/) or Coinbase Wallet
+- Docker (optional, for `local` network)
+- Faucets: [Circle](https://faucet.circle.com), [Base](https://portal.cdp.coinbase.com/products/faucet)
+- [@xmtp/content-type-transaction-reference](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-transaction-reference)
+- [@xmtp/content-type-wallet-send-calls](https://github.com/xmtp/xmtp-js/tree/main/content-types/content-type-wallet-send-calls)
+
+### Environment variables
+
+To run your XMTP agent, you must create a `.env` file with the following variables:
+
+```bash
+XMTP_WALLET_KEY= # the private key for the wallet
+XMTP_DB_ENCRYPTION_KEY= # the encryption key for the wallet
+# public key is
+
+NETWORK_ID=base-sepolia # base-mainnet or others
+XMTP_ENV=dev # local, dev, production
+```
+
+### Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/xmtp-transactions
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
+yarn dev
 ```

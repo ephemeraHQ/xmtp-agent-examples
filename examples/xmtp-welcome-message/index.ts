@@ -1,9 +1,13 @@
-import { Agent, type AgentMiddleware, MessageContext } from "@xmtp/agent-sdk";
+import {
+  Agent,
+  Conversation,
+  ConversationContext,
+  MessageContext,
+} from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 
 import {
   ActionBuilder,
-  inlineActionsMiddleware,
   registerAction,
   sendActions,
 } from "../../utils/inline-actions/inline-actions";
@@ -59,41 +63,10 @@ Data provided by CoinGecko 📈`);
   }
 }
 
-/**
- * Middleware to detect first-time interactions and add flag to context
- */
-const firstTimeInteractionMiddleware: AgentMiddleware = async (ctx, next) => {
-  const messages = await ctx.conversation.messages();
-  const hasSentBefore = messages.some(
-    (msg) =>
-      msg.senderInboxId.toLowerCase() === ctx.client.inboxId.toLowerCase(),
-  );
-  const members = await ctx.conversation.members();
-  const wasMemberBefore = members.some(
-    (member: { inboxId: string; installationIds: string[] }) =>
-      member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
-      member.installationIds.length > 1,
-  );
-
-  // Add the first-time interaction flag to the context
-  if (!hasSentBefore && !wasMemberBefore) {
-    console.warn("First time interaction");
-  } else {
-    console.warn("Not first time interaction");
-    // return; to break the middleware chain and prevent the inline actions middleware from being executed
-    //return;
-  }
-
-  await next();
-};
-
 const agent = await Agent.createFromEnv({
   env: process.env.XMTP_ENV as "local" | "dev" | "production",
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
-
-// Add middleware
-agent.use(firstTimeInteractionMiddleware, inlineActionsMiddleware);
 
 // Register action handlers using the utilities
 registerAction("get-current-price", handleCurrentPrice);
@@ -103,20 +76,27 @@ agent.on("unhandledError", (error) => {
   console.error("Agent error", error);
 });
 
-// Handle first-time user messages - send welcome with actions
-agent.on("text", async (ctx) => {
-  if (ctx.isDm()) {
-    const welcomeActions = ActionBuilder.create(
-      `welcome-${Date.now()}`,
-      `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
-    )
-      .add("get-current-price", "💰 Get Current ETH Price")
-      .add("get-price-chart", "📊 Get Price with 24h Change")
-      .build();
+async function sendWelcomeMessage(
+  ctx: ConversationContext<unknown, Conversation>,
+) {
+  console.log("Added to group:", ctx.conversation.id);
+  const welcomeActions = ActionBuilder.create(
+    `welcome-${Date.now()}`,
+    `👋 Welcome! I'm your ETH price agent.\n\nI can help you stay updated with the latest Ethereum price information. Choose an option below to get started:`,
+  )
+    .add("get-current-price", "💰 Get Current ETH Price")
+    .add("get-price-chart", "📊 Get Price with 24h Change")
+    .build();
 
-    console.log(`✓ Sending welcome message with actions`);
-    await sendActions(ctx, welcomeActions);
-  }
+  console.log(`✓ Sending welcome message with actions`);
+  await sendActions(ctx.conversation, welcomeActions);
+}
+
+agent.on("dm", async (ctx) => {
+  sendWelcomeMessage(ctx);
+});
+agent.on("group", async (ctx) => {
+  sendWelcomeMessage(ctx);
 });
 
 agent.on("start", () => {
@@ -126,3 +106,13 @@ agent.on("start", () => {
 });
 
 void agent.start();
+
+/* 
+* This is used in the case ou removed the installation before and were part of the group.
+* Example usage:
+const wasMemberBefore = members.some(
+  (member: { inboxId: string; installationIds: string[] }) =>
+    member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
+    member.installationIds.length > 1,
+); 
+*/

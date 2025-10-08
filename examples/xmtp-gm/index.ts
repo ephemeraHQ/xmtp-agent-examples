@@ -38,11 +38,6 @@ agent.on("text", async (ctx) => {
   }
 });
 
-agent.on("group", async (ctx) => {
-  // received when you create a new group
-  console.log("Added to group:", ctx.conversation.id);
-});
-
 agent.on("start", () => {
   console.log(`Waiting for messages...`);
   console.log(`Address: ${agent.address}`);

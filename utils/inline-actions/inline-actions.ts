@@ -1,4 +1,8 @@
-import type { AgentMiddleware, MessageContext } from "@xmtp/agent-sdk";
+import type {
+  AgentMiddleware,
+  Conversation,
+  MessageContext,
+} from "@xmtp/agent-sdk";
 import {
   ContentTypeActions,
   type Action,
@@ -115,13 +119,10 @@ export class ActionBuilder {
 
 // Helper functions
 export async function sendActions(
-  ctx: MessageContext,
+  conversation: Conversation,
   actionsContent: ActionsContent,
 ): Promise<void> {
-  const message = await ctx.conversation.send(
-    actionsContent,
-    ContentTypeActions,
-  );
+  const message = await conversation.send(actionsContent, ContentTypeActions);
   lastSentActionMessage = message;
 }
 

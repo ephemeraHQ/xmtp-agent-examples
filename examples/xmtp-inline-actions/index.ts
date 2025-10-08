@@ -121,7 +121,7 @@ async function main() {
       .add("check-balance", "Check Balance")
       .build();
 
-    await sendActions(ctx, actions);
+    await sendActions(ctx.conversation, actions);
   });
 
   registerAction("more-info", async (ctx) => {
@@ -163,7 +163,7 @@ Choose an action below:`,
       .add("more-info", "ℹ️ More Info")
       .build();
 
-    await sendActions(ctx, actions);
+    await sendActions(ctx.conversation, actions);
   });
 
   // Handle startup

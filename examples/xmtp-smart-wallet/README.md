@@ -30,15 +30,6 @@ CDP_API_KEY_PRIVATE_KEY= # the private key for the CDP API key
 XMTP_ENV=dev # local, dev, production
 ```
 
-You can generate random xmtp keys with the following command:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> Running the `gen:keys` command will append keys to your existing `.env` file.
-
 ### Run the agent
 
 ```bash
