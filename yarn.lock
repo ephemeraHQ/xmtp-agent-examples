@@ -9305,6 +9305,7 @@ __metadata:
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
     typescript-eslint: "npm:^8.22.0"
+    uint8arrays: "npm:^5.1.0"
   languageName: unknown
   linkType: soft
 
