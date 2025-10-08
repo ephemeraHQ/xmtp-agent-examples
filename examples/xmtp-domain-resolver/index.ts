@@ -57,7 +57,7 @@ agent.on("text", async (ctx) => {
       return a.displayName.localeCompare(b.displayName);
     });
   const names = farcasterResults.map((result) => result.identity).join("\n");
-  await ctx.sendText(names);
+  await ctx.sendText(`Hi 👋🏼! ${names}`);
 });
 
 agent.on("start", () => {
