@@ -1,6 +1,6 @@
 {
   "name": "@examples/xmtp-domain-resolver",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,8 +11,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@xmtp/agent-sdk": "*",
-    "viem": "^2.21.54"
+    "@xmtp/agent-sdk": "*"
   },
   "devDependencies": {
     "tsx": "*",

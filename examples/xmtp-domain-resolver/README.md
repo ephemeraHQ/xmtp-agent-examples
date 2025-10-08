@@ -1,14 +1,8 @@
-# Domain resolver example
+# ENS domain resolver example
 
 An XMTP agent that resolves ENS names to Ethereum addresses and performs reverse lookups.
 
 ![](./screenshot.png)
-
-## Features
-
-- **Forward Resolution**: Send an ENS name (e.g., `vitalik.eth`) to get the Ethereum address
-- **Reverse Resolution**: Send an Ethereum address to find its registered ENS name
-- **Real-time Responses**: Get instant domain resolution results
 
 ## Usage
 
@@ -18,6 +12,11 @@ Simply message the agent with:
 - An Ethereum address: `0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045`
 
 The agent will automatically detect the input type and perform the appropriate lookup.
+
+### Features
+
+- **Forward Resolution**: Send an ENS name (e.g., `vitalik.eth`) to get the Ethereum address
+- **Reverse Resolution**: Send an Ethereum address to find its registered ENS name
 
 ## Getting started
 
