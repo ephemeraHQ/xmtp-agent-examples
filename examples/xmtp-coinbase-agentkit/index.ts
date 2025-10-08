@@ -59,6 +59,7 @@ function ensureLocalStorage() {
  */
 function saveWalletData(userId: string, walletData: WalletData): void {
   const localFilePath = `${WALLET_STORAGE_DIR}/${userId}.json`;
+  if (fs.existsSync(localFilePath)) return;
   try {
     fs.writeFileSync(localFilePath, JSON.stringify(walletData, null, 2));
     console.log(`Wallet data saved for user ${userId}`);
@@ -222,7 +223,10 @@ async function processMessage(
  */
 async function handleMessage(ctx: MessageContext) {
   try {
-    const { agent, config } = await initializeAgent(ctx.message.senderInboxId);
+    const userId = ctx.message.senderInboxId;
+    console.log(`Received message from ${userId}: ${ctx.message.content}`);
+
+    const { agent, config } = await initializeAgent(userId);
     const response = await processMessage(
       agent,
       config,
@@ -230,7 +234,7 @@ async function handleMessage(ctx: MessageContext) {
     );
 
     await ctx.sendText(response);
-    console.debug(`Sent response to ${ctx.message.senderInboxId}: ${response}`);
+    console.debug(`Sent response to ${ctx.message.senderInboxId}: ${response} \n`);
   } catch (error) {
     console.error("Error handling message:", error);
     await ctx.sendText(
@@ -252,9 +256,9 @@ agent.on("text", (ctx) => {
 });
 
 agent.on("start", () => {
-  console.log(`Waiting for messages...`);
   console.log(`Address: ${agent.address}`);
-  console.log(`🔗${getTestUrl(agent.client)}`);
+  console.log(`Start a conversation at 🔗${getTestUrl(agent.client)}`);
+  console.log(`Waiting for messages... \n`);
 });
 
 void agent.start();
