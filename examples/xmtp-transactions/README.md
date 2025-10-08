@@ -143,15 +143,6 @@ NETWORK_ID=base-sepolia # base-mainnet or others
 XMTP_ENV=dev # local, dev, production
 ```
 
-You can generate random xmtp keys with the following command:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> Running the `gen:keys` command will append keys to your existing `.env` file.
-
 ### Run the agent
 
 ```bash

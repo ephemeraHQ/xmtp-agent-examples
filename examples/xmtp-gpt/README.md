@@ -25,15 +25,6 @@ XMTP_ENV=dev # local, dev, production
 OPENAI_API_KEY= # the API key for the OpenAI API
 ```
 
-You can generate random xmtp keys with the following command:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> Running the `gen:keys` command will append keys to your existing `.env` file.
-
 ### Run the agent
 
 ```bash

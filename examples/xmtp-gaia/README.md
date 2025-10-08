@@ -28,15 +28,6 @@ GAIA_NODE_URL= # Your custom Gaia node URL or a public node, ex: https://llama8b
 GAIA_MODEL_NAME= # Model name running in your Gaia node or a public node, ex: llama
 ```
 
-You can generate random xmtp keys with the following command:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> Running the `gen:keys` command will append keys to your existing `.env` file.
-
 ### Run the agent
 
 ```bash
