@@ -107,13 +107,12 @@ agent.on("start", () => {
 
 void agent.start();
 
-/*
-This is used in the case ou removed the installation before and were part of the group.
-
-  const wasMemberBefore = members.some(
-    (member: { inboxId: string; installationIds: string[] }) =>
-      member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
-      member.installationIds.length > 1,
-  );
-
-  */
+/* 
+* This is used in the case ou removed the installation before and were part of the group.
+* Example usage:
+const wasMemberBefore = members.some(
+  (member: { inboxId: string; installationIds: string[] }) =>
+    member.inboxId.toLowerCase() === ctx.client.inboxId.toLowerCase() &&
+    member.installationIds.length > 1,
+); 
+*/
