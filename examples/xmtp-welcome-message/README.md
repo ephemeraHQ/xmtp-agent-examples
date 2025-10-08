@@ -9,10 +9,10 @@ An ETH price agent that demonstrates welcome messages with interactive buttons a
 
 ## Features
 
-- **Welcome Message**: Interactive onboarding with action buttons
+- **Welcome Message**: Interactive onboarding with action buttons for both DMs and Groups
 - **ETH Price Data**: Real-time price fetching from CoinGecko API
-- **Middleware Architecture**: Clean separation of concerns with custom middleware
-- **First-time Detection**: Identifies first-time interactions
+- **Native Event Handlers**: Uses `dm` and `group` events for automatic welcome messages
+- **Inline Actions**: Interactive buttons for easy user interaction
 - **Error Handling**: Graceful API failure handling
 
 ## Usage

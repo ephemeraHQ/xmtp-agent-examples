@@ -1,7 +1,6 @@
 import type {
   AgentMiddleware,
   Conversation,
-  ConversationContext,
   MessageContext,
 } from "@xmtp/agent-sdk";
 import {
