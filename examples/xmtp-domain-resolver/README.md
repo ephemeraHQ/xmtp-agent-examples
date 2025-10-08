@@ -2,6 +2,8 @@
 
 An XMTP agent that resolves ENS names to Ethereum addresses and performs reverse lookups.
 
+![](./screenshot.png)
+
 ## Features
 
 - **Forward Resolution**: Send an ENS name (e.g., `vitalik.eth`) to get the Ethereum address
