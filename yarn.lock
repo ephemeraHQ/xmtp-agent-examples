@@ -1000,6 +1000,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@examples/xmtp-domain-resolver@workspace:examples/xmtp-domain-resolver":
+  version: 0.0.0-use.local
+  resolution: "@examples/xmtp-domain-resolver@workspace:examples/xmtp-domain-resolver"
+  dependencies:
+    "@xmtp/agent-sdk": "npm:*"
+    tsx: "npm:*"
+    typescript: "npm:*"
+    viem: "npm:^2.21.54"
+  languageName: unknown
+  linkType: soft
+
 "@examples/xmtp-gaia@workspace:examples/xmtp-gaia":
   version: 0.0.0-use.local
   resolution: "@examples/xmtp-gaia@workspace:examples/xmtp-gaia"
@@ -8971,7 +8982,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:*, viem@npm:>=2.29.0, viem@npm:^2.1.1, viem@npm:^2.20.2, viem@npm:^2.21.26, viem@npm:^2.22.16, viem@npm:^2.27.2, viem@npm:^2.31.7, viem@npm:^2.37.6, viem@npm:^2.7.9":
+"viem@npm:*, viem@npm:>=2.29.0, viem@npm:^2.1.1, viem@npm:^2.20.2, viem@npm:^2.21.26, viem@npm:^2.21.54, viem@npm:^2.22.16, viem@npm:^2.27.2, viem@npm:^2.31.7, viem@npm:^2.37.6, viem@npm:^2.7.9":
   version: 2.38.0
   resolution: "viem@npm:2.38.0"
   dependencies:
