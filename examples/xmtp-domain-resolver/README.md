@@ -1,56 +1,58 @@
-# ENS domain resolver example
+# Domain Resolver Agent
 
-An XMTP agent that resolves ENS names to Ethereum addresses and performs reverse lookups.
+An XMTP agent that performs reverse resolution of Ethereum addresses to Web3 identities using the [Web3.bio API](https://api.web3.bio/).
 
-![](./screenshot.png)
+## Features
+
+- **Reverse Resolution**: Resolves Ethereum addresses to domain names across multiple platforms
+- **Multi-Platform Support**: Finds identities from ENS, Farcaster, Lens, Basenames, Linea Name Service, and more
+- **Automatic Detection**: Uses sender's address if no address is provided in the message
+
+## How It Works
+
+Send an Ethereum address and the agent will look up associated domain names across various Web3 platforms:
+
+- **ENS** (e.g., `vitalik.eth`)
+- **Farcaster** (e.g., `dwr.eth`)
+- **Lens Protocol** (e.g., `stani.lens`)
+- **Basenames** (e.g., `tony.base.eth`)
+- **Linea Name Service** (e.g., `name.linea.eth`)
+
+## Setup
+
+```bash
+# Generate keys
+yarn gen:keys
+
+# Add Web3.bio API key to .env (optional but recommended for rate limits)
+WEB3_BIO_API_KEY=your_api_key_here
+```
 
 ## Usage
 
-Simply message the agent with:
-
-- An ENS name: `vitalik.eth`
-- An Ethereum address: `0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045`
-
-The agent will automatically detect the input type and perform the appropriate lookup.
-
-### Features
-
-- **Forward Resolution**: Send an ENS name (e.g., `vitalik.eth`) to get the Ethereum address
-- **Reverse Resolution**: Send an Ethereum address to find its registered ENS name
-
-## Getting started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
-### Requirements
-
-- Node.js v20 or higher
-- Yarn v4 or higher
-- Docker (optional, for local network)
-
-### Environment variables
-
-To run your XMTP agent, you must create a `.env` file with the following variables:
+Start the agent:
 
 ```bash
-XMTP_WALLET_KEY= # the private key of the wallet
-XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV=dev # local, dev, production
-```
-
-### Run the agent
-
-```bash
-# git clone repo
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# go to the folder
-cd xmtp-agent-examples
-cd examples/xmtp-domain-resolver
-# install packages
-yarn
-# generate random xmtp keys (optional)
-yarn gen:keys
-# run the example
 yarn dev
 ```
+
+Send an Ethereum address to resolve:
+
+```
+0xd8da6bf26964af9d7eed9e03e53415d37aa96045
+```
+
+Response:
+
+```
+Address: 0xd8da6bf26964af9d7eed9e03e53415d37aa96045
+
+Resolved names:
+vitalik.eth (ens)
+vitalik.eth (farcaster)
+vitalik.lens (lens)
+```
+
+## API Reference
+
+This agent uses the Web3.bio `/ns/` endpoint for identity resolution. For more details, see the [Web3.bio API documentation](https://api.web3.bio/).
