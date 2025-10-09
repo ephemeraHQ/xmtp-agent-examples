@@ -43,29 +43,15 @@ agent.on("text", async (ctx) => {
     // Build response message
     let response = "🔍 Resolved addresses:\n\n";
     for (const [identifier, address] of Object.entries(resolved)) {
-      if (address) {
-        // Try to get Web3 name for this address
-        try {
-          const name = await resolveName(address);
-          if (name) {
-            response += `✅ @${identifier} → ${address}\n   Name: ${name}\n`;
-          } else {
-            response += `✅ @${identifier} → ${address}\n`;
-          }
-        } catch {
-          response += `✅ @${identifier} → ${address}\n`;
-        }
-      } else {
-        // Check if it's a shortened address
-        if (identifier.match(/0x[a-fA-F0-9]+(?:…|\.{2,3})[a-fA-F0-9]+/)) {
-          if (ctx.isGroup()) {
-            response += `⚠️ @${identifier} → No matching member found\n`;
-          } else {
-            response += `⚠️ @${identifier} → Shortened address (only works in groups)\n`;
-          }
-        } else {
-          response += `❌ @${identifier} → Not found\n`;
-        }
+      if (!address) {
+        response += `❌ @${identifier} → Not found\n`;
+        continue;
+      }
+
+      const name = await resolveName(address);
+      response += `✅ @${identifier} → ${address}\n`;
+      if (name) {
+        response += `   Name: ${name}\n`;
       }
     }
 
