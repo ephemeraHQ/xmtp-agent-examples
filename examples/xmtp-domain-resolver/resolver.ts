@@ -15,6 +15,22 @@ export interface Web3BioProfile {
   description: string | null;
 }
 
+// Farcaster API response types
+export interface FarcasterTransfer {
+  id: number;
+  timestamp: number;
+  username: string;
+  owner: string;
+  from: number;
+  to: number;
+  user_signature: string;
+  server_signature: string;
+}
+
+export interface FarcasterTransfersResponse {
+  transfers: FarcasterTransfer[];
+}
+
 /**
  * Filters and extracts Farcaster names from Web3.bio profiles
  * @param profiles - Array of Web3BioProfile results
@@ -225,4 +241,69 @@ export const resolveMentionsInMessage = async (
   );
 
   return results;
+};
+
+/**
+ * Gets the Farcaster FID (Farcaster ID) for a given username
+ * @param username - The Farcaster username (without @ symbol)
+ * @returns The FID number or null if not found
+ */
+export const getFarcasterFID = async (
+  username: string,
+): Promise<number | null> => {
+  try {
+    const endpoint = `https://fnames.farcaster.xyz/transfers/current?name=${username}`;
+    const response = await fetch(endpoint);
+
+    if (!response.ok) {
+      console.error(
+        `Failed to fetch FID for ${username}: ${response.statusText}`,
+      );
+      return null;
+    }
+
+    const data = (await response.json()) as FarcasterTransfersResponse;
+
+    if (data.transfers && data.transfers.length > 0) {
+      // The "to" field contains the FID
+      return data.transfers[0].to;
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Error fetching FID for ${username}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Gets the Farcaster FID for a given Ethereum address or identifier
+ * First resolves the identifier to Farcaster usernames, then gets the FID
+ * @param identifier - Ethereum address or domain name
+ * @returns Object containing username and FID, or null if not found
+ */
+export const getFarcasterFIDByAddress = async (
+  identifier: string,
+): Promise<{ username: string; fid: number } | null> => {
+  try {
+    const farcasterNames = await resolveFarcasterNames(identifier);
+
+    if (farcasterNames.length === 0) {
+      console.log(`No Farcaster usernames found for ${identifier}`);
+      return null;
+    }
+
+    // Get FID for the first username found
+    const username = farcasterNames[0];
+    const fid = await getFarcasterFID(username);
+
+    if (fid === null) {
+      return null;
+    }
+
+    return { username, fid };
+  } catch (error) {
+    console.error(`Error getting FID for ${identifier}:`, error);
+    return null;
+  }
 };

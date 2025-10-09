@@ -6,6 +6,7 @@ import {
   resolveMentionsInMessage,
   extractMentions,
   extractMemberAddresses,
+  getFarcasterFID,
 } from "./resolver";
 
 loadEnvFile();
@@ -48,7 +49,14 @@ agent.on("text", async (ctx) => {
         try {
           const farcasterNames = await resolveFarcasterNames(address);
           if (farcasterNames.length > 0) {
-            response += `✅ @${identifier} → ${address}\n   Farcaster: ${farcasterNames.join(", ")}\n`;
+            // Try to get FID for each Farcaster name
+            const farcasterInfo = await Promise.all(
+              farcasterNames.map(async (name) => {
+                const fid = await getFarcasterFID(name);
+                return fid !== null ? `${name} (FID: ${fid})` : name;
+              }),
+            );
+            response += `✅ @${identifier} → ${address}\n   Farcaster: ${farcasterInfo.join(", ")}\n`;
           } else {
             response += `✅ @${identifier} → ${address}\n`;
           }
