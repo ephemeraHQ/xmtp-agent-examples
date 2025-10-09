@@ -5,7 +5,6 @@ import {
   resolveMentionsInMessage,
   extractMentions,
   extractMemberAddresses,
-  resolveAddress,
 } from "../../utils/resolver";
 
 loadEnvFile();
