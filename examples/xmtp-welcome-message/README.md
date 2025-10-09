@@ -2,7 +2,7 @@
 
 An ETH price agent that demonstrates welcome messages with interactive buttons and middleware architecture.
 
-<p align="center">
+<p align="center" style="display: flex; justify-content: space-between;">
   <img src="media/left.png" alt="Image 1" width="49%">
   <img src="media/right.png" alt="Image 2" width="49%">
 </p>
