@@ -1,6 +1,6 @@
 # Domain resolver example
 
-An XMTP agent that performs reverse resolution of Ethereum addresses to Web3 identities using the [Web3.bio API](https://api.web3.bio/) and Farcaster FID lookups.
+An XMTP agent that resolves Ethereum addresses to Web3 identities using the [Web3.bio API](https://api.web3.bio/).
 
 ![](./screenshot.png)
 
@@ -11,47 +11,42 @@ An XMTP agent that performs reverse resolution of Ethereum addresses to Web3 ide
 
 ## Usage
 
-Send an Ethereum address and the agent will look up associated domain names and Farcaster IDs across various Web3 platforms:
+Send mentions with Ethereum addresses or domain names, and the agent will resolve them:
+
+### Core Helpers
 
 ```tsx
-on("text", async (ctx) => {
-  const input = ctx.getSenderAddress();
-  const results = await fetchFromWeb3Bio(input);
-  const names = results.map((result) => result.identity).join("\n");
-  await ctx.sendText(names);
-});
+// Resolve identifier to Ethereum address (agent-sdk)
+const address = await resolveAddress("vitalik.eth");
+// Returns: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+
+// Resolve address to Web3 name (web3.bio, first result)
+const name = await resolveName("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045");
+// Returns: vitalik.eth
+
+// Group member helpers
+const members = await ctx.conversation.members();
+const addresses = extractMemberAddresses(members);
 ```
 
+### Supported Platforms
+
 - **ENS** (e.g., `vitalik.eth`)
-- **Farcaster** (e.g., `dwr.eth`) with FID lookup
+- **Farcaster** (e.g., `dwr.eth`)
 - **Lens Protocol** (e.g., `stani.lens`)
 - **Basenames** (e.g., `tony.base.eth`)
 - **Linea Name Service** (e.g., `name.linea.eth`)
 
-### Farcaster FID Lookup
-
-The resolver now includes Farcaster FID (Farcaster ID) lookup capabilities:
-
-```tsx
-// Get FID by username
-const fid = await getFarcasterFID("vitalik");
-// Returns: 5650 (the FID number)
-
-// Get FID by Ethereum address
-const result = await getFarcasterFIDByAddress("vitalik.eth");
-// Returns: { username: "vitalik.eth", fid: 5650 }
-```
-
-Example output:
+### Example Output
 
 ```
 🔍 Resolved addresses:
 
 ✅ @vitalik.eth → 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-   Farcaster: vitalik.eth (FID: 5650)
+   Name: vitalik.eth
 
 ✅ @bankr → 0x12e83ba524041062d5dc702a6ea4f97e3ddcff29
-   Farcaster: bankr (FID: 291955)
+   Name: bankr
 ```
 
 ## Getting started

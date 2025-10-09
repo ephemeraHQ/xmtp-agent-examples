@@ -2,11 +2,10 @@ import { Agent } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { loadEnvFile } from "../../utils/general";
 import {
-  resolveFarcasterNames,
   resolveMentionsInMessage,
   extractMentions,
   extractMemberAddresses,
-  getFarcasterFID,
+  resolveName,
 } from "./resolver";
 
 loadEnvFile();
@@ -45,18 +44,11 @@ agent.on("text", async (ctx) => {
     let response = "🔍 Resolved addresses:\n\n";
     for (const [identifier, address] of Object.entries(resolved)) {
       if (address) {
-        // Try to get Farcaster names for this address
+        // Try to get Web3 name for this address
         try {
-          const farcasterNames = await resolveFarcasterNames(address);
-          if (farcasterNames.length > 0) {
-            // Try to get FID for each Farcaster name
-            const farcasterInfo = await Promise.all(
-              farcasterNames.map(async (name) => {
-                const fid = await getFarcasterFID(name);
-                return fid !== null ? `${name} (FID: ${fid})` : name;
-              }),
-            );
-            response += `✅ @${identifier} → ${address}\n   Farcaster: ${farcasterInfo.join(", ")}\n`;
+          const name = await resolveName(address);
+          if (name) {
+            response += `✅ @${identifier} → ${address}\n   Name: ${name}\n`;
           } else {
             response += `✅ @${identifier} → ${address}\n`;
           }

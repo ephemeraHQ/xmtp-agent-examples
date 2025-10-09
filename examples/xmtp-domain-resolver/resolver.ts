@@ -1,4 +1,4 @@
-import { AgentError, IdentifierKind } from "@xmtp/agent-sdk";
+import { IdentifierKind } from "@xmtp/agent-sdk";
 import { createNameResolver } from "@xmtp/agent-sdk/user";
 import type { GroupMember } from "@xmtp/agent-sdk";
 
@@ -15,84 +15,60 @@ export interface Web3BioProfile {
   description: string | null;
 }
 
-// Farcaster API response types
-export interface FarcasterTransfer {
-  id: number;
-  timestamp: number;
-  username: string;
-  owner: string;
-  from: number;
-  to: number;
-  user_signature: string;
-  server_signature: string;
-}
-
-export interface FarcasterTransfersResponse {
-  transfers: FarcasterTransfer[];
-}
-
 /**
- * Filters and extracts Farcaster names from Web3.bio profiles
- * @param profiles - Array of Web3BioProfile results
- * @returns Array of Farcaster identity names sorted alphabetically
- */
-export const getFarcasterNames = (profiles: Web3BioProfile[]): string[] => {
-  const farcasterResults = profiles
-    .filter((profile) => profile.platform === "farcaster")
-    .sort((a, b) => a.displayName.localeCompare(b.displayName));
-
-  return farcasterResults.map((result) => result.identity);
-};
-
-/**
- * Fetches profiles from Web3.bio API for a given identifier
+ * Resolves an identifier to an Ethereum address using agent-sdk's built-in resolver
+ * This uses web3.bio under the hood
  * @param identifier - Ethereum address or domain name to resolve
- * @param apiKey - Optional API key for authenticated requests
- * @returns Array of Web3BioProfile results
+ * @returns Ethereum address or null if not found
  */
-export const fetchFromWeb3Bio = async (
+export const resolveAddress = async (
   identifier: string,
-): Promise<Web3BioProfile[]> => {
-  const endpoint = `https://api.web3.bio/ns/${identifier}`;
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  if (process.env.WEB3_BIO_API_KEY) {
-    headers["X-API-KEY"] = `Bearer ${process.env.WEB3_BIO_API_KEY}`;
-  }
-
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new AgentError(
-      2000,
-      `Could not resolve identifier "${identifier}": ${response.statusText} (${response.status})`,
-    );
-  }
-
-  return response.json() as Promise<Web3BioProfile[]>;
-};
-
-/**
- * Resolves an identifier to Farcaster names
- * @param identifier - Ethereum address or domain name to resolve
- * @returns Array of Farcaster names
- */
-export const resolveFarcasterNames = async (
-  identifier: string,
-): Promise<string[]> => {
+): Promise<string | null> => {
   try {
-    // Use the full API to get profile data (not just address)
-    const profiles = await fetchFromWeb3Bio(identifier);
-    console.log("profiles", identifier, profiles);
-    return getFarcasterNames(profiles || []);
+    const address = await resolver(identifier);
+    return address || null;
   } catch (error) {
-    console.error(`Failed to get Farcaster names for ${identifier}:`, error);
-    return [];
+    console.error(`Failed to resolve ${identifier}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Resolves an Ethereum address to a Web3 name/identity using Web3.bio
+ * Returns the first result found
+ * @param address - Ethereum address to resolve
+ * @returns Web3 identity name or null if not found
+ */
+export const resolveName = async (address: string): Promise<string | null> => {
+  try {
+    const endpoint = `https://api.web3.bio/ns/${address}`;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (process.env.WEB3_BIO_API_KEY) {
+      headers["X-API-KEY"] = `Bearer ${process.env.WEB3_BIO_API_KEY}`;
+    }
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers,
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Failed to resolve name for ${address}: ${response.statusText}`,
+      );
+      return null;
+    }
+
+    const profiles = (await response.json()) as Web3BioProfile[];
+
+    // Return the first profile's identity, or null if no profiles found
+    return profiles.length > 0 ? profiles[0].identity : null;
+  } catch (error) {
+    console.error(`Error resolving name for ${address}:`, error);
+    return null;
   }
 };
 
@@ -150,12 +126,13 @@ export const extractMemberAddresses = (members: GroupMember[]): string[] => {
 };
 
 /**
- * Resolves an identifier to an Ethereum address using agent-sdk's built-in resolver
+ * Resolves an identifier to an Ethereum address
+ * Handles full addresses, shortened addresses (in groups), and domain names
  * @param identifier - Ethereum address or domain name to resolve
  * @param memberAddresses - Optional array of member addresses to match shortened addresses against
  * @returns Ethereum address or null if not found
  */
-export const resolveToAddress = async (
+export const resolveIdentifier = async (
   identifier: string,
   memberAddresses?: string[],
 ): Promise<string | null> => {
@@ -172,14 +149,8 @@ export const resolveToAddress = async (
     return null;
   }
 
-  try {
-    // Use agent-sdk's built-in resolver
-    const address = await resolver(identifier);
-    return address || null;
-  } catch (error) {
-    console.error(`Failed to resolve ${identifier}:`, error);
-    return null;
-  }
+  // Otherwise, resolve using agent-sdk
+  return resolveAddress(identifier);
 };
 
 /**
@@ -236,74 +207,9 @@ export const resolveMentionsInMessage = async (
 
   await Promise.all(
     mentions.map(async (mention) => {
-      results[mention] = await resolveToAddress(mention, memberAddresses);
+      results[mention] = await resolveIdentifier(mention, memberAddresses);
     }),
   );
 
   return results;
-};
-
-/**
- * Gets the Farcaster FID (Farcaster ID) for a given username
- * @param username - The Farcaster username (without @ symbol)
- * @returns The FID number or null if not found
- */
-export const getFarcasterFID = async (
-  username: string,
-): Promise<number | null> => {
-  try {
-    const endpoint = `https://fnames.farcaster.xyz/transfers/current?name=${username}`;
-    const response = await fetch(endpoint);
-
-    if (!response.ok) {
-      console.error(
-        `Failed to fetch FID for ${username}: ${response.statusText}`,
-      );
-      return null;
-    }
-
-    const data = (await response.json()) as FarcasterTransfersResponse;
-
-    if (data.transfers && data.transfers.length > 0) {
-      // The "to" field contains the FID
-      return data.transfers[0].to;
-    }
-
-    return null;
-  } catch (error) {
-    console.error(`Error fetching FID for ${username}:`, error);
-    return null;
-  }
-};
-
-/**
- * Gets the Farcaster FID for a given Ethereum address or identifier
- * First resolves the identifier to Farcaster usernames, then gets the FID
- * @param identifier - Ethereum address or domain name
- * @returns Object containing username and FID, or null if not found
- */
-export const getFarcasterFIDByAddress = async (
-  identifier: string,
-): Promise<{ username: string; fid: number } | null> => {
-  try {
-    const farcasterNames = await resolveFarcasterNames(identifier);
-
-    if (farcasterNames.length === 0) {
-      console.log(`No Farcaster usernames found for ${identifier}`);
-      return null;
-    }
-
-    // Get FID for the first username found
-    const username = farcasterNames[0];
-    const fid = await getFarcasterFID(username);
-
-    if (fid === null) {
-      return null;
-    }
-
-    return { username, fid };
-  } catch (error) {
-    console.error(`Error getting FID for ${identifier}:`, error);
-    return null;
-  }
 };
