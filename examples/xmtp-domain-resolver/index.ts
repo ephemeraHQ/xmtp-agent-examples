@@ -5,7 +5,7 @@ import {
   resolveMentionsInMessage,
   extractMentions,
   extractMemberAddresses,
-  resolveName,
+  resolveAddress,
 } from "../../utils/resolver";
 
 loadEnvFile();
@@ -36,11 +36,7 @@ agent.on("text", async (ctx) => {
       response += `❌ ${identifier} → Not found\n`;
       continue;
     }
-
-    const name = await resolveName(address);
-    response += name
-      ? `✅ ${identifier} → \nName: ${name}\nAddress: ${address}\n\n`
-      : `✅ ${identifier} → \nAddress: ${address}\n\n`;
+    response += `✅ ${identifier} → \${address}\n\n`;
   }
 
   await ctx.sendText(response);
