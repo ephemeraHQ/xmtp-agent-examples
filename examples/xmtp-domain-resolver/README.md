@@ -28,10 +28,15 @@ on("text", async (ctx) => {
 - **Basenames** (e.g., `tony.base.eth`)
 - **Linea Name Service** (e.g., `name.linea.eth`)
 
-Simply message the agent with:
+Example:
 
-- An ENS name: `vitalik.eth`
-- An Ethereum address: `0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045`
+```json
+Resolved mentions in message: {
+  "0xadc5…f002": "0xadc58094c42e2a8149d90f626a1d6cfb4a79f002",
+  "bankr": "0x12e83ba524041062d5dc702a6ea4f97e3ddcff29",
+  "humanagent.eth": "0x93e2fc3e99dfb1238eb9e0ef2580efc5809c7204"
+}
+```
 
 ## Getting started
 
