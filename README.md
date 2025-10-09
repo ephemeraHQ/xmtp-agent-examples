@@ -6,6 +6,7 @@ These example agents serve as a starting point for building your own agents. The
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
 - [xmtp-gated-group](/examples/xmtp-gated-group/): Add members to a group based on arbitrary criteria
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gasless USDC on base
+- [xmtp-domain-resolver](/examples/xmtp-domain-resolver/): Resolve ens user tags in group messages
 - [xmtp-transactions](/examples/xmtp-transactions/): Allow transactions between users and agents
 - [xmtp-gaia](/examples/xmtp-gaia/): This example uses a [Gaia](https://docs.gaianet.ai) API
 - [xmtp-smart-wallet](/examples/xmtp-smart-wallet/): Agent that uses a smart wallet to send messages
