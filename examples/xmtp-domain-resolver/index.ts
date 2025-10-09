@@ -14,8 +14,10 @@ const agent = await Agent.createFromEnv({
 });
 
 agent.on("text", async (ctx) => {
+  console.log(ctx.message.content);
   const mentions = extractMentions(ctx.message.content);
   if (mentions.length === 0) return;
+  console.log(mentions);
 
   // Get group members for shortened address matching
   const memberAddresses = ctx.isGroup()
@@ -35,7 +37,8 @@ agent.on("text", async (ctx) => {
       response += `❌ ${identifier} → Not found\n`;
       continue;
     }
-    response += `✅ ${identifier} → \${address}\n\n`;
+    response += `✅ ${identifier} → ${address}\n\n`;
+    console.log(identifier, address);
   }
 
   await ctx.sendText(response);

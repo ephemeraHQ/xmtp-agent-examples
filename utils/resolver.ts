@@ -1,7 +1,9 @@
 import { IdentifierKind } from "@xmtp/agent-sdk";
 import { createNameResolver } from "@xmtp/agent-sdk/user";
 import type { GroupMember } from "@xmtp/agent-sdk";
+import { loadEnvFile } from "./general";
 
+loadEnvFile();
 // Create resolver instance (uses web3.bio under the hood)
 const resolveAddress = createNameResolver(process.env.WEB3_BIO_API_KEY || "");
 
@@ -82,6 +84,11 @@ export const resolveIdentifier = async (
     return null;
   }
 
+  // If it's just a username (no dots), append .farcaster.eth
+  if (!identifier.includes(".")) {
+    identifier = `${identifier}.farcaster.eth`;
+  }
+  console.log(identifier);
   // Otherwise, resolve using agent-sdk
   return resolveAddress(identifier);
 };
