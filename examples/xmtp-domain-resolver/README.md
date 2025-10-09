@@ -16,7 +16,7 @@ Send mentions with Ethereum addresses or domain names, and the agent will resolv
 ```tsx
 // Extract mentions from message text
 const mentions = extractMentions(ctx.message.content);
-// Returns: ["vitalik.eth", "0xabc5…f002", "@humanagent.eth"]
+// Returns: ["bankr", "0xabc5…f002", "@humanagent.eth"]
 
 // Extract member addresses from group
 const members = await ctx.conversation.members();
@@ -28,11 +28,11 @@ const resolved = await resolveMentionsInMessage(
   ctx.message.content,
   memberAddresses,
 );
-// Returns: { "vitalik.eth": "0x...", "0xabc5…f002": "0x..." }
+// Returns: { "bankr.farcaster.eth": "0x...", "0xabc5…f002": "0x..." }
 
 // Resolve ENS names or other web3 identities using web3.bio
 const resolveAddress = createNameResolver("your-web3bio-api-key");
-const address = await resolveAddress("vitalik.eth");
+const address = await resolveAddress("bankr");
 console.log(`Resolved address: ${address}`);
 ```
 
