@@ -17,11 +17,7 @@ Send mentions with Ethereum addresses or domain names, and the agent will resolv
 
 ```tsx
 // Resolve identifier to Ethereum address (agent-sdk)
-const address = await resolveAddress("vitalik.eth");
-// Returns: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-
-// Resolve address to Web3 name (web3.bio, first result)
-const name = await resolveName("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045");
+const address = await resolveAddress("@humanagent.eth");
 // Returns: vitalik.eth
 
 // Group member helpers
@@ -33,20 +29,15 @@ const addresses = extractMemberAddresses(members);
 
 - **ENS** (e.g., `vitalik.eth`)
 - **Farcaster** (e.g., `dwr.eth`)
-- **Lens Protocol** (e.g., `stani.lens`)
 - **Basenames** (e.g., `tony.base.eth`)
-- **Linea Name Service** (e.g., `name.linea.eth`)
+- **Lens Protocol** (e.g., `stani.lens`)
 
 ### Example Output
 
 ```
 🔍 Resolved addresses:
 
-✅ @vitalik.eth → 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-   Name: vitalik.eth
-
-✅ @bankr → 0x12e83ba524041062d5dc702a6ea4f97e3ddcff29
-   Name: bankr
+✅ @humanagent.eth → 0x93e2fc3e99dfb1238eb9e0ef2580efc5809c7204
 ```
 
 ## Getting started
