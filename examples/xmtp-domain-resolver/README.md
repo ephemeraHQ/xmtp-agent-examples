@@ -4,6 +4,11 @@ An XMTP agent that performs reverse resolution of Ethereum addresses to Web3 ide
 
 ![](./screenshot.png)
 
+<p align="center">
+  <img src="media/left.png" alt="Image 1" width="49%">
+  <img src="media/right.png" alt="Image 2" width="49%">
+</p>
+
 ## Usage
 
 Send an Ethereum address and the agent will look up associated domain names across various Web3 platforms:
