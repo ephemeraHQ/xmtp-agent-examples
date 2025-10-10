@@ -2,14 +2,19 @@
 
 An XMTP agent that creates a group that requires a secret passphrase to join.
 
+<p align="center" >
+  <img src="media/left.png" alt="Image 1" width="49%">
+  <img src="media/right.png" alt="Image 2" width="49%">
+</p>
+
+## Usage
+
 1. Users send a message to the agent
 2. The agent checks if the message matches the secret passphrase
 3. If correct, the user is added to an exclusive group
 4. If incorrect, the user gets an error message
 
-## Usage
-
-1. Update the secret word in `index.ts`:
+5. Update the secret word in `index.ts`:
 
 ```tsx
 // Configuration for the secret word gated group
