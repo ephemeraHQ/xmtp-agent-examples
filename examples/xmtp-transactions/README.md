@@ -2,7 +2,11 @@
 
 This example allows users to send tokens like USDC to an agent.
 
-https://github.com/user-attachments/assets/efb8006d-9758-483d-ad1b-9287ea4d426d
+<p align="center" >
+  <img src="media/one.png" alt="Image 1" width="33%">
+  <img src="media/two.png" alt="Image 2" width="33%">
+  <img src="media/three.png" alt="Image 2" width="33%">
+</p>
 
 ## Usage
 
