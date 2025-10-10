@@ -52,11 +52,9 @@ Once you have a transaction reference, you can send it as part of your conversat
 await conversation.messages.send(walletSendCalls, ContentTypeWalletSendCalls);
 ```
 
-### Transaction References
+### Transaction reference middleware
 
 The agent automatically handles transaction reference messages through middleware. When a transaction reference is received, it will display confirmation details including the network, transaction hash, and metadata.
-
-#### Middleware Implementation
 
 ```tsx
 import { type AgentMiddleware } from "@xmtp/agent-sdk";

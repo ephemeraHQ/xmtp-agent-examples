@@ -1,8 +1,6 @@
 # Gaia agent example
 
-This example uses a [Gaia](https://docs.gaianet.ai) API for AI based responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
-
-Using Gaia, you can also run your own [node](https://docs.gaianet.ai/getting-started/quick-start) and use the OpenAI compatible API in this library.
+This example uses [Gaia](https://docs.gaianet.ai) for AI responses and [XMTP](https://xmtp.org) for messaging. You can run your own [node](https://docs.gaianet.ai/getting-started/quick-start) or use public nodes.
 
 ## Getting started
 
