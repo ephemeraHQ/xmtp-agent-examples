@@ -82,3 +82,6 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
+
+> [!TIP]
+> Base associated domains with FIDs. You can see neynar API [https://docs.neynar.com/reference/fetch-bulk-users]
