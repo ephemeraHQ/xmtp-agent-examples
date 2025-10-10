@@ -84,13 +84,13 @@ agent.on("text", async (ctx) => {
 });
 
 agent.on("text", async (ctx) => {
-  if (ctx.isDm() && !ctx.message.content.startsWith("/")) return;
-
-  await ctx.sendText(
-    "Available commands:\n" +
-      "/balance - Check your USDC balance\n" +
-      "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
-  );
+  if (ctx.isDm() && !ctx.message.content.startsWith("/")) {
+    await ctx.sendText(
+      "Available commands:\n" +
+        "/balance - Check your USDC balance\n" +
+        "/tx <amount> - Send USDC to the agent (e.g. /tx 0.1)",
+    );
+  }
 });
 
 agent.on("start", () => {
