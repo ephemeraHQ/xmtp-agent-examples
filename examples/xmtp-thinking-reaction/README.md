@@ -29,7 +29,7 @@ XMTP_ENV=dev # local, dev, production
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-stream-callbacks
+cd examples/xmtp-thinking-reaction
 # install packages
 yarn
 # generate random xmtp keys (optional)
