@@ -50,7 +50,7 @@ Example output:
 - **Lens Protocol** (e.g., `stani.lens`)
 
 > [!TIP]
-> Base associates their addresses with FIDs. You can see that info in [neynar API](https://docs.neynar.com/reference/fetch-bulk-users)
+> Base associates their addresses with FIDs. You can fetch it using [neynar API](https://docs.neynar.com/reference/fetch-bulk-users)
 
 ## Getting started
 

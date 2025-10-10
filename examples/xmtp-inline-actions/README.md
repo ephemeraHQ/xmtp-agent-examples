@@ -2,16 +2,11 @@
 
 A focused XMTP agent demonstrating inline actions UX/UI with interactive buttons and USDC transactions.
 
-<p align="center" >
-  <img src="media/left.png" alt="Image 1" width="49%">
-  <img src="media/right.png" alt="Image 2" width="49%">
-</p>
+![](./screenshot.png)
 
 ## Usage
 
 Send `/help` to see the main menu. This example showcases core inline action UX patterns:
-
-![](./screenshot.png)
 
 ### **1. Using Inline Actions Utils**
 
