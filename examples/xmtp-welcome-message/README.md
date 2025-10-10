@@ -1,4 +1,4 @@
-# XMTP welcome message Example
+# Welcome message example
 
 An ETH price agent that demonstrates welcome messages with interactive buttons and middleware architecture.
 

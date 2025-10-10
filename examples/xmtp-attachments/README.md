@@ -1,4 +1,4 @@
-# XMTP Attachments Example
+# Remote attachments example
 
 An XMTP agent that demonstrates [file attachment](https://docs.xmtp.org/agents/content-types/attachments) handling using utility functions for encryption, decoding, and re-encoding.
 

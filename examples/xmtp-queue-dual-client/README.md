@@ -1,4 +1,4 @@
-# XMTP dual client queue example
+# Dual client queue example
 
 A simple demonstration of using two separate XMTP clients: one for receiving messages and another for sending queued responses.
 
