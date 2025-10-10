@@ -8,6 +8,7 @@ import { getTestUrl } from "@xmtp/agent-sdk/debug";
 
 import {
   ActionBuilder,
+  inlineActionsMiddleware,
   registerAction,
   sendActions,
 } from "../../utils/inline-actions/inline-actions";
@@ -68,13 +69,12 @@ const agent = await Agent.createFromEnv({
   codecs: [new ActionsCodec(), new IntentCodec()],
 });
 
+// Add middleware to handle button clicks
+agent.use(inlineActionsMiddleware);
+
 // Register action handlers using the utilities
 registerAction("get-current-price", handleCurrentPrice);
 registerAction("get-price-chart", handlePriceWithChange);
-
-agent.on("unhandledError", (error) => {
-  console.error("Agent error", error);
-});
 
 async function sendWelcomeMessage(
   ctx: ConversationContext<unknown, Conversation>,
@@ -91,6 +91,10 @@ async function sendWelcomeMessage(
   console.log(`✓ Sending welcome message with actions`);
   await sendActions(ctx.conversation, welcomeActions);
 }
+
+agent.on("text", async (ctx) => {
+  console.log("Received text message:", ctx.message.content);
+});
 
 agent.on("dm", async (ctx) => {
   sendWelcomeMessage(ctx);
