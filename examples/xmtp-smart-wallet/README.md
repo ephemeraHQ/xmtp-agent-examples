@@ -1,4 +1,4 @@
-# CDP smart contract wallet example
+# CDP smart wallet example
 
 This example demonstrates an agent setup on XMTP Network with access to the full set of CDP Smart Contract Wallets.
 

@@ -1,4 +1,4 @@
-# XMTP Inline Actions Agent
+# Inline actions example
 
 A focused XMTP agent demonstrating inline actions UX/UI with interactive buttons and USDC transactions.
 

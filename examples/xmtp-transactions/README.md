@@ -1,4 +1,4 @@
-# Transaction example
+# Transactions example
 
 This example allows users to send tokens like USDC to an agent.
 
