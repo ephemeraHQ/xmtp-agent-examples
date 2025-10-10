@@ -4,10 +4,16 @@ This example demonstrates an agent setup on XMTP Network with access to the full
 
 ![](./screenshot.png)
 
-## Getting started
+## Usage
 
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+Example prompts:
+
+- "Transfer a portion of your ETH to a random address"
+- "What is the price of BTC?"
+- "Request eth and usdc from faucet" (base-sepolia only)
+- "Swap 1 USDC to ETH" (base-mainnet only)
+
+## Getting started
 
 ### Requirements
 
@@ -57,16 +63,3 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
-
-## Usage
-
-Example prompts:
-
-- "Transfer a portion of your ETH to a random address"
-- "What is the price of BTC?"
-- "Request eth and usdc from faucet" (base-sepolia only)
-- "Swap 1 USDC to ETH" (base-mainnet only)
-
-## License
-
-Apache-2.0

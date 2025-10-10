@@ -2,11 +2,6 @@
 
 This example uses the [OpenAI](https://openai.com) API for GPT-based responses and [XMTP](https://xmtp.org) for secure messaging. You can test your agent on [xmtp.chat](https://xmtp.chat) or any other XMTP-compatible client.
 
-## Getting started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
 ### Requirements
 
 - Node.js v20 or higher

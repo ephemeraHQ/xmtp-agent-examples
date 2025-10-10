@@ -4,9 +4,6 @@ This agent reacts to messages with a thinking emoji (⏳), waits 2 seconds, then
 
 ## Getting started
 
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
 ### Requirements
 
 - Node.js v20 or higher

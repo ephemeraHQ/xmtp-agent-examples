@@ -6,9 +6,6 @@ Using Gaia, you can also run your own [node](https://docs.gaianet.ai/getting-sta
 
 ## Getting started
 
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
 ### Requirements
 
 - Node.js v20 or higher

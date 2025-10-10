@@ -2,10 +2,7 @@
 
 A simple demonstration of using two separate XMTP clients: one for receiving messages and another for sending queued responses.
 
-## Getting Started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
+## Getting started
 
 ### Requirements
 
@@ -22,15 +19,6 @@ XMTP_WALLET_KEY= # the private key of the wallet
 XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
-
-Generate random XMTP keys with:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> The `gen:keys` command appends keys to your existing `.env` file.
 
 ### Running the Agent
 
