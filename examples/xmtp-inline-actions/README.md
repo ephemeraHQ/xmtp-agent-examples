@@ -7,33 +7,9 @@ A focused XMTP agent demonstrating inline actions UX/UI with interactive buttons
   <img src="media/right.png" alt="Image 2" width="49%">
 </p>
 
-## Features
-
-- **Inline Actions**: Interactive buttons with different styles and images
-- **Token Transfers**: Send USDC using wallet send calls (EIP-5792)
-- **Rich Metadata**: Enhanced transaction information for wallets
-- **Balance Checking**: Check USDC balances on-chain
-- **Network Support**: Base Sepolia and Base Mainnet
-
 ## Usage
 
-Send `/help` to see the main menu:
-
-### **Main Menu Actions**
-
-- **💸 Transaction Actions**: Opens transaction menu with send options
-- **💰 Check Balance** (with cat image): View bot's USDC balance
-- **ℹ️ More Info**: Network and feature information
-
-### **Transaction Actions Menu**
-
-- **Send 0.005 USDC**: Small transfer
-- **Send 1 USDC**: Larger transfer
-- **Check Balance**: View balance
-
-## How It Works
-
-This example showcases core inline action UX patterns:
+Send `/help` to see the main menu. This example showcases core inline action UX patterns:
 
 ### **1. Using Inline Actions Utils**
 
@@ -78,9 +54,6 @@ ActionBuilder.create("id", "description")
 ```
 
 ## Getting started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
 ### Requirements
 

@@ -136,8 +136,11 @@ async function handleSuccessfulPassphrase(ctx: MessageContext) {
     await group.send(GROUP_CONFIG.messages.success[1]);
     await group.send(GROUP_CONFIG.messages.success[2]);
 
-    // Mark user as in group
-    usersInGroup.add(await ctx.getSenderAddress());
+    // Mark user as in group or get the sender address
+    const senderAddress = await ctx.getSenderAddress();
+    if (senderAddress) {
+      usersInGroup.add(senderAddress);
+    }
 
     console.log(
       `✅ User ${ctx.message.senderInboxId} successfully added to group ${group.id}`,

@@ -21,11 +21,10 @@
     "typecheck": "tsc"
   },
   "resolutions": {
-    "@xmtp/agent-sdk": "1.1.5"
+    "@xmtp/agent-sdk": "1.1.7"
   },
   "dependencies": {
-    "@xmtp/agent-sdk": "1.1.5",
-    "uint8arrays": "^5.1.0"
+    "@xmtp/agent-sdk": "1.1.7"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
@@ -43,7 +42,8 @@
     "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.22.0"
+    "typescript-eslint": "^8.22.0",
+    "uint8arrays": "^5.1.0"
   },
   "packageManager": "yarn@4.6.0",
   "engines": {

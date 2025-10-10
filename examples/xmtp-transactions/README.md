@@ -115,9 +115,6 @@ const networks = [
 
 ## Getting started
 
-> [!NOTE]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
 ### Requirements
 
 - Node.js v20 or higher

@@ -3664,18 +3664,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/agent-sdk@npm:1.1.5":
-  version: 1.1.5
-  resolution: "@xmtp/agent-sdk@npm:1.1.5"
+"@xmtp/agent-sdk@npm:1.1.7":
+  version: 1.1.7
+  resolution: "@xmtp/agent-sdk@npm:1.1.7"
   dependencies:
     "@xmtp/content-type-reaction": "npm:^2.0.2"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/content-type-reply": "npm:^2.0.2"
     "@xmtp/content-type-text": "npm:^2.0.2"
-    "@xmtp/node-sdk": "npm:^4.2.2"
+    "@xmtp/node-sdk": "npm:^4.2.3"
     uint8arrays: "npm:^5.1.0"
     viem: "npm:^2.37.6"
-  checksum: 10c0/44c7482d718e47bab443c41f1cf5c9a372fc3947d6e6abc69270286f0591a603463c217a1d033e73900dfa108968ff9d378b6884a87c38a4f15ff4c0689f30b3
+  checksum: 10c0/91fb41d111d0e04e9ce6afce76b98724ecf97f98412123d8d50a76a98446320d743be200e4bb201f5aebe8f13177da66442ea7b34344abfd269d05f2b4c28ea3
   languageName: node
   linkType: hard
 
@@ -3771,7 +3771,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmtp/node-sdk@npm:^4.2.2":
+"@xmtp/node-sdk@npm:^4.2.3":
   version: 4.2.3
   resolution: "@xmtp/node-sdk@npm:4.2.3"
   dependencies:
@@ -9301,7 +9301,7 @@ __metadata:
     "@eslint/compat": "npm:^1.2.6"
     "@eslint/js": "npm:^9.19.0"
     "@types/node": "npm:^22.13.0"
-    "@xmtp/agent-sdk": "npm:1.1.5"
+    "@xmtp/agent-sdk": "npm:1.1.7"
     "@xmtp/content-type-primitives": "npm:^2.0.2"
     "@xmtp/content-type-remote-attachment": "npm:^2.0.2"
     "@xmtp/content-type-wallet-send-calls": "npm:^1.0.1"

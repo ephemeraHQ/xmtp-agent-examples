@@ -7,14 +7,6 @@ An ETH price agent that demonstrates welcome messages with interactive buttons a
   <img src="media/right.png" alt="Image 2" width="49%">
 </p>
 
-## Features
-
-- **Welcome Message**: Interactive onboarding with action buttons for both DMs and Groups
-- **ETH Price Data**: Real-time price fetching from CoinGecko API
-- **Native Event Handlers**: Uses `dm` and `group` events for automatic welcome messages
-- **Inline Actions**: Interactive buttons for easy user interaction
-- **Error Handling**: Graceful API failure handling
-
 ## Usage
 
 The agent uses native XMTP event handlers for DMs and Groups:
@@ -47,11 +39,6 @@ agent.on("group", async (ctx) => {
   sendWelcomeMessage(ctx);
 });
 ```
-
-## Getting started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
 ### Requirements
 

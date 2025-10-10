@@ -42,7 +42,7 @@ Example output:
 ✅ @humanagent.eth → 0x93e2fc3e99dfb1238eb9e0ef2580efc5809c7204
 ```
 
-£### Supported platforms
+### Supported platforms
 
 - **ENS** (e.g., `vitalik.eth`)
 - **Farcaster** (e.g., `dwr.eth`)
@@ -50,9 +50,6 @@ Example output:
 - **Lens Protocol** (e.g., `stani.lens`)
 
 ## Getting started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
 
 ### Requirements
 

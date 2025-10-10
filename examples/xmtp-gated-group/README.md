@@ -7,40 +7,6 @@ An XMTP agent that creates a group that requires a secret passphrase to join.
 3. If correct, the user is added to an exclusive group
 4. If incorrect, the user gets an error message
 
-> [!IMPORTANT]
-> Because of XMTP's security guarantees, you need to add the bot to the group manually and make it an admin.
-
-## Getting Started
-
-> [!TIP]
-> See XMTP's [cursor rules](/.cursor/README.md) for vibe coding agents and best practices.
-
-### Requirements
-
-- Node.js v20 or higher
-- Yarn v4 or higher
-- Docker (optional, for local network testing)
-
-### Environment Variables
-
-To run your XMTP agent, create a `.env` file with the following variables:
-
-```bash
-SECRET_WORD= # the secret word to join the group
-XMTP_WALLET_KEY= # the private key of the wallet
-XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
-XMTP_ENV=dev # local, dev, production
-```
-
-Generate random XMTP keys with:
-
-```bash
-yarn gen:keys
-```
-
-> [!WARNING]
-> The `gen:keys` command appends keys to your existing `.env` file.
-
 ## Usage
 
 1. Update the secret word in `index.ts`:
@@ -83,5 +49,40 @@ yarn
 # Generate random XMTP keys (optional)
 yarn gen:keys
 # Run the example
+yarn dev
+```
+
+### Requirements
+
+- Node.js v20 or higher
+- Yarn v4 or higher
+- Docker (optional, for local network)
+
+### Environment variables
+
+To run your XMTP agent, you must create a `.env` file with the following variables:
+
+```bash
+XMTP_WALLET_KEY= # the private key of the wallet
+XMTP_DB_ENCRYPTION_KEY= # a second random 32 bytes encryption key for local db encryption
+XMTP_ENV=dev # local, dev, production
+GAIA_API_KEY= # Your API key from https://gaianet.ai
+GAIA_NODE_URL= # Your custom Gaia node URL or a public node, ex: https://llama8b.gaia.domains/v1
+GAIA_MODEL_NAME= # Model name running in your Gaia node or a public node, ex: llama
+```
+
+### Run the agent
+
+```bash
+# git clone repo
+git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
+# go to the folder
+cd xmtp-agent-examples
+cd examples/xmtp-gaia
+# install packages
+yarn
+# generate random xmtp keys (optional)
+yarn gen:keys
+# run the example
 yarn dev
 ```
