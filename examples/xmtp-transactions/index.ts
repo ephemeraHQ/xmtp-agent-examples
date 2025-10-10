@@ -58,7 +58,7 @@ agent.on("text", async (ctx) => {
 agent.on("text", async (ctx) => {
   if (!ctx.message.content.startsWith("/tx")) return;
   const agentAddress = agent.address || "";
-  const senderAddress = await ctx.getSenderAddress();
+  const senderAddress = (await ctx.getSenderAddress()) || "";
 
   const amount = parseFloat((ctx.message.content as string).split(" ")[1]);
   if (isNaN(amount) || amount <= 0) {
