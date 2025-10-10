@@ -37,20 +37,7 @@ const GROUP_CONFIG = {
 };
 ```
 
-### Running the Agent
-
-```bash
-# Clone the repository
-git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
-# Navigate to the secret word group example directory
-cd xmtp-agent-examples/examples/xmtp-secret-word-group
-# Install dependencies
-yarn
-# Generate random XMTP keys (optional)
-yarn gen:keys
-# Run the example
-yarn dev
-```
+## Getting started
 
 ### Requirements
 
@@ -78,7 +65,7 @@ GAIA_MODEL_NAME= # Model name running in your Gaia node or a public node, ex: ll
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-gaia
+cd examples/xmtp-gated-group
 # install packages
 yarn
 # generate random xmtp keys (optional)

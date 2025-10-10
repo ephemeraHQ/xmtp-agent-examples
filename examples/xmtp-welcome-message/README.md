@@ -40,6 +40,8 @@ agent.on("group", async (ctx) => {
 });
 ```
 
+## Getting started
+
 ### Requirements
 
 - Node.js v20 or higher

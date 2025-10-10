@@ -20,7 +20,7 @@ XMTP_DB_ENCRYPTION_KEY= # encryption key for the local database
 XMTP_ENV=dev # local, dev, production
 ```
 
-### Running the Agent
+### Run the agent
 
 ```bash
 # Clone the repository
