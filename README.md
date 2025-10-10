@@ -86,7 +86,7 @@ XMTP_FORCE_DEBUG_LEVEL=warn # debug, info, warn, error
 
 Try out the examples using [xmtp.chat](https://xmtp.chat), the official playground for agents.
 
-![](/examples/xmtp-inline-actions/screenshot.png)
+![](/examples/xmtp-gm/screenshot.png)
 
 ### Run a local XMTP network (Optional)
 
