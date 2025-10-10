@@ -159,7 +159,7 @@ Choose an action below:`,
     )
       .add("transaction-actions", "💸 Transaction Actions")
       .add("send-with-metadata", "😉 Send with Metadata")
-      .add("check-balance", "Check Balance")
+      .add("check-balance", "💰 Check Balance")
       .add("more-info", "ℹ️ More Info")
       .build();
 
