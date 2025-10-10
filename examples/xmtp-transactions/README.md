@@ -7,6 +7,7 @@ This example allows users to send tokens like USDC to an agent.
   <img src="media/two.png" alt="Image 2" width="33%">
   <img src="media/three.png" alt="Image 2" width="33%">
 </p>
+
 ## Usage
 
 ### Commands
