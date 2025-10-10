@@ -2,6 +2,8 @@
 
 An ETH price agent that demonstrates welcome messages with interactive buttons and middleware architecture.
 
+> This example is based on the [TBA Chat Example Bot](https://github.com/siwan-cb/tba-chat-example-bot).
+
 <p align="center" >
   <img src="media/left.png" alt="Image 1" width="49%">
   <img src="media/right.png" alt="Image 2" width="49%">
@@ -73,7 +75,3 @@ yarn gen:keys
 # run the example
 yarn dev
 ```
-
-## Reference
-
-This example is based on the [TBA Chat Example Bot](https://github.com/siwan-cb/tba-chat-example-bot).
