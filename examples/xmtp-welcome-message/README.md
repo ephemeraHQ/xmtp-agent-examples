@@ -1,4 +1,4 @@
-# XMTP Welcome Message Example
+# XMTP welcome message Example
 
 An ETH price agent that demonstrates welcome messages with interactive buttons and middleware architecture.
 
@@ -39,6 +39,8 @@ agent.on("group", async (ctx) => {
   sendWelcomeMessage(ctx);
 });
 ```
+
+## Getting started
 
 ### Requirements
 

@@ -11,6 +11,8 @@ A focused XMTP agent demonstrating inline actions UX/UI with interactive buttons
 
 Send `/help` to see the main menu. This example showcases core inline action UX patterns:
 
+![](./screenshot.png)
+
 ### **1. Using Inline Actions Utils**
 
 ```typescript

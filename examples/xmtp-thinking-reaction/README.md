@@ -2,6 +2,8 @@
 
 This agent reacts to messages with a thinking emoji (⏳), waits 2 seconds, then sends a response (and removes the reaction).
 
+![](./screenshot.png)
+
 ## Getting started
 
 ### Requirements
@@ -27,7 +29,7 @@ XMTP_ENV=dev # local, dev, production
 git clone https://github.com/ephemeraHQ/xmtp-agent-examples.git
 # go to the folder
 cd xmtp-agent-examples
-cd examples/xmtp-stream-callbacks
+cd examples/xmtp-thinking-reaction
 # install packages
 yarn
 # generate random xmtp keys (optional)
