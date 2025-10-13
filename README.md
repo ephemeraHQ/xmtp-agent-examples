@@ -24,8 +24,6 @@ See these [Cursor rules](/.cursor) for vibe coding with XMTP using best practice
 Prompt: lets create an example that gets a number and returns its 2x multiple (use claude max)
 ```
 
-🎥 Watch [Vibe coding agents with XMTP](https://youtu.be/djRLnWUvwIA) for a quickstart guide to building with these example agents.
-
 ### Run an example agent
 
 ```bash
