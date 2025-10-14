@@ -34,14 +34,6 @@ const address = await resolveAddress("bankr");
 console.log(`Resolved address: ${address}`);
 ```
 
-Example output:
-
-```
-🔍 Resolved addresses:
-
-✅ @humanagent.eth → 0x93e2fc3e99dfb1238eb9e0ef2580efc5809c7204
-```
-
 ### Supported platforms
 
 - **ENS** (e.g., `vitalik.eth`)
