@@ -3,7 +3,7 @@
 An XMTP agent that demonstrates [file attachment](https://docs.xmtp.org/agents/content-types/attachments) handling using utility functions for encryption, decoding, and re-encoding.
 
 <p align="center" >
-  <img src="media/left.png" alt="Image 1" width="49%">
+  <img src="screenshot.png" alt="Image 1" width="49%">
 </p>
 
 ## Usage
