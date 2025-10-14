@@ -4,7 +4,7 @@ These example agents serve as a starting point for building your own agents. The
 
 - [xmtp-gm](/examples/xmtp-gm/): A simple agent that replies to all text messages with "gm"
 - [xmtp-gpt](/examples/xmtp-gpt/): An example using GPT API's to answer messages
-- [xmtp-mini-app](https://github.com/ephemeraHQ/xmtp-mini-app-example): An example using mini app to access group members
+- [xmtp-mini-app](/examples/xmtp-mini-app/): An example using mini app to access group members
 - [xmtp-gated-group](/examples/xmtp-gated-group/): Add members to a group based on arbitrary criteria
 - [xmtp-coinbase-agentkit](/examples/xmtp-coinbase-agentkit/): Agent that uses a CDP for gasless USDC on base
 - [xmtp-domain-resolver](/examples/xmtp-domain-resolver/): Resolve ens user tags in group messages
