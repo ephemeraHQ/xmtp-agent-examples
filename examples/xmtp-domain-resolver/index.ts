@@ -10,11 +10,10 @@ const agent = await Agent.createFromEnv({
 });
 
 agent.on("text", async (ctx) => {
-  console.log(ctx.message.content);
-
+  const content = ctx.message.content;
   // Resolve all mentions in the message
   const resolved = await resolveMentionsInMessage(
-    ctx.message.content,
+    content,
     await ctx.conversation.members(),
   );
 
