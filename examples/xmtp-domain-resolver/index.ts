@@ -1,11 +1,7 @@
 import { Agent } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { loadEnvFile } from "../../utils/general";
-import {
-  resolveMentionsInMessage,
-  extractMentions,
-  extractMemberAddresses,
-} from "../../utils/resolver";
+import { resolveMentionsInMessage } from "../../utils/resolver";
 
 loadEnvFile();
 
@@ -14,21 +10,15 @@ const agent = await Agent.createFromEnv({
 });
 
 agent.on("text", async (ctx) => {
-  console.log(ctx.message.content);
-  const mentions = extractMentions(ctx.message.content);
-  if (mentions.length === 0) return;
-  console.log(mentions);
-
-  // Get group members for shortened address matching
-  const memberAddresses = ctx.isGroup()
-    ? extractMemberAddresses(await ctx.conversation.members())
-    : [];
-
-  // Resolve all mentions
+  const content = ctx.message.content;
+  // Resolve all mentions in the message
   const resolved = await resolveMentionsInMessage(
-    ctx.message.content,
-    memberAddresses,
+    content,
+    await ctx.conversation.members(),
   );
+
+  // If no mentions found, don't respond
+  if (Object.keys(resolved).length === 0) return;
 
   // Build response
   let response = "🔍 Resolved:\n\n";

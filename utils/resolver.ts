@@ -146,16 +146,26 @@ export const extractMentions = (message: string): string[] => {
 /**
  * Resolves all mentions in a message to Ethereum addresses
  * @param message - The message text to parse
- * @param memberAddresses - Optional array of member addresses to match shortened addresses against
+ * @param members - Optional array of group members to match shortened addresses against
  * @returns Object mapping identifiers to addresses
  */
 export const resolveMentionsInMessage = async (
   message: string,
-  memberAddresses?: string[],
+  members?: GroupMember[],
 ): Promise<Record<string, string | null>> => {
+  // Extract mentions from message
   const mentions = extractMentions(message);
-  const results: Record<string, string | null> = {};
 
+  // If no mentions found, return empty object
+  if (mentions.length === 0) {
+    return {};
+  }
+
+  // Extract member addresses if members provided
+  const memberAddresses = members ? extractMemberAddresses(members) : [];
+
+  // Resolve all mentions
+  const results: Record<string, string | null> = {};
   await Promise.all(
     mentions.map(async (mention) => {
       results[mention] = await resolveIdentifier(mention, memberAddresses);

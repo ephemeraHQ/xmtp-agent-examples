@@ -12,19 +12,10 @@ An XMTP agent that resolves Ethereum addresses to Web3 identities using the [Web
 Send mentions with Ethereum addresses or domain names, and the agent will resolve them:
 
 ```tsx
-// Extract mentions from message text
-const mentions = extractMentions(ctx.message.content);
-// Returns: ["bankr", "0xabc5…f002", "@humanagent.eth"]
-
-// Extract member addresses from group
-const members = await ctx.conversation.members();
-const addresses = extractMemberAddresses(members);
-// Returns: ["0x93e2fc3e99dfb1238eb9e0ef2580efc5809c7204", ...]
-
 // Resolve all mentions to Ethereum addresses
 const resolved = await resolveMentionsInMessage(
   ctx.message.content,
-  memberAddresses,
+  await ctx.conversation.members(),
 );
 // Returns: { "bankr.farcaster.eth": "0x...", "0xabc5…f002": "0x..." }
 
@@ -32,14 +23,6 @@ const resolved = await resolveMentionsInMessage(
 const resolveAddress = createNameResolver("your-web3bio-api-key");
 const address = await resolveAddress("bankr");
 console.log(`Resolved address: ${address}`);
-```
-
-Example output:
-
-```
-🔍 Resolved addresses:
-
-✅ @humanagent.eth → 0x93e2fc3e99dfb1238eb9e0ef2580efc5809c7204
 ```
 
 ### Supported platforms
