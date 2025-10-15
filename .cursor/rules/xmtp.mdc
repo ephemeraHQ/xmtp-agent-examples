@@ -127,11 +127,11 @@ agent.on("reply", async (ctx) => {
 
 // Listen to new conversations
 agent.on("dm", async (ctx) => {
-  await ctx.sendText("Welcome to our DM!");
+  // handle dm conversation
 });
 
 agent.on("group", async (ctx) => {
-  await ctx.sendText("Hello group!");
+  // handle group conversation
 });
 
 // Listen to unhandled events
