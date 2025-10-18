@@ -1,0 +1,677 @@
+import "dotenv/config";
+import React, { useState, useEffect, useRef } from "react";
+import { render, Box, Text, useApp } from "ink";
+import TextInput from "ink-text-input";
+import {
+  Agent,
+  IdentifierKind,
+  type Conversation,
+  type DecodedMessage,
+  type XmtpEnv,
+  type Group,
+  type Dm,
+} from "@xmtp/agent-sdk";
+import { createSigner, createUser } from "@xmtp/agent-sdk/user";
+import { fromString } from "uint8arrays/from-string";
+
+// Red color - matching the original theme (rgb: 252, 76, 52)
+const RED = "#fc4c34";
+
+// ============================================================================
+// Types
+// ============================================================================
+interface FormattedMessage {
+  timestamp: string;
+  sender: string;
+  content: string;
+  isFromSelf: boolean;
+}
+
+// ============================================================================
+// Header Component
+// ============================================================================
+interface HeaderProps {
+  conversation: Conversation | null;
+  env: XmtpEnv;
+  address: string;
+  inboxId: string;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  conversation,
+  env,
+  address,
+  inboxId,
+}) => {
+  const logoLines = [
+    " ██╗  ██╗███╗   ███╗████████╗██████╗ ",
+    " ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗",
+    "  ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝",
+    "  ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ ",
+    " ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     ",
+    " ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     ",
+  ];
+
+  if (!conversation) {
+    // Show initialization header
+    return (
+      <Box flexDirection="column" marginBottom={1}>
+        <Box
+          borderStyle="round"
+          borderColor={RED}
+          paddingX={2}
+          paddingY={1}
+          flexDirection="row"
+        >
+          <Box flexDirection="column">
+            {logoLines.map((line, i) => (
+              <Box key={i}>
+                <Text color={RED}>{line}</Text>
+              </Box>
+            ))}
+          </Box>
+          <Box flexDirection="column" marginLeft={2}>
+            <Text dimColor>
+              InboxId: <Text color={RED}>{inboxId.slice(0, 16)}...</Text>
+            </Text>
+            <Text dimColor>
+              Address: <Text color={RED}>{address.slice(0, 10)}...</Text>
+            </Text>
+            <Text dimColor>
+              Conversations: <Text color={RED}>{2}</Text>
+            </Text>
+            <Text dimColor>
+              Network: <Text color={RED}>{env}</Text>
+            </Text>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  const isGroup = conversation.constructor.name === "Group";
+
+  return (
+    <Box flexDirection="column">
+      <Box paddingX={1} paddingY={0}>
+        {isGroup ? (
+          <Text bold color={RED} inverse>
+            {" "}
+            GROUP: {(conversation as Group).name || "Unnamed Group"}{" "}
+          </Text>
+        ) : (
+          <Text bold color={RED} inverse>
+            {" "}
+            DM: {(conversation as Dm).peerInboxId.slice(0, 16)}...{" "}
+          </Text>
+        )}
+      </Box>
+      <Box marginTop={1}>
+        <Text dimColor>Commands: /conversations • /back • /exit</Text>
+      </Box>
+    </Box>
+  );
+};
+
+// ============================================================================
+// Messages Component
+// ============================================================================
+interface MessagesProps {
+  messages: FormattedMessage[];
+  height: number;
+}
+
+const Messages: React.FC<MessagesProps> = ({ messages, height }) => {
+  // Show last N messages that fit in the height
+  const visibleMessages = messages.slice(-height);
+
+  return (
+    <Box flexDirection="column" marginY={1}>
+      {visibleMessages.length === 0 ? (
+        <Text dimColor>No messages yet...</Text>
+      ) : (
+        visibleMessages.map((msg, index) => (
+          <Box key={index}>
+            <Text dimColor>[{msg.timestamp}]</Text>
+            <Text> </Text>
+            <Text bold color={RED}>
+              {msg.sender}
+            </Text>
+            <Text>: {msg.content}</Text>
+          </Box>
+        ))
+      )}
+    </Box>
+  );
+};
+
+// ============================================================================
+// Input Component
+// ============================================================================
+interface InputBoxProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: (value: string) => void;
+  placeholder?: string;
+}
+
+const InputBox: React.FC<InputBoxProps> = ({
+  value,
+  onChange,
+  onSubmit,
+  placeholder = "Send a message to the agent",
+}) => {
+  return (
+    <Box flexDirection="column" marginTop={1}>
+      <Box borderStyle="round" borderColor="gray" paddingX={1}>
+        <TextInput
+          value={value}
+          onChange={onChange}
+          onSubmit={onSubmit}
+          placeholder={placeholder}
+          showCursor={true}
+        />
+      </Box>
+    </Box>
+  );
+};
+
+// ============================================================================
+// Conversation List Component
+// ============================================================================
+interface ConversationListProps {
+  conversations: Conversation[];
+  currentConversationId: string | null;
+}
+
+const ConversationList: React.FC<ConversationListProps> = ({
+  conversations,
+  currentConversationId,
+}) => {
+  return (
+    <Box flexDirection="column" marginY={1}>
+      <Text bold color={RED}>
+        YOUR CONVERSATIONS
+      </Text>
+      <Box marginTop={1} flexDirection="column">
+        {conversations.length === 0 ? (
+          <Text color={RED}>No conversations found</Text>
+        ) : (
+          conversations.map((conv, index) => {
+            const isGroup = conv.constructor.name === "Group";
+            const isCurrent = conv.id === currentConversationId;
+            const label = isCurrent ? "●" : " ";
+
+            if (isGroup) {
+              const group = conv as Group;
+              return (
+                <Box key={index}>
+                  <Text color={RED}>{label}</Text>
+                  <Text bold> {index + 1}.</Text>
+                  <Text color={RED}> [GROUP]</Text>
+                  <Text> {group.name || "Unnamed"}</Text>
+                </Box>
+              );
+            } else {
+              const dm = conv as Dm;
+              const peerShort = dm.peerInboxId.slice(0, 16) + "...";
+              return (
+                <Box key={index}>
+                  <Text color={RED}>{label}</Text>
+                  <Text bold> {index + 1}.</Text>
+                  <Text color={RED}> [DM]</Text>
+                  <Text> {peerShort}</Text>
+                </Box>
+              );
+            }
+          })
+        )}
+      </Box>
+      <Box marginTop={1}>
+        <Text dimColor>Use /chat &lt;number&gt; to switch conversations</Text>
+      </Box>
+    </Box>
+  );
+};
+
+// ============================================================================
+// Main App Component
+// ============================================================================
+interface AppProps {
+  env: XmtpEnv;
+  agentIdentifiers?: string[];
+}
+
+const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
+  const { exit } = useApp();
+  const [agent, setAgent] = useState<Agent | null>(null);
+  const [address, setAddress] = useState<string>("");
+  const [inboxId, setInboxId] = useState<string>("");
+  const [currentConversation, setCurrentConversation] =
+    useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<FormattedMessage[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [showConversationList, setShowConversationList] = useState(false);
+  const [error, setError] = useState<string>("");
+  const streamRef = useRef<AsyncIterable<DecodedMessage> | null>(null);
+  const isStreamingRef = useRef(false);
+
+  // Initialize agent
+  useEffect(() => {
+    const initAgent = async () => {
+      const walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
+      const encryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
+
+      if (!walletKey || !encryptionKey) {
+        setError(
+          "XMTP_CLIENT_WALLET_KEY and XMTP_CLIENT_DB_ENCRYPTION_KEY must be set",
+        );
+        return;
+      }
+
+      const user = createUser(walletKey as `0x${string}`);
+      const signer = createSigner(user);
+      const dbEncryptionKey = fromString(encryptionKey, "hex");
+
+      const newAgent = await Agent.create(signer, {
+        env,
+        dbEncryptionKey,
+      });
+
+      const identifier = await signer.getIdentifier();
+      const addr =
+        identifier.identifierKind === IdentifierKind.Ethereum
+          ? identifier.identifier
+          : "Unknown";
+
+      setAgent(newAgent);
+      setAddress(addr);
+      setInboxId(newAgent.client.inboxId);
+
+      // Sync conversations
+      await newAgent.client.conversations.sync();
+      const convList = await newAgent.client.conversations.list();
+      setConversations(convList);
+
+      // If agent identifiers provided, create/find conversation
+      if (agentIdentifiers && agentIdentifiers.length > 0) {
+        const conv = await findOrCreateConversation(newAgent, agentIdentifiers);
+        if (conv) {
+          setCurrentConversation(conv);
+          await loadMessages(conv, newAgent);
+          await startMessageStream(conv, newAgent);
+        }
+      }
+    };
+
+    initAgent().catch((err) => {
+      setError(`Failed to initialize: ${err.message}`);
+    });
+  }, []);
+
+  // Find or create conversation
+  const findOrCreateConversation = async (
+    agentInstance: Agent,
+    identifiers: string[],
+  ): Promise<Conversation | null> => {
+    const client = agentInstance.client;
+
+    try {
+      if (identifiers.length > 1) {
+        // Create group
+        const allEthAddresses = identifiers.every(
+          (id) => id.startsWith("0x") && id.length === 42,
+        );
+
+        if (allEthAddresses) {
+          const memberIdentifiers = identifiers.map((id) => ({
+            identifier: id,
+            identifierKind: IdentifierKind.Ethereum,
+          }));
+
+          const group = await client.conversations.newGroupWithIdentifiers(
+            memberIdentifiers,
+            {
+              groupName: "CLI Group Chat",
+              groupDescription: "Group created from CLI",
+            },
+          );
+          return group;
+        } else {
+          const group = await client.conversations.newGroup(identifiers, {
+            groupName: "CLI Group Chat",
+            groupDescription: "Group created from CLI",
+          });
+          return group;
+        }
+      } else {
+        // Create/find DM
+        const identifier = identifiers[0];
+        const isEthAddress =
+          identifier.startsWith("0x") && identifier.length === 42;
+
+        // Try to find existing conversation
+        await client.conversations.sync();
+        const convs = await client.conversations.list();
+
+        for (const conv of convs) {
+          if (conv.constructor.name === "Dm") {
+            const dm = conv as Dm;
+            if (dm.peerInboxId.toLowerCase() === identifier.toLowerCase()) {
+              return conv;
+            }
+
+            if (isEthAddress) {
+              const members = await conv.members();
+              for (const member of members) {
+                const ethId = member.accountIdentifiers.find(
+                  (id) => id.identifierKind === IdentifierKind.Ethereum,
+                );
+                if (
+                  ethId &&
+                  ethId.identifier.toLowerCase() === identifier.toLowerCase()
+                ) {
+                  return conv;
+                }
+              }
+            }
+          }
+        }
+
+        // Create new DM
+        if (isEthAddress) {
+          return await client.conversations.newDmWithIdentifier({
+            identifier,
+            identifierKind: IdentifierKind.Ethereum,
+          });
+        } else {
+          return await client.conversations.newDm(identifier);
+        }
+      }
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(`Failed to create conversation: ${error.message}`);
+      return null;
+    }
+  };
+
+  // Load messages
+  const loadMessages = async (conv: Conversation, agentInstance: Agent) => {
+    await conv.sync();
+    const msgs = await conv.messages();
+    const formatted = msgs
+      .slice(-50)
+      .map((msg) => formatMessage(msg, agentInstance));
+    setMessages(formatted);
+  };
+
+  // Format message
+  const formatMessage = (
+    message: DecodedMessage,
+    agentInstance: Agent,
+  ): FormattedMessage => {
+    const timestamp = message.sentAt.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const isFromSelf = message.senderInboxId === agentInstance.client.inboxId;
+    const sender = isFromSelf ? "You" : message.senderInboxId.slice(0, 8);
+
+    const content =
+      typeof message.content === "string"
+        ? message.content
+        : JSON.stringify(message.content);
+
+    return { timestamp, sender, content, isFromSelf };
+  };
+
+  // Start message stream
+  const startMessageStream = async (
+    conv: Conversation,
+    agentInstance: Agent,
+  ) => {
+    if (isStreamingRef.current) return;
+
+    isStreamingRef.current = true;
+    const client = agentInstance.client;
+
+    try {
+      streamRef.current = await client.conversations.streamAllMessages();
+
+      (async () => {
+        if (!streamRef.current) return;
+
+        for await (const message of streamRef.current) {
+          if (message.conversationId !== conv.id) continue;
+
+          const formatted = formatMessage(message, agentInstance);
+          setMessages((prev) => [...prev, formatted]);
+        }
+      })().catch((err) => {
+        setError(`Stream error: ${err.message}`);
+        isStreamingRef.current = false;
+      });
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(`Failed to start stream: ${error.message}`);
+      isStreamingRef.current = false;
+    }
+  };
+
+  // Handle input submit
+  const handleSubmit = async (value: string) => {
+    if (!value.trim()) return;
+
+    const message = value.trim();
+    setInputValue("");
+
+    // Handle commands
+    if (message === "/exit") {
+      exit();
+      return;
+    }
+
+    if (message === "/back") {
+      setCurrentConversation(null);
+      setMessages([]);
+      setShowConversationList(false);
+      return;
+    }
+
+    if (message === "/conversations") {
+      setShowConversationList((prev) => !prev);
+      return;
+    }
+
+    if (message.startsWith("/chat ")) {
+      const parts = message.split(" ");
+      if (parts.length === 2) {
+        const index = parseInt(parts[1]) - 1;
+        if (!isNaN(index) && index >= 0 && index < conversations.length) {
+          const newConv = conversations[index];
+          setCurrentConversation(newConv);
+          setShowConversationList(false);
+          if (agent) {
+            await loadMessages(newConv, agent);
+            await startMessageStream(newConv, agent);
+          }
+          return;
+        }
+      }
+      setError("Usage: /chat <number>");
+      return;
+    }
+
+    // If not in a conversation, show error for non-command input
+    if (!currentConversation) {
+      setError(
+        "No active conversation. Use /conversations to see available chats or /chat <number> to select one.",
+      );
+      return;
+    }
+
+    // Send message
+    if (!agent) {
+      setError("Agent not initialized");
+      return;
+    }
+
+    try {
+      await currentConversation.send(message);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(`Failed to send: ${error.message}`);
+    }
+  };
+
+  // Show error state
+  if (error) {
+    return (
+      <Box flexDirection="column">
+        <Box borderStyle="round" borderColor="red" padding={1}>
+          <Text color="red">Error: {error}</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Show loading state
+  if (!agent) {
+    return (
+      <Box flexDirection="column">
+        <Text color={RED}>Initializing XMTP Agent...</Text>
+      </Box>
+    );
+  }
+
+  return (
+    <Box flexDirection="column">
+      <Header
+        conversation={currentConversation}
+        env={env}
+        address={address}
+        inboxId={inboxId}
+      />
+
+      {showConversationList && (
+        <ConversationList
+          conversations={conversations}
+          currentConversationId={currentConversation?.id || null}
+        />
+      )}
+
+      {currentConversation && <Messages messages={messages} height={20} />}
+
+      <InputBox
+        value={inputValue}
+        onChange={setInputValue}
+        onSubmit={handleSubmit}
+        placeholder={
+          currentConversation
+            ? "Send a message to the agent"
+            : "Type a command (e.g., /conversations, /chat 1)"
+        }
+      />
+
+      {!currentConversation && conversations.length > 0 && (
+        <Box flexDirection="column" marginTop={1}>
+          <Text dimColor>
+            Available commands: /conversations, /chat &lt;number&gt;, /exit
+          </Text>
+        </Box>
+      )}
+
+      {!currentConversation && conversations.length === 0 && (
+        <Box flexDirection="column" marginTop={1}>
+          <Text dimColor>
+            No conversations found. Use --agent &lt;address&gt; to start a new
+            chat.
+          </Text>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+// ============================================================================
+// CLI Entry Point
+// ============================================================================
+function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
+  const args = process.argv.slice(2);
+  let env = (process.env.XMTP_ENV as XmtpEnv) || "production";
+  let help = false;
+  const agents: string[] = [];
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const nextArg = args[i + 1];
+
+    if (arg === "--help" || arg === "-h") {
+      help = true;
+    } else if (arg === "--env" && nextArg) {
+      env = nextArg as XmtpEnv;
+      i++;
+    } else if (arg === "--agent" && nextArg) {
+      i++;
+      while (i < args.length && !args[i].startsWith("--")) {
+        agents.push(args[i]);
+        i++;
+      }
+      i--;
+    }
+  }
+
+  return { env, help, agents: agents.length > 0 ? agents : undefined };
+}
+
+function showHelp(): void {
+  console.log(`
+XMTP CLI Chat Interface
+
+Chat with your XMTP conversations directly from the terminal.
+
+USAGE:
+  yarn chat [options]
+
+OPTIONS:
+  --agent <address...>   Connect to agent(s) by Ethereum address or inbox ID
+                        Single address: creates/opens a DM
+                        Multiple addresses: creates a group chat
+  --env <environment>    XMTP environment (local, dev, production)
+                        [default: production or XMTP_ENV]
+  -h, --help            Show this help message
+
+IN-CHAT COMMANDS:
+  /conversations         List all your conversations with numbers
+  /chat <number>         Switch to a different conversation
+  /back                  Return to conversation list
+  /exit                  Quit the application
+
+EXAMPLES:
+  yarn chat
+  yarn chat --env dev
+  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2
+  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2 0x1234567890abcdef1234567890abcdef12345678
+  yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179
+
+ENVIRONMENT VARIABLES:
+  XMTP_ENV                       Default environment
+  XMTP_CLIENT_WALLET_KEY         Wallet private key (required)
+  XMTP_CLIENT_DB_ENCRYPTION_KEY  Database encryption key (required)
+`);
+}
+
+async function main(): Promise<void> {
+  const { env, help, agents } = parseArgs();
+
+  if (help) {
+    showHelp();
+    process.exit(0);
+  }
+
+  render(<App env={env} agentIdentifiers={agents} />);
+}
+
+void main();
