@@ -34,8 +34,9 @@ class TerminalUI {
   private messageBuffer: string[] = [];
   private maxMessages = 100;
   private terminalHeight: number;
-  private inputHeight = 3; // Lines reserved for input area
+  private inputHeight = 4; // Lines reserved for input area (top border, input, bottom border, spacing)
   private headerHeight = 3; // Lines for header
+  private placeholderText = "Send a message to the agent";
 
   constructor() {
     this.terminalHeight = process.stdout.rows || 24;
@@ -59,29 +60,30 @@ class TerminalUI {
   // Render the header
   renderHeader(conversation: Conversation): string {
     const isGroup = conversation.constructor.name === "Group";
+    const bgRed = "\x1b[48;2;252;76;52m"; // Background red
     let header = "";
 
     if (isGroup) {
       const group = conversation as Group;
-      header = `${colors.bgCyan}${colors.bright} GROUP: ${group.name || "Unnamed Group"} ${colors.reset}`;
+      header = `${bgRed}${colors.bright} GROUP: ${group.name || "Unnamed Group"} ${colors.reset}`;
     } else {
       const dm = conversation as Dm;
       const peerId = dm.peerInboxId.slice(0, 16) + "...";
-      header = `${colors.bgBlue}${colors.bright} DM: ${peerId} ${colors.reset}`;
+      header = `${bgRed}${colors.bright} DM: ${peerId} ${colors.reset}`;
     }
 
     return header;
   }
 
-  // Render the input separator with box styling
-  renderInputArea(): void {
+  // Render bottom border of input box
+  renderInputBottomBorder(): void {
     const width = process.stdout.columns || 80;
-    const separator = `${colors.dim}${"─".repeat(width)}${colors.reset}`;
-    console.log(separator);
+    const bottomBorder = `${colors.dim}└${"─".repeat(width - 2)}┘${colors.reset}`;
+    console.log(bottomBorder);
   }
 
   // Clear screen and render full UI
-  render(conversation: Conversation, prompt: string): void {
+  render(conversation: Conversation, currentInput: string = ""): void {
     // Clear screen and move cursor to top
     process.stdout.write("\x1b[2J\x1b[H");
 
@@ -99,16 +101,79 @@ class TerminalUI {
 
     // Move to bottom for input area
     const currentLine = this.headerHeight + visibleMessages.length + 1;
-    const targetLine = this.terminalHeight - this.inputHeight;
+    const targetLine = this.terminalHeight - this.inputHeight - 1;
     if (currentLine < targetLine) {
       process.stdout.write("\n".repeat(targetLine - currentLine));
     }
 
-    // Render input separator
-    this.renderInputArea();
+    // Render input box with top border
+    const width = process.stdout.columns || 80;
+    const topBorder = `${colors.dim}┌${"─".repeat(width - 2)}┐${colors.reset}`;
+    console.log(topBorder);
 
-    // Input prompt (readline will handle this line)
-    process.stdout.write(prompt);
+    // Render input line with placeholder
+    this.renderInputLine(currentInput);
+
+    // Render bottom border
+    this.renderInputBottomBorder();
+  }
+
+  // Render just the input line
+  renderInputLine(currentInput: string = ""): void {
+    const width = process.stdout.columns || 80;
+    const innerWidth = width - 4;
+
+    if (!currentInput) {
+      // Show placeholder
+      const padding = " ".repeat(
+        Math.max(0, innerWidth - this.placeholderText.length),
+      );
+      console.log(
+        `${colors.dim}│${colors.reset} ${colors.dim}${this.placeholderText}${colors.reset}${padding} ${colors.dim}│${colors.reset}`,
+      );
+    } else {
+      // Show current input
+      const padding = " ".repeat(Math.max(0, innerWidth - currentInput.length));
+      console.log(
+        `${colors.dim}│${colors.reset} ${currentInput}${padding} ${colors.dim}│${colors.reset}`,
+      );
+    }
+  }
+
+  // Update only the input line (efficient, no full redraw)
+  updateInputLine(currentInput: string = ""): void {
+    // Save cursor position
+    process.stdout.write("\x1b7");
+
+    // Move to input line (2 lines up from bottom)
+    process.stdout.write(`\x1b[${this.terminalHeight - 2}H`);
+
+    // Clear the line
+    process.stdout.write("\x1b[2K");
+
+    // Render the new input
+    const width = process.stdout.columns || 80;
+    const innerWidth = width - 4;
+
+    if (!currentInput) {
+      // Show placeholder
+      const padding = " ".repeat(
+        Math.max(0, innerWidth - this.placeholderText.length),
+      );
+      process.stdout.write(
+        `${colors.dim}│${colors.reset} ${colors.dim}${this.placeholderText}${colors.reset}${padding} ${colors.dim}│${colors.reset}`,
+      );
+    } else {
+      // Show current input
+      const padding = " ".repeat(Math.max(0, innerWidth - currentInput.length));
+      process.stdout.write(
+        `${colors.dim}│${colors.reset} ${currentInput}${padding} ${colors.dim}│${colors.reset}`,
+      );
+    }
+
+    // Restore cursor position and move to input position
+    process.stdout.write(`\x1b[${this.terminalHeight - 2}H`);
+    process.stdout.write("\x1b[" + (currentInput.length + 3) + "G");
   }
 
   // Add message and refresh display (for new messages during chat)
@@ -126,21 +191,17 @@ class TerminalUI {
     };
     const currentInput = rlWithLine.line || "";
 
-    // Re-render everything
-    this.render(conversation, "");
+    // Re-render everything (includes borders)
+    this.render(conversation, currentInput);
+
+    // Move cursor back up to input line and position it correctly
+    process.stdout.write("\x1b[2A"); // Move up 2 lines (past bottom border and input line)
+    process.stdout.write("\x1b[" + (currentInput.length + 3) + "G"); // Move to correct column (| + space + input length)
 
     // Restore readline's input
     if (currentInput) {
       rlWithLine.line = currentInput;
       rlWithLine.cursor = currentInput.length;
-    }
-
-    // Refresh readline display
-    const rlInterface = rl as readline.Interface & {
-      _refreshLine?: () => void;
-    };
-    if (rlInterface._refreshLine) {
-      rlInterface._refreshLine();
     }
   }
 
@@ -178,10 +239,6 @@ class XmtpChatCLI {
     const signer = createSigner(user);
     const dbEncryptionKey = fromString(encryptionKey!, "hex");
 
-    console.log(
-      `${colors.cyan}${colors.bright}Initializing XMTP client...${colors.reset}`,
-    );
-
     this.agent = await Agent.create(signer, {
       env: this.env,
       dbEncryptionKey,
@@ -215,36 +272,105 @@ class XmtpChatCLI {
     // Get inbox state
     const inboxState = await client.preferences.inboxState();
 
-    const url = `http://xmtp.chat/dm/${address}`;
+    // Shorten IDs for display
+    const shortInboxId = `${inboxId.slice(0, 8)}...${inboxId.slice(-8)}`;
+    const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
-    // Smaller logo lines
+    // Red color for everything
+    const red = "\x1b[38;2;252;76;52m";
+
+    // Logo lines - all in red
     const logoLines = [
-      `\x1b[38;2;252;76;52m ██╗  ██╗███╗   ███╗`,
-      ` ╚██╗██╔╝████╗ ████║`,
-      `  ╚███╔╝ ██╔████╔██║`,
-      `  ██╔██╗ ██║╚██╔╝██║`,
-      ` ██╔╝ ██╗██║ ╚═╝ ██║`,
-      ` ╚═╝  ╚═╝╚═╝     ╚═╝\x1b[0m`,
+      ` ██╗  ██╗███╗   ███╗████████╗██████╗ `,
+      ` ╚██╗██╔╝████╗ ████║╚══██╔══╝██╔══██╗`,
+      `  ╚███╔╝ ██╔████╔██║   ██║   ██████╔╝`,
+      `  ██╔██╗ ██║╚██╔╝██║   ██║   ██╔═══╝ `,
+      ` ██╔╝ ██╗██║ ╚═╝ ██║   ██║   ██║     `,
+      ` ╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   ╚═╝     `,
     ];
 
-    // Details lines
+    // Details lines - all in red
     const detailsLines = [
-      `${colors.green}${colors.bright}✓ XMTP Client Initialized${colors.reset}`,
-      `${colors.dim}InboxId:${colors.reset} ${inboxId}`,
-      `${colors.dim}Address:${colors.reset} ${address}`,
-      `${colors.dim}Conversations:${colors.reset} ${conversations.length} • ${colors.dim}Installations:${colors.reset} ${inboxState.installations.length}`,
-      `${colors.dim}Network:${colors.reset} ${this.env}`,
-      `${colors.dim}URL:${colors.reset} ${colors.cyan}${url}${colors.reset}`,
+      `${red}${colors.bright}✓ XMTP Client Initialized${colors.reset}`,
+      `${colors.dim}InboxId:${colors.reset} ${red}${shortInboxId}${colors.reset}`,
+      `${colors.dim}Address:${colors.reset} ${red}${shortAddress}${colors.reset}`,
+      `${colors.dim}Conversations:${colors.reset} ${red}${conversations.length}${colors.reset} • ${colors.dim}Installations:${colors.reset} ${red}${inboxState.installations.length}${colors.reset}`,
+      `${colors.dim}Network:${colors.reset} ${red}${this.env}${colors.reset}`,
     ];
 
+    // Calculate box width (logo width + spacing + approximate details width)
+    const boxWidth = 78;
+    const topBorder = `${red}┌${"─".repeat(boxWidth)}┐${colors.reset}`;
+    const bottomBorder = `${red}└${"─".repeat(boxWidth)}┘${colors.reset}`;
+
+    // Helper to strip ANSI codes for length calculation
+    const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, ""); // eslint-disable-line no-control-regex
+
     console.log("");
-    // Print logo and details side by side
+    console.log(topBorder);
+
+    // Print logo and details side by side with borders
     for (let i = 0; i < Math.max(logoLines.length, detailsLines.length); i++) {
-      const logo = logoLines[i] || " ".repeat(21);
+      const logo = logoLines[i] || " ".repeat(39);
       const detail = detailsLines[i] || "";
-      console.log(`${logo}  ${detail}`);
+      const content = `${red}${logo}${colors.reset}  ${detail}`;
+      const contentLength = stripAnsi(content).length;
+      const padding = " ".repeat(Math.max(0, boxWidth - contentLength - 1));
+      console.log(
+        `${red}│${colors.reset} ${content}${padding} ${red}│${colors.reset}`,
+      );
     }
+
+    console.log(bottomBorder);
     console.log("");
+  }
+
+  // Create or find group with multiple addresses
+  async findOrCreateGroup(identifiers: string[]): Promise<Conversation | null> {
+    const agent = await this.initializeAgent();
+    const client = agent.client;
+
+    const red = "\x1b[38;2;252;76;52m";
+    console.log(
+      `${red}${colors.bright}Creating group with: ${identifiers.join(", ")}${colors.reset}`,
+    );
+
+    try {
+      // Check if all identifiers are Ethereum addresses
+      const allEthAddresses = identifiers.every(
+        (id) => id.startsWith("0x") && id.length === 42,
+      );
+
+      let group: Group;
+
+      if (allEthAddresses) {
+        // Use newGroupWithIdentifiers for Ethereum addresses
+        const memberIdentifiers = identifiers.map((id) => ({
+          identifier: id,
+          identifierKind: IdentifierKind.Ethereum,
+        }));
+
+        group = await client.conversations.newGroupWithIdentifiers(
+          memberIdentifiers,
+          {
+            groupName: "CLI Group Chat",
+            groupDescription: "Group created from CLI",
+          },
+        );
+      } else {
+        // Use newGroup for inbox IDs (or mixed case)
+        group = await client.conversations.newGroup(identifiers, {
+          groupName: "CLI Group Chat",
+          groupDescription: "Group created from CLI",
+        });
+      }
+
+      console.log(`${red}✓ Created group chat${colors.reset}\n`);
+      return group;
+    } catch (error) {
+      console.error(`${red}Failed to create group:${colors.reset}`, error);
+      return null;
+    }
   }
 
   // Find or create conversation with a specific agent (by address or inbox ID)
@@ -254,8 +380,9 @@ class XmtpChatCLI {
     const agent = await this.initializeAgent();
     const client = agent.client;
 
+    const red = "\x1b[38;2;252;76;52m";
     console.log(
-      `${colors.yellow}${colors.bright}Looking for conversation with: ${identifier}${colors.reset}`,
+      `${red}${colors.bright}Looking for conversation with: ${identifier}${colors.reset}`,
     );
 
     // Sync conversations first
@@ -273,9 +400,7 @@ class XmtpChatCLI {
 
         // Check if peer inbox ID matches
         if (dm.peerInboxId.toLowerCase() === identifier.toLowerCase()) {
-          console.log(
-            `${colors.green}✓ Found existing DM with agent${colors.reset}\n`,
-          );
+          console.log(`${red}✓ Found existing DM with agent${colors.reset}\n`);
           return conv;
         }
 
@@ -292,7 +417,7 @@ class XmtpChatCLI {
                 identifier.toLowerCase()
             ) {
               console.log(
-                `${colors.green}✓ Found existing DM with agent${colors.reset}\n`,
+                `${red}✓ Found existing DM with agent${colors.reset}\n`,
               );
               return conv;
             }
@@ -303,7 +428,7 @@ class XmtpChatCLI {
 
     // No existing conversation found, create new one
     console.log(
-      `${colors.yellow}No existing conversation found. Creating new DM...${colors.reset}`,
+      `${red}No existing conversation found. Creating new DM...${colors.reset}`,
     );
 
     try {
@@ -315,21 +440,17 @@ class XmtpChatCLI {
           identifier,
           identifierKind: IdentifierKind.Ethereum,
         });
-        console.log(
-          `${colors.green}✓ Created new DM with agent${colors.reset}\n`,
-        );
+        console.log(`${red}✓ Created new DM with agent${colors.reset}\n`);
       } else {
         // Create DM using inbox ID
         newConversation = await client.conversations.newDm(identifier);
-        console.log(
-          `${colors.green}✓ Created new DM with agent${colors.reset}\n`,
-        );
+        console.log(`${red}✓ Created new DM with agent${colors.reset}\n`);
       }
 
       return newConversation;
     } catch (error) {
       console.error(
-        `${colors.red}Failed to create conversation:${colors.reset}`,
+        `${red}Failed to create conversation:${colors.reset}`,
         error,
       );
       return null;
@@ -346,15 +467,12 @@ class XmtpChatCLI {
     await client.conversations.sync();
     this.conversationsList = await client.conversations.list();
 
+    const red = "\x1b[38;2;252;76;52m";
+
     this.terminalUI.addMessage("");
-    this.terminalUI.addMessage(
-      `${colors.cyan}${colors.bright}═══ YOUR CONVERSATIONS ═══${colors.reset}`,
-    );
 
     if (this.conversationsList.length === 0) {
-      this.terminalUI.addMessage(
-        `${colors.red}No conversations found${colors.reset}`,
-      );
+      this.terminalUI.addMessage(`${red}No conversations found${colors.reset}`);
       return;
     }
 
@@ -365,16 +483,16 @@ class XmtpChatCLI {
 
       if (isGroup) {
         const group = conv as Group;
-        const label = isCurrent ? `${colors.green}●${colors.reset}` : " ";
+        const label = isCurrent ? `${red}●${colors.reset}` : " ";
         this.terminalUI.addMessage(
-          `${label} ${colors.bright}${i + 1}.${colors.reset} ${colors.green}[GROUP]${colors.reset} ${group.name || "Unnamed"}`,
+          `${label} ${colors.bright}${i + 1}.${colors.reset} ${red}[GROUP]${colors.reset} ${group.name || "Unnamed"}`,
         );
       } else {
         const dm = conv as Dm;
-        const label = isCurrent ? `${colors.green}●${colors.reset}` : " ";
+        const label = isCurrent ? `${red}●${colors.reset}` : " ";
         const peerShort = dm.peerInboxId.slice(0, 16) + "...";
         this.terminalUI.addMessage(
-          `${label} ${colors.bright}${i + 1}.${colors.reset} ${colors.blue}[DM]${colors.reset} ${peerShort}`,
+          `${label} ${colors.bright}${i + 1}.${colors.reset} ${red}[DM]${colors.reset} ${peerShort}`,
         );
       }
     }
@@ -390,29 +508,33 @@ class XmtpChatCLI {
     const agent = await this.initializeAgent();
     const client = agent.client;
 
-    console.log(
-      `${colors.yellow}${colors.bright}Syncing conversations...${colors.reset}`,
-    );
+    const red = "\x1b[38;2;252;76;52m";
+
     await client.conversations.sync();
 
     this.conversationsList = await client.conversations.list();
 
     if (this.conversationsList.length === 0) {
       console.log(
-        `${colors.red}No conversations found. Start a conversation on XMTP first!${colors.reset}`,
+        `${red}No conversations found. Start a conversation on XMTP first!${colors.reset}`,
       );
       return null;
     }
 
-    console.log(
-      `\n${colors.cyan}${colors.bright}═══════════════════════════════════════${colors.reset}`,
-    );
-    console.log(
-      `${colors.cyan}${colors.bright}         YOUR CONVERSATIONS${colors.reset}`,
-    );
-    console.log(
-      `${colors.cyan}${colors.bright}═══════════════════════════════════════${colors.reset}\n`,
-    );
+    // Box border
+    const width = 60;
+    const topBorder = `${red}┌${"─".repeat(width)}┐${colors.reset}`;
+    const bottomBorder = `${red}└${"─".repeat(width)}┘${colors.reset}`;
+    const titleText = "YOUR CONVERSATIONS";
+    const titlePadding = Math.floor((width - titleText.length) / 2);
+    const titleLine = `${red}│${" ".repeat(titlePadding)}${colors.bright}${titleText}${colors.reset}${red}${" ".repeat(width - titlePadding - titleText.length)}│${colors.reset}`;
+
+    // Helper to strip ANSI codes for length calculation
+    const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, ""); // eslint-disable-line no-control-regex
+
+    console.log(`\n${topBorder}`);
+    console.log(titleLine);
+    console.log(`${red}├${"─".repeat(width)}┤${colors.reset}`);
 
     // Display conversations with numbers
     for (let i = 0; i < this.conversationsList.length; i++) {
@@ -422,23 +544,44 @@ class XmtpChatCLI {
       if (isGroup) {
         const group = conv as Group;
         const members = await conv.members();
-        console.log(
-          `${colors.bright}${i + 1}.${colors.reset} ${colors.green}[GROUP]${colors.reset} ${group.name || "Unnamed Group"}`,
+        const line1 = `${colors.bright}${i + 1}.${colors.reset} ${red}[GROUP]${colors.reset} ${group.name || "Unnamed Group"}`;
+        const line2 = `   ${colors.dim}${members.length} members • ID: ${conv.id.slice(0, 12)}...${colors.reset}`;
+        const padding1 = " ".repeat(
+          Math.max(0, width - stripAnsi(line1).length - 1),
+        );
+        const padding2 = " ".repeat(
+          Math.max(0, width - stripAnsi(line2).length - 1),
         );
         console.log(
-          `   ${colors.dim}${members.length} members • ID: ${conv.id.slice(0, 12)}...${colors.reset}`,
+          `${red}│${colors.reset} ${line1}${padding1} ${red}│${colors.reset}`,
+        );
+        console.log(
+          `${red}│${colors.reset} ${line2}${padding2} ${red}│${colors.reset}`,
         );
       } else {
         const dm = conv as Dm;
-        console.log(
-          `${colors.bright}${i + 1}.${colors.reset} ${colors.blue}[DM]${colors.reset} ${dm.peerInboxId.slice(0, 16)}...`,
+        const line1 = `${colors.bright}${i + 1}.${colors.reset} ${red}[DM]${colors.reset} ${dm.peerInboxId.slice(0, 16)}...`;
+        const line2 = `   ${colors.dim}ID: ${conv.id.slice(0, 12)}...${colors.reset}`;
+        const padding1 = " ".repeat(
+          Math.max(0, width - stripAnsi(line1).length - 1),
+        );
+        const padding2 = " ".repeat(
+          Math.max(0, width - stripAnsi(line2).length - 1),
         );
         console.log(
-          `   ${colors.dim}ID: ${conv.id.slice(0, 12)}...${colors.reset}`,
+          `${red}│${colors.reset} ${line1}${padding1} ${red}│${colors.reset}`,
+        );
+        console.log(
+          `${red}│${colors.reset} ${line2}${padding2} ${red}│${colors.reset}`,
         );
       }
-      console.log("");
+      const emptyPadding = " ".repeat(width - 1);
+      console.log(
+        `${red}│${colors.reset} ${emptyPadding} ${red}│${colors.reset}`,
+      );
     }
+
+    console.log(bottomBorder);
 
     // Get user selection
     const rl = readline.createInterface({
@@ -448,7 +591,7 @@ class XmtpChatCLI {
 
     const selection = await new Promise<string>((resolve) => {
       rl.question(
-        `${colors.yellow}Select a conversation (1-${this.conversationsList.length}) or 'q' to quit: ${colors.reset}`,
+        `${red}Select a conversation (1-${this.conversationsList.length}) or 'q' to quit: ${colors.reset}`,
         (answer) => {
           rl.close();
           resolve(answer.trim());
@@ -462,7 +605,7 @@ class XmtpChatCLI {
 
     const index = parseInt(selection) - 1;
     if (isNaN(index) || index < 0 || index >= this.conversationsList.length) {
-      console.log(`${colors.red}Invalid selection!${colors.reset}`);
+      console.log(`${red}Invalid selection!${colors.reset}`);
       return null;
     }
 
@@ -471,8 +614,9 @@ class XmtpChatCLI {
 
   // Switch to a different conversation by index
   private async switchToConversation(index: number): Promise<void> {
+    const red = "\x1b[38;2;252;76;52m";
     if (index < 0 || index >= this.conversationsList.length) {
-      const errorMsg = `${colors.red}Invalid conversation number. Use /conversations to see the list.${colors.reset}`;
+      const errorMsg = `${red}Invalid conversation number. Use /conversations to see the list.${colors.reset}`;
       if (this.terminalUI && this.rl && this.currentConversation) {
         this.terminalUI.addAndRefresh(
           errorMsg,
@@ -504,10 +648,11 @@ class XmtpChatCLI {
       minute: "2-digit",
     });
 
+    const red = "\x1b[38;2;252;76;52m";
     const senderShort = message.senderInboxId.slice(0, 8);
     const sender = isFromSelf
-      ? `${colors.green}${colors.bright}You${colors.reset}`
-      : `${colors.cyan}${senderShort}${colors.reset}`;
+      ? `${red}${colors.bright}You${colors.reset}`
+      : `${red}${senderShort}${colors.reset}`;
 
     const content =
       typeof message.content === "string"
@@ -554,17 +699,13 @@ class XmtpChatCLI {
           }
         }
       })().catch((error) => {
-        console.error(
-          `${colors.red}Error in message stream:${colors.reset}`,
-          error,
-        );
+        const red = "\x1b[38;2;252;76;52m";
+        console.error(`${red}Error in message stream:${colors.reset}`, error);
         this.isStreaming = false;
       });
     } catch (error) {
-      console.error(
-        `${colors.red}Error streaming messages:${colors.reset}`,
-        error,
-      );
+      const red = "\x1b[38;2;252;76;52m";
+      console.error(`${red}Error streaming messages:${colors.reset}`, error);
       this.isStreaming = false;
     }
   }
@@ -599,11 +740,12 @@ class XmtpChatCLI {
       this.terminalUI.addMessage(formattedMessage);
     }
 
-    // Initial render
-    this.terminalUI.render(
-      conversation,
-      `${colors.green}${colors.bright}You${colors.reset} ${colors.dim}>${colors.reset} `,
-    );
+    // Initial render with bordered input
+    this.terminalUI.render(conversation, "");
+
+    // Position cursor at the input line (move up 2 lines to be inside the box)
+    process.stdout.write("\x1b[2A"); // Move up past bottom border
+    process.stdout.write("\x1b[3G"); // Move to column 3 (after "│ ")
 
     // Start streaming new messages
     await this.startMessageStream(conversation);
@@ -612,10 +754,36 @@ class XmtpChatCLI {
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-      prompt: `${colors.green}${colors.bright}You${colors.reset} ${colors.dim}>${colors.reset} `,
+      terminal: false, // We handle terminal output ourselves
     });
 
-    this.rl.prompt();
+    // Set up manual input handling
+    let currentLine = "";
+
+    // Override process.stdin handling for better control
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (data: string) => {
+      // Handle the input manually
+      for (const char of data) {
+        if (char === "\n" || char === "\r") {
+          // Submit the line
+          this.rl!.emit("line", currentLine);
+          currentLine = "";
+          // Update to show placeholder again
+          this.terminalUI!.updateInputLine(currentLine);
+        } else if (char === "\x7f" || char === "\b") {
+          // Backspace
+          if (currentLine.length > 0) {
+            currentLine = currentLine.slice(0, -1);
+            this.terminalUI!.updateInputLine(currentLine);
+          }
+        } else if (char >= " " && char <= "~") {
+          // Printable character
+          currentLine += char;
+          this.terminalUI!.updateInputLine(currentLine);
+        }
+      }
+    });
 
     return new Promise<boolean>((resolve) => {
       this.rl!.on("line", async (input) => {
@@ -664,7 +832,8 @@ class XmtpChatCLI {
               return;
             }
           }
-          const errorMsg = `${colors.red}Usage: /chat <number>${colors.reset}`;
+          const red = "\x1b[38;2;252;76;52m";
+          const errorMsg = `${red}Usage: /chat <number>${colors.reset}`;
           if (this.terminalUI && this.rl) {
             this.terminalUI.addAndRefresh(errorMsg, conversation, this.rl);
           }
@@ -677,7 +846,8 @@ class XmtpChatCLI {
           await conversation.send(message);
           // Message will appear via stream
         } catch {
-          const errorMsg = `${colors.red}✗ Failed to send message${colors.reset}`;
+          const red = "\x1b[38;2;252;76;52m";
+          const errorMsg = `${red}✗ Failed to send message${colors.reset}`;
           if (this.terminalUI && this.rl) {
             this.terminalUI.addAndRefresh(errorMsg, conversation, this.rl);
           }
@@ -696,23 +866,32 @@ class XmtpChatCLI {
   }
 
   // Main chat loop
-  async start(agentIdentifier?: string): Promise<void> {
+  async start(agentIdentifiers?: string[]): Promise<void> {
     try {
       await this.initializeAgent();
 
-      // If agent identifier is provided, go directly to that conversation
-      if (agentIdentifier) {
+      // If agent identifiers are provided, go directly to that conversation
+      if (agentIdentifiers && agentIdentifiers.length > 0) {
         // Load conversations list for quick switching
         const client = this.agent!.client;
         await client.conversations.sync();
         this.conversationsList = await client.conversations.list();
 
-        const conversation =
-          await this.findOrCreateConversation(agentIdentifier);
+        let conversation: Conversation | null;
+
+        // Create group if multiple addresses, DM if single
+        if (agentIdentifiers.length > 1) {
+          conversation = await this.findOrCreateGroup(agentIdentifiers);
+        } else {
+          conversation = await this.findOrCreateConversation(
+            agentIdentifiers[0],
+          );
+        }
 
         if (!conversation) {
+          const red = "\x1b[38;2;252;76;52m";
           console.log(
-            `${colors.red}Failed to connect to agent. Exiting...${colors.reset}`,
+            `${red}Failed to connect to agent(s). Exiting...${colors.reset}`,
           );
           return;
         }
@@ -730,7 +909,8 @@ class XmtpChatCLI {
           const conversation = await this.selectConversation();
 
           if (!conversation) {
-            console.log(`\n${colors.yellow}Goodbye!${colors.reset}`);
+            const red = "\x1b[38;2;252;76;52m";
+            console.log(`\n${red}Goodbye!${colors.reset}`);
             break;
           }
 
@@ -738,7 +918,8 @@ class XmtpChatCLI {
         }
       }
     } catch (error) {
-      console.error(`${colors.red}Error:${colors.reset}`, error);
+      const red = "\x1b[38;2;252;76;52m";
+      console.error(`${red}Error:${colors.reset}`, error);
     } finally {
       await this.stopMessageStream();
       process.exit(0);
@@ -747,11 +928,11 @@ class XmtpChatCLI {
 }
 
 // Parse command line arguments
-function parseArgs(): { env: XmtpEnv; help: boolean; agent?: string } {
+function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
   const args = process.argv.slice(2);
   let env = (process.env.XMTP_ENV as XmtpEnv) || "production";
   let help = false;
-  let agent: string | undefined;
+  const agents: string[] = [];
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -763,17 +944,23 @@ function parseArgs(): { env: XmtpEnv; help: boolean; agent?: string } {
       env = nextArg as XmtpEnv;
       i++;
     } else if (arg === "--agent" && nextArg) {
-      agent = nextArg;
+      // Collect all subsequent non-flag arguments as agent addresses
       i++;
+      while (i < args.length && !args[i].startsWith("--")) {
+        agents.push(args[i]);
+        i++;
+      }
+      i--; // Step back one since the loop will increment
     }
   }
 
-  return { env, help, agent };
+  return { env, help, agents: agents.length > 0 ? agents : undefined };
 }
 
 function showHelp(): void {
+  const red = "\x1b[38;2;252;76;52m";
   console.log(`
-${colors.cyan}${colors.bright}XMTP CLI Chat Interface${colors.reset}
+${red}${colors.bright}XMTP CLI Chat Interface${colors.reset}
 
 Chat with your XMTP conversations directly from the terminal.
 
@@ -781,7 +968,9 @@ ${colors.bright}USAGE:${colors.reset}
   yarn chat [options]
 
 ${colors.bright}OPTIONS:${colors.reset}
-  --agent <address>      Connect directly to an agent by Ethereum address or inbox ID
+  --agent <address...>   Connect to agent(s) by Ethereum address or inbox ID
+                        Single address: creates/opens a DM
+                        Multiple addresses: creates a group chat
   --env <environment>    XMTP environment (local, dev, production)
                         [default: production or XMTP_ENV]
   -h, --help            Show this help message
@@ -796,6 +985,7 @@ ${colors.bright}EXAMPLES:${colors.reset}
   yarn chat
   yarn chat --env dev
   yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2
+  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2 0x1234567890abcdef1234567890abcdef12345678
   yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179
 
 ${colors.bright}ENVIRONMENT VARIABLES:${colors.reset}
@@ -807,7 +997,7 @@ ${colors.bright}ENVIRONMENT VARIABLES:${colors.reset}
 
 // CLI entry point
 async function main(): Promise<void> {
-  const { env, help, agent } = parseArgs();
+  const { env, help, agents } = parseArgs();
 
   if (help) {
     showHelp();
@@ -815,17 +1005,10 @@ async function main(): Promise<void> {
   }
 
   console.clear();
-  console.log(
-    `${colors.cyan}${colors.bright}
-╔═══════════════════════════════════════╗
-║       XMTP CLI Chat Interface         ║
-╚═══════════════════════════════════════╝
-${colors.reset}`,
-  );
 
   const chat = new XmtpChatCLI(env);
 
-  await chat.start(agent);
+  await chat.start(agents);
 }
 
 void main();
