@@ -1,69 +1,59 @@
-import "dotenv/config";
-import {
-  APP_VERSION,
-  createSigner,
-  getEncryptionKeyFromHex,
-} from "@helpers/client";
-import {
-  getActiveVersion,
-  IdentifierKind,
-  type Client,
-  type XmtpEnv,
-} from "@versions/node-sdk";
-
 // MOCK AGENT ADDRESS 0x7723d790A5e00b650BF146A0961F8Bb148F0450C
 
+import {
+  Agent,
+  type XmtpEnv,
+  IdentifierKind,
+  type Group,
+  type Dm,
+} from "@xmtp/agent-sdk";
+import { createSigner, createUser } from "@xmtp/agent-sdk/user";
+import { fromString } from "uint8arrays/from-string";
+
 class MockXmtpAgent {
-  private client: Client | null = null;
+  private agent: Agent | null = null;
 
-  constructor(public env: XmtpEnv = "production") {}
+  constructor() {}
 
-  // Initialize the single fixed client
-  async initializeClient(): Promise<Client> {
-    if (this.client) {
-      return this.client;
-    }
-
-    const walletKey = process.env.WALLET_KEY;
-    const encryptionKey = process.env.ENCRYPTION_KEY;
-
+  async initializeAgent(): Promise<Agent> {
+    const walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
+    const encryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
     if (!walletKey || !encryptionKey) {
       throw new Error(
         "WALLET_KEY and ENCRYPTION_KEY must be set in environment",
       );
     }
-
-    const signer = createSigner(walletKey as `0x${string}`);
-    const dbEncryptionKey = getEncryptionKeyFromHex(encryptionKey);
-
-    // @ts-expect-error - TODO: fix this
-    this.client = await getActiveVersion().Client.create(signer, {
+    const user = createUser(walletKey as `0x${string}`);
+    const signer = createSigner(user);
+    const dbEncryptionKey = fromString(
+      process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY!,
+      "hex",
+    );
+    this.agent = await Agent.create(signer, {
+      env: process.env.XMTP_ENV as XmtpEnv,
       dbEncryptionKey,
-      env: this.env,
-      appVersion: APP_VERSION,
     });
-
-    console.log(`📖 Initialized XMTP client: ${this.client?.inboxId}`);
-    return this.client as Client;
+    console.log(`📖 Initialized XMTP agent: ${this.agent?.address}`);
+    return this.agent as Agent;
   }
 
   // List all conversations with details
   async listConversations(): Promise<void> {
-    const client = await this.initializeClient();
+    const agent = await this.initializeAgent();
 
     // Sync conversations to get latest state
-    await client.conversations.sync();
+    await agent.client.conversations.sync();
 
     // Get all conversations
-    const conversations = await client.conversations.list();
+    const conversations = await agent.client.conversations.list();
     const groups = conversations.filter(
       (conv) => conv.constructor.name === "Group",
     );
     const dms = conversations.filter((conv) => conv.constructor.name === "Dm");
 
     console.log(`\n📊 XMTP CONVERSATIONS (${conversations.length} total):`);
-    console.log(`Environment: ${this.env}`);
-    console.log(`Client Inbox ID: ${client.inboxId}`);
+    console.log(`Environment: ${process.env.XMTP_ENV}`);
+    console.log(`Client Inbox ID: ${agent.client.inboxId}`);
     console.log("─".repeat(80));
 
     if (conversations.length === 0) {
@@ -75,10 +65,11 @@ class MockXmtpAgent {
     if (groups.length > 0) {
       console.log(`\n🏗️  GROUPS (${groups.length}):`);
       for (const group of groups) {
-        console.log(`\n   Group: ${(group as any).name || "Unnamed"}`);
+        const groupData = group as Group;
+        console.log(`\n   Group: ${groupData.name || "Unnamed"}`);
         console.log(`   ID: ${group.id}`);
         console.log(
-          `   Description: ${(group as any).description || "No description"}`,
+          `   Description: ${groupData.description || "No description"}`,
         );
 
         const members = await group.members();
@@ -100,7 +91,8 @@ class MockXmtpAgent {
     if (dms.length > 0) {
       console.log(`\n💬 DIRECT MESSAGES (${dms.length}):`);
       for (const dm of dms) {
-        console.log(`\n   DM with: ${(dm as any).peerInboxId}`);
+        const dmData = dm as Dm;
+        console.log(`\n   DM with: ${dmData.peerInboxId}`);
         console.log(`   ID: ${dm.id}`);
       }
     }
@@ -108,11 +100,11 @@ class MockXmtpAgent {
 
   // List messages for a specific conversation
   async listMessages(conversationId: string): Promise<void> {
-    const client = await this.initializeClient();
+    const agent = await this.initializeAgent();
 
     // Get the conversation
     const conversation =
-      await client.conversations.getConversationById(conversationId);
+      await agent.client.conversations.getConversationById(conversationId);
 
     if (!conversation) {
       console.error(`❌ Conversation not found: ${conversationId}`);
@@ -127,9 +119,11 @@ class MockXmtpAgent {
     console.log(`Type: ${conversation.constructor.name}`);
 
     if (conversation.constructor.name === "Group") {
-      console.log(`Group Name: ${(conversation as any).name || "Unnamed"}`);
+      const groupData = conversation as Group;
+      console.log(`Group Name: ${groupData.name || "Unnamed"}`);
     } else if (conversation.constructor.name === "Dm") {
-      console.log(`Peer: ${(conversation as any).peerInboxId}`);
+      const dmData = conversation as Dm;
+      console.log(`Peer: ${dmData.peerInboxId}`);
     }
 
     console.log(`Total Messages: ${messages.length}`);
@@ -150,65 +144,29 @@ class MockXmtpAgent {
 
   // Check your own inbox ID and address
   async checkIdentity(): Promise<void> {
-    const client = await this.initializeClient();
+    const agent = await this.initializeAgent();
 
     console.log(`\n🆔 XMTP IDENTITY CHECK:`);
-    console.log(`Environment: ${this.env}`);
+    console.log(`Environment: ${process.env.XMTP_ENV}`);
     console.log("─".repeat(80));
 
     // Get inbox ID
-    console.log(`📬 Inbox ID: ${client.inboxId}`);
+    console.log(`📬 Inbox ID: ${agent.client.inboxId}`);
 
     // Get installation ID
-    console.log(`🔧 Installation ID: ${client.installationId}`);
+    console.log(`🔧 Installation ID: ${agent.client.installationId}`);
 
-    // Get Ethereum address from signer
-    const signer = client.signer;
-    if (signer) {
-      const identifier = await signer.getIdentifier();
-
-      if (identifier.identifierKind === IdentifierKind.Ethereum) {
-        // Ethereum
-        console.log(`💰 Ethereum Address: ${identifier.identifier}`);
-      } else {
-        console.log(`🔑 Address Type: ${identifier.identifierKind}`);
-        console.log(`🔑 Address: ${identifier.identifier}`);
-      }
-    } else {
-      console.log(`🔑 Address: Unable to get signer information`);
-    }
-
-    // Get wallet key info (masked for security)
-    const walletKey = process.env.WALLET_KEY;
-    if (walletKey) {
-      const maskedKey = walletKey.slice(0, 6) + "..." + walletKey.slice(-4);
-      console.log(`🔐 Wallet Key: ${maskedKey}`);
-    }
-
-    // Get encryption key info (masked for security)
-    const encryptionKey = process.env.ENCRYPTION_KEY;
-    if (encryptionKey) {
-      const maskedKey =
-        encryptionKey.slice(0, 6) + "..." + encryptionKey.slice(-4);
-      console.log(`🔒 Encryption Key: ${maskedKey}`);
-    }
+    // Get address
+    console.log(`💰 Address: ${agent.address}`);
   }
 }
 
 // Global mock agent instance
-let globalMockAgent: MockXmtpAgent | null = null;
-
-function getMockAgent(env: XmtpEnv = "production"): MockXmtpAgent {
-  if (!globalMockAgent || globalMockAgent.env !== env) {
-    globalMockAgent = new MockXmtpAgent(env);
-  }
-  return globalMockAgent;
-}
+const mockAgent = new MockXmtpAgent();
 
 // CLI Configuration
 interface MockConfig {
-  operation: string;
-  env: string;
+  operation: "conversations" | "messages" | "identity";
   conversationId?: string;
 }
 
@@ -225,23 +183,22 @@ OPERATIONS:
   identity                   Check your own inbox ID and address
 
 OPTIONS:
-  --env <environment>        XMTP environment (local, dev, production) [default: production]
   -h, --help                Show this help message
 
 EXAMPLES:
   # List all conversations
-  yarn mock conversations --env local
+  yarn mock conversations
 
   # List messages for a specific conversation
-  yarn mock messages fcba2fced9910c95d91f1ae4dcac2f41 --env local
+  yarn mock messages fcba2fced9910c95d91f1ae4dcac2f41
 
   # Check your identity
-  yarn mock identity --env local
+  yarn mock identity
 
 ENVIRONMENT VARIABLES:
-  XMTP_ENV             Default environment
-  WALLET_KEY           Wallet private key (required)
-  ENCRYPTION_KEY       Database encryption key (required)
+  XMTP_ENV                      XMTP environment (local, dev, production)
+  XMTP_CLIENT_WALLET_KEY        Wallet private key (required)
+  XMTP_CLIENT_DB_ENCRYPTION_KEY Database encryption key (required)
 
 For more information, see: cli/readme.md
 `);
@@ -251,12 +208,11 @@ function parseArgs(): MockConfig {
   const args = process.argv.slice(2);
   const config: MockConfig = {
     operation: "conversations",
-    env: process.env.XMTP_ENV ?? "production",
   };
 
   // First argument is the operation
   if (args.length > 0 && !args[0].startsWith("--")) {
-    config.operation = args[0];
+    config.operation = args[0] as MockConfig["operation"];
     args.shift(); // Remove operation from args
   }
 
@@ -272,14 +228,10 @@ function parseArgs(): MockConfig {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    const nextArg = args[i + 1];
 
     if (arg === "--help" || arg === "-h") {
       showHelp();
       process.exit(0);
-    } else if (arg === "--env" && nextArg) {
-      config.env = nextArg;
-      i++;
     }
   }
 
@@ -287,9 +239,7 @@ function parseArgs(): MockConfig {
 }
 
 // Operation: List conversations
-async function runConversationsOperation(config: MockConfig): Promise<void> {
-  const mockAgent = getMockAgent(config.env as XmtpEnv);
-
+async function runConversationsOperation(): Promise<void> {
   try {
     await mockAgent.listConversations();
   } catch (error) {
@@ -308,8 +258,6 @@ async function runMessagesOperation(config: MockConfig): Promise<void> {
     return;
   }
 
-  const mockAgent = getMockAgent(config.env as XmtpEnv);
-
   try {
     await mockAgent.listMessages(config.conversationId);
   } catch (error) {
@@ -319,9 +267,7 @@ async function runMessagesOperation(config: MockConfig): Promise<void> {
 }
 
 // Operation: Check identity
-async function runIdentityOperation(config: MockConfig): Promise<void> {
-  const mockAgent = getMockAgent(config.env as XmtpEnv);
-
+async function runIdentityOperation(): Promise<void> {
   try {
     await mockAgent.checkIdentity();
   } catch (error) {
@@ -336,13 +282,13 @@ async function main(): Promise<void> {
   try {
     switch (config.operation) {
       case "conversations":
-        await runConversationsOperation(config);
+        await runConversationsOperation();
         break;
       case "messages":
         await runMessagesOperation(config);
         break;
       case "identity":
-        await runIdentityOperation(config);
+        await runIdentityOperation();
         break;
       default:
         console.error(`❌ Unknown operation: ${config.operation}`);

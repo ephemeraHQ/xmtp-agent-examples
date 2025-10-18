@@ -1,18 +1,16 @@
 import "dotenv/config";
 import * as readline from "readline";
 import {
-  APP_VERSION,
-  createSigner,
-  getEncryptionKeyFromHex,
-} from "@helpers/client";
-import {
-  getActiveVersion,
+  Agent,
   IdentifierKind,
-  type Client,
   type Conversation,
   type DecodedMessage,
   type XmtpEnv,
-} from "@versions/node-sdk";
+  type Group,
+  type Dm,
+} from "@xmtp/agent-sdk";
+import { createSigner, createUser } from "@xmtp/agent-sdk/user";
+import { fromString } from "uint8arrays/from-string";
 
 // ANSI color codes for pretty terminal output
 const colors = {
@@ -29,41 +27,38 @@ const colors = {
 };
 
 class XmtpChatCLI {
-  private client: Client | null = null;
+  private agent: Agent | null = null;
   private currentConversation: Conversation | null = null;
   private rl: readline.Interface | null = null;
-  private messageStream: any = null;
+  private messageStream: AsyncIterable<DecodedMessage> | null = null;
   private isStreaming = false;
 
   constructor(public env: XmtpEnv = "production") {}
 
-  // Initialize XMTP client
-  async initializeClient(): Promise<Client> {
-    if (this.client) {
-      return this.client;
+  // Initialize XMTP agent
+  async initializeAgent(): Promise<Agent> {
+    if (this.agent) {
+      return this.agent;
     }
 
-    const walletKey = process.env.WALLET_KEY;
-    const encryptionKey = process.env.ENCRYPTION_KEY;
-
+    const walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
+    const encryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
     if (!walletKey || !encryptionKey) {
       throw new Error(
-        "WALLET_KEY and ENCRYPTION_KEY must be set in environment",
+        "XMTP_CLIENT_WALLET_KEY and XMTP_CLIENT_DB_ENCRYPTION_KEY must be set in environment",
       );
     }
-
-    const signer = createSigner(walletKey as `0x${string}`);
-    const dbEncryptionKey = getEncryptionKeyFromHex(encryptionKey);
+    const user = createUser(walletKey as `0x${string}`);
+    const signer = createSigner(user);
+    const dbEncryptionKey = fromString(encryptionKey!, "hex");
 
     console.log(
       `${colors.cyan}${colors.bright}Initializing XMTP client...${colors.reset}`,
     );
 
-    // @ts-expect-error - TODO: fix this
-    this.client = await getActiveVersion().Client.create(signer, {
-      dbEncryptionKey,
+    this.agent = await Agent.create(signer, {
       env: this.env,
-      appVersion: APP_VERSION,
+      dbEncryptionKey,
     });
 
     // Get address info
@@ -76,15 +71,18 @@ class XmtpChatCLI {
     console.log(
       `${colors.green}✓ Connected to XMTP ${this.env}${colors.reset}`,
     );
-    console.log(`${colors.dim}Inbox ID: ${this.client.inboxId}${colors.reset}`);
+    console.log(
+      `${colors.dim}Inbox ID: ${this.agent.client.inboxId}${colors.reset}`,
+    );
     console.log(`${colors.dim}Address: ${address}${colors.reset}\n`);
 
-    return this.client as Client;
+    return this.agent;
   }
 
   // List all conversations and let user select one
   async selectConversation(): Promise<Conversation | null> {
-    const client = await this.initializeClient();
+    const agent = await this.initializeAgent();
+    const client = agent.client;
 
     console.log(
       `${colors.yellow}${colors.bright}Syncing conversations...${colors.reset}`,
@@ -116,7 +114,7 @@ class XmtpChatCLI {
       const isGroup = conv.constructor.name === "Group";
 
       if (isGroup) {
-        const group = conv as any;
+        const group = conv as Group;
         const members = await conv.members();
         console.log(
           `${colors.bright}${i + 1}.${colors.reset} ${colors.green}[GROUP]${colors.reset} ${group.name || "Unnamed Group"}`,
@@ -125,7 +123,7 @@ class XmtpChatCLI {
           `   ${colors.dim}${members.length} members • ID: ${conv.id.slice(0, 12)}...${colors.reset}`,
         );
       } else {
-        const dm = conv as any;
+        const dm = conv as Dm;
         console.log(
           `${colors.bright}${i + 1}.${colors.reset} ${colors.blue}[DM]${colors.reset} ${dm.peerInboxId.slice(0, 16)}...`,
         );
@@ -194,22 +192,45 @@ class XmtpChatCLI {
     }
 
     this.isStreaming = true;
-    const client = await this.initializeClient();
+    const agent = await this.initializeAgent();
+    const client = agent.client;
 
     try {
-      // Stream messages
-      this.messageStream = await conversation.streamMessages((message) => {
-        const isFromSelf = message.senderInboxId === client.inboxId;
+      // Stream messages using the client's streaming API
+      this.messageStream = await client.conversations.streamAllMessages();
 
-        // Clear the current line and move cursor up to avoid interfering with prompt
-        process.stdout.write("\r\x1b[K");
+      (async () => {
+        if (!this.messageStream) return;
 
-        this.displayMessage(message, isFromSelf);
+        for await (const message of this.messageStream) {
+          // Only show messages from the current conversation
+          if (message.conversationId !== conversation.id) {
+            continue;
+          }
 
-        // Redisplay the prompt
-        if (this.rl) {
-          (this.rl as any).prompt(true);
+          const isFromSelf = message.senderInboxId === client.inboxId;
+
+          // Clear the current line and move cursor up to avoid interfering with prompt
+          process.stdout.write("\r\x1b[K");
+
+          this.displayMessage(message, isFromSelf);
+
+          // Redisplay the prompt
+          if (this.rl) {
+            const rlInterface = this.rl as readline.Interface & {
+              _refreshLine?: () => void;
+            };
+            if (rlInterface._refreshLine) {
+              rlInterface._refreshLine();
+            }
+          }
         }
+      })().catch((error) => {
+        console.error(
+          `${colors.red}Error in message stream:${colors.reset}`,
+          error,
+        );
+        this.isStreaming = false;
       });
     } catch (error) {
       console.error(
@@ -223,7 +244,7 @@ class XmtpChatCLI {
   // Stop message stream
   private async stopMessageStream(): Promise<void> {
     if (this.messageStream) {
-      await this.messageStream.stop();
+      // Streams from generators don't have stop(), we just stop consuming
       this.messageStream = null;
     }
     this.isStreaming = false;
@@ -239,7 +260,7 @@ class XmtpChatCLI {
     );
 
     if (isGroup) {
-      const group = conversation as any;
+      const group = conversation as Group;
       console.log(
         `${colors.magenta}${colors.bright}  GROUP: ${group.name || "Unnamed Group"}${colors.reset}`,
       );
@@ -247,7 +268,7 @@ class XmtpChatCLI {
         console.log(`${colors.dim}  ${group.description}${colors.reset}`);
       }
     } else {
-      const dm = conversation as any;
+      const dm = conversation as Dm;
       console.log(
         `${colors.magenta}${colors.bright}  DM with: ${dm.peerInboxId}${colors.reset}`,
       );
@@ -264,7 +285,8 @@ class XmtpChatCLI {
   // Chat in the selected conversation
   async chatInConversation(conversation: Conversation): Promise<boolean> {
     this.currentConversation = conversation;
-    const client = await this.initializeClient();
+    const agent = await this.initializeAgent();
+    const client = agent.client;
 
     // Display header
     this.displayConversationHeader(conversation);
@@ -348,7 +370,7 @@ class XmtpChatCLI {
   // Main chat loop
   async start(): Promise<void> {
     try {
-      await this.initializeClient();
+      await this.initializeAgent();
 
       let keepRunning = true;
 
