@@ -43,13 +43,16 @@ yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c4191
 - Connect directly to an agent using `--agent` flag
 - Auto-creates DM if no existing conversation found
 - Real-time message streaming
-- Send messages with a simple interface
+- Beautiful boxed input field UI (like Cursor!)
+- Switch between conversations without leaving the app
 - Color-coded display (You vs Others)
-- Message history
+- Message history with scrolling
 - Persisted identity (stored in DB)
 
 **In-chat commands:**
 
+- `/conversations` - List all your conversations with quick-access numbers
+- `/chat <number>` - Switch to a different conversation (e.g., `/chat 2`)
 - `/back` - Return to conversation list
 - `/exit` - Quit the app
 
