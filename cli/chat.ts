@@ -79,6 +79,95 @@ class XmtpChatCLI {
     return this.agent;
   }
 
+  // Find or create conversation with a specific agent (by address or inbox ID)
+  async findOrCreateConversation(
+    identifier: string,
+  ): Promise<Conversation | null> {
+    const agent = await this.initializeAgent();
+    const client = agent.client;
+
+    console.log(
+      `${colors.yellow}${colors.bright}Looking for conversation with: ${identifier}${colors.reset}`,
+    );
+
+    // Sync conversations first
+    await client.conversations.sync();
+    const conversations = await client.conversations.list();
+
+    // Determine if identifier is an Ethereum address or inbox ID
+    const isEthAddress =
+      identifier.startsWith("0x") && identifier.length === 42;
+
+    // Try to find existing conversation
+    for (const conv of conversations) {
+      if (conv.constructor.name === "Dm") {
+        const dm = conv as Dm;
+
+        // Check if peer inbox ID matches
+        if (dm.peerInboxId.toLowerCase() === identifier.toLowerCase()) {
+          console.log(
+            `${colors.green}✓ Found existing DM with agent${colors.reset}\n`,
+          );
+          return conv;
+        }
+
+        // If identifier is an Ethereum address, check member addresses
+        if (isEthAddress) {
+          const members = await conv.members();
+          for (const member of members) {
+            const ethIdentifier = member.accountIdentifiers.find(
+              (id) => id.identifierKind === IdentifierKind.Ethereum,
+            );
+            if (
+              ethIdentifier &&
+              ethIdentifier.identifier.toLowerCase() ===
+                identifier.toLowerCase()
+            ) {
+              console.log(
+                `${colors.green}✓ Found existing DM with agent${colors.reset}\n`,
+              );
+              return conv;
+            }
+          }
+        }
+      }
+    }
+
+    // No existing conversation found, create new one
+    console.log(
+      `${colors.yellow}No existing conversation found. Creating new DM...${colors.reset}`,
+    );
+
+    try {
+      let newConversation: Dm;
+
+      if (isEthAddress) {
+        // Create DM using Ethereum address
+        newConversation = await client.conversations.newDmWithIdentifier({
+          identifier,
+          identifierKind: IdentifierKind.Ethereum,
+        });
+        console.log(
+          `${colors.green}✓ Created new DM with agent${colors.reset}\n`,
+        );
+      } else {
+        // Create DM using inbox ID
+        newConversation = await client.conversations.newDm(identifier);
+        console.log(
+          `${colors.green}✓ Created new DM with agent${colors.reset}\n`,
+        );
+      }
+
+      return newConversation;
+    } catch (error) {
+      console.error(
+        `${colors.red}Failed to create conversation:${colors.reset}`,
+        error,
+      );
+      return null;
+    }
+  }
+
   // List all conversations and let user select one
   async selectConversation(): Promise<Conversation | null> {
     const agent = await this.initializeAgent();
@@ -368,21 +457,37 @@ class XmtpChatCLI {
   }
 
   // Main chat loop
-  async start(): Promise<void> {
+  async start(agentIdentifier?: string): Promise<void> {
     try {
       await this.initializeAgent();
 
-      let keepRunning = true;
-
-      while (keepRunning) {
-        const conversation = await this.selectConversation();
+      // If agent identifier is provided, go directly to that conversation
+      if (agentIdentifier) {
+        const conversation =
+          await this.findOrCreateConversation(agentIdentifier);
 
         if (!conversation) {
-          console.log(`\n${colors.yellow}Goodbye!${colors.reset}`);
-          break;
+          console.log(
+            `${colors.red}Failed to connect to agent. Exiting...${colors.reset}`,
+          );
+          return;
         }
 
-        keepRunning = await this.chatInConversation(conversation);
+        await this.chatInConversation(conversation);
+      } else {
+        // Normal flow: let user select from conversations
+        let keepRunning = true;
+
+        while (keepRunning) {
+          const conversation = await this.selectConversation();
+
+          if (!conversation) {
+            console.log(`\n${colors.yellow}Goodbye!${colors.reset}`);
+            break;
+          }
+
+          keepRunning = await this.chatInConversation(conversation);
+        }
       }
     } catch (error) {
       console.error(`${colors.red}Error:${colors.reset}`, error);
@@ -394,10 +499,11 @@ class XmtpChatCLI {
 }
 
 // Parse command line arguments
-function parseArgs(): { env: XmtpEnv; help: boolean } {
+function parseArgs(): { env: XmtpEnv; help: boolean; agent?: string } {
   const args = process.argv.slice(2);
   let env = (process.env.XMTP_ENV as XmtpEnv) || "production";
   let help = false;
+  let agent: string | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -408,10 +514,13 @@ function parseArgs(): { env: XmtpEnv; help: boolean } {
     } else if (arg === "--env" && nextArg) {
       env = nextArg as XmtpEnv;
       i++;
+    } else if (arg === "--agent" && nextArg) {
+      agent = nextArg;
+      i++;
     }
   }
 
-  return { env, help };
+  return { env, help, agent };
 }
 
 function showHelp(): void {
@@ -424,6 +533,7 @@ ${colors.bright}USAGE:${colors.reset}
   yarn chat [options]
 
 ${colors.bright}OPTIONS:${colors.reset}
+  --agent <address>      Connect directly to an agent by Ethereum address or inbox ID
   --env <environment>    XMTP environment (local, dev, production)
                         [default: production or XMTP_ENV]
   -h, --help            Show this help message
@@ -431,7 +541,8 @@ ${colors.bright}OPTIONS:${colors.reset}
 ${colors.bright}EXAMPLES:${colors.reset}
   yarn chat
   yarn chat --env dev
-  yarn chat --env local
+  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2
+  yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179
 
 ${colors.bright}ENVIRONMENT VARIABLES:${colors.reset}
   XMTP_ENV          Default environment
@@ -442,7 +553,7 @@ ${colors.bright}ENVIRONMENT VARIABLES:${colors.reset}
 
 // CLI entry point
 async function main(): Promise<void> {
-  const { env, help } = parseArgs();
+  const { env, help, agent } = parseArgs();
 
   if (help) {
     showHelp();
@@ -460,7 +571,7 @@ ${colors.reset}`,
 
   const chat = new XmtpChatCLI(env);
 
-  await chat.start();
+  await chat.start(agent);
 }
 
 void main();
