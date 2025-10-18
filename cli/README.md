@@ -1,6 +1,6 @@
 # XMTP CLI Tools
 
-Command-line tools for interacting with XMTP.
+Command-line tools for interacting with XMTP. Built with [Ink](https://github.com/vadimdemedes/ink) - React for CLIs.
 
 ## Setup
 
@@ -39,15 +39,16 @@ yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c4191
 
 **Features:**
 
-- Select from your conversations (DMs and Groups)
-- Connect directly to an agent using `--agent` flag
-- Auto-creates DM if no existing conversation found
-- Real-time message streaming
-- Beautiful boxed input field UI (like Cursor!)
-- Switch between conversations without leaving the app
-- Color-coded display (You vs Others)
-- Message history with scrolling
-- Persisted identity (stored in DB)
+- 🎨 Built with React components (Ink framework)
+- 💬 Select from your conversations (DMs and Groups)
+- 🤖 Connect directly to an agent using `--agent` flag
+- ✨ Auto-creates DM if no existing conversation found
+- 🔄 Real-time message streaming
+- 🎯 Beautiful boxed input field UI
+- 🔀 Switch between conversations without leaving the app
+- 🌈 Color-coded display (You vs Others)
+- 📜 Message history with scrolling
+- 💾 Persisted identity (stored in DB)
 
 **In-chat commands:**
 
@@ -71,9 +72,35 @@ yarn mock messages <conversation-id> --env dev
 yarn mock identity --env local
 ```
 
+## Architecture
+
+The CLI is built with a modular React-based architecture using Ink:
+
+```
+cli/
+├── chat.tsx                    # Main entry point
+├── xmtp-client.ts             # XMTP client wrapper (encapsulated)
+├── types.ts                   # Shared TypeScript types
+├── constants.ts               # Global constants (colors, etc.)
+└── components/
+    ├── Header.tsx             # Client info banner
+    ├── ConversationList.tsx   # Conversation selection
+    ├── ChatView.tsx           # Main chat interface
+    ├── MessageList.tsx        # Message display
+    └── InputBox.tsx           # Message input
+```
+
+**Benefits:**
+
+- Clean separation of concerns (XMTP logic separate from UI)
+- Reusable React components
+- Easy to test and extend
+- Better state management with React hooks
+
 ## Notes
 
 - The CLI uses the same identity (WALLET_KEY) each time you run it
 - To use a different identity, change the WALLET_KEY in `.env`
 - To reset and create a new identity, delete the `.db3` files
 - Messages are streamed in real-time as they arrive
+- Built with [Ink](https://github.com/vadimdemedes/ink) for terminal rendering

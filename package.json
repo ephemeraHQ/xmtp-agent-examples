@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "build:examples": "yarn workspaces foreach --all --include \"examples/*\" run build",
-    "chat": "tsx cli/chat.ts",
+    "chat": "tsx cli/chat.tsx",
     "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
     "dev": "cd examples/xmtp-gm && tsx --watch index.ts",
@@ -25,7 +25,12 @@
     "@xmtp/agent-sdk": "1.1.7"
   },
   "dependencies": {
-    "@xmtp/agent-sdk": "1.1.7"
+    "@xmtp/agent-sdk": "1.1.7",
+    "dotenv": "^16.4.7",
+    "ink": "^5.0.1",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
