@@ -10,6 +10,7 @@ import {
   type XmtpEnv,
   type Group,
   type Dm,
+  type Client,
 } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
@@ -90,13 +91,19 @@ const InfoText: React.FC<InfoTextProps> = ({ children, marginTop = 1 }) => (
 interface HeaderProps {
   conversation: Conversation | null;
   env: XmtpEnv;
+  url: string;
+  conversations: number;
+  installations: number;
   address: string;
   inboxId: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
   conversation,
+  conversations,
   env,
+  url,
+  installations,
   address,
   inboxId,
 }) => {
@@ -129,13 +136,16 @@ const Header: React.FC<HeaderProps> = ({
               Address: <Text color={RED}>{address}</Text>
             </Text>
             <Text dimColor>
-              Conversations: <Text color={RED}>{2}</Text>
+              Conversations: <Text color={RED}>{conversations}</Text>
+            </Text>
+            <Text dimColor>
+              Installations: <Text color={RED}>{installations}</Text>
             </Text>
             <Text dimColor>
               Network: <Text color={RED}>{env}</Text>
             </Text>
             <Text dimColor>
-              URL: <Text color={RED}>{env}</Text>
+              URL: <Text color={RED}>{url}</Text>
             </Text>
           </Box>
         </Box>
@@ -296,6 +306,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [address, setAddress] = useState<string>("");
   const [url, setUrl] = useState<string>("");
+  const [installations, setInstallations] = useState<number>(0);
   const [inboxId, setInboxId] = useState<string>("");
   const [currentConversation, setCurrentConversation] =
     useState<Conversation | null>(null);
@@ -334,6 +345,11 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       setInboxId(newAgent.client.inboxId);
       setUrl(getTestUrl(newAgent.client) || "");
 
+      const finalInboxState = await Client.inboxStateFromInboxIds(
+        [newAgent.client.inboxId],
+        env,
+      );
+      setInstallations(finalInboxState[0].installations.length);
       // Sync conversations
       await newAgent.client.conversations.sync();
       const convList = await newAgent.client.conversations.list();
@@ -581,6 +597,9 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       <Header
         conversation={currentConversation}
         env={env}
+        url={url}
+        conversations={conversations.length}
+        installations={installations}
         address={address}
         inboxId={inboxId}
       />
