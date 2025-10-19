@@ -14,7 +14,9 @@ import {
 import { Client } from "@xmtp/node-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
-import { fromString } from "uint8arrays/from-string";
+import { generatePrivateKey } from "viem/accounts";
+import { generateEncryptionKeyHex } from "./generateKeys";
+import { fromString } from "uint8arrays";
 
 function showHelp(): void {
   console.log(`
@@ -358,23 +360,23 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   // Initialize agent
   useEffect(() => {
     const initAgent = async () => {
-      const walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
-      const encryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
+      let walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
+      let dbEncryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
 
-      if (!walletKey || !encryptionKey) {
-        setError(
-          "XMTP_CLIENT_WALLET_KEY and XMTP_CLIENT_DB_ENCRYPTION_KEY must be set",
-        );
-        return;
+      if (!walletKey || !dbEncryptionKey) {
+        walletKey = generatePrivateKey();
+        dbEncryptionKey = generateEncryptionKeyHex();
       }
 
       const user = createUser(walletKey as `0x${string}`);
       const signer = createSigner(user);
-      const dbEncryptionKey = fromString(encryptionKey, "hex");
+
+      // Convert hex string to Uint8Array for dbEncryptionKey
+      const encryptionKeyBytes = fromString(dbEncryptionKey, "hex");
 
       const newAgent = await Agent.create(signer, {
         env,
-        dbEncryptionKey,
+        dbEncryptionKey: encryptionKeyBytes,
       });
 
       setAgent(newAgent);
