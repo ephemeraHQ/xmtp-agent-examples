@@ -29,6 +29,15 @@ pnpm add @xmtp/agent-sdk
 yarn add @xmtp/agent-sdk
 ```
 
+## Talk using the CLI
+
+```bash
+# initialize the CLI
+yarn cli
+# connect to an agent
+yarn cli --agent 0x81bddb3d7cd9ccdfaeb117ce19fd77c1433b907d --env production
+```
+
 ## Quick Start
 
 ```ts
