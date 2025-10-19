@@ -28,6 +28,62 @@ interface FormattedMessage {
 }
 
 // ============================================================================
+// Utility Functions
+// ============================================================================
+const isGroup = (conversation: Conversation): conversation is Group => {
+  return conversation.constructor.name === "Group";
+};
+
+const isDm = (conversation: Conversation): conversation is Dm => {
+  return conversation.constructor.name === "Dm";
+};
+
+const isEthAddress = (identifier: string): boolean => {
+  return identifier.startsWith("0x") && identifier.length === 42;
+};
+
+const handleError = (
+  error: unknown,
+  setError: (msg: string) => void,
+  context: string,
+): void => {
+  const err = error as Error;
+  setError(`${context}: ${err.message}`);
+};
+
+// ============================================================================
+// Reusable UI Components
+// ============================================================================
+interface StatusBoxProps {
+  children: React.ReactNode;
+  color?: string;
+  borderColor?: string;
+}
+
+const StatusBox: React.FC<StatusBoxProps> = ({
+  children,
+  color = "red",
+  borderColor = "red",
+}) => (
+  <Box flexDirection="column">
+    <Box borderStyle="round" borderColor={borderColor} padding={1}>
+      <Text color={color}>{children}</Text>
+    </Box>
+  </Box>
+);
+
+interface InfoTextProps {
+  children: React.ReactNode;
+  marginTop?: number;
+}
+
+const InfoText: React.FC<InfoTextProps> = ({ children, marginTop = 1 }) => (
+  <Box flexDirection="column" marginTop={marginTop}>
+    <Text dimColor>{children}</Text>
+  </Box>
+);
+
+// ============================================================================
 // Header Component
 // ============================================================================
 interface HeaderProps {
@@ -89,15 +145,13 @@ const Header: React.FC<HeaderProps> = ({
     );
   }
 
-  const isGroup = conversation.constructor.name === "Group";
-
   return (
     <Box flexDirection="column">
       <Box paddingX={1} paddingY={0}>
-        {isGroup ? (
+        {isGroup(conversation) ? (
           <Text bold color={RED} inverse>
             {" "}
-            GROUP: {(conversation as Group).name || "Unnamed Group"}{" "}
+            GROUP: {conversation.name || "Unnamed Group"}{" "}
           </Text>
         ) : (
           <Text bold color={RED} inverse>
@@ -106,9 +160,9 @@ const Header: React.FC<HeaderProps> = ({
           </Text>
         )}
       </Box>
-      <Box marginTop={1}>
-        <Text dimColor>Commands: /conversations • /back • /exit</Text>
-      </Box>
+      <InfoText marginTop={1}>
+        Commands: /conversations • /back • /exit
+      </InfoText>
     </Box>
   );
 };
@@ -198,23 +252,20 @@ const ConversationList: React.FC<ConversationListProps> = ({
           <Text color={RED}>No conversations found</Text>
         ) : (
           conversations.map((conv, index) => {
-            const isGroup = conv.constructor.name === "Group";
             const isCurrent = conv.id === currentConversationId;
             const label = isCurrent ? "●" : " ";
 
-            if (isGroup) {
-              const group = conv as Group;
+            if (isGroup(conv)) {
               return (
                 <Box key={index}>
                   <Text color={RED}>{label}</Text>
                   <Text bold> {index + 1}.</Text>
                   <Text color={RED}> [GROUP]</Text>
-                  <Text> {group.name || "Unnamed"}</Text>
+                  <Text> {conv.name || "Unnamed"}</Text>
                 </Box>
               );
             } else {
-              const dm = conv as Dm;
-              const peerShort = dm.peerInboxId.slice(0, 16) + "...";
+              const peerShort = (conv as Dm).peerInboxId.slice(0, 16) + "...";
               return (
                 <Box key={index}>
                   <Text color={RED}>{label}</Text>
@@ -227,9 +278,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
           })
         )}
       </Box>
-      <Box marginTop={1}>
-        <Text dimColor>Use /chat &lt;number&gt; to switch conversations</Text>
-      </Box>
+      <InfoText marginTop={1}>
+        Use /chat &lt;number&gt; to switch conversations
+      </InfoText>
     </Box>
   );
 };
@@ -306,7 +357,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
     };
 
     initAgent().catch((err) => {
-      setError(`Failed to initialize: ${err.message}`);
+      handleError(err, setError, "Failed to initialize");
     });
   }, []);
 
@@ -316,82 +367,66 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
     identifiers: string[],
   ): Promise<Conversation | null> => {
     const client = agentInstance.client;
+    const groupOptions = {
+      groupName: "CLI Group Chat",
+      groupDescription: "Group created from CLI",
+    };
 
     try {
       if (identifiers.length > 1) {
         // Create group
-        const allEthAddresses = identifiers.every(
-          (id) => id.startsWith("0x") && id.length === 42,
-        );
+        const allEthAddresses = identifiers.every(isEthAddress);
 
         if (allEthAddresses) {
           const memberIdentifiers = identifiers.map((id) => ({
             identifier: id,
             identifierKind: IdentifierKind.Ethereum,
           }));
-
-          const group = await client.conversations.newGroupWithIdentifiers(
+          return await client.conversations.newGroupWithIdentifiers(
             memberIdentifiers,
-            {
-              groupName: "CLI Group Chat",
-              groupDescription: "Group created from CLI",
-            },
+            groupOptions,
           );
-          return group;
-        } else {
-          const group = await client.conversations.newGroup(identifiers, {
-            groupName: "CLI Group Chat",
-            groupDescription: "Group created from CLI",
-          });
-          return group;
-        }
-      } else {
-        // Create/find DM
-        const identifier = identifiers[0];
-        const isEthAddress =
-          identifier.startsWith("0x") && identifier.length === 42;
-
-        // Try to find existing conversation
-        await client.conversations.sync();
-        const convs = await client.conversations.list();
-
-        for (const conv of convs) {
-          if (conv.constructor.name === "Dm") {
-            const dm = conv as Dm;
-            if (dm.peerInboxId.toLowerCase() === identifier.toLowerCase()) {
-              return conv;
-            }
-
-            if (isEthAddress) {
-              const members = await conv.members();
-              for (const member of members) {
-                const ethId = member.accountIdentifiers.find(
-                  (id) => id.identifierKind === IdentifierKind.Ethereum,
-                );
-                if (
-                  ethId &&
-                  ethId.identifier.toLowerCase() === identifier.toLowerCase()
-                ) {
-                  return conv;
-                }
-              }
-            }
-          }
         }
 
-        // Create new DM
-        if (isEthAddress) {
-          return await client.conversations.newDmWithIdentifier({
-            identifier,
-            identifierKind: IdentifierKind.Ethereum,
+        return await client.conversations.newGroup(identifiers, groupOptions);
+      }
+
+      // Create/find DM
+      const identifier = identifiers[0];
+
+      // Try to find existing conversation
+      await client.conversations.sync();
+      const convs = await client.conversations.list();
+
+      for (const conv of convs) {
+        if (!isDm(conv)) continue;
+
+        if (conv.peerInboxId.toLowerCase() === identifier.toLowerCase()) {
+          return conv;
+        }
+
+        if (isEthAddress(identifier)) {
+          const members = await conv.members();
+          const foundMember = members.find((member) => {
+            const ethId = member.accountIdentifiers.find(
+              (id) => id.identifierKind === IdentifierKind.Ethereum,
+            );
+            return ethId?.identifier.toLowerCase() === identifier.toLowerCase();
           });
-        } else {
-          return await client.conversations.newDm(identifier);
+
+          if (foundMember) return conv;
         }
       }
+
+      // Create new DM
+      return isEthAddress(identifier)
+        ? await client.conversations.newDmWithIdentifier({
+            identifier,
+            identifierKind: IdentifierKind.Ethereum,
+          })
+        : await client.conversations.newDm(identifier);
     } catch (err: unknown) {
-      const error = err as Error;
-      setError(`Failed to create conversation: ${error.message}`);
+      handleError(err, setError, "Failed to create conversation");
       return null;
     }
   };
@@ -450,13 +485,46 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
           setMessages((prev) => [...prev, formatted]);
         }
       })().catch((err) => {
-        setError(`Stream error: ${err.message}`);
+        handleError(err, setError, "Stream error");
         isStreamingRef.current = false;
       });
     } catch (err: unknown) {
-      const error = err as Error;
-      setError(`Failed to start stream: ${error.message}`);
+      handleError(err, setError, "Failed to start stream");
       isStreamingRef.current = false;
+    }
+  };
+
+  // Command handlers
+  const commands = {
+    "/exit": () => exit(),
+    "/back": () => {
+      setCurrentConversation(null);
+      setMessages([]);
+      setShowConversationList(false);
+    },
+    "/conversations": () => setShowConversationList((prev) => !prev),
+  };
+
+  const handleChatCommand = async (message: string) => {
+    const parts = message.split(" ");
+    if (parts.length !== 2) {
+      setError("Usage: /chat <number>");
+      return;
+    }
+
+    const index = parseInt(parts[1]) - 1;
+    if (isNaN(index) || index < 0 || index >= conversations.length) {
+      setError("Invalid conversation number");
+      return;
+    }
+
+    const newConv = conversations[index];
+    setCurrentConversation(newConv);
+    setShowConversationList(false);
+
+    if (agent) {
+      await loadMessages(newConv, agent);
+      await startMessageStream(newConv, agent);
     }
   };
 
@@ -467,40 +535,15 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
     const message = value.trim();
     setInputValue("");
 
-    // Handle commands
-    if (message === "/exit") {
-      exit();
+    // Handle direct commands
+    if (commands[message as keyof typeof commands]) {
+      commands[message as keyof typeof commands]();
       return;
     }
 
-    if (message === "/back") {
-      setCurrentConversation(null);
-      setMessages([]);
-      setShowConversationList(false);
-      return;
-    }
-
-    if (message === "/conversations") {
-      setShowConversationList((prev) => !prev);
-      return;
-    }
-
+    // Handle /chat command
     if (message.startsWith("/chat ")) {
-      const parts = message.split(" ");
-      if (parts.length === 2) {
-        const index = parseInt(parts[1]) - 1;
-        if (!isNaN(index) && index >= 0 && index < conversations.length) {
-          const newConv = conversations[index];
-          setCurrentConversation(newConv);
-          setShowConversationList(false);
-          if (agent) {
-            await loadMessages(newConv, agent);
-            await startMessageStream(newConv, agent);
-          }
-          return;
-        }
-      }
-      setError("Usage: /chat <number>");
+      await handleChatCommand(message);
       return;
     }
 
@@ -521,20 +564,13 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
     try {
       await currentConversation.send(message);
     } catch (err: unknown) {
-      const error = err as Error;
-      setError(`Failed to send: ${error.message}`);
+      handleError(err, setError, "Failed to send");
     }
   };
 
   // Show error state
   if (error) {
-    return (
-      <Box flexDirection="column">
-        <Box borderStyle="round" borderColor="red" padding={1}>
-          <Text color="red">Error: {error}</Text>
-        </Box>
-      </Box>
-    );
+    return <StatusBox>Error: {error}</StatusBox>;
   }
 
   // Show loading state
@@ -576,20 +612,16 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       />
 
       {!currentConversation && conversations.length > 0 && (
-        <Box flexDirection="column" marginTop={1}>
-          <Text dimColor>
-            Available commands: /conversations, /chat &lt;number&gt;, /exit
-          </Text>
-        </Box>
+        <InfoText>
+          Available commands: /conversations, /chat &lt;number&gt;, /exit
+        </InfoText>
       )}
 
       {!currentConversation && conversations.length === 0 && (
-        <Box flexDirection="column" marginTop={1}>
-          <Text dimColor>
-            No conversations found. Use --agent &lt;address&gt; to start a new
-            chat.
-          </Text>
-        </Box>
+        <InfoText>
+          No conversations found. Use --agent &lt;address&gt; to start a new
+          chat.
+        </InfoText>
       )}
     </Box>
   );
