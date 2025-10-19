@@ -467,6 +467,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       const newAgent = await Agent.create(signer, {
         env,
         dbEncryptionKey: encryptionKeyBytes,
+        dbPath: (inboxId) => "." + `/cli-${env}-${inboxId.slice(0, 8)}.db3`,
       });
 
       setAgent(newAgent);

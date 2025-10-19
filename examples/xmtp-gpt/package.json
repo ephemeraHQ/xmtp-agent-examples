@@ -7,6 +7,7 @@
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "cli": "tsx ../../scripts/cli.tsx",
     "lint": "cd ../.. && yarn eslint examples/xmtp-gpt",
     "revoke": "tsx ../../scripts/revokeInstallations.ts",
     "start": "tsx index.ts"
