@@ -11,12 +11,12 @@ import {
   type Group,
   type Dm,
 } from "@xmtp/agent-sdk";
+import { getRandomValues } from "node:crypto";
 import { Client } from "@xmtp/node-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { generatePrivateKey } from "viem/accounts";
-import { generateEncryptionKeyHex } from "./generateKeys";
-import { fromString } from "uint8arrays";
+import { fromString, toString } from "uint8arrays";
 
 function showHelp(): void {
   console.log(`
@@ -31,12 +31,13 @@ OPTIONS:
   --agent <address...>   Connect to agent(s) by Ethereum address or inbox ID
                         Single address: creates/opens a DM
                         Multiple addresses: creates a group chat
+                        [auto-detected in dev environment if not provided]
   --env <environment>    XMTP environment (local, dev, production)
                         [default: production or XMTP_ENV]
   -h, --help            Show this help message
 
 IN-CHAT COMMANDS:
-  /conversations         List all your conversations with numbers
+  /list                  List all your conversations with numbers
   /chat <number>         Switch to a different conversation
   /back                  Return to conversation list
   /exit                  Quit the application
@@ -57,6 +58,8 @@ ENVIRONMENT VARIABLES:
 
 // Red color - matching the original theme (rgb: 252, 76, 52)
 const RED = "#fc4c34";
+// Standard red for errors
+const ERROR_RED = "#fc4c34";
 
 // ============================================================================
 // Types
@@ -87,9 +90,17 @@ const handleError = (
   error: unknown,
   setError: (msg: string) => void,
   context: string,
+  clearAfter?: number,
 ): void => {
   const err = error as Error;
   setError(`${context}: ${err.message}`);
+
+  // Auto-clear error after specified time (default 5 seconds)
+  if (clearAfter) {
+    setTimeout(() => {
+      setError("");
+    }, clearAfter);
+  }
 };
 
 // ============================================================================
@@ -103,8 +114,8 @@ interface StatusBoxProps {
 
 const StatusBox: React.FC<StatusBoxProps> = ({
   children,
-  color = "red",
-  borderColor = "red",
+  color = ERROR_RED,
+  borderColor = ERROR_RED,
 }) => (
   <Box flexDirection="column">
     <Box borderStyle="round" borderColor={borderColor} padding={1}>
@@ -207,9 +218,7 @@ const Header: React.FC<HeaderProps> = ({
           </Text>
         )}
       </Box>
-      <InfoText marginTop={1}>
-        Commands: /conversations • /back • /exit
-      </InfoText>
+      <InfoText marginTop={1}>Commands: /list • /back • /exit</InfoText>
     </Box>
   );
 };
@@ -354,6 +363,20 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showConversationList, setShowConversationList] = useState(false);
   const [error, setError] = useState<string>("");
+  const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Function to set error with auto-clear
+  const setErrorWithTimeout = (message: string, timeoutMs = 5000) => {
+    setError(message);
+    if (errorTimeout) {
+      clearTimeout(errorTimeout);
+    }
+    const timeout = setTimeout(() => {
+      setError("");
+      setErrorTimeout(null);
+    }, timeoutMs);
+    setErrorTimeout(timeout);
+  };
   const streamRef = useRef<AsyncIterable<DecodedMessage> | null>(null);
   const isStreamingRef = useRef(false);
 
@@ -365,7 +388,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
       if (!walletKey || !dbEncryptionKey) {
         walletKey = generatePrivateKey();
-        dbEncryptionKey = generateEncryptionKeyHex();
+        dbEncryptionKey = toString(getRandomValues(new Uint8Array(32)), "hex");
       }
 
       const user = createUser(walletKey as `0x${string}`);
@@ -555,19 +578,19 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       setMessages([]);
       setShowConversationList(false);
     },
-    "/conversations": () => setShowConversationList((prev) => !prev),
+    "/list": () => setShowConversationList((prev) => !prev),
   };
 
   const handleChatCommand = async (message: string) => {
     const parts = message.split(" ");
     if (parts.length !== 2) {
-      setError("Usage: /chat <number>");
+      setErrorWithTimeout("Usage: /chat <number>");
       return;
     }
 
     const index = parseInt(parts[1]) - 1;
     if (isNaN(index) || index < 0 || index >= conversations.length) {
-      setError("Invalid conversation number");
+      setErrorWithTimeout("Invalid conversation number");
       return;
     }
 
@@ -616,15 +639,15 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
           return;
         }
       }
-      setError(
-        "No active conversation. Use /conversations to see available chats or /chat <number> to select one.",
+      setErrorWithTimeout(
+        "No active conversation. Use /list to see available chats or /chat <number> to select one.",
       );
       return;
     }
 
     // Send message
     if (!agent) {
-      setError("Agent not initialized");
+      setErrorWithTimeout("Agent not initialized");
       return;
     }
 
@@ -634,11 +657,6 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       handleError(err, setError, "Failed to send");
     }
   };
-
-  // Show error state
-  if (error) {
-    return <StatusBox>Error: {error}</StatusBox>;
-  }
 
   // Show loading state
   if (!agent) {
@@ -660,6 +678,15 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         address={address}
         inboxId={inboxId}
       />
+
+      {/* Show error inline if present */}
+      {error && (
+        <Box marginY={1}>
+          <StatusBox color={ERROR_RED} borderColor={ERROR_RED}>
+            Error: {error}
+          </StatusBox>
+        </Box>
+      )}
 
       {showConversationList && (
         <ConversationList
@@ -683,14 +710,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
       {!currentConversation && conversations.length > 0 && (
         <InfoText>
-          Available commands: /conversations, /chat &lt;number&gt;, /exit
-        </InfoText>
-      )}
-
-      {!currentConversation && conversations.length === 0 && (
-        <InfoText>
-          No conversations found. Use --agent &lt;address&gt; to start a new
-          chat.
+          Available commands: /list, /chat &lt;number&gt;, /exit
         </InfoText>
       )}
     </Box>
@@ -723,6 +743,16 @@ function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
       }
       i--;
     }
+  }
+
+  // Auto-detect agent address if not provided and we're in dev environment
+  if (agents.length === 0 && env === "dev") {
+    // Try to get agent address from environment or use the known dev agent address
+    const autoAgentAddress =
+      process.env.XMTP_AGENT_ADDRESS ||
+      "0x6d91489e2235ba4e96660e52cc746a9c2537823b";
+    agents.push(autoAgentAddress);
+    console.log(`🔗 Auto-connecting to agent: ${autoAgentAddress}`);
   }
 
   return { env, help, agents: agents.length > 0 ? agents : undefined };
