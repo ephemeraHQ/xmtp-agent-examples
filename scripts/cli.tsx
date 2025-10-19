@@ -11,12 +11,12 @@ import {
   type Group,
   type Dm,
 } from "@xmtp/agent-sdk";
+import { getRandomValues } from "node:crypto";
 import { Client } from "@xmtp/node-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { generatePrivateKey } from "viem/accounts";
-import { fromString } from "uint8arrays";
-import { getRandomValues } from "node:crypto";
+import { fromString, toString } from "uint8arrays";
 
 function showHelp(): void {
   console.log(`
@@ -31,6 +31,7 @@ OPTIONS:
   --agent <address...>   Connect to agent(s) by Ethereum address or inbox ID
                         Single address: creates/opens a DM
                         Multiple addresses: creates a group chat
+                        [auto-detected in dev environment if not provided]
   --env <environment>    XMTP environment (local, dev, production)
                         [default: production or XMTP_ENV]
   -h, --help            Show this help message
@@ -387,10 +388,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
       if (!walletKey || !dbEncryptionKey) {
         walletKey = generatePrivateKey();
-        dbEncryptionKey = fromString(
-          toString(getRandomValues(new Uint8Array(32)), "hex"),
-          "hex",
-        );
+        dbEncryptionKey = toString(getRandomValues(new Uint8Array(32)), "hex");
       }
 
       const user = createUser(walletKey as `0x${string}`);
@@ -715,13 +713,6 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
           Available commands: /list, /chat &lt;number&gt;, /exit
         </InfoText>
       )}
-
-      {!currentConversation && conversations.length === 0 && (
-        <InfoText>
-          No conversations found. Use --agent &lt;address&gt; to start a new
-          chat.
-        </InfoText>
-      )}
     </Box>
   );
 };
@@ -752,6 +743,16 @@ function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
       }
       i--;
     }
+  }
+
+  // Auto-detect agent address if not provided and we're in dev environment
+  if (agents.length === 0 && env === "dev") {
+    // Try to get agent address from environment or use the known dev agent address
+    const autoAgentAddress =
+      process.env.XMTP_AGENT_ADDRESS ||
+      "0x6d91489e2235ba4e96660e52cc746a9c2537823b";
+    agents.push(autoAgentAddress);
+    console.log(`🔗 Auto-connecting to agent: ${autoAgentAddress}`);
   }
 
   return { env, help, agents: agents.length > 0 ? agents : undefined };
