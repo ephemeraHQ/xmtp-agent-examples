@@ -15,8 +15,8 @@ import { Client } from "@xmtp/node-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { generatePrivateKey } from "viem/accounts";
-import { generateEncryptionKeyHex } from "./generateKeys";
 import { fromString } from "uint8arrays";
+import { getRandomValues } from "node:crypto";
 
 function showHelp(): void {
   console.log(`
@@ -36,7 +36,7 @@ OPTIONS:
   -h, --help            Show this help message
 
 IN-CHAT COMMANDS:
-  /conversations         List all your conversations with numbers
+  /list                  List all your conversations with numbers
   /chat <number>         Switch to a different conversation
   /back                  Return to conversation list
   /exit                  Quit the application
@@ -58,7 +58,7 @@ ENVIRONMENT VARIABLES:
 // Red color - matching the original theme (rgb: 252, 76, 52)
 const RED = "#fc4c34";
 // Standard red for errors
-const ERROR_RED = "red";
+const ERROR_RED = "#fc4c34";
 
 // ============================================================================
 // Types
@@ -217,9 +217,7 @@ const Header: React.FC<HeaderProps> = ({
           </Text>
         )}
       </Box>
-      <InfoText marginTop={1}>
-        Commands: /conversations • /back • /exit
-      </InfoText>
+      <InfoText marginTop={1}>Commands: /list • /back • /exit</InfoText>
     </Box>
   );
 };
@@ -389,7 +387,10 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
       if (!walletKey || !dbEncryptionKey) {
         walletKey = generatePrivateKey();
-        dbEncryptionKey = generateEncryptionKeyHex();
+        dbEncryptionKey = fromString(
+          toString(getRandomValues(new Uint8Array(32)), "hex"),
+          "hex",
+        );
       }
 
       const user = createUser(walletKey as `0x${string}`);
@@ -579,7 +580,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       setMessages([]);
       setShowConversationList(false);
     },
-    "/conversations": () => setShowConversationList((prev) => !prev),
+    "/list": () => setShowConversationList((prev) => !prev),
   };
 
   const handleChatCommand = async (message: string) => {
@@ -641,7 +642,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         }
       }
       setErrorWithTimeout(
-        "No active conversation. Use /conversations to see available chats or /chat <number> to select one.",
+        "No active conversation. Use /list to see available chats or /chat <number> to select one.",
       );
       return;
     }
@@ -711,7 +712,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
       {!currentConversation && conversations.length > 0 && (
         <InfoText>
-          Available commands: /conversations, /chat &lt;number&gt;, /exit
+          Available commands: /list, /chat &lt;number&gt;, /exit
         </InfoText>
       )}
 
