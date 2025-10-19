@@ -10,8 +10,8 @@ import {
   type XmtpEnv,
   type Group,
   type Dm,
-  type Client,
 } from "@xmtp/agent-sdk";
+import { Client } from "@xmtp/node-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { fromString } from "uint8arrays/from-string";
@@ -130,7 +130,7 @@ const Header: React.FC<HeaderProps> = ({
           </Box>
           <Box flexDirection="column" marginLeft={2}>
             <Text dimColor>
-              InboxId: <Text color={RED}>{inboxId.slice(0, 16)}...</Text>
+              InboxId: <Text color={RED}>{inboxId.slice(0, 36)}...</Text>
             </Text>
             <Text dimColor>
               Address: <Text color={RED}>{address}</Text>
@@ -145,7 +145,7 @@ const Header: React.FC<HeaderProps> = ({
               Network: <Text color={RED}>{env}</Text>
             </Text>
             <Text dimColor>
-              URL: <Text color={RED}>{url}</Text>
+              URL: <Text color={RED}>{url.slice(0, 30)}...</Text>
             </Text>
           </Box>
         </Box>
@@ -557,8 +557,22 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       return;
     }
 
-    // If not in a conversation, show error for non-command input
+    // If not in a conversation, try to connect to agent address
     if (!currentConversation) {
+      if (agent) {
+        try {
+          const conv = await findOrCreateConversation(agent, [message]);
+          if (conv) {
+            setCurrentConversation(conv);
+            await loadMessages(conv, agent);
+            await startMessageStream(conv, agent);
+            return;
+          }
+        } catch (err: unknown) {
+          handleError(err, setError, "Failed to connect to agent");
+          return;
+        }
+      }
       setError(
         "No active conversation. Use /conversations to see available chats or /chat <number> to select one.",
       );
@@ -620,7 +634,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         placeholder={
           currentConversation
             ? "Send a message to the agent"
-            : "Type a command (e.g., /conversations, /chat 1)"
+            : "Enter agent address"
         }
       />
 
