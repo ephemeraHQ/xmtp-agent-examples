@@ -1,6 +1,5 @@
 import { Agent } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
-
 import { loadEnvFile } from "../../utils/general";
 
 loadEnvFile();
