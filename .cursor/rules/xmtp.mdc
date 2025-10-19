@@ -17,6 +17,15 @@ Full agent building guide: **[Build an XMTP Agent](https://docs.xmtp.org/agents/
 
 This SDK is based on familiar Node.js patterns: you register event listeners, compose middleware, and extend behavior just like you would in frameworks such as [Express](https://expressjs.com/). This makes it easy to bring existing JavaScript and TypeScript skills into building conversational agents.
 
+## Talk to your agent using the CLI
+
+```bash
+# initialize the CLI
+yarn cli
+# connect to an agent
+yarn cli --agent 0x81bddb3d7cd9ccdfaeb117ce19fd77c1433b907d --env production
+```
+
 ## Installation
 
 Choose your package manager:

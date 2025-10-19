@@ -89,7 +89,7 @@ Try out the examples using [xmtp.chat](https://xmtp.chat), the official playgrou
 
 ![](/examples/xmtp-gm/screenshot.png)
 
-### Run the CLI
+### Talk to your agent using the CLI
 
 ```bash
 # initialize the CLI
