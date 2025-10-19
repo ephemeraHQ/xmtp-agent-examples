@@ -365,8 +365,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <Box flexDirection="column" marginY={1}>
-      <Text bold color={RED}>
-        YOUR CONVERSATIONS
+      <Text dimColor color={RED}>
+        Your conversations
       </Text>
       <Box marginTop={1} flexDirection="column">
         {conversations.length === 0 ? (
