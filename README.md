@@ -17,7 +17,7 @@ These example agents serve as a starting point for building your own agents. The
 - [xmtp-queue-dual-client](/examples/xmtp-queue-dual-client/): Agent that uses two clients to send and receive messages
 - [xmtp-welcome-message](/examples/xmtp-welcome-message/): Agent that sends a welcome message when its added and to new members
 
-> Visit [Miniapps in XMTP](https://xmtp.org/miniapps) to explore the latest agents and mini-apps.
+> Visit [miniapps](https://xmtp.org/miniapps) to explore the latest agents and mini-apps.
 
 ### Vibe coding
 
