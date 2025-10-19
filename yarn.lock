@@ -4075,6 +4075,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"arr-rotate@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "arr-rotate@npm:1.0.0"
+  checksum: 10c0/f0fe35c373c10b9140e0ac4f8a8194904c7ec2bd7919c1cf713941af994450750afb66c8f001113023fcb4fcf5ff7591e88f6286bd4bcc500bc622f9d740d6e3
+  languageName: node
+  linkType: hard
+
 "async-function@npm:^1.0.0":
   version: 1.0.0
   resolution: "async-function@npm:1.0.0"
@@ -4619,7 +4626,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cli-spinners@npm:^2.5.0":
+"cli-spinners@npm:^2.5.0, cli-spinners@npm:^2.7.0":
   version: 2.9.2
   resolution: "cli-spinners@npm:2.9.2"
   checksum: 10c0/907a1c227ddf0d7a101e7ab8b300affc742ead4b4ebe920a5bf1bc6d45dce2958fcd195eb28fa25275062fe6fa9b109b93b63bc8033396ed3bcb50297008b3a3
@@ -5779,7 +5786,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"figures@npm:^3.0.0":
+"figures@npm:^3.0.0, figures@npm:^3.2.0":
   version: 3.2.0
   resolution: "figures@npm:3.2.0"
   dependencies:
@@ -6307,6 +6314,32 @@ __metadata:
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
   checksum: 10c0/4e531f648b29039fb7426fb94075e6545faa1eb9fe83c29f0b6d9e7263aceb4289d2d4557db0d428188eeb449cc7c5e77b0a0b2c4e248ff2a65933a0dee49ef2
+  languageName: node
+  linkType: hard
+
+"ink-select-input@npm:^4.0.0":
+  version: 4.2.2
+  resolution: "ink-select-input@npm:4.2.2"
+  dependencies:
+    arr-rotate: "npm:^1.0.0"
+    figures: "npm:^3.2.0"
+    lodash.isequal: "npm:^4.5.0"
+  peerDependencies:
+    ink: ^3.0.5
+    react: ^16.5.2 || ^17.0.0
+  checksum: 10c0/b781b14d27f7a9200cf91eb082b3323d0ddffafdaf2508dbaa1b7c44e90eda70ffb2f4d219dc281d779a9710fda78d6fb38510296fe981ce3eb79d0283bb4792
+  languageName: node
+  linkType: hard
+
+"ink-spinner@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "ink-spinner@npm:5.0.0"
+  dependencies:
+    cli-spinners: "npm:^2.7.0"
+  peerDependencies:
+    ink: ">=4.0.0"
+    react: ">=18.0.0"
+  checksum: 10c0/47b0201bc8b0b1fb475a6f8a117d5a099dde6f7ee2439b547ec60511e8460095ae6e78e8d34a7b8e54cb4c69def4310ce3649467c98ac8540d3c49ad030dd014
   languageName: node
   linkType: hard
 
@@ -6865,6 +6898,13 @@ __metadata:
   dependencies:
     p-locate: "npm:^5.0.0"
   checksum: 10c0/d3972ab70dfe58ce620e64265f90162d247e87159b6126b01314dd67be43d50e96a50b517bce2d9452a79409c7614054c277b5232377de50416564a77ac7aad3
+  languageName: node
+  linkType: hard
+
+"lodash.isequal@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.isequal@npm:4.5.0"
+  checksum: 10c0/dfdb2356db19631a4b445d5f37868a095e2402292d59539a987f134a8778c62a2810c2452d11ae9e6dcac71fc9de40a6fedcb20e2952a15b431ad8b29e50e28f
   languageName: node
   linkType: hard
 
@@ -9536,6 +9576,8 @@ __metadata:
     eslint-plugin-prettier: "npm:^5.2.3"
     globals: "npm:^15.14.0"
     ink: "npm:^6.3.1"
+    ink-select-input: "npm:^4.0.0"
+    ink-spinner: "npm:^5.0.0"
     ink-text-input: "npm:^6.0.0"
     prettier: "npm:^3.4.2"
     prettier-plugin-packagejson: "npm:^2.5.8"

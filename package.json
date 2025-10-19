@@ -14,7 +14,7 @@
     "format": "prettier -w .",
     "gen:keys": "tsx scripts/generateKeys.ts",
     "lint": "eslint .",
-    "revoke": "tsx scripts/revokeInstallations.ts",
+    "revoke": "tsx scripts/revokeInstallations.tsx",
     "start": "cd examples/xmtp-gm && tsx index.ts",
     "typecheck": "tsc"
   },
@@ -26,6 +26,8 @@
     "@xmtp/agent-sdk": "1.1.7",
     "@xmtp/content-type-remote-attachment": "^2.0.2",
     "@xmtp/content-type-wallet-send-calls": "^1.0.1",
+    "ink-select-input": "^4.0.0",
+    "ink-spinner": "^5.0.0",
     "ink-text-input": "^6.0.0",
     "react": "^19.2.0",
     "uint8arrays": "^5.1.0"
