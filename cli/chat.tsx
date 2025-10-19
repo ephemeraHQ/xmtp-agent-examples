@@ -11,6 +11,7 @@ import {
   type Group,
   type Dm,
 } from "@xmtp/agent-sdk";
+import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { fromString } from "uint8arrays/from-string";
 
@@ -112,13 +113,7 @@ const Header: React.FC<HeaderProps> = ({
     // Show initialization header
     return (
       <Box flexDirection="column" marginBottom={1}>
-        <Box
-          borderStyle="round"
-          borderColor={RED}
-          paddingX={2}
-          paddingY={1}
-          flexDirection="row"
-        >
+        <Box paddingX={2} paddingY={1} flexDirection="row">
           <Box flexDirection="column">
             {logoLines.map((line, i) => (
               <Box key={i}>
@@ -131,13 +126,16 @@ const Header: React.FC<HeaderProps> = ({
               InboxId: <Text color={RED}>{inboxId.slice(0, 16)}...</Text>
             </Text>
             <Text dimColor>
-              Address: <Text color={RED}>{address.slice(0, 10)}...</Text>
+              Address: <Text color={RED}>{address}</Text>
             </Text>
             <Text dimColor>
               Conversations: <Text color={RED}>{2}</Text>
             </Text>
             <Text dimColor>
               Network: <Text color={RED}>{env}</Text>
+            </Text>
+            <Text dimColor>
+              URL: <Text color={RED}>{env}</Text>
             </Text>
           </Box>
         </Box>
@@ -297,6 +295,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const { exit } = useApp();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [address, setAddress] = useState<string>("");
+  const [url, setUrl] = useState<string>("");
   const [inboxId, setInboxId] = useState<string>("");
   const [currentConversation, setCurrentConversation] =
     useState<Conversation | null>(null);
@@ -330,15 +329,10 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         dbEncryptionKey,
       });
 
-      const identifier = await signer.getIdentifier();
-      const addr =
-        identifier.identifierKind === IdentifierKind.Ethereum
-          ? identifier.identifier
-          : "Unknown";
-
       setAgent(newAgent);
-      setAddress(addr);
+      setAddress(newAgent.address || "");
       setInboxId(newAgent.client.inboxId);
+      setUrl(getTestUrl(newAgent.client) || "");
 
       // Sync conversations
       await newAgent.client.conversations.sync();
