@@ -89,7 +89,16 @@ Try out the examples using [xmtp.chat](https://xmtp.chat), the official playgrou
 
 ![](/examples/xmtp-gm/screenshot.png)
 
-### Run a local XMTP network (Optional)
+### Run the CLI
+
+```bash
+# initialize the CLI
+yarn cli
+# connect to an agent
+yarn cli --agent 0x81bddb3d7cd9ccdfaeb117ce19fd77c1433b907d --env production
+```
+
+### Run a local XMTP network (optional)
 
 `dev` and `production` networks are hosted by XMTP, while you can run your own `local` network.
 

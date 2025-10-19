@@ -146,7 +146,8 @@ async function initializeAgent(
       configurable: { thread_id: userId },
     };
 
-    const canUseFaucet = walletProvider.getNetwork().networkId == "base-sepolia";
+    const canUseFaucet =
+      walletProvider.getNetwork().networkId == "base-sepolia";
     const faucetMessage = `If you ever need funds, you can request them from the faucet.`;
     const cantUseFaucetMessage = `If you need funds, you can provide your wallet details and request funds from the user.`;
 
@@ -234,7 +235,9 @@ async function handleMessage(ctx: MessageContext) {
     );
 
     await ctx.sendText(response);
-    console.debug(`Sent response to ${ctx.message.senderInboxId}: ${response} \n`);
+    console.debug(
+      `Sent response to ${ctx.message.senderInboxId}: ${response} \n`,
+    );
   } catch (error) {
     console.error("Error handling message:", error);
     await ctx.sendText(
@@ -258,6 +261,7 @@ agent.on("text", (ctx) => {
 agent.on("start", () => {
   console.log(`Address: ${agent.address}`);
   console.log(`Start a conversation at 🔗${getTestUrl(agent.client)}`);
+
   console.log(`Waiting for messages... \n`);
 });
 
