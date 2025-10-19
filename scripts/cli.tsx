@@ -317,11 +317,52 @@ interface ConversationListProps {
   conversations: Conversation[];
   currentConversationId: string | null;
 }
+const getEthereumAddress = async (
+  conversation: Conversation,
+): Promise<string | null> => {
+  const members = await conversation.members();
 
+  for (const member of members) {
+    // Get Ethereum address
+    const ethIdentifier = member.accountIdentifiers.find(
+      (id) => id.identifierKind === IdentifierKind.Ethereum,
+    );
+
+    if (ethIdentifier) {
+      return ethIdentifier.identifier;
+    }
+  }
+  return null;
+};
 const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   currentConversationId,
 }) => {
+  const [addressMap, setAddressMap] = React.useState<Record<string, string>>(
+    {},
+  );
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadAddresses = async () => {
+      const newAddressMap: Record<string, string> = {};
+
+      for (const conv of conversations) {
+        if (!isGroup(conv)) {
+          const address = await getEthereumAddress(conv);
+          if (address) {
+            newAddressMap[conv.id] = address;
+          }
+        }
+      }
+
+      setAddressMap(newAddressMap);
+      setLoading(false);
+    };
+
+    loadAddresses();
+  }, [conversations]);
+
   return (
     <Box flexDirection="column" marginY={1}>
       <Text bold color={RED}>
@@ -330,6 +371,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
       <Box marginTop={1} flexDirection="column">
         {conversations.length === 0 ? (
           <Text color={RED}>No conversations found</Text>
+        ) : loading ? (
+          <Text color={RED}>Loading conversations...</Text>
         ) : (
           conversations.map((conv, index) => {
             const isCurrent = conv.id === currentConversationId;
@@ -345,15 +388,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 </Box>
               );
             } else {
-              const peerShort = (conv as Dm).peerInboxId.slice(0, 16) + "...";
-              return (
-                <Box key={index}>
-                  <Text color={RED}>{label}</Text>
-                  <Text bold> {index + 1}.</Text>
-                  <Text color={RED}> [DM]</Text>
-                  <Text> {peerShort}</Text>
-                </Box>
-              );
+              const peerShort = addressMap[conv.id];
+              if (peerShort) {
+                return (
+                  <Box key={index}>
+                    <Text color={RED}>{label}</Text>
+                    <Text bold> {index + 1}.</Text>
+                    <Text color={RED}> [DM]</Text>
+                    <Text> {peerShort}</Text>
+                  </Box>
+                );
+              }
             }
           })
         )}
