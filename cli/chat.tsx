@@ -16,6 +16,43 @@ import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { fromString } from "uint8arrays/from-string";
 
+function showHelp(): void {
+  console.log(`
+XMTP CLI Chat Interface
+
+Chat with your XMTP conversations directly from the terminal.
+
+USAGE:
+  yarn chat [options]
+
+OPTIONS:
+  --agent <address...>   Connect to agent(s) by Ethereum address or inbox ID
+                        Single address: creates/opens a DM
+                        Multiple addresses: creates a group chat
+  --env <environment>    XMTP environment (local, dev, production)
+                        [default: production or XMTP_ENV]
+  -h, --help            Show this help message
+
+IN-CHAT COMMANDS:
+  /conversations         List all your conversations with numbers
+  /chat <number>         Switch to a different conversation
+  /back                  Return to conversation list
+  /exit                  Quit the application
+
+EXAMPLES:
+  yarn chat
+  yarn chat --env dev
+  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2
+  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2 0x1234567890abcdef1234567890abcdef12345678
+  yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179
+
+ENVIRONMENT VARIABLES:
+  XMTP_ENV                       Default environment
+  XMTP_CLIENT_WALLET_KEY         Wallet private key (required)
+  XMTP_CLIENT_DB_ENCRYPTION_KEY  Database encryption key (required)
+`);
+}
+
 // Red color - matching the original theme (rgb: 252, 76, 52)
 const RED = "#fc4c34";
 
@@ -119,7 +156,7 @@ const Header: React.FC<HeaderProps> = ({
   if (!conversation) {
     // Show initialization header
     return (
-      <Box flexDirection="column" marginBottom={1}>
+      <Box flexDirection="column" marginBottom={0}>
         <Box paddingX={2} paddingY={1} flexDirection="row">
           <Box flexDirection="column">
             {logoLines.map((line, i) => (
@@ -629,7 +666,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         />
       )}
 
-      {currentConversation && <Messages messages={messages} height={20} />}
+      {currentConversation && <Messages messages={messages} height={10} />}
 
       <InputBox
         value={inputValue}
@@ -687,43 +724,6 @@ function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
   }
 
   return { env, help, agents: agents.length > 0 ? agents : undefined };
-}
-
-function showHelp(): void {
-  console.log(`
-XMTP CLI Chat Interface
-
-Chat with your XMTP conversations directly from the terminal.
-
-USAGE:
-  yarn chat [options]
-
-OPTIONS:
-  --agent <address...>   Connect to agent(s) by Ethereum address or inbox ID
-                        Single address: creates/opens a DM
-                        Multiple addresses: creates a group chat
-  --env <environment>    XMTP environment (local, dev, production)
-                        [default: production or XMTP_ENV]
-  -h, --help            Show this help message
-
-IN-CHAT COMMANDS:
-  /conversations         List all your conversations with numbers
-  /chat <number>         Switch to a different conversation
-  /back                  Return to conversation list
-  /exit                  Quit the application
-
-EXAMPLES:
-  yarn chat
-  yarn chat --env dev
-  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2
-  yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2 0x1234567890abcdef1234567890abcdef12345678
-  yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179
-
-ENVIRONMENT VARIABLES:
-  XMTP_ENV                       Default environment
-  XMTP_CLIENT_WALLET_KEY         Wallet private key (required)
-  XMTP_CLIENT_DB_ENCRYPTION_KEY  Database encryption key (required)
-`);
 }
 
 async function main(): Promise<void> {

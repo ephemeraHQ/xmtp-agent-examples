@@ -26,15 +26,22 @@
     "@xmtp/agent-sdk": "1.1.7",
     "@xmtp/content-type-remote-attachment": "^2.0.2",
     "@xmtp/content-type-wallet-send-calls": "^1.0.1",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.0",
+    "uint8arrays": "^5.1.0"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^1.2.4",
+    "@types/react": "^19",
     "eslint": "^9.19.0",
     "eslint-plugin-prettier": "^5.2.3",
     "globals": "^15.14.0",
+    "ink": "^6.3.1",
     "prettier": "^3.4.2",
     "prettier-plugin-packagejson": "^2.5.8",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.22.0",
-    "uint8arrays": "^5.1.0"
+    "typescript-eslint": "^8.22.0"
   },
   "packageManager": "yarn@4.6.0",
   "engines": {
