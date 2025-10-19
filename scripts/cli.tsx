@@ -40,7 +40,6 @@ IN-CHAT COMMANDS:
   /list                  List all your conversations with numbers
   /chat <number>         Switch to a different conversation
   /back                  Return to conversation list
-  /exit                  Quit the application
 
 EXAMPLES:
   yarn chat
@@ -218,7 +217,7 @@ const Header: React.FC<HeaderProps> = ({
           </Text>
         )}
       </Box>
-      <InfoText marginTop={1}>Commands: /list • /back • /exit</InfoText>
+      <InfoText marginTop={1}>Commands: /list • /back</InfoText>
     </Box>
   );
 };
@@ -647,7 +646,6 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
   // Command handlers
   const commands = {
-    "/exit": () => exit(),
     "/back": () => {
       setCurrentConversation(null);
       setMessages([]);
@@ -784,9 +782,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       />
 
       {!currentConversation && conversations.length > 0 && (
-        <InfoText>
-          Available commands: /list, /chat &lt;number&gt;, /exit
-        </InfoText>
+        <InfoText>Available commands: /list, /chat &lt;number&gt;</InfoText>
       )}
     </Box>
   );
