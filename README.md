@@ -91,8 +91,6 @@ Try out the examples using [xmtp.chat](https://xmtp.chat), the official playgrou
 
 ### Run the CLI
 
-![](/cli/screenshot.png)
-
 ```bash
 # initialize the CLI
 yarn cli
