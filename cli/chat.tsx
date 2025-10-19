@@ -14,9 +14,7 @@ import {
 import { Client } from "@xmtp/node-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
-import { generatePrivateKey } from "viem/accounts";
-import { generateEncryptionKeyHex } from "./generateKeys";
-import { fromString } from "uint8arrays";
+import { fromString } from "uint8arrays/from-string";
 
 function showHelp(): void {
   console.log(`
@@ -36,7 +34,7 @@ OPTIONS:
   -h, --help            Show this help message
 
 IN-CHAT COMMANDS:
-  /conversations         List all your conversations with numbers
+  /list                  List all your conversations with numbers
   /chat <number>         Switch to a different conversation
   /back                  Return to conversation list
   /exit                  Quit the application
@@ -73,6 +71,49 @@ interface FormattedMessage {
 // ============================================================================
 // Utility Functions
 // ============================================================================
+
+// Helper function to get Ethereum address from conversation
+const getEthereumAddress = async (
+  conversation: Conversation,
+  clientInboxId: string,
+): Promise<string> => {
+  try {
+    if (isGroup(conversation)) {
+      return `${conversation.name || "Unnamed Group"}`;
+    } else {
+      // For DMs, get the peer's Ethereum address
+      const members = await conversation.members();
+      const peerMember = members.find(
+        (member) => member.inboxId !== clientInboxId,
+      );
+
+      if (peerMember) {
+        const ethIdentifier = peerMember.accountIdentifiers.find(
+          (id) => id.identifierKind === IdentifierKind.Ethereum,
+        );
+        return (
+          ethIdentifier?.identifier ||
+          (conversation as Dm).peerInboxId.slice(0, 8) +
+            "..." +
+            (conversation as Dm).peerInboxId.slice(-8)
+        );
+      }
+
+      return (
+        (conversation as Dm).peerInboxId.slice(0, 8) +
+        "..." +
+        (conversation as Dm).peerInboxId.slice(-8)
+      );
+    }
+  } catch {
+    // Fallback to inbox ID if we can't get the address
+    return isGroup(conversation)
+      ? `${conversation.name || "Unnamed Group"}`
+      : (conversation as Dm).peerInboxId.slice(0, 8) +
+          "..." +
+          (conversation as Dm).peerInboxId.slice(-8);
+  }
+};
 const isGroup = (conversation: Conversation): conversation is Group => {
   return conversation.constructor.name === "Group";
 };
@@ -89,17 +130,9 @@ const handleError = (
   error: unknown,
   setError: (msg: string) => void,
   context: string,
-  clearAfter?: number,
 ): void => {
   const err = error as Error;
   setError(`${context}: ${err.message}`);
-
-  // Auto-clear error after specified time (default 5 seconds)
-  if (clearAfter) {
-    setTimeout(() => {
-      setError("");
-    }, clearAfter);
-  }
 };
 
 // ============================================================================
@@ -113,8 +146,8 @@ interface StatusBoxProps {
 
 const StatusBox: React.FC<StatusBoxProps> = ({
   children,
-  color = ERROR_RED,
-  borderColor = ERROR_RED,
+  color = "red",
+  borderColor = "red",
 }) => (
   <Box flexDirection="column">
     <Box borderStyle="round" borderColor={borderColor} padding={1}>
@@ -205,21 +238,12 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <Box flexDirection="column">
       <Box paddingX={1} paddingY={0}>
-        {isGroup(conversation) ? (
-          <Text bold color={RED} inverse>
-            {" "}
-            GROUP: {conversation.name || "Unnamed Group"}{" "}
-          </Text>
-        ) : (
-          <Text bold color={RED} inverse>
-            {" "}
-            DM: {(conversation as Dm).peerInboxId.slice(0, 16)}...{" "}
-          </Text>
-        )}
+        <Text bold color={RED} inverse>
+          {" "}
+          {isGroup(conversation) ? "GROUP" : ""}{" "}
+        </Text>
       </Box>
-      <InfoText marginTop={1}>
-        Commands: /conversations • /back • /exit
-      </InfoText>
+      <InfoText marginTop={1}>Commands: /list • /back • /exit</InfoText>
     </Box>
   );
 };
@@ -293,12 +317,42 @@ const InputBox: React.FC<InputBoxProps> = ({
 interface ConversationListProps {
   conversations: Conversation[];
   currentConversationId: string | null;
+  clientInboxId: string;
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   currentConversationId,
+  clientInboxId,
 }) => {
+  const [addressMap, setAddressMap] = useState<Map<string, string>>(new Map());
+
+  // Load addresses for all conversations
+  useEffect(() => {
+    const loadAddresses = async () => {
+      const newAddressMap = new Map<string, string>();
+
+      for (const conv of conversations) {
+        try {
+          const address = await getEthereumAddress(conv, clientInboxId);
+          newAddressMap.set(conv.id, address);
+        } catch {
+          // Keep existing entry or use fallback
+          const fallback = isGroup(conv)
+            ? conv.name || "Unnamed Group"
+            : (conv as Dm).peerInboxId.slice(0, 8) +
+              "..." +
+              (conv as Dm).peerInboxId.slice(-8);
+          newAddressMap.set(conv.id, fallback);
+        }
+      }
+
+      setAddressMap(newAddressMap);
+    };
+
+    loadAddresses();
+  }, [conversations, clientInboxId]);
+
   return (
     <Box flexDirection="column" marginY={1}>
       <Text bold color={RED}>
@@ -311,27 +365,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
           conversations.map((conv, index) => {
             const isCurrent = conv.id === currentConversationId;
             const label = isCurrent ? "●" : " ";
+            const displayAddress = addressMap.get(conv.id) || "Loading...";
 
-            if (isGroup(conv)) {
-              return (
-                <Box key={index}>
-                  <Text color={RED}>{label}</Text>
-                  <Text bold> {index + 1}.</Text>
-                  <Text color={RED}> [GROUP]</Text>
-                  <Text> {conv.name || "Unnamed"}</Text>
-                </Box>
-              );
-            } else {
-              const peerShort = (conv as Dm).peerInboxId.slice(0, 16) + "...";
-              return (
-                <Box key={index}>
-                  <Text color={RED}>{label}</Text>
-                  <Text bold> {index + 1}.</Text>
-                  <Text color={RED}> [DM]</Text>
-                  <Text> {peerShort}</Text>
-                </Box>
-              );
-            }
+            return (
+              <Box key={index}>
+                <Text color={RED}>{label}</Text>
+                <Text bold> {index + 1}.</Text>
+                <Text> {displayAddress}</Text>
+              </Box>
+            );
           })
         )}
       </Box>
@@ -364,30 +406,29 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showConversationList, setShowConversationList] = useState(false);
   const [error, setError] = useState<string>("");
-  const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
   const streamRef = useRef<AsyncIterable<DecodedMessage> | null>(null);
   const isStreamingRef = useRef(false);
 
   // Initialize agent
   useEffect(() => {
     const initAgent = async () => {
-      let walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
-      let dbEncryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
+      const walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
+      const encryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
 
-      if (!walletKey || !dbEncryptionKey) {
-        walletKey = generatePrivateKey();
-        dbEncryptionKey = generateEncryptionKeyHex();
+      if (!walletKey || !encryptionKey) {
+        setError(
+          "XMTP_CLIENT_WALLET_KEY and XMTP_CLIENT_DB_ENCRYPTION_KEY must be set",
+        );
+        return;
       }
 
       const user = createUser(walletKey as `0x${string}`);
       const signer = createSigner(user);
-
-      // Convert hex string to Uint8Array for dbEncryptionKey
-      const encryptionKeyBytes = fromString(dbEncryptionKey, "hex");
+      const dbEncryptionKey = fromString(encryptionKey, "hex");
 
       const newAgent = await Agent.create(signer, {
         env,
-        dbEncryptionKey: encryptionKeyBytes,
+        dbEncryptionKey,
       });
 
       setAgent(newAgent);
@@ -566,7 +607,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       setMessages([]);
       setShowConversationList(false);
     },
-    "/conversations": () => setShowConversationList((prev) => !prev),
+    "/list": () => setShowConversationList((prev) => !prev),
   };
 
   const handleChatCommand = async (message: string) => {
@@ -628,7 +669,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         }
       }
       setError(
-        "No active conversation. Use /conversations to see available chats or /chat <number> to select one.",
+        "No active conversation. Use /list to see available chats or /chat <number> to select one.",
       );
       return;
     }
@@ -648,7 +689,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
   // Show error state
   if (error) {
-    return <StatusBox>Error: {error}</StatusBox>;
+    return <StatusBox color={ERROR_RED} borderColor={ERROR_RED}>Error: {error}</StatusBox>;
   }
 
   // Show loading state
@@ -676,6 +717,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         <ConversationList
           conversations={conversations}
           currentConversationId={currentConversation?.id || null}
+          clientInboxId={inboxId}
         />
       )}
 
@@ -694,7 +736,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
       {!currentConversation && conversations.length > 0 && (
         <InfoText>
-          Available commands: /conversations, /chat &lt;number&gt;, /exit
+          Available commands: /list, /chat &lt;number&gt;, /exit
         </InfoText>
       )}
 
