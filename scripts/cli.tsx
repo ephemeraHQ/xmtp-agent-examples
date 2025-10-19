@@ -366,15 +366,6 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [error, setError] = useState<string>("");
   const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // Function to clear error with timeout
-  const clearError = () => {
-    setError('');
-    if (errorTimeout) {
-      clearTimeout(errorTimeout);
-      setErrorTimeout(null);
-    }
-  };
-
   // Function to set error with auto-clear
   const setErrorWithTimeout = (message: string, timeoutMs = 5000) => {
     setError(message);
@@ -382,7 +373,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       clearTimeout(errorTimeout);
     }
     const timeout = setTimeout(() => {
-      setError('');
+      setError("");
       setErrorTimeout(null);
     }, timeoutMs);
     setErrorTimeout(timeout);
@@ -594,13 +585,13 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const handleChatCommand = async (message: string) => {
     const parts = message.split(" ");
     if (parts.length !== 2) {
-      setError("Usage: /chat <number>");
+      setErrorWithTimeout("Usage: /chat <number>");
       return;
     }
 
     const index = parseInt(parts[1]) - 1;
     if (isNaN(index) || index < 0 || index >= conversations.length) {
-      setError("Invalid conversation number");
+      setErrorWithTimeout("Invalid conversation number");
       return;
     }
 
@@ -649,7 +640,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
           return;
         }
       }
-      setError(
+      setErrorWithTimeout(
         "No active conversation. Use /conversations to see available chats or /chat <number> to select one.",
       );
       return;
@@ -657,7 +648,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
     // Send message
     if (!agent) {
-      setError("Agent not initialized");
+      setErrorWithTimeout("Agent not initialized");
       return;
     }
 
@@ -667,11 +658,6 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       handleError(err, setError, "Failed to send");
     }
   };
-
-  // Show error state
-  if (error) {
-    return <StatusBox>Error: {error}</StatusBox>;
-  }
 
   // Show loading state
   if (!agent) {
@@ -693,6 +679,15 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         address={address}
         inboxId={inboxId}
       />
+
+      {/* Show error inline if present */}
+      {error && (
+        <Box marginY={1}>
+          <StatusBox color={ERROR_RED} borderColor={ERROR_RED}>
+            Error: {error}
+          </StatusBox>
+        </Box>
+      )}
 
       {showConversationList && (
         <ConversationList
