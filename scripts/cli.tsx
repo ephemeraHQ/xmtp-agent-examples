@@ -365,6 +365,28 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [showConversationList, setShowConversationList] = useState(false);
   const [error, setError] = useState<string>("");
   const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Function to clear error with timeout
+  const clearError = () => {
+    setError('');
+    if (errorTimeout) {
+      clearTimeout(errorTimeout);
+      setErrorTimeout(null);
+    }
+  };
+
+  // Function to set error with auto-clear
+  const setErrorWithTimeout = (message: string, timeoutMs = 5000) => {
+    setError(message);
+    if (errorTimeout) {
+      clearTimeout(errorTimeout);
+    }
+    const timeout = setTimeout(() => {
+      setError('');
+      setErrorTimeout(null);
+    }, timeoutMs);
+    setErrorTimeout(timeout);
+  };
   const streamRef = useRef<AsyncIterable<DecodedMessage> | null>(null);
   const isStreamingRef = useRef(false);
 
