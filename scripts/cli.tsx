@@ -15,7 +15,7 @@ import { getRandomValues } from "node:crypto";
 import { Client } from "@xmtp/node-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createSigner, createUser } from "@xmtp/agent-sdk/user";
-import { generatePrivateKey } from "viem/accounts";
+import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
 import { fromString, toString } from "uint8arrays";
 
 function showHelp(): void {
@@ -235,21 +235,45 @@ const Messages: React.FC<MessagesProps> = ({ messages, height }) => {
   // Show last N messages that fit in the height
   const visibleMessages = messages.slice(-height);
 
+  // Helper function to format long text with proper indentation
+  const formatLongText = (text: string, prefix: string) => {
+    const lines = text.split("\n");
+    if (lines.length === 1) {
+      return text;
+    }
+
+    // For multi-line content, indent continuation lines
+    return lines
+      .map((line, index) => {
+        if (index === 0) return line;
+        // Add indentation to match the prefix length
+        const indent = " ".repeat(prefix.length);
+        return `${indent}${line}`;
+      })
+      .join("\n");
+  };
+
   return (
     <Box flexDirection="column" marginY={1}>
       {visibleMessages.length === 0 ? (
         <Text dimColor>No messages yet...</Text>
       ) : (
-        visibleMessages.map((msg, index) => (
-          <Box key={index}>
-            <Text dimColor>[{msg.timestamp}]</Text>
-            <Text> </Text>
-            <Text bold color={RED}>
-              {msg.sender}
-            </Text>
-            <Text>: {msg.content}</Text>
-          </Box>
-        ))
+        visibleMessages.map((msg, index) => {
+          const prefix = `[${msg.timestamp}] ${msg.sender}: `;
+          const formattedContent = formatLongText(msg.content, prefix);
+
+          return (
+            <Box key={index} flexDirection="column">
+              <Text>
+                <Text dimColor>[{msg.timestamp}] </Text>
+                <Text bold color={RED}>
+                  {msg.sender}:
+                </Text>
+                <Text> {formattedContent}</Text>
+              </Text>
+            </Box>
+          );
+        })
       )}
     </Box>
   );
@@ -293,19 +317,60 @@ interface ConversationListProps {
   conversations: Conversation[];
   currentConversationId: string | null;
 }
+const getEthereumAddress = async (
+  conversation: Conversation,
+): Promise<string | null> => {
+  const members = await conversation.members();
 
+  for (const member of members) {
+    // Get Ethereum address
+    const ethIdentifier = member.accountIdentifiers.find(
+      (id) => id.identifierKind === IdentifierKind.Ethereum,
+    );
+
+    if (ethIdentifier) {
+      return ethIdentifier.identifier;
+    }
+  }
+  return null;
+};
 const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   currentConversationId,
 }) => {
+  const [addressMap, setAddressMap] = React.useState<Record<string, string>>(
+    {},
+  );
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadAddresses = async () => {
+      const newAddressMap: Record<string, string> = {};
+
+      for (const conv of conversations) {
+        if (!isGroup(conv)) {
+          const address = await getEthereumAddress(conv);
+          if (address) {
+            newAddressMap[conv.id] = address;
+          }
+        }
+      }
+
+      setAddressMap(newAddressMap);
+      setLoading(false);
+    };
+
+    loadAddresses();
+  }, [conversations]);
+
   return (
     <Box flexDirection="column" marginY={1}>
-      <Text bold color={RED}>
-        YOUR CONVERSATIONS
-      </Text>
+      <Text dimColor>Your conversations</Text>
       <Box marginTop={1} flexDirection="column">
         {conversations.length === 0 ? (
           <Text color={RED}>No conversations found</Text>
+        ) : loading ? (
+          <Text color={RED}>Loading conversations...</Text>
         ) : (
           conversations.map((conv, index) => {
             const isCurrent = conv.id === currentConversationId;
@@ -321,15 +386,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 </Box>
               );
             } else {
-              const peerShort = (conv as Dm).peerInboxId.slice(0, 16) + "...";
-              return (
-                <Box key={index}>
-                  <Text color={RED}>{label}</Text>
-                  <Text bold> {index + 1}.</Text>
-                  <Text color={RED}> [DM]</Text>
-                  <Text> {peerShort}</Text>
-                </Box>
-              );
+              const peerShort = addressMap[conv.id];
+              if (peerShort) {
+                return (
+                  <Box key={index}>
+                    <Text color={RED}>{label}</Text>
+                    <Text bold> {index + 1}.</Text>
+                    <Text color={RED}> [DM]</Text>
+                    <Text> {peerShort}</Text>
+                  </Box>
+                );
+              }
             }
           })
         )}
@@ -400,6 +467,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
       const newAgent = await Agent.create(signer, {
         env,
         dbEncryptionKey: encryptionKeyBytes,
+        dbPath: (inboxId) => "." + `/cli-${env}-${inboxId.slice(0, 8)}.db3`,
       });
 
       setAgent(newAgent);
@@ -530,10 +598,17 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         "..." +
         agentInstance.address?.slice(-4);
 
-    const content =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    let content: string;
+    if (typeof message.content === "string") {
+      content = message.content;
+    } else {
+      // Try to format JSON nicely, fallback to compact if it fails
+      try {
+        content = JSON.stringify(message.content, null, 2);
+      } catch {
+        content = JSON.stringify(message.content);
+      }
+    }
 
     return { timestamp, sender, content, isFromSelf };
   };
@@ -748,10 +823,13 @@ function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
   // Auto-detect agent address if not provided and we're in dev environment
   if (agents.length === 0 && env === "dev") {
     // Try to get agent address from environment or use the known dev agent address
-    const autoAgentAddress =
-      process.env.XMTP_AGENT_ADDRESS ||
-      "0x6d91489e2235ba4e96660e52cc746a9c2537823b";
-    agents.push(autoAgentAddress);
+    const autoAgentAddressKey = process.env.XMTP_WALLET_KEY || "";
+    const autoAgentAddress = privateKeyToAddress(
+      autoAgentAddressKey as `0x${string}`,
+    );
+    if (autoAgentAddress) {
+      agents.push(autoAgentAddress);
+    }
     console.log(`🔗 Auto-connecting to agent: ${autoAgentAddress}`);
   }
 

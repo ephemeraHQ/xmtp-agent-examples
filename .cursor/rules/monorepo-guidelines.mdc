@@ -28,6 +28,8 @@ When creating new agent examples in this monorepo, follow these guidelines for c
     "build": "tsc",
     "dev": "tsx --watch index.ts",
     "gen:keys": "tsx ../../scripts/generateKeys.ts",
+
+    "cli": "tsx ../../scripts/cli.tsx",
     "lint": "cd ../.. && yarn eslint examples/xmtp-agent-name",
     "revoke": "tsx ../../scripts/revokeInstallations.ts",
     "start": "tsx index.ts"
