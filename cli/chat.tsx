@@ -462,7 +462,11 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
     });
 
     const isFromSelf = message.senderInboxId === agentInstance.client.inboxId;
-    const sender = isFromSelf ? "You" : message.senderInboxId.slice(0, 8);
+    const sender = isFromSelf
+      ? "You"
+      : agentInstance.address?.slice(0, 4) +
+        "..." +
+        agentInstance.address?.slice(-4);
 
     const content =
       typeof message.content === "string"
