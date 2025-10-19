@@ -261,6 +261,7 @@ agent.on("text", (ctx) => {
 agent.on("start", () => {
   console.log(`Address: ${agent.address}`);
   console.log(`Start a conversation at 🔗${getTestUrl(agent.client)}`);
+
   console.log(`Waiting for messages... \n`);
 });
 
