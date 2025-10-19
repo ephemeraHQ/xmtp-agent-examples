@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "build": "tsc",
+    "cli": "tsx cli/chat.tsx",
     "build:examples": "yarn workspaces foreach --all --include \"examples/*\" run build",
-    "clean": "rimraf node_modules && yarn clean:dbs",
     "clean:dbs": "rimraf *.db3* ||:",
     "dev": "cd examples/xmtp-gm && tsx --watch index.ts",
     "format": "prettier -w .",
@@ -24,17 +24,12 @@
     "@xmtp/agent-sdk": "1.1.7"
   },
   "dependencies": {
-    "@xmtp/agent-sdk": "1.1.7"
-  },
-  "devDependencies": {
-    "@eslint/compat": "^1.2.6",
-    "@eslint/js": "^9.19.0",
+    "@xmtp/agent-sdk": "1.1.7",
     "@types/node": "^22.13.0",
     "@xmtp/content-type-primitives": "^2.0.2",
     "@xmtp/content-type-remote-attachment": "^2.0.2",
     "@xmtp/content-type-wallet-send-calls": "^1.0.1",
     "eslint": "^9.19.0",
-    "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
     "globals": "^15.14.0",
     "prettier": "^3.4.2",
