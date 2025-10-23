@@ -7,8 +7,8 @@ loadEnvFile();
 
 /* Initialize the OpenAI client */
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-const agent = await Agent.createFromEnv({});
+console.log(process.env.OPENAI_API_KEY);
+const agent = await Agent.createFromEnv();
 
 agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content;
