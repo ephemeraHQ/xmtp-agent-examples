@@ -14,7 +14,7 @@ agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content;
   const senderAddress = await ctx.getSenderAddress();
   console.log(`Received message: ${messageContent} by ${senderAddress}`);
-
+  //
   try {
     /* Get the AI response */
     const completion = await openai.chat.completions.create({
