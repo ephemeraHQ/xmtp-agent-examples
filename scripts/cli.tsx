@@ -432,7 +432,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [error, setError] = useState<string>("");
   const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<string>(
-    "Initializing XMTP Agent...",
+    "Initializing XMTP cli client...",
   );
 
   // Function to set error with auto-clear
@@ -453,7 +453,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   // Initialize agent
   useEffect(() => {
     const initAgent = async () => {
-      setLoadingStatus("Initializing XMTP Agent...");
+      setLoadingStatus("Initializing XMTP cli client...");
 
       let walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
       let dbEncryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
