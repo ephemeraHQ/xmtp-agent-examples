@@ -18,6 +18,9 @@ import { createSigner, createUser } from "@xmtp/agent-sdk/user";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
 import { fromString, toString } from "uint8arrays";
 
+import { loadEnvFile } from "../utils/general";
+
+loadEnvFile();
 function showHelp(): void {
   console.log(`
 XMTP CLI Chat Interface
@@ -32,8 +35,6 @@ OPTIONS:
                         Single address: creates/opens a DM
                         Multiple addresses: creates a group chat
                         [auto-detected in dev environment if not provided]
-  --env <environment>    XMTP environment (local, dev, production)
-                        [default: production or XMTP_ENV]
   -h, --help            Show this help message
 
 IN-CHAT COMMANDS:
@@ -44,7 +45,6 @@ IN-CHAT COMMANDS:
 
 EXAMPLES:
   yarn chat
-  yarn chat --env dev
   yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2
   yarn chat --agent 0x7c40611372d354799d138542e77243c284e460b2 0x1234567890abcdef1234567890abcdef12345678
   yarn chat --agent 1180478fde9f6dfd4559c25f99f1a3f1505e1ad36b9c3a4dd3d5afb68c419179
@@ -797,7 +797,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 // ============================================================================
 function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
   const args = process.argv.slice(2);
-  let env = (process.env.XMTP_ENV as XmtpEnv) || "production";
+  const env = (process.env.XMTP_ENV as XmtpEnv) || "production";
   let help = false;
   const agents: string[] = [];
 
@@ -807,9 +807,6 @@ function parseArgs(): { env: XmtpEnv; help: boolean; agents?: string[] } {
 
     if (arg === "--help" || arg === "-h") {
       help = true;
-    } else if (arg === "--env" && nextArg) {
-      env = nextArg as XmtpEnv;
-      i++;
     } else if (arg === "--agent" && nextArg) {
       i++;
       while (i < args.length && !args[i].startsWith("--")) {
@@ -843,8 +840,19 @@ async function main(): Promise<void> {
     showHelp();
     process.exit(0);
   }
+  // Create a mutable array of agent identifiers
+  const agentIdentifiers = agents ? [...agents] : [];
 
-  render(<App env={env} agentIdentifiers={agents} />);
+  // If no agents specified, use the agent from XMTP_WALLET_KEY
+  if (agentIdentifiers.length === 0) {
+    const walletKey = process.env.XMTP_WALLET_KEY || "";
+    if (walletKey) {
+      const publicKey = privateKeyToAddress(walletKey as `0x${string}`);
+      agentIdentifiers.push(publicKey);
+    }
+  }
+
+  render(<App env={env} agentIdentifiers={agentIdentifiers} />);
 }
 
 void main();
