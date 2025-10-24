@@ -431,6 +431,9 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [showConversationList, setShowConversationList] = useState(false);
   const [error, setError] = useState<string>("");
   const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState<string>(
+    "Initializing XMTP Agent...",
+  );
 
   // Function to set error with auto-clear
   const setErrorWithTimeout = (message: string, timeoutMs = 5000) => {
@@ -450,6 +453,8 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   // Initialize agent
   useEffect(() => {
     const initAgent = async () => {
+      setLoadingStatus("Initializing XMTP Agent...");
+
       let walletKey = process.env.XMTP_CLIENT_WALLET_KEY;
       let dbEncryptionKey = process.env.XMTP_CLIENT_DB_ENCRYPTION_KEY;
 
@@ -480,6 +485,8 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         env,
       );
       setInstallations(finalInboxState[0].installations.length);
+
+      setLoadingStatus("Syncing conversations...");
       // Sync conversations
       await newAgent.client.conversations.sync();
       const convList = await newAgent.client.conversations.list();
@@ -487,17 +494,22 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
 
       // If agent identifiers provided, create/find conversation
       if (agentIdentifiers && agentIdentifiers.length > 0) {
+        setLoadingStatus("Connecting to agent...");
         const conv = await findOrCreateConversation(newAgent, agentIdentifiers);
         if (conv) {
+          setLoadingStatus("Loading messages...");
           setCurrentConversation(conv);
           await loadMessages(conv, newAgent);
           await startMessageStream(conv, newAgent);
         }
       }
+
+      setLoadingStatus("");
     };
 
     initAgent().catch((err) => {
       handleError(err, setError, "Failed to initialize");
+      setLoadingStatus("");
     });
   }, []);
 
@@ -734,10 +746,22 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   };
 
   // Show loading state
-  if (!agent) {
+  if (!agent || loadingStatus) {
     return (
-      <Box flexDirection="column">
-        <Text color={RED}>Initializing XMTP Agent...</Text>
+      <Box flexDirection="column" padding={1}>
+        <Box marginBottom={1}>
+          <Text color={RED} bold>
+            🔄 {loadingStatus}
+          </Text>
+        </Box>
+        {agent && (
+          <Box flexDirection="column" marginLeft={2}>
+            <Text dimColor>✓ Agent initialized</Text>
+            <Text dimColor>
+              Address: {address.slice(0, 10)}...{address.slice(-8)}
+            </Text>
+          </Box>
+        )}
       </Box>
     );
   }
