@@ -146,6 +146,7 @@ interface HeaderProps {
   installations: number;
   address: string;
   inboxId: string;
+  peerAddress: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -156,6 +157,7 @@ const Header: React.FC<HeaderProps> = ({
   installations,
   address,
   inboxId,
+  peerAddress,
 }) => {
   const logoLines = [
     " ██╗  ██╗███╗   ███╗████████╗██████╗ ",
@@ -214,7 +216,9 @@ const Header: React.FC<HeaderProps> = ({
         ) : (
           <Text bold color={RED} inverse>
             {" "}
-            DM: {(conversation as Dm).peerInboxId.slice(0, 16)}...{" "}
+            DM:{" "}
+            {peerAddress ||
+              (conversation as Dm).peerInboxId.slice(0, 16) + "..."}{" "}
           </Text>
         )}
       </Box>
@@ -434,6 +438,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
   const [loadingStatus, setLoadingStatus] = useState<string>(
     "Initializing XMTP cli client...",
   );
+  const [peerAddress, setPeerAddress] = useState<string>("");
 
   // Function to set error with auto-clear
   const setErrorWithTimeout = (message: string, timeoutMs = 5000) => {
@@ -499,6 +504,15 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         if (conv) {
           setLoadingStatus("Loading messages...");
           setCurrentConversation(conv);
+
+          // Fetch peer address for DMs
+          if (!isGroup(conv)) {
+            const address = await getEthereumAddress(conv);
+            setPeerAddress(address || "");
+          } else {
+            setPeerAddress("");
+          }
+
           await loadMessages(conv, newAgent);
           await startMessageStream(conv, newAgent);
         }
@@ -662,6 +676,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
     "/exit": () => exit(),
     "/back": () => {
       setCurrentConversation(null);
+      setPeerAddress("");
       setMessages([]);
       setShowConversationList(false);
     },
@@ -684,6 +699,14 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
     const newConv = conversations[index];
     setCurrentConversation(newConv);
     setShowConversationList(false);
+
+    // Fetch peer address for DMs
+    if (!isGroup(newConv)) {
+      const address = await getEthereumAddress(newConv);
+      setPeerAddress(address || "");
+    } else {
+      setPeerAddress("");
+    }
 
     if (agent) {
       await loadMessages(newConv, agent);
@@ -717,6 +740,15 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
           const conv = await findOrCreateConversation(agent, [message]);
           if (conv) {
             setCurrentConversation(conv);
+
+            // Fetch peer address for DMs
+            if (!isGroup(conv)) {
+              const address = await getEthereumAddress(conv);
+              setPeerAddress(address || "");
+            } else {
+              setPeerAddress("");
+            }
+
             await loadMessages(conv, agent);
             await startMessageStream(conv, agent);
             return;
@@ -776,6 +808,7 @@ const App: React.FC<AppProps> = ({ env, agentIdentifiers }) => {
         installations={installations}
         address={address}
         inboxId={inboxId}
+        peerAddress={peerAddress}
       />
 
       {/* Show error inline if present */}
