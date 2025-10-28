@@ -19,11 +19,14 @@ agent.on("text", async (ctx) => {
   );
 
   // Get sender's Farcaster profile
-  const senderAddress = await ctx.getSenderAddress();
-  const senderProfile = await fetchFarcasterProfile(senderAddress || "");
+  const senderProfile = await fetchFarcasterProfile(
+    (await ctx.getSenderAddress()) ?? "",
+  );
 
   if (senderProfile.username) {
-    console.log(`Message from Farcaster user: ${senderProfile.username}`);
+    console.log(
+      `Message from Farcaster user: ${senderProfile.username}, FID: ${senderProfile.social?.uid}`,
+    );
   }
 
   // If no mentions found, don't respond
@@ -31,7 +34,6 @@ agent.on("text", async (ctx) => {
     console.log("No mentions found");
     return;
   }
-  console.log(resolved);
 
   // Build response
   let response = "🔍 Resolved:\n\n";
@@ -45,7 +47,12 @@ agent.on("text", async (ctx) => {
     // Try to get Farcaster username for the resolved address
     const profile = await fetchFarcasterProfile(address);
     if (profile.username) {
-      response += `✅ ${identifier} → ${address}\n   👤 Farcaster: ${profile.username}\n\n`;
+      response += `✅ ${identifier} → ${address}\n   👤 Farcaster: ${profile.username}`;
+      if (profile.social) {
+        response += `\n   🆔 FID: ${profile.fid}`;
+        response += `\n   👥 Followers: ${profile.social.follower} | Following: ${profile.social.following}`;
+      }
+      response += `\n\n`;
     } else {
       response += `✅ ${identifier} → ${address}\n\n`;
     }

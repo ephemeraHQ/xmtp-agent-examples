@@ -1,4 +1,4 @@
-import { IdentifierKind } from "@xmtp/agent-sdk";
+import { AgentError, IdentifierKind } from "@xmtp/agent-sdk";
 import { createNameResolver } from "@xmtp/agent-sdk/user";
 import type { GroupMember } from "@xmtp/agent-sdk";
 import { loadEnvFile } from "./general";
@@ -173,4 +173,78 @@ export const resolveMentionsInMessage = async (
   );
 
   return results;
+};
+
+export const fetchFarcasterProfile = async (
+  name: string,
+  apiKey?: string,
+): Promise<{
+  address: string | null | undefined;
+  displayName?: string | null;
+  platform: string;
+  username: string | null | undefined;
+  fid: string | null | undefined;
+  social?: {
+    uid: number | null;
+    follower: number | null;
+    following: number | null;
+  } | null;
+}> => {
+  const endpoint = `https://api.web3.bio/profile/${escape(name)}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (apiKey) {
+    headers["X-API-KEY"] = `Bearer ${apiKey}`;
+  }
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new AgentError(
+      2000,
+      `Could not resolve address for name "${name}": ${response.statusText} (${response.status})`,
+    );
+  }
+  const data = (await response.json()) as Array<{
+    address: string | null;
+    platform: string;
+    displayName?: string;
+    username?: string;
+    fid?: string;
+    social?: {
+      uid: number | null;
+      follower: number | null;
+      following: number | null;
+    };
+  }> | null;
+
+  // Filter the array to find the Farcaster profile
+  const farcasterProfile = data?.find(
+    (profile) => profile.platform === "farcaster",
+  );
+  //console.log(farcasterProfile);
+  if (farcasterProfile) {
+    return {
+      address: farcasterProfile.address,
+      displayName: farcasterProfile.displayName,
+      platform: farcasterProfile.platform,
+      username: farcasterProfile.displayName || null,
+      fid: farcasterProfile.social?.uid?.toString() || null,
+      social: farcasterProfile.social || null,
+    };
+  }
+
+  return {
+    address: null,
+    displayName: null,
+    platform: "",
+    username: null,
+    fid: null,
+    social: null,
+  };
 };

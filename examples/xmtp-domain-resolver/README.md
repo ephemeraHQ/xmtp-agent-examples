@@ -32,9 +32,6 @@ console.log(`Resolved address: ${address}`);
 - **Basenames** (e.g., `tony.base.eth`)
 - **Lens Protocol** (e.g., `stani.lens`)
 
-> [!TIP]
-> Base associates their addresses with FIDs. You can fetch it using [neynar API](https://docs.neynar.com/reference/fetch-bulk-users)
-
 ## Getting started
 
 ### Requirements
@@ -42,6 +39,8 @@ console.log(`Resolved address: ${address}`);
 - Node.js v20 or higher
 - Yarn v4 or higher
 - Docker (optional, for local network)
+- Web3.social [api key](https://api.web3.bio/) (default API)
+- neynar [api key](https://docs.neynar.com/reference/fetch-bulk-users) (alternative to web3.social)
 
 ### Environment variables
 
