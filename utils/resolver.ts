@@ -90,7 +90,12 @@ export const resolveIdentifier = async (
   }
   console.log(identifier);
   // Otherwise, resolve using agent-sdk
-  return resolveAddress(identifier);
+  try {
+    return await resolveAddress(identifier);
+  } catch (error) {
+    console.error(`Failed to resolve "${identifier}":`, error);
+    return null;
+  }
 };
 
 /**
@@ -173,4 +178,97 @@ export const resolveMentionsInMessage = async (
   );
 
   return results;
+};
+
+export const fetchFarcasterProfile = async (
+  name: string,
+  apiKey?: string,
+): Promise<{
+  address: string | null | undefined;
+  displayName?: string | null;
+  platform: string;
+  username: string | null | undefined;
+  fid: string | null | undefined;
+  social?: {
+    uid: number | null;
+    follower: number | null;
+    following: number | null;
+  } | null;
+}> => {
+  try {
+    const endpoint = `https://api.web3.bio/profile/${escape(name)}`;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (apiKey) {
+      headers["X-API-KEY"] = `Bearer ${apiKey}`;
+    }
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers,
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Failed to fetch Farcaster profile for "${name}": ${response.statusText} (${response.status})`,
+      );
+      return {
+        address: null,
+        displayName: null,
+        platform: "",
+        username: null,
+        fid: null,
+        social: null,
+      };
+    }
+    const data = (await response.json()) as Array<{
+      address: string | null;
+      platform: string;
+      displayName?: string;
+      username?: string;
+      fid?: string;
+      social?: {
+        uid: number | null;
+        follower: number | null;
+        following: number | null;
+      };
+    }> | null;
+
+    // Filter the array to find the Farcaster profile
+    const farcasterProfile = data?.find(
+      (profile) => profile.platform === "farcaster",
+    );
+    //console.log(farcasterProfile);
+    if (farcasterProfile) {
+      return {
+        address: farcasterProfile.address,
+        displayName: farcasterProfile.displayName,
+        platform: farcasterProfile.platform,
+        username: farcasterProfile.displayName || null,
+        fid: farcasterProfile.social?.uid?.toString() || null,
+        social: farcasterProfile.social || null,
+      };
+    }
+
+    return {
+      address: null,
+      displayName: null,
+      platform: "",
+      username: null,
+      fid: null,
+      social: null,
+    };
+  } catch (error) {
+    console.error(`Error fetching Farcaster profile for "${name}":`, error);
+    return {
+      address: null,
+      displayName: null,
+      platform: "",
+      username: null,
+      fid: null,
+      social: null,
+    };
+  }
 };
