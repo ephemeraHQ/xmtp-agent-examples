@@ -18,10 +18,15 @@ agent.on("text", async (ctx) => {
   );
 
   // If no mentions found, don't respond
-  if (Object.keys(resolved).length === 0) return;
+  if (Object.keys(resolved).length === 0) {
+    console.log("No mentions found");
+    return;
+  }
+  console.log(resolved);
 
   // Build response
   let response = "🔍 Resolved:\n\n";
+
   for (const [identifier, address] of Object.entries(resolved)) {
     if (!address) {
       response += `❌ ${identifier} → Not found\n`;
