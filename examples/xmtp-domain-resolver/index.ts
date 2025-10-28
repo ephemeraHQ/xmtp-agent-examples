@@ -1,39 +1,14 @@
-import { Agent, AgentError } from "@xmtp/agent-sdk";
+import { Agent } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { loadEnvFile } from "../../utils/general";
-import { resolveMentionsInMessage } from "../../utils/resolver";
+import {
+  resolveMentionsInMessage,
+  fetchFarcasterProfile,
+} from "../../utils/resolver";
 
 loadEnvFile();
 
 const agent = await Agent.createFromEnv();
-
-export const fetchFromWeb3Bio = async (
-  name: string,
-  apiKey?: string,
-): Promise<{ address: string | null }[]> => {
-  const endpoint = `https://api.web3.bio/profile/${escape(name)}`;
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  if (apiKey) {
-    headers["X-API-KEY"] = `Bearer ${apiKey}`;
-  }
-
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new AgentError(
-      2000,
-      `Could not resolve address for name "${name}": ${response.statusText} (${response.status})`,
-    );
-  }
-
-  return response.json() as Promise<{ address: string | null }[]>;
-};
 
 agent.on("text", async (ctx) => {
   const content = ctx.message.content;
@@ -43,10 +18,14 @@ agent.on("text", async (ctx) => {
     await ctx.conversation.members(),
   );
 
-  const web3BioResolved = await fetchFromWeb3Bio(
-    (await ctx.getSenderAddress()) || "",
-  );
-  console.log(web3BioResolved);
+  // Get sender's Farcaster profile
+  const senderAddress = await ctx.getSenderAddress();
+  const senderProfile = await fetchFarcasterProfile(senderAddress || "");
+
+  if (senderProfile.username) {
+    console.log(`Message from Farcaster user: ${senderProfile.username}`);
+  }
+
   // If no mentions found, don't respond
   if (Object.keys(resolved).length === 0) {
     console.log("No mentions found");
@@ -62,8 +41,19 @@ agent.on("text", async (ctx) => {
       response += `❌ ${identifier} → Not found\n`;
       continue;
     }
-    response += `✅ ${identifier} → ${address}\n\n`;
-    console.log(identifier, address);
+
+    // Try to get Farcaster username for the resolved address
+    const profile = await fetchFarcasterProfile(address);
+    if (profile.username) {
+      response += `✅ ${identifier} → ${address}\n   👤 Farcaster: ${profile.username}\n\n`;
+    } else {
+      response += `✅ ${identifier} → ${address}\n\n`;
+    }
+    console.log(
+      identifier,
+      address,
+      profile.username || "No Farcaster profile",
+    );
   }
 
   await ctx.sendText(response);
