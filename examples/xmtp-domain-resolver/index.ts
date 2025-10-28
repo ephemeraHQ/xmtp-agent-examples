@@ -5,9 +5,7 @@ import { resolveMentionsInMessage } from "../../utils/resolver";
 
 loadEnvFile();
 
-const agent = await Agent.createFromEnv({
-  env: process.env.XMTP_ENV as "local" | "dev" | "production",
-});
+const agent = await Agent.createFromEnv();
 
 agent.on("text", async (ctx) => {
   const content = ctx.message.content;
