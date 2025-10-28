@@ -23,6 +23,14 @@ const resolved = await resolveMentionsInMessage(
 const resolveAddress = createNameResolver("your-web3bio-api-key");
 const address = await resolveAddress("bankr");
 console.log(`Resolved address: ${address}`);
+
+//farcaster profile
+const senderProfile = await fetchFarcasterProfile(senderAddress);
+if (senderProfile.username) {
+  console.log(
+    `Message from Farcaster user: ${senderProfile.username}, FID: ${senderProfile.social?.uid}`,
+  );
+}
 ```
 
 ### Supported platforms
